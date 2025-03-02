@@ -36,6 +36,7 @@ const QuoteAttribution = ({ hasWon, theme, textColor, inline = false }) => {
       
       if (DEBUG) console.log("Fetching attribution from URL:", url);
       
+      // Attempt to fetch attribution, but handle failure gracefully
       fetch(url, {
         credentials: 'include',
         mode: 'cors',
@@ -46,7 +47,8 @@ const QuoteAttribution = ({ hasWon, theme, textColor, inline = false }) => {
         .then(res => {
           if (!res.ok) {
             console.error(`HTTP error! Status: ${res.status}`);
-            throw new Error('Failed to fetch attribution');
+            // Instead of throwing an error, we'll return a default/fallback value
+            return { major_attribution: "", minor_attribution: "" };
           }
           return res.json();
         })
@@ -54,14 +56,18 @@ const QuoteAttribution = ({ hasWon, theme, textColor, inline = false }) => {
           if (DEBUG) console.log("Attribution data received:", data);
           
           setAttribution({
-            major: formatMajorAttribution(data.major_attribution),
-            minor: data.minor_attribution
+            major: formatMajorAttribution(data.major_attribution || ""),
+            minor: data.minor_attribution || ""
           });
           setIsLoading(false);
         })
         .catch(err => {
           console.error('Error fetching attribution:', err);
-          setError('Could not load attribution');
+          // Set a default value instead of an error
+          setAttribution({
+            major: "",
+            minor: ""
+          });
           setIsLoading(false);
         });
     }

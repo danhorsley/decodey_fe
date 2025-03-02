@@ -141,9 +141,29 @@ class ApiService {
    * 
    * @returns {Promise} - Promise that resolves to the attribution data
    */
+  /**
+   * Get quote attribution
+   * 
+   * @returns {Promise} - Promise that resolves to the attribution data
+   */
   getAttribution() {
-    return this.fetchApi('/get_attribution', {
+    // Get game ID from localStorage
+    const gameId = localStorage.getItem('uncrypt-game-id');
+    
+    // Construct URL with game_id as a query parameter if available
+    const endpoint = gameId 
+      ? `/get_attribution?game_id=${encodeURIComponent(gameId)}`
+      : '/get_attribution';
+      
+    return this.fetchApi(endpoint, {
       method: 'GET'
+    }).catch(error => {
+      console.error('Error fetching attribution:', error);
+      // Return a default value on error to avoid breaking the UI
+      return {
+        major_attribution: '',
+        minor_attribution: ''
+      };
     });
   }
   

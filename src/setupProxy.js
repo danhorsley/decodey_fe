@@ -33,6 +33,8 @@ module.exports = function(app) {
     // Make sure cookies are passed through
     cookieDomainRewrite: 'localhost',
     withCredentials: true,
+    // Ensure all HTTP methods are allowed, not just POST
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
   });
 
   // Apply to all API endpoints

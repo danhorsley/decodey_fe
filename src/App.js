@@ -124,7 +124,7 @@ function App() {
         setOriginalLetters(data.original_letters);
         setStartTime(Date.now());
         setCompletionTime(null);
-        playSound('keyclick');
+        //playSound('keyclick');
       })
       .catch(err => {
         console.error('Error starting game:', err);
