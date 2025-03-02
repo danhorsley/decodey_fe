@@ -7,6 +7,9 @@ channel = "stable-24_05"
 [deployment]
 build_command = "npm run build"
 run_command = "npx serve -s build -p 3000"
+run = ["sh", "-c", "npm run"]
+build = ["sh", "-c", "npm run build"]
+deploymentTarget = "cloudrun"
 
 [[ports]]
 localPort = 3000
