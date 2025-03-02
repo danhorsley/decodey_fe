@@ -1,7 +1,8 @@
+
 // Configuration for the app
 const config = {
     // API base URL - change this to your deployed backend URL
-    apiUrl: 'https://uncryptbe.replit.app',
+    apiUrl: process.env.REACT_APP_API_URL || 'https://uncryptbe.replit.app',
     
     // Debug flag to control logging
     DEBUG: true,
@@ -16,7 +17,7 @@ const config = {
         // Return headers object with session ID if available
         return {
           ...(sessionId ? { 'X-Session-ID': sessionId } : {}),
-          'Origin': 'https://uncryptbe.replit.app' // Ensure consistent origin
+          'Origin': window.location.origin // Ensure consistent origin
         };
       },
       
@@ -29,6 +30,11 @@ const config = {
           if (config.DEBUG) console.log('Saved session ID:', sessionId);
         }
       }
+    },
+    
+    // Deployment health check - simple function that will return true for root path
+    healthCheck: async () => {
+      return true;
     }
   };
   
