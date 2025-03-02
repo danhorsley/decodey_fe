@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import MatrixRain from './MatrixRain'; // Import our new component
+import MatrixRain from './MatrixRain'; // Make sure to create this file from our earlier code
 import SaveButton from './SaveButton';
-import QuoteAttribution from './QuoteAttribution';
 
-// Enhanced win celebration component
+// Enhanced win celebration component with Matrix effect
 const WinCelebration = ({ 
   startGame, 
   playSound, 
@@ -14,15 +13,16 @@ const WinCelebration = ({
   theme,
   textColor,
   encrypted = '',
+  display = '',
   correctlyGuessed = [],
   guessedMappings = {}
 }) => {
   // Animation state
   const [animationStage, setAnimationStage] = useState(0);
   const [showStats, setShowStats] = useState(false);
-  const [showMatrixRain, setShowMatrixRain] = useState(true); // Changed from confetti to matrix rain
+  const [showMatrixRain, setShowMatrixRain] = useState(true);
   const [showFireworks, setShowFireworks] = useState(false);
-  const [isMatrixActive, setIsMatrixActive] = useState(true); // Changed from confetti to matrix
+  const [isMatrixActive, setIsMatrixActive] = useState(true);
   
   // Get matrix color based on textColor
   const matrixColor = textColor === 'scifi-blue' ? '#4cc9f0' : 
@@ -60,6 +60,28 @@ const WinCelebration = ({
   console.log("Show stats:", showStats);
   console.log("Game time seconds:", gameTimeSeconds);
   console.log("Score:", score);
+  
+  // Get the decrypted text
+  const getDecryptedText = () => {
+    // If display is available, use it directly
+    if (display) {
+      return display;
+    }
+    
+    // Fallback: Try to reconstruct from encrypted and mappings
+    try {
+      return encrypted.replace(/[A-Z]/g, (match) => {
+        // Find this encrypted letter's original letter
+        for (const [enc, orig] of Object.entries(guessedMappings)) {
+          if (enc === match) return orig;
+        }
+        return match; // Return the encrypted letter if mapping not found
+      });
+    } catch (error) {
+      console.error("Error generating decrypted text:", error);
+      return encrypted || "Error displaying text";
+    }
+  };
   
   // Staged animation sequence
   useEffect(() => {
@@ -169,22 +191,8 @@ const WinCelebration = ({
           
           {/* Display the original quote and attribution */}
           <div className="quote-container">
-            <p className="decrypted-quote">{encrypted.replace(/[A-Z]/g, (match) => {
-              // Find this encrypted letter in correctly guessed and get its mapping
-              const originalLetter = correctlyGuessed.includes(match) ? 
-                Object.entries(guessedMappings).find(([enc]) => enc === match)?.[1] : 
-                '?';
-              return originalLetter || '?';
-            })}</p>
-            <p className="quote-attribution">
-              <span className="attribution-name">— </span>
-              <QuoteAttribution 
-                hasWon={true} 
-                theme={theme}
-                textColor={textColor}
-                inline={true}
-              />
-            </p>
+            <p className="decrypted-quote">{getDecryptedText()}</p>
+            {/* Note: Attribution removed since the API endpoint is causing errors */}
           </div>
         </div>
         

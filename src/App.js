@@ -589,6 +589,7 @@ const handleHint = () => {
     theme={settings.theme}
     textColor={settings.textColor}
     encrypted={encrypted}
+    display={display}  // Add this line
     correctlyGuessed={correctlyGuessed}
     guessedMappings={guessedMappings}
   />

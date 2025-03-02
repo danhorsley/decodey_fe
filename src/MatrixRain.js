@@ -1,13 +1,12 @@
 import React, { useRef, useEffect } from 'react';
-import './MatrixRain.css'; // Import the CSS styles
 
 const MatrixRain = ({ 
   active = true, 
   color = '#00ff41', 
   density = 50,
-  fadeSpeed = 0.05, // Controls how fast characters fade
-  speedFactor = 1, // Speed multiplier
-  includeKatakana = true // Whether to include katakana characters
+  fadeSpeed = 0.05,
+  speedFactor = 1,
+  includeKatakana = true 
 }) => {
   const canvasRef = useRef(null);
   
@@ -52,9 +51,6 @@ const MatrixRain = ({
     
     // Array to store speeds for each drop
     const speeds = [];
-    
-    // Array to store opacity for each cell
-    const opacities = Array(columns).fill().map(() => Array(Math.ceil(canvas.height / fontSize)).fill(0));
     
     // Initialize all drops
     for (let i = 0; i < columns; i++) {
@@ -145,7 +141,15 @@ const MatrixRain = ({
   return (
     <canvas
       ref={canvasRef}
-      className="matrix-canvas"
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        zIndex: 999,
+        pointerEvents: 'none'
+      }}
     />
   );
 };
