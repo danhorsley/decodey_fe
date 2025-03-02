@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import Confetti from 'react-confetti';
+import MatrixRain from './MatrixRain'; // Import our new component
 import SaveButton from './SaveButton';
+import QuoteAttribution from './QuoteAttribution';
 
 // Enhanced win celebration component
 const WinCelebration = ({ 
@@ -11,14 +12,21 @@ const WinCelebration = ({
   startTime,
   completionTime,
   theme,
-  textColor 
+  textColor,
+  encrypted = '',
+  correctlyGuessed = [],
+  guessedMappings = {}
 }) => {
   // Animation state
   const [animationStage, setAnimationStage] = useState(0);
   const [showStats, setShowStats] = useState(false);
-  const [showConfetti, setShowConfetti] = useState(true);
+  const [showMatrixRain, setShowMatrixRain] = useState(true); // Changed from confetti to matrix rain
   const [showFireworks, setShowFireworks] = useState(false);
-  const [isConfettiActive, setIsConfettiActive] = useState(true);
+  const [isMatrixActive, setIsMatrixActive] = useState(true); // Changed from confetti to matrix
+  
+  // Get matrix color based on textColor
+  const matrixColor = textColor === 'scifi-blue' ? '#4cc9f0' : 
+                      textColor === 'retro-green' ? '#00ff41' : '#00ff41';
   
   // Refs for animation
   const statsRef = useRef(null);
@@ -60,7 +68,7 @@ const WinCelebration = ({
     // Initial animation
     const timeline = [
       () => {
-        // Play win sound and start confetti
+        // Play win sound and start matrix rain
         playSound('win');
         console.log("Stage 0: Playing win sound");
       },
@@ -90,10 +98,10 @@ const WinCelebration = ({
         }
       },
       () => {
-        // Gradually reduce confetti
-        console.log("Stage 3: Reducing confetti");
+        // Gradually reduce matrix rain intensity
+        console.log("Stage 3: Reducing matrix rain");
         setTimeout(() => {
-          setIsConfettiActive(false);
+          setIsMatrixActive(false);
         }, 1000);
       }
     ];
@@ -124,24 +132,21 @@ const WinCelebration = ({
   // Clean up animations after some time
   useEffect(() => {
     const cleanupTimer = setTimeout(() => {
-      setShowConfetti(false);
+      setShowMatrixRain(false);
       setShowFireworks(false);
-    }, 7000); // Stop animations after 7 seconds
+    }, 10000); // Stop animations after 10 seconds
     
     return () => clearTimeout(cleanupTimer);
   }, []);
   
   return (
     <div ref={containerRef} className={`win-celebration ${theme === 'dark' ? 'dark-theme' : ''} text-${textColor}`}>
-      {/* Confetti effect */}
-      {showConfetti && (
-        <Confetti
-          width={window.innerWidth}
-          height={window.innerHeight}
-          recycle={isConfettiActive}
-          numberOfPieces={isConfettiActive ? 200 : 50}
-          gravity={0.2}
-          tweenDuration={5000}
+      {/* Matrix Rain effect */}
+      {showMatrixRain && (
+        <MatrixRain 
+          active={isMatrixActive}
+          color={matrixColor}
+          density={70}
         />
       )}
       
@@ -158,9 +163,29 @@ const WinCelebration = ({
       <div className="celebration-content">
         {/* Victory message */}
         <div ref={messageRef} className="victory-message">
-            <h2 className="victory-title">Solved! Rating : </h2>
+          <h2 className="victory-title">Solved! Rating : </h2>
           <h2 className="victory-title">{rating}</h2>
           <p className="victory-subtitle">You've successfully decrypted the message!</p>
+          
+          {/* Display the original quote and attribution */}
+          <div className="quote-container">
+            <p className="decrypted-quote">{encrypted.replace(/[A-Z]/g, (match) => {
+              // Find this encrypted letter in correctly guessed and get its mapping
+              const originalLetter = correctlyGuessed.includes(match) ? 
+                Object.entries(guessedMappings).find(([enc]) => enc === match)?.[1] : 
+                '?';
+              return originalLetter || '?';
+            })}</p>
+            <p className="quote-attribution">
+              <span className="attribution-name">— </span>
+              <QuoteAttribution 
+                hasWon={true} 
+                theme={theme}
+                textColor={textColor}
+                inline={true}
+              />
+            </p>
+          </div>
         </div>
         
         {/* Stats display - now with inline style fallback */}

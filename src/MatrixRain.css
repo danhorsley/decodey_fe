@@ -1,0 +1,118 @@
+.matrix-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 999;
+    pointer-events: none;
+  }
+  
+  /* Enhanced celebration background when matrix rain is active */
+  .win-celebration {
+    background-color: rgba(0, 0, 0, 0.8) !important; /* Darker background for better contrast */
+  }
+  
+  /* Make celebration content pop over the matrix rain */
+  .celebration-content {
+    z-index: 1001;
+    position: relative;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5) !important;
+  }
+  
+  /* Enhanced glow effects for sci-fi blue theme */
+  .text-scifi-blue .victory-title {
+    text-shadow: 0 0 15px rgba(76, 201, 240, 0.8) !important;
+  }
+  
+  .text-scifi-blue .play-again-button {
+    box-shadow: 0 0 15px rgba(76, 201, 240, 0.5) !important;
+  }
+  
+  /* Enhanced glow effects for retro green theme */
+  .text-retro-green .victory-title {
+    text-shadow: 0 0 15px rgba(0, 255, 65, 0.8) !important;
+  }
+  
+  .text-retro-green .play-again-button {
+    box-shadow: 0 0 15px rgba(0, 255, 65, 0.5) !important;
+  }
+  
+  /* Improved stats container for better readability over matrix effect */
+  .stats-container .stat-item {
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  }
+  
+  /* Modified animation for the matrix theme */
+  @keyframes matrix-glow {
+    0% {
+      opacity: 0.7;
+      transform: translateY(0);
+    }
+    50% {
+      opacity: 1;
+      transform: translateY(-2px);
+    }
+    100% {
+      opacity: 0.7;
+      transform: translateY(0);
+    }
+  }
+  
+  .stat-value {
+    animation: matrix-glow 2s infinite ease-in-out;
+  }
+  
+  /* Quote container in victory message */
+  .quote-container {
+    margin-top: 25px;
+    padding: 20px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    position: relative;
+    max-height: 200px;
+    overflow-y: auto;
+    text-align: left;
+  }
+  
+  .decrypted-quote {
+    font-family: 'Courier New', monospace;
+    font-size: 1rem;
+    line-height: 1.5;
+    margin-bottom: 15px;
+    color: white;
+    font-weight: normal;
+  }
+  
+  .quote-attribution {
+    text-align: right;
+    font-style: italic;
+    margin-top: 10px;
+    opacity: 0.9;
+  }
+  
+  /* Sci-fi blue theme for quote */
+  .text-scifi-blue .decrypted-quote {
+    color: #4cc9f0;
+    text-shadow: 0 0 5px rgba(76, 201, 240, 0.5);
+  }
+  
+  /* Retro green theme for quote */
+  .text-retro-green .decrypted-quote {
+    color: #00ff41;
+    text-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
+  }
+  
+  /* Make the attribution display inline within victory screen */
+  .quote-attribution .attribution-container {
+    display: inline;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .quote-attribution .attribution-text {
+    display: inline;
+  }

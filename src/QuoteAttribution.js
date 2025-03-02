@@ -4,8 +4,12 @@ import config from './config';
 
 /**
  * Component to display quote attribution
+ * @param {boolean} hasWon - Whether the game has been won
+ * @param {string} theme - The current theme ('light' or 'dark')
+ * @param {string} textColor - The text color theme ('default', 'scifi-blue', or 'retro-green')
+ * @param {boolean} inline - Whether to display inline (for victory screen) or as a block
  */
-const QuoteAttribution = ({ hasWon, theme, textColor }) => {
+const QuoteAttribution = ({ hasWon, theme, textColor, inline = false }) => {
   const [attribution, setAttribution] = useState({
     major: '',
     minor: ''
@@ -68,37 +72,59 @@ const QuoteAttribution = ({ hasWon, theme, textColor }) => {
     return null;
   }
 
-  // Show loading state
-  if (isLoading) {
-    return <div className="attribution-container">Loading attribution...</div>;
-  }
-
-  // Show error state
-  if (error) {
-    return <div className="attribution-container error">{error}</div>;
-  }
-
-  // Don't render if we don't have attribution data
-  if (!attribution.major && !attribution.minor) {
-    return null;
-  }
-
-  // Render the attribution
-  return (
-    <div className={`attribution-container ${theme === 'dark' ? 'dark-theme' : ''} text-${textColor}`}>
-      <div className="attribution-content">
-        <div className="attribution-text">
-          <span className="major-attribution">{attribution.major}</span>
-          {attribution.minor && (
-            <>
-              <span className="attribution-separator">—</span>
-              <span className="minor-attribution">{attribution.minor}</span>
-            </>
-          )}
+  // Use different rendering for inline mode vs block mode
+  if (inline) {
+    // For inline rendering in victory screen
+    if (isLoading) {
+      return <span>Loading...</span>;
+    }
+    
+    if (error) {
+      return <span className="error">{error}</span>;
+    }
+    
+    if (!attribution.major && !attribution.minor) {
+      return <span>Unknown</span>;
+    }
+    
+    return (
+      <span className={`attribution-inline text-${textColor}`}>
+        <span className="major-attribution">{attribution.major}</span>
+        {attribution.minor && (
+          <span className="minor-attribution">, {attribution.minor}</span>
+        )}
+      </span>
+    );
+  } else {
+    // Standard block rendering for the main screen
+    if (isLoading) {
+      return <div className="attribution-container">Loading attribution...</div>;
+    }
+  
+    if (error) {
+      return <div className="attribution-container error">{error}</div>;
+    }
+  
+    if (!attribution.major && !attribution.minor) {
+      return null;
+    }
+  
+    return (
+      <div className={`attribution-container ${theme === 'dark' ? 'dark-theme' : ''} text-${textColor}`}>
+        <div className="attribution-content">
+          <div className="attribution-text">
+            <span className="major-attribution">{attribution.major}</span>
+            {attribution.minor && (
+              <>
+                <span className="attribution-separator">—</span>
+                <span className="minor-attribution">{attribution.minor}</span>
+              </>
+            )}
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  }
 };
 
 export default QuoteAttribution;

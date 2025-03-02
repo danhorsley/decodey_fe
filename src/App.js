@@ -77,8 +77,33 @@ function App() {
   const startGame = () => {
     if (DEBUG) console.log("Starting new game...");
     
-    apiService.startGame()
+    fetch(`${config.apiUrl}/start`, {
+      credentials: 'include', // Critical for session cookies
+      mode: 'cors',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    })
+      .then(res => {
+        if (!res.ok) {
+          console.error(`HTTP error! Status: ${res.status}`);
+          throw new Error(`HTTP error! Status: ${res.status}`);
+        }
+        if (DEBUG) console.log("Response headers:", Object.fromEntries([...res.headers]));
+        return res.json();
+      })
       .then(data => {
+        if (DEBUG) console.log("Game data received:", data);
+        
+        // Save game ID to localStorage
+        if (data.game_id) {
+          localStorage.setItem('uncrypt-game-id', data.game_id);
+          console.log("Saved game ID to localStorage:", data.game_id);
+        } else {
+          console.warn("No game ID received from server");
+        }
+        
         // Apply hardcore mode if enabled
         let encryptedText = data.encrypted_paragraph;
         let displayText = data.display;
@@ -220,83 +245,128 @@ const submitGuess = (guessedLetter) => {
     });
 };
 
-  const handleHint = () => {
-    if (DEBUG) console.log("Requesting hint...");
-    
-    fetch(`${config.apiUrl}/hint`, {
-      method: 'POST',
-      credentials: 'include',
-      mode: 'cors',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
+const handleHint = () => {
+  console.log("=== HINT REQUEST DEBUGGING ===");
+  console.log("Requesting hint...");
+  
+  // Get the game_id from localStorage
+  const gameId = localStorage.getItem('uncrypt-game-id');
+  console.log("Game ID from localStorage:", gameId);
+  
+  // Prepare the request body
+  const requestBody = {};
+  
+  // Add game_id if available
+  if (gameId) {
+    requestBody.game_id = gameId;
+    console.log("Added game_id to request body:", gameId);
+  } else {
+    console.warn("No game_id available to send!");
+  }
+  
+  console.log("Complete request body:", JSON.stringify(requestBody));
+  
+  fetch(`${config.apiUrl}/hint`, {
+    method: 'POST',
+    credentials: 'include', // Critical for session cookies
+    mode: 'cors',
+    headers: { 
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    },
+    body: JSON.stringify(requestBody)
+  })
+    .then(res => {
+      console.log("Response status:", res.status);
+      console.log("Response headers:", Object.fromEntries([...res.headers]));
+      
+      if (!res.ok) {
+        console.error(`HTTP error! Status: ${res.status}`);
+        throw new Error(`HTTP error! Status: ${res.status}`);
+      }
+      
+      return res.json();
+    })
+    .then(data => {
+      console.log("Hint response data:", data);
+      
+      // Check if there's an error message about session expiration
+      if (data.error && data.error.includes('Session expired')) {
+        console.warn("Session expired error detected!");
+        
+        // If a new game_id is provided, save it
+        if (data.game_id) {
+          localStorage.setItem('uncrypt-game-id', data.game_id);
+          console.log("New game ID saved:", data.game_id);
+        } else {
+          console.warn("No new game_id provided in response");
+        }
+        
+        // Automatically restart the game
+        console.log("Restarting game due to expired session");
+        startGame();
+        return;
+      }
+      
+      console.log("Processing valid hint response");
+      
+      // Store old state for comparison
+      const oldCorrectlyGuessed = [...correctlyGuessed];
+      console.log("Previous correctly guessed:", oldCorrectlyGuessed);
+      
+      // Process display text for hardcore mode if enabled
+      let displayText = data.display;
+      if (settings.hardcoreMode) {
+        displayText = displayText.replace(/[^A-Z?]/g, '');
+      }
+      
+      // Update state with server response
+      setDisplay(displayText);
+      setMistakes(data.mistakes);
+      
+      if (data.correctly_guessed) {
+        console.log("New correctly guessed:", data.correctly_guessed);
+        
+        // Find which letter is newly added (the hint)
+        const newGuessedLetters = data.correctly_guessed.filter(
+          letter => !oldCorrectlyGuessed.includes(letter)
+        );
+        console.log("Newly guessed letters:", newGuessedLetters);
+        
+        // For each newly guessed letter, update the mapping
+        newGuessedLetters.forEach(encryptedLetter => {
+          // Find this letter in the encrypted text and get the corresponding character in display
+          for (let i = 0; i < encrypted.length; i++) {
+            if (encrypted[i] === encryptedLetter && data.display[i] !== '?') {
+              // Add to guessedMappings
+              setGuessedMappings(prev => ({
+                ...prev,
+                [encryptedLetter]: data.display[i]
+              }));
+              console.log(`Updated mapping: ${encryptedLetter} -> ${data.display[i]}`);
+              break;
+            }
+          }
+        });
+        
+        // Update correctlyGuessed state
+        setCorrectlyGuessed(data.correctly_guessed);
+        
+        // Play hint sound
+        playSound('hint');
+      } else {
+        console.error("Response missing correctly_guessed array:", data);
       }
     })
-      .then(res => {
-        if (!res.ok) {
-          console.error(`HTTP error! Status: ${res.status}`);
-          throw new Error(`HTTP error! Status: ${res.status}`);
-        }
-        return res.json();
-      })
-      .then(data => {
-        if (DEBUG) console.log("Hint response:", data);
-        
-        // Check if there's an error message about session expiration
-        if (data.error && data.error.includes('Session expired')) {
-          console.warn("Session expired. Restarting game...");
-          // Automatically restart the game
-          startGame();
-          return;
-        }
-        
-        // Store old state for comparison
-        const oldCorrectlyGuessed = [...correctlyGuessed];
-        
-        // Process display text for hardcore mode if enabled
-        let displayText = data.display;
-        if (settings.hardcoreMode) {
-          displayText = displayText.replace(/[^A-Z?]/g, '');
-        }
-        
-        // Update state with server response
-        setDisplay(displayText);
-        setMistakes(data.mistakes);
-        
-        if (data.correctly_guessed) {
-          // Find which letter is newly added (the hint)
-          const newGuessedLetters = data.correctly_guessed.filter(
-            letter => !oldCorrectlyGuessed.includes(letter)
-          );
-          
-          // For each newly guessed letter, update the mapping
-          newGuessedLetters.forEach(encryptedLetter => {
-            // Find this letter in the encrypted text and get the corresponding character in display
-            for (let i = 0; i < encrypted.length; i++) {
-              if (encrypted[i] === encryptedLetter && data.display[i] !== '?') {
-                // Add to guessedMappings
-                setGuessedMappings(prev => ({
-                  ...prev,
-                  [encryptedLetter]: data.display[i]
-                }));
-                break;
-              }
-            }
-          });
-          
-          // Update correctlyGuessed state
-          setCorrectlyGuessed(data.correctly_guessed);
-          
-          // Play hint sound
-          playSound('hint');
-        } else {
-          console.error("Response missing correctly_guessed array:", data);
-        }
-      })
-      .catch(err => {
-        console.error('Error getting hint:', err);
-      });
-  };
+    .catch(err => {
+      console.error('Error getting hint:', err);
+      
+      // Handle connection errors gracefully
+      if (err.message.includes('Failed to fetch')) {
+        alert('Connection to the server failed. Please check your internet connection and try again.');
+      }
+    });
+};
 
   // ==== KEYBOARD INPUT HANDLERS ====
   const handleEncryptedSelect = (letter) => {
@@ -508,23 +578,26 @@ const submitGuess = (guessedLetter) => {
             </div>
           )}
 
-          {completionTime ? (
-            <WinCelebration
-              startGame={startGame}
-              playSound={playSound}
-              mistakes={mistakes}
-              maxMistakes={maxMistakes}
-              startTime={startTime}
-              completionTime={completionTime}
-              theme={settings.theme}
-              textColor={settings.textColor}
-            />
-          ) : mistakes >= maxMistakes ? (
-            <div className="game-message">
-              <p>Game Over! Too many mistakes.</p>
-              <button onClick={startGame}>Try Again</button>
-            </div>
-          ) : null}
+{completionTime ? (
+  <WinCelebration
+    startGame={startGame}
+    playSound={playSound}
+    mistakes={mistakes}
+    maxMistakes={maxMistakes}
+    startTime={startTime}
+    completionTime={completionTime}
+    theme={settings.theme}
+    textColor={settings.textColor}
+    encrypted={encrypted}
+    correctlyGuessed={correctlyGuessed}
+    guessedMappings={guessedMappings}
+  />
+) : mistakes >= maxMistakes ? (
+  <div className="game-message">
+    <p>Game Over! Too many mistakes.</p>
+    <button onClick={startGame}>Try Again</button>
+  </div>
+) : null}
         </MobileLayout>
       </div>
     );
