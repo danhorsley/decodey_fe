@@ -12,6 +12,8 @@ import WinCelebration from './WinCelebration';
 import About from './About';
 import MobileLayout from './MobileLayout';
 import config from './config';
+import apiService from './apiService';
+
 
 // Debug flag for logging
 const DEBUG = true;
@@ -75,25 +77,8 @@ function App() {
   const startGame = () => {
     if (DEBUG) console.log("Starting new game...");
     
-    fetch(`${config.apiUrl}/start`, {
-      credentials: 'include', // Critical for session cookies
-      mode: 'cors',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      }
-    })
-      .then(res => {
-        if (!res.ok) {
-          console.error(`HTTP error! Status: ${res.status}`);
-          throw new Error(`HTTP error! Status: ${res.status}`);
-        }
-        if (DEBUG) console.log("Response headers:", Object.fromEntries([...res.headers]));
-        return res.json();
-      })
+    apiService.startGame()
       .then(data => {
-        if (DEBUG) console.log("Game data received:", data);
-        
         // Apply hardcore mode if enabled
         let encryptedText = data.encrypted_paragraph;
         let displayText = data.display;
@@ -136,6 +121,7 @@ function App() {
   };
 
 // Enhanced debugging for submitGuess
+// Enhanced submitGuess function that works with your current backend
 const submitGuess = (guessedLetter) => {
   // Get the game_id from localStorage
   const gameId = localStorage.getItem('uncrypt-game-id');
@@ -179,14 +165,16 @@ const submitGuess = (guessedLetter) => {
       
       // Check if there's an error message about session expiration
       if (data.error && data.error.includes('Session expired')) {
-        console.warn("Session expired. Restarting game...");
-        // Don't restart automatically, let's see what's happening
-        console.log("Would restart game here. Current game state:");
-        console.log("- Game ID:", localStorage.getItem('uncrypt-game-id'));
-        console.log("- Encrypted:", encrypted);
-        console.log("- Display:", display);
-        console.log("- Correctly guessed:", correctlyGuessed);
-        // startGame();
+        console.warn("Session expired. A new game was started.");
+        
+        // If a new game_id is provided, save it
+        if (data.game_id) {
+          localStorage.setItem('uncrypt-game-id', data.game_id);
+          console.log("New game ID saved:", data.game_id);
+        }
+        
+        // Start a new game
+        startGame();
         return;
       }
       
@@ -224,6 +212,11 @@ const submitGuess = (guessedLetter) => {
     })
     .catch(err => {
       console.error('Error guessing:', err);
+      
+      // Handle connection errors gracefully
+      if (err.message.includes('Failed to fetch')) {
+        alert('Connection to the server failed. Please check your internet connection and try again.');
+      }
     });
 };
 
