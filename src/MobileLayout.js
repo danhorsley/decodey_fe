@@ -40,32 +40,18 @@ const MobileLayout = ({ children, isLandscape }) => {
     setDismissedWarning(true);
   };
 
-  // Process children to ensure proper structuring for mobile layout
-  const processChildren = (children) => {
-    if (!React.isValidElement(children)) {
-      return children;
-    }
-
-    // Find the game header, text container, controls, and grids from children
+  // Find the different components we need to rearrange
+  const extractComponents = (children) => {
     let gameHeader = null;
     let textContainer = null;
     let controls = null;
+    let sidebar = null;
     let grids = null;
+    let keyboardHint = null;
+    let gameMessage = null;
+    let winCelebration = null;
     let otherElements = [];
 
-    // If children is a single element, process it directly
-    if (React.Children.count(children) === 1) {
-      // If it's a fragment or div, process its children
-      if (
-        children.type === React.Fragment ||
-        (typeof children.type === "string" && children.type === "div")
-      ) {
-        return processChildren(children.props.children);
-      }
-      return children;
-    }
-
-    // Process array of children
     React.Children.forEach(children, (child) => {
       if (!React.isValidElement(child)) {
         otherElements.push(child);
@@ -76,25 +62,91 @@ const MobileLayout = ({ children, isLandscape }) => {
         gameHeader = child;
       } else if (child.props.className?.includes("text-container")) {
         textContainer = child;
-      } else if (child.props.className?.includes("middle-controls-container")) {
+      } else if (child.props.className?.includes("controls")) {
         controls = child;
+      } else if (child.props.className?.includes("sidebar")) {
+        sidebar = child;
       } else if (child.props.className?.includes("grids")) {
         grids = child;
+      } else if (child.props.className?.includes("keyboard-hint")) {
+        keyboardHint = child;
+      } else if (child.props.className?.includes("game-message")) {
+        gameMessage = child;
+      } else if (child.props.className?.includes("win-celebration")) {
+        winCelebration = child;
       } else {
         otherElements.push(child);
       }
     });
 
-    // Restructure for mobile layout
+    return {
+      gameHeader,
+      textContainer,
+      controls,
+      sidebar,
+      grids,
+      keyboardHint,
+      gameMessage,
+      winCelebration,
+      otherElements,
+    };
+  };
+
+  // Process all children to restructure for mobile layout
+  const renderMobileLayout = (children) => {
+    // If children is a fragment, process its children
+    if (
+      React.isValidElement(children) &&
+      (children.type === React.Fragment ||
+        (typeof children.type === "string" && children.type === "div"))
+    ) {
+      return renderMobileLayout(children.props.children);
+    }
+
+    // Extract components
+    const {
+      gameHeader,
+      textContainer,
+      controls,
+      sidebar,
+      grids,
+      keyboardHint,
+      gameMessage,
+      winCelebration,
+      otherElements,
+    } = extractComponents(Array.isArray(children) ? children : [children]);
+
+    // Restructure for our new layout with text container between grids
+    // and controls below sidebar
     return (
       <>
         {gameHeader}
-        {textContainer}
+
+        {/* Main gameplay container with text between grids */}
         <div className="mobile-layout-flex-container">
           {grids}
-          {controls}
+          {textContainer}
         </div>
-        {otherElements}
+
+        {/* Sidebar with frequency bars */}
+        {sidebar}
+
+        {/* Controls in a container below sidebar with minimal gap */}
+        <div className="controls-container">{controls}</div>
+
+        {/* Keyboard hint */}
+        {keyboardHint}
+
+        {/* Game message (win/lose state) */}
+        {gameMessage}
+
+        {/* Win celebration overlay (takes full screen) */}
+        {winCelebration}
+
+        {/* Include any other elements */}
+        {otherElements.map((element, index) => (
+          <React.Fragment key={index}>{element}</React.Fragment>
+        ))}
       </>
     );
   };
@@ -124,7 +176,7 @@ const MobileLayout = ({ children, isLandscape }) => {
       )}
 
       {/* Main content with mobile-specific structure */}
-      <div className="game-content">{processChildren(children)}</div>
+      <div className="game-content">{renderMobileLayout(children)}</div>
 
       {/* Optional debug information - can be removed in production */}
       {process.env.NODE_ENV === "development" && (

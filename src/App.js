@@ -491,6 +491,11 @@ function App() {
   }
 
   // Mobile Game View
+  // This is a snippet to modify in your App.js file
+
+  // Find the Mobile Game View section and update it to this:
+
+  // Mobile Game View
   if (useMobileMode) {
     return (
       <div className="App-container">
@@ -541,7 +546,7 @@ function App() {
             </button>
           </div>
 
-          {/* Text container */}
+          {/* Text container - will be positioned between grids by MobileLayout */}
           <div
             className={`text-container ${settings.hardcoreMode ? "hardcore-mode" : ""}`}
           >
@@ -558,7 +563,7 @@ function App() {
             )}
           </div>
 
-          {/* Grids */}
+          {/* Grids - these will be positioned on the left and right sides by MobileLayout */}
           <div className="grids">
             <div className="encrypted-grid">
               {sortedEncryptedLetters.map((letter) => (
@@ -589,8 +594,7 @@ function App() {
 
           <div className="sidebar">
             {Array.from("ABCDEFGHIJKLMNOPQRSTUVWXYZ").map((letter) => {
-              // FIX: Check if this letter is a key in guessedMappings (an encrypted letter that's been guessed)
-              // Instead of checking if it's a value in the guessedMappings
+              // Check if letter is guessed correctly
               const isGuessed =
                 letter in guessedMappings || correctlyGuessed.includes(letter);
 
@@ -619,29 +623,27 @@ function App() {
             })}
           </div>
 
-          {/* Moved controls to bottom */}
-          <div className="bottom-controls-container">
-            <div className="controls">
-              <p>
-                Mistakes: {mistakes}/{maxMistakes}
-              </p>
-              <button
-                onClick={handleHint}
-                disabled={mistakes >= maxMistakes - 1}
-                className="hint-button"
-              >
-                Hint
-              </button>
-            </div>
+          {/* Controls now directly within the layout */}
+          <div className="controls">
+            <p>
+              Mistakes: {mistakes}/{maxMistakes}
+            </p>
+            <button
+              onClick={handleHint}
+              disabled={mistakes >= maxMistakes - 1}
+              className="hint-button"
+            >
+              Hint
+            </button>
           </div>
 
           {settings.speedMode && (
             <div className="keyboard-hint">
               <p>
-                Keyboard Speed Mode:
+                Keyboard Mode:
                 {!selectedEncrypted
-                  ? "Press a letter key to select from the encrypted grid."
-                  : `Selected ${selectedEncrypted} - Press a letter key to make a guess or ESC to cancel.`}
+                  ? "Press a letter key to select."
+                  : `${selectedEncrypted} - Press letter to guess.`}
               </p>
             </div>
           )}
