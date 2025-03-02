@@ -587,11 +587,12 @@ function App() {
             </div>
           </div>
 
-          {/* Frequency sidebar */}
           <div className="sidebar">
             {Array.from("ABCDEFGHIJKLMNOPQRSTUVWXYZ").map((letter) => {
-              // Check if this letter has been guessed (appears in guessedMappings values)
-              const isGuessed = Object.values(guessedMappings).includes(letter);
+              // FIX: Check if this letter is a key in guessedMappings (an encrypted letter that's been guessed)
+              // Instead of checking if it's a value in the guessedMappings
+              const isGuessed =
+                letter in guessedMappings || correctlyGuessed.includes(letter);
 
               return (
                 <div key={letter} className="frequency-bar">
@@ -788,8 +789,9 @@ function App() {
 
         <div className="sidebar">
           {Array.from("ABCDEFGHIJKLMNOPQRSTUVWXYZ").map((letter) => {
-            // Check if this letter has been guessed (appears in guessedMappings values)
-            const isGuessed = Object.values(guessedMappings).includes(letter);
+            // FIX: Use the same fixed logic for mobile view
+            const isGuessed =
+              letter in guessedMappings || correctlyGuessed.includes(letter);
 
             return (
               <div key={letter} className="frequency-bar">
