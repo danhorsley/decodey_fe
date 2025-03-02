@@ -14,7 +14,10 @@ const config = {
         const sessionId = localStorage.getItem('uncrypt-session-id');
         
         // Return headers object with session ID if available
-        return sessionId ? { 'X-Session-ID': sessionId } : {};
+        return {
+          ...(sessionId ? { 'X-Session-ID': sessionId } : {}),
+          'Origin': 'https://uncryptbe.replit.app' // Ensure consistent origin
+        };
       },
       
       // Function to save session ID from response headers

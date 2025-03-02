@@ -34,7 +34,10 @@ class ApiService {
     // Default options
     const fetchOptions = {
       ...options,
-      headers,
+      headers: {
+        ...headers,
+        'Origin': 'https://uncryptbe.replit.app' // Ensure consistent origin
+      },
       credentials: 'include', // Always include credentials
       mode: 'cors'
     };
