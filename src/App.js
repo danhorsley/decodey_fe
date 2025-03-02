@@ -5,7 +5,6 @@ import Settings from './Settings';
 import { useAppContext } from './AppContext';
 import useSound from './SoundManager';
 import useKeyboardInput from './KeyboardController';
-import QuoteAttribution from './QuoteAttribution';
 import { createStructuralMatch } from './utils';
 import SaveButton from './SaveButton';
 import WinCelebration from './WinCelebration';
@@ -490,12 +489,6 @@ const handleHint = () => {
             )}
           </div>
 
-          <QuoteAttribution 
-            hasWon={!!completionTime} 
-            theme={settings.theme} 
-            textColor={settings.textColor} 
-          />
-
           {/* Controls container */}
           <div className="middle-controls-container">
             <div className="controls">
@@ -579,26 +572,26 @@ const handleHint = () => {
           )}
 
 {completionTime ? (
-  <WinCelebration
-    startGame={startGame}
-    playSound={playSound}
-    mistakes={mistakes}
-    maxMistakes={maxMistakes}
-    startTime={startTime}
-    completionTime={completionTime}
-    theme={settings.theme}
-    textColor={settings.textColor}
-    encrypted={encrypted}
-    display={display}  // Add this line
-    correctlyGuessed={correctlyGuessed}
-    guessedMappings={guessedMappings}
-  />
-) : mistakes >= maxMistakes ? (
-  <div className="game-message">
-    <p>Game Over! Too many mistakes.</p>
-    <button onClick={startGame}>Try Again</button>
-  </div>
-) : null}
+            <WinCelebration
+              startGame={startGame}
+              playSound={playSound}
+              mistakes={mistakes}
+              maxMistakes={maxMistakes}
+              startTime={startTime}
+              completionTime={completionTime}
+              theme={settings.theme}
+              textColor={settings.textColor}
+              encrypted={encrypted}
+              display={display}
+              correctlyGuessed={correctlyGuessed}
+              guessedMappings={guessedMappings}
+            />
+          ) : mistakes >= maxMistakes ? (
+            <div className="game-message">
+              <p>Game Over! Too many mistakes.</p>
+              <button onClick={startGame}>Try Again</button>
+            </div>
+          ) : null}
         </MobileLayout>
       </div>
     );
@@ -633,11 +626,7 @@ const handleHint = () => {
             <div className="hardcore-badge">HARDCORE MODE</div>
           )}
         </div>
-        <QuoteAttribution 
-            hasWon={!!completionTime} 
-            theme={settings.theme} 
-            textColor={settings.textColor} 
-          />
+
 
         <div className="grids">
           <div className="encrypted-grid">
@@ -720,22 +709,26 @@ const handleHint = () => {
           </div>
 
           {completionTime ? (
-            <WinCelebration
-              startGame={startGame}
-              playSound={playSound}
-              mistakes={mistakes}
-              maxMistakes={maxMistakes}
-              startTime={startTime}
-              completionTime={completionTime}
-              theme={settings.theme}
-              textColor={settings.textColor}
-            />
-          ) : mistakes >= maxMistakes ? (
-            <div className="game-message">
-              <p>Game Over! Too many mistakes.</p>
-              <button onClick={startGame}>Try Again</button>
-            </div>
-          ) : null}
+  <WinCelebration
+    startGame={startGame}
+    playSound={playSound}
+    mistakes={mistakes}
+    maxMistakes={maxMistakes}
+    startTime={startTime}
+    completionTime={completionTime}
+    theme={settings.theme}
+    textColor={settings.textColor}
+    encrypted={encrypted}
+    display={display}
+    correctlyGuessed={correctlyGuessed}
+    guessedMappings={guessedMappings}
+  />
+) : mistakes >= maxMistakes ? (
+  <div className="game-message">
+    <p>Game Over! Too many mistakes.</p>
+    <button onClick={startGame}>Try Again</button>
+  </div>
+) : null}
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import MatrixRain from './MatrixRain'; // Make sure to create this file from our earlier code
+import MatrixRain from './MatrixRain';
 import SaveButton from './SaveButton';
+import config from './config';
 
 // Enhanced win celebration component with Matrix effect
 const WinCelebration = ({ 
@@ -23,6 +24,12 @@ const WinCelebration = ({
   const [showMatrixRain, setShowMatrixRain] = useState(true);
   const [showFireworks, setShowFireworks] = useState(false);
   const [isMatrixActive, setIsMatrixActive] = useState(true);
+  
+  // Attribution state
+  const [attribution, setAttribution] = useState({
+    major: '',
+    minor: ''
+  });
   
   // Get matrix color based on textColor
   const matrixColor = textColor === 'scifi-blue' ? '#4cc9f0' : 
@@ -55,12 +62,6 @@ const WinCelebration = ({
   else if (score >= 500) rating = 'Cabinet Noir';
   else rating = 'Cryptanalyst';
   
-  // Debug logs for troubleshooting
-  console.log("Animation stage:", animationStage);
-  console.log("Show stats:", showStats);
-  console.log("Game time seconds:", gameTimeSeconds);
-  console.log("Score:", score);
-  
   // Get the decrypted text
   const getDecryptedText = () => {
     // If display is available, use it directly
@@ -83,6 +84,48 @@ const WinCelebration = ({
     }
   };
   
+  // Fetch attribution data when component mounts
+  useEffect(() => {
+    const fetchAttribution = async () => {
+      try {
+        // Get the game_id from localStorage
+        const gameId = localStorage.getItem('uncrypt-game-id');
+        
+        // Add game_id as a query parameter if available
+        const url = gameId 
+          ? `${config.apiUrl}/get_attribution?game_id=${encodeURIComponent(gameId)}`
+          : `${config.apiUrl}/get_attribution`;
+        
+        console.log("Fetching attribution from URL:", url);
+        
+        const response = await fetch(url, {
+          credentials: 'include',
+          mode: 'cors',
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          console.error(`HTTP error! Status: ${response.status}`);
+          return;
+        }
+        
+        const data = await response.json();
+        console.log("Attribution data received:", data);
+        
+        setAttribution({
+          major: data.major_attribution || "",
+          minor: data.minor_attribution || ""
+        });
+      } catch (error) {
+        console.error("Error fetching attribution:", error);
+      }
+    };
+    
+    fetchAttribution();
+  }, []);
+  
   // Staged animation sequence
   useEffect(() => {
     console.log("Running animation stage:", animationStage);
@@ -90,22 +133,17 @@ const WinCelebration = ({
     // Initial animation
     const timeline = [
       () => {
-        // Play win sound and start matrix rain
+        // Play win sound and start matrix rain immediately
         playSound('win');
-        console.log("Stage 0: Playing win sound");
+        setShowFireworks(true); // Show fireworks immediately
+        console.log("Stage 0: Playing win sound and showing fireworks");
       },
       () => {
-        // Show message with animation
+        // Show message with animation immediately
         if (messageRef.current) {
           messageRef.current.classList.add('animate-scale-in');
           console.log("Stage 1: Message animation added");
         }
-        
-        // Start fireworks after a short delay
-        setTimeout(() => {
-          setShowFireworks(true);
-          console.log("Setting fireworks to true");
-        }, 300);
       },
       () => {
         // Show stats with animation
@@ -133,7 +171,7 @@ const WinCelebration = ({
       timeline[animationStage]();
       const nextStage = setTimeout(() => {
         setAnimationStage(animationStage + 1);
-      }, animationStage === 0 ? 500 : 800);
+      }, animationStage === 0 ? 100 : 300); // Reduced delays for quicker appearance
       
       return () => clearTimeout(nextStage);
     }
@@ -146,7 +184,7 @@ const WinCelebration = ({
         console.log("Force showing stats after timeout");
         setShowStats(true);
       }
-    }, 2000);
+    }, 1000); // Reduced from 2000 to make it appear faster
     
     return () => clearTimeout(forceShowStats);
   }, [showStats]);
@@ -162,7 +200,11 @@ const WinCelebration = ({
   }, []);
   
   return (
-    <div ref={containerRef} className={`win-celebration ${theme === 'dark' ? 'dark-theme' : ''} text-${textColor}`}>
+    <div 
+      ref={containerRef} 
+      className={`win-celebration ${theme === 'dark' ? 'dark-theme' : ''} text-${textColor}`}
+      style={{ zIndex: 1200 }} /* Ensure this is higher than any other content */
+    >
       {/* Matrix Rain effect */}
       {showMatrixRain && (
         <MatrixRain 
@@ -182,17 +224,23 @@ const WinCelebration = ({
       )}
       
       {/* Main celebration content */}
-      <div className="celebration-content">
+      <div className="celebration-content" style={{ zIndex: 1500, position: "relative" }}>
         {/* Victory message */}
         <div ref={messageRef} className="victory-message">
-          <h2 className="victory-title">Solved! Rating : </h2>
+          <h2 className="victory-title">Solved! Rating: </h2>
           <h2 className="victory-title">{rating}</h2>
-          <p className="victory-subtitle">You've successfully decrypted the message!</p>
           
           {/* Display the original quote and attribution */}
           <div className="quote-container">
             <p className="decrypted-quote">{getDecryptedText()}</p>
-            {/* Note: Attribution removed since the API endpoint is causing errors */}
+            <div className="quote-attribution">
+              {attribution && attribution.major && (
+                <span>— {attribution.major}</span>
+              )}
+              {attribution && attribution.minor && (
+                <span>, {attribution.minor}</span>
+              )}
+            </div>
           </div>
         </div>
         
@@ -226,7 +274,7 @@ const WinCelebration = ({
         
         {/* Action buttons */}
         <div className="celebration-actions">
-          <SaveButton hasWon={true} playSound={playSound} />
+          {/* <SaveButton hasWon={true} playSound={playSound} /> */}
           <button 
             className="play-again-button"
             onClick={startGame}
