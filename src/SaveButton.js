@@ -7,6 +7,7 @@ import config from './config';
 const SaveButton = ({ hasWon, playSound }) => {
   const [saveStatus, setSaveStatus] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const DEBUG = config.DEBUG || true;
 
   // Don't render if the game isn't won yet
   if (!hasWon) {
@@ -17,20 +18,38 @@ const SaveButton = ({ hasWon, playSound }) => {
     setIsLoading(true);
     setSaveStatus(null);
     
+    if (DEBUG) console.log("Saving quote...");
+    
+    // Get the game_id from localStorage
+    const gameId = localStorage.getItem('uncrypt-game-id');
+    
+    // Prepare request body
+    const requestBody = {};
+    if (gameId) {
+      requestBody.game_id = gameId;
+      if (DEBUG) console.log("Using game_id for save:", gameId);
+    }
+    
     fetch(`${config.apiUrl}/save_quote`, {
       method: 'POST',
+      credentials: 'include',
+      mode: 'cors',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
       },
-      credentials: 'include' // Important for cookies/session
+      body: JSON.stringify(requestBody)
     })
       .then(res => {
         if (!res.ok) {
+          console.error(`HTTP error! Status: ${res.status}`);
           throw new Error('Failed to save quote');
         }
         return res.json();
       })
       .then(data => {
+        if (DEBUG) console.log("Save response:", data);
+        
         setSaveStatus({ success: true, message: data.message });
         setIsLoading(false);
         // Play a success sound if available

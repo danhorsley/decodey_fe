@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { formatMajorAttribution } from './utils'; // Import the formatting function
+import { formatMajorAttribution } from './utils';
 import config from './config';
 
 /**
@@ -12,24 +12,43 @@ const QuoteAttribution = ({ hasWon, theme, textColor }) => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const DEBUG = config.DEBUG || true;
 
   // Fetch attribution data when the game is won
-// In QuoteAttribution.js, update the fetch call to get attribution
-useEffect(() => {
+  useEffect(() => {
     if (hasWon) {
       setIsLoading(true);
       setError(null);
       
-      fetch(`${config.apiUrl}/get_attribution`, {
-        credentials: 'include' // Important for cookies/session
+      if (DEBUG) console.log("Fetching attribution data...");
+      
+      // Get the game_id from localStorage
+      const gameId = localStorage.getItem('uncrypt-game-id');
+      
+      // Add game_id as a query parameter if available
+      const url = gameId 
+        ? `${config.apiUrl}/get_attribution?game_id=${encodeURIComponent(gameId)}`
+        : `${config.apiUrl}/get_attribution`;
+      
+      if (DEBUG) console.log("Fetching attribution from URL:", url);
+      
+      fetch(url, {
+        credentials: 'include',
+        mode: 'cors',
+        headers: {
+          'Accept': 'application/json'
+        }
       })
         .then(res => {
           if (!res.ok) {
+            console.error(`HTTP error! Status: ${res.status}`);
             throw new Error('Failed to fetch attribution');
           }
           return res.json();
         })
         .then(data => {
+          if (DEBUG) console.log("Attribution data received:", data);
+          
           setAttribution({
             major: formatMajorAttribution(data.major_attribution),
             minor: data.minor_attribution
@@ -42,7 +61,7 @@ useEffect(() => {
           setIsLoading(false);
         });
     }
-  }, [hasWon]);
+  }, [hasWon, DEBUG]);
 
   // If the game isn't won yet, don't render anything
   if (!hasWon) {
@@ -68,7 +87,6 @@ useEffect(() => {
   return (
     <div className={`attribution-container ${theme === 'dark' ? 'dark-theme' : ''} text-${textColor}`}>
       <div className="attribution-content">
-        {/* <span className="attribution-label">Attributed to:</span> */}
         <div className="attribution-text">
           <span className="major-attribution">{attribution.major}</span>
           {attribution.minor && (

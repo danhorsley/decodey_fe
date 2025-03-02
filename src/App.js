@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import './Mobile.css';
 import Settings from './Settings';
@@ -12,6 +12,9 @@ import WinCelebration from './WinCelebration';
 import About from './About';
 import MobileLayout from './MobileLayout';
 import config from './config';
+
+// Debug flag for logging
+const DEBUG = true;
 
 function App() {
   // ==== CONTEXT AND APP SETTINGS ====
@@ -45,8 +48,13 @@ function App() {
   const [completionTime, setCompletionTime] = useState(null);
 
   // ==== DERIVED VALUES AND CALCULATIONS ====
-  // Get unique encrypted letters that actually appear in the encrypted text
-  const encryptedLetters = [...new Set(encrypted.match(/[A-Z]/g) || [])];
+  // Get unique encrypted letters that actually appear in the encrypted text - memoized
+  const encryptedLetters = React.useMemo(() => {
+    return [...new Set(encrypted.match(/[A-Z]/g) || [])];
+  }, [encrypted]);
+  
+  // Store the unique letter count in a ref to avoid re-renders
+  const uniqueEncryptedLettersRef = useRef(0);
   
   // Sort the encrypted letters based on the setting
   const sortedEncryptedLetters = React.useMemo(() => {
@@ -55,11 +63,6 @@ function App() {
     }
     return encryptedLetters;
   }, [encryptedLetters, settings.gridSorting]);
-  
-  const uniqueEncryptedLetters = encryptedLetters.length;
-  
-  // Calculate if all encrypted letters have been correctly guessed
-  const hasWon = uniqueEncryptedLetters > 0 && correctlyGuessed.length >= uniqueEncryptedLetters;
   
   // Get used letters for display
   const usedGuessLetters = Object.values(guessedMappings);
@@ -70,20 +73,33 @@ function App() {
 
   // ==== GAME FUNCTIONS ====
   const startGame = () => {
-    fetch(`${config.apiUrl}/start`)
+    if (DEBUG) console.log("Starting new game...");
+    
+    fetch(`${config.apiUrl}/start`, {
+      credentials: 'include', // Critical for session cookies
+      mode: 'cors',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    })
       .then(res => {
-        if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+        if (!res.ok) {
+          console.error(`HTTP error! Status: ${res.status}`);
+          throw new Error(`HTTP error! Status: ${res.status}`);
+        }
+        if (DEBUG) console.log("Response headers:", Object.fromEntries([...res.headers]));
         return res.json();
       })
       .then(data => {
+        if (DEBUG) console.log("Game data received:", data);
+        
         // Apply hardcore mode if enabled
         let encryptedText = data.encrypted_paragraph;
         let displayText = data.display;
         
         if (settings.hardcoreMode) {
-          // Remove spaces and punctuation from encrypted text
           encryptedText = encryptedText.replace(/[^A-Z]/g, '');
-          // Apply same transformation to display text to match structure
           displayText = displayText.replace(/[^A-Z?]/g, '');
         }
         
@@ -100,7 +116,10 @@ function App() {
         setCompletionTime(null);
         playSound('keyclick');
       })
-      .catch(err => console.error('Error starting game:', err));
+      .catch(err => {
+        console.error('Error starting game:', err);
+        alert('Error starting game. Please check console for details.');
+      });
   };
 
   const handleEncryptedClick = (letter) => {
@@ -116,27 +135,74 @@ function App() {
     }
   };
 
-  const submitGuess = (guessedLetter) => {
-    fetch(`${config.apiUrl}/guess`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        encrypted_letter: selectedEncrypted,
-        guessed_letter: guessedLetter.toUpperCase()
-      }),
-      credentials: 'include' // Important for cookies/session
+// Enhanced debugging for submitGuess
+const submitGuess = (guessedLetter) => {
+  // Get the game_id from localStorage
+  const gameId = localStorage.getItem('uncrypt-game-id');
+  
+  console.log(`Submitting guess: ${guessedLetter} for ${selectedEncrypted}`);
+  console.log(`Using game_id: ${gameId}`);
+  
+  // Prepare the request body
+  const requestBody = {
+    encrypted_letter: selectedEncrypted,
+    guessed_letter: guessedLetter.toUpperCase()
+  };
+  
+  // Add game_id if available
+  if (gameId) {
+    requestBody.game_id = gameId;
+  }
+  
+  console.log("Full request body:", JSON.stringify(requestBody));
+  
+  fetch(`${config.apiUrl}/guess`, {
+    method: 'POST',
+    credentials: 'include',
+    mode: 'cors',
+    headers: { 
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    },
+    body: JSON.stringify(requestBody)
+  })
+    .then(res => {
+      if (!res.ok) {
+        console.error(`HTTP error! Status: ${res.status}`);
+        throw new Error(`HTTP error! Status: ${res.status}`);
+      }
+      console.log("Response headers:", Object.fromEntries([...res.headers]));
+      return res.json();
     })
-      .then(res => res.json())
-      .then(data => {
-        // Process display text for hardcore mode if enabled
-        let displayText = data.display;
-        if (settings.hardcoreMode) {
-          displayText = displayText.replace(/[^A-Z?]/g, '');
-        }
-        
-        setDisplay(displayText);
-        setMistakes(data.mistakes);
+    .then(data => {
+      console.log("Guess response:", data);
+      
+      // Check if there's an error message about session expiration
+      if (data.error && data.error.includes('Session expired')) {
+        console.warn("Session expired. Restarting game...");
+        // Don't restart automatically, let's see what's happening
+        console.log("Would restart game here. Current game state:");
+        console.log("- Game ID:", localStorage.getItem('uncrypt-game-id'));
+        console.log("- Encrypted:", encrypted);
+        console.log("- Display:", display);
+        console.log("- Correctly guessed:", correctlyGuessed);
+        // startGame();
+        return;
+      }
+      
+      // Process display text for hardcore mode if enabled
+      let displayText = data.display;
+      if (settings.hardcoreMode) {
+        displayText = displayText.replace(/[^A-Z?]/g, '');
+      }
+      
+      setDisplay(displayText);
+      setMistakes(data.mistakes);
+      
+      // Make sure correctly_guessed exists in the response
+      if (data.correctly_guessed) {
         setCorrectlyGuessed(data.correctly_guessed);
+        
         if (data.correctly_guessed.includes(selectedEncrypted) && 
             !correctlyGuessed.includes(selectedEncrypted)) {
           playSound('correct');
@@ -150,19 +216,47 @@ function App() {
         else if (data.mistakes > mistakes) {
           playSound('incorrect');
         }
-        setSelectedEncrypted(null);
-      })
-      .catch(err => console.error('Error guessing:', err));
-  };
+      } else {
+        console.error("Response missing correctly_guessed array:", data);
+      }
+      
+      setSelectedEncrypted(null);
+    })
+    .catch(err => {
+      console.error('Error guessing:', err);
+    });
+};
 
   const handleHint = () => {
+    if (DEBUG) console.log("Requesting hint...");
+    
     fetch(`${config.apiUrl}/hint`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include' // Important for cookies/session
+      credentials: 'include',
+      mode: 'cors',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
     })
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) {
+          console.error(`HTTP error! Status: ${res.status}`);
+          throw new Error(`HTTP error! Status: ${res.status}`);
+        }
+        return res.json();
+      })
       .then(data => {
+        if (DEBUG) console.log("Hint response:", data);
+        
+        // Check if there's an error message about session expiration
+        if (data.error && data.error.includes('Session expired')) {
+          console.warn("Session expired. Restarting game...");
+          // Automatically restart the game
+          startGame();
+          return;
+        }
+        
         // Store old state for comparison
         const oldCorrectlyGuessed = [...correctlyGuessed];
         
@@ -199,9 +293,16 @@ function App() {
           
           // Update correctlyGuessed state
           setCorrectlyGuessed(data.correctly_guessed);
+          
+          // Play hint sound
+          playSound('hint');
+        } else {
+          console.error("Response missing correctly_guessed array:", data);
         }
       })
-      .catch(err => console.error('Error getting hint:', err));
+      .catch(err => {
+        console.error('Error getting hint:', err);
+      });
   };
 
   // ==== KEYBOARD INPUT HANDLERS ====
@@ -226,7 +327,7 @@ function App() {
 
   // Keyboard input handling
   useKeyboardInput({
-    enabled: !hasWon && mistakes < maxMistakes, // Disable when game is over
+    enabled: !completionTime && mistakes < maxMistakes, // Disable when game is over
     speedMode: settings.speedMode,
     encryptedLetters: encryptedLetters,
     originalLetters: originalLetters,
@@ -236,19 +337,31 @@ function App() {
     playSound: playSound
   });
 
-  // Play win sound when game is won
+  // Win check effect - using completionTime as source of truth
   useEffect(() => {
-    if (hasWon && !completionTime) {
-      // Set completion time when the player wins
-      setCompletionTime(Date.now());
-      playSound('win');
-    } 
-    console.log('Win check:', { 
-      uniqueLetters: uniqueEncryptedLetters, 
-      correctlyGuessedLength: correctlyGuessed.length,
-      hasWon: hasWon
-    });
-  }, [correctlyGuessed, uniqueEncryptedLetters, hasWon, completionTime, playSound]);
+    // Only run this effect when the encrypted text or correctly guessed letters change
+    if (encrypted) {
+      // Store the count in the ref
+      uniqueEncryptedLettersRef.current = encryptedLetters.length;
+      
+      // Only check for win if we have unique letters and some guesses
+      if (encryptedLetters.length > 0 && correctlyGuessed.length > 0) {
+        // Compare the current state
+        const winCondition = correctlyGuessed.length >= encryptedLetters.length;
+        
+        // Only set completion time once when the game is won
+        if (winCondition && !completionTime) {
+          setCompletionTime(Date.now());
+          playSound('win');
+          console.log('GAME WON!', { 
+            uniqueLetters: encryptedLetters.length, 
+            correctlyGuessedLength: correctlyGuessed.length,
+            hasWon: winCondition
+          });
+        }
+      }
+    }
+  }, [encrypted, correctlyGuessed, encryptedLetters, completionTime, playSound]);
 
   // Apply theme effect - this runs for both game and settings views
   useEffect(() => {
@@ -305,65 +418,63 @@ function App() {
             </button>
           </div>
           
-          {/* For the Mobile Game View in App.js, replace the controls and grid sections with this updated structure */}
+          {/* Text container */}
+          <div className={`text-container ${settings.hardcoreMode ? 'hardcore-mode' : ''}`}>
+            <pre className="encrypted">{encrypted || 'Loading...'}</pre>
+            <pre className="display" dangerouslySetInnerHTML={createStructuralMatch(encrypted, display)}></pre>
+            {settings.hardcoreMode && (
+              <div className="hardcore-badge">HARDCORE MODE</div>
+            )}
+          </div>
 
-{/* Text container remains the same */}
-<div className={`text-container ${settings.hardcoreMode ? 'hardcore-mode' : ''}`}>
-  <pre className="encrypted">{encrypted || 'Loading...'}</pre>
-  <pre className="display" dangerouslySetInnerHTML={createStructuralMatch(encrypted, display)}></pre>
-  {settings.hardcoreMode && (
-    <div className="hardcore-badge">HARDCORE MODE</div>
-  )}
-</div>
+          <QuoteAttribution 
+            hasWon={!!completionTime} 
+            theme={settings.theme} 
+            textColor={settings.textColor} 
+          />
 
-<QuoteAttribution 
-  hasWon={hasWon} 
-  theme={settings.theme} 
-  textColor={settings.textColor} 
-/>
+          {/* Controls container */}
+          <div className="middle-controls-container">
+            <div className="controls">
+              <p>Mistakes: {mistakes}/{maxMistakes}</p>
+              <button 
+                onClick={handleHint} 
+                disabled={mistakes >= maxMistakes - 1}
+                className="hint-button"
+              >
+                Hint
+              </button>
+            </div>
+          </div>
 
-{/* New structure with middle controls container */}
-<div className="middle-controls-container">
-  <div className="controls">
-    <p>Mistakes: {mistakes}/{maxMistakes}</p>
-    <button 
-      onClick={handleHint} 
-      disabled={mistakes >= maxMistakes - 1}
-      className="hint-button"
-    >
-      Hint
-    </button>
-  </div>
-</div>
-
-{/* Grids remain the same */}
-<div className="grids">
-  <div className="encrypted-grid">
-    {sortedEncryptedLetters.map(letter => (
-      <div
-        key={letter}
-        className={`letter-cell ${selectedEncrypted === letter ? 'selected' : ''} ${
-          correctlyGuessed.includes(letter) ? 'guessed' : ''
-        } ${lastCorrectGuess === letter ? 'flash' : ''}`}
-        onClick={() => handleEncryptedClick(letter)}
-      >
-        {letter}
-      </div>
-    ))}
-  </div>
-  
-  <div className="guess-grid">
-    {originalLetters.map(letter => (
-      <div
-        key={letter}
-        className={`letter-cell ${usedGuessLetters.includes(letter) ? 'guessed' : ''}`}
-        onClick={() => handleGuessClick(letter)}
-      >
-        {letter}
-      </div>
-    ))}
-  </div>
-</div>
+          {/* Grids */}
+          <div className="grids">
+            <div className="encrypted-grid">
+              {sortedEncryptedLetters.map(letter => (
+                <div
+                  key={letter}
+                  className={`letter-cell ${selectedEncrypted === letter ? 'selected' : ''} ${
+                    correctlyGuessed.includes(letter) ? 'guessed' : ''
+                  } ${lastCorrectGuess === letter ? 'flash' : ''}`}
+                  onClick={() => handleEncryptedClick(letter)}
+                >
+                  {letter}
+                </div>
+              ))}
+            </div>
+            
+            <div className="guess-grid">
+              {originalLetters.map(letter => (
+                <div
+                  key={letter}
+                  className={`letter-cell ${usedGuessLetters.includes(letter) ? 'guessed' : ''}`}
+                  onClick={() => handleGuessClick(letter)}
+                >
+                  {letter}
+                </div>
+              ))}
+            </div>
+          </div>
           
           <div className="sidebar">
             {Array.from('ABCDEFGHIJKLMNOPQRSTUVWXYZ').map(letter => {
@@ -404,7 +515,7 @@ function App() {
             </div>
           )}
 
-          {hasWon ? (
+          {completionTime ? (
             <WinCelebration
               startGame={startGame}
               playSound={playSound}
@@ -456,7 +567,7 @@ function App() {
           )}
         </div>
         <QuoteAttribution 
-            hasWon={hasWon} 
+            hasWon={!!completionTime} 
             theme={settings.theme} 
             textColor={settings.textColor} 
           />
@@ -541,23 +652,23 @@ function App() {
             })}
           </div>
 
-            {hasWon ? (
-                      <WinCelebration
-            startGame={startGame}
-            playSound={playSound}
-            mistakes={mistakes}
-            maxMistakes={maxMistakes}
-            startTime={startTime}
-            completionTime={completionTime}
-            theme={settings.theme}
-            textColor={settings.textColor}
-          />
-        ) : mistakes >= maxMistakes ? (
-          <div className="game-message">
-            <p>Game Over! Too many mistakes.</p>
-            <button onClick={startGame}>Try Again</button>
-          </div>
-        ) : null}
+          {completionTime ? (
+            <WinCelebration
+              startGame={startGame}
+              playSound={playSound}
+              mistakes={mistakes}
+              maxMistakes={maxMistakes}
+              startTime={startTime}
+              completionTime={completionTime}
+              theme={settings.theme}
+              textColor={settings.textColor}
+            />
+          ) : mistakes >= maxMistakes ? (
+            <div className="game-message">
+              <p>Game Over! Too many mistakes.</p>
+              <button onClick={startGame}>Try Again</button>
+            </div>
+          ) : null}
       </div>
     </div>
   );
