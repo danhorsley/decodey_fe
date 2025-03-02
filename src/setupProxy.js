@@ -5,6 +5,11 @@ module.exports = function(app) {
   const apiProxy = createProxyMiddleware({
     target: 'https://uncryptbe.replit.app',
     changeOrigin: true,
+    // Fix for "Invalid Host Header" error
+    headers: {
+      'host': 'uncryptbe.replit.app',
+    },
+    disableHostCheck: true,
     // Log request/response for debugging
     onProxyReq: (proxyReq, req, res) => {
       console.log(`[Proxy] Request: ${req.method} ${req.path}`);
