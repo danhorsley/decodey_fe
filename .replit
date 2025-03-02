@@ -5,7 +5,8 @@ run = "npm start"
 channel = "stable-24_05"
 
 [deployment]
-run = ["sh", "-c", "npm start"]
+build_command = "npm run build"
+run_command = "npx serve -s build -p 3000"
 
 [[ports]]
 localPort = 3000
