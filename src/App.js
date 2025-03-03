@@ -689,12 +689,13 @@ function App() {
         <div
           className={`text-container ${settings.hardcoreMode ? "hardcore-mode" : ""}`}
         >
-          {/* For mobile, prevent word breaks across lines */}
+          {/* For mobile, enhance spaces for better visibility */}
           <div
             className="alternating-text"
             dangerouslySetInnerHTML={formatAlternatingLines(
               useMobileMode ? preventWordBreaks(encrypted) : encrypted,
               useMobileMode ? preventWordBreaks(display) : display,
+              useMobileMode, // Pass true for enhanceSpaces in mobile view
             )}
           ></div>
           {settings.hardcoreMode && (

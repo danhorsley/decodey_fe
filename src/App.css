@@ -1348,7 +1348,7 @@ button:hover:not(:disabled) {
 /* Adjust sizing for desktop vs mobile */
 @media (min-width: 768px) {
   .frequency-indicator {
-    font-size: 0.75em;
+    font-size: 0.65em;
     bottom: 1px;
     right: 2px;
   }
