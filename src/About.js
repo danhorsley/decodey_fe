@@ -28,7 +28,7 @@ function About({ isOpen, onClose }) {
               Use letter frequency numbers in the left grid to help analyze the
               pattern
             </li>
-            <li>Solve before running out of mistakes</li>
+            <li>Solve before running out of try again</li>
           </ol>
           <p>Need help? Use the hint button (costs one mistake).</p>
         </div>
