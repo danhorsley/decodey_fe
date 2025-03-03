@@ -650,8 +650,10 @@ function App() {
     borderRadius: '12px',
     boxShadow: '0 5px 15px rgba(0, 0, 0, 0.3)',
     textAlign: 'center',
-    maxWidth: '300px',
-    width: '80%'
+    maxWidth: '280px',
+    width: '85%',
+    margin: '0 auto',
+    boxSizing: 'border-box'
   };
 
   // Default Desktop Game View
@@ -801,17 +803,18 @@ function App() {
             <button 
               onClick={startGame}
               style={{
-                margin: '0 auto',
-                padding: '12px 25px',
+                margin: '15px auto 0',
+                padding: '12px 20px',
                 fontSize: '1.1rem',
                 display: 'block',
-                width: '100%',
-                maxWidth: '180px',
+                width: '90%',
+                maxWidth: '160px',
                 textAlign: 'center',
                 fontWeight: 'bold',
                 boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
                 position: 'relative',
-                zIndex: 1010
+                zIndex: 1010,
+                borderRadius: '8px'
               }}
             >
               Try Again
