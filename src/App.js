@@ -34,6 +34,25 @@ function App() {
     isLandscape,
     useMobileMode,
   } = useAppContext();
+  
+  // Define gameOverStyle early to prevent initialization errors
+  const gameOverStyle = {
+    position: 'fixed',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    zIndex: 1100,
+    backgroundColor: settings.theme === "dark" ? '#333' : '#f0f8ff',
+    color: settings.theme === "dark" ? '#f8f9fa' : '#212529',
+    padding: '25px',
+    borderRadius: '12px',
+    boxShadow: '0 5px 15px rgba(0, 0, 0, 0.3)',
+    textAlign: 'center',
+    maxWidth: '280px',
+    width: '85%',
+    margin: '0 auto',
+    boxSizing: 'border-box'
+  };
 
   // ==== STATE DECLARATIONS ====
   const [encrypted, setEncrypted] = useState("");
@@ -658,25 +677,6 @@ function App() {
       </div>
     );
   }
-
-  // Create a game over message style based on theme
-  const gameOverStyle = {
-    position: 'fixed',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    zIndex: 1100,
-    backgroundColor: settings.theme === "dark" ? '#333' : '#f0f8ff',
-    color: settings.theme === "dark" ? '#f8f9fa' : '#212529',
-    padding: '25px',
-    borderRadius: '12px',
-    boxShadow: '0 5px 15px rgba(0, 0, 0, 0.3)',
-    textAlign: 'center',
-    maxWidth: '280px',
-    width: '85%',
-    margin: '0 auto',
-    boxSizing: 'border-box'
-  };
 
   // Default Desktop Game View
   return (
