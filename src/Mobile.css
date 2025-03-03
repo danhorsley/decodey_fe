@@ -375,17 +375,23 @@
   max-height: 80vh;
   overflow-y: auto;
   box-sizing: border-box;
+  background-color: rgba(51, 51, 51, 0.85) !important;
+  /* Translucent background */
+  backdrop-filter: blur(3px);
+  /* Optional blur effect */
 }
 
 .mobile-mode .win-celebration .victory-title {
-  font-size: 1.8rem;
-  margin-bottom: 10px;
+  font-size: 1.5rem;
+  margin-bottom: 5px;
 }
 
 .mobile-mode .win-celebration .quote-container {
-  margin-top: 15px;
+  margin-top: 10px;
   padding: 10px;
-  max-height: 120px;
+  max-height: 100px;
+  background-color: rgba(0, 0, 0, 0.2);
+  /* More translucent */
 }
 
 .mobile-mode .win-celebration .decrypted-quote {
@@ -395,13 +401,13 @@
 }
 
 .mobile-mode .win-celebration .stats-container {
-  gap: 10px !important;
-  margin: 15px 0 !important;
+  gap: 8px !important;
+  margin: 10px 0 !important;
 }
 
 .mobile-mode .win-celebration .stat-item {
-  min-width: 70px;
-  padding: 8px 5px;
+  min-width: 60px;
+  padding: 5px;
 }
 
 .mobile-mode .win-celebration .stat-value {
