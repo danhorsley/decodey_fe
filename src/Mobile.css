@@ -427,7 +427,7 @@
 }
 
 /* ===== THEME COLOR STYLES ===== */
-/* Force theme colors for mobile devices regardless of theme setting */
+/* Initial theme defaults */
 .mobile-mode {
   color: #212529;
   background-color: #ffffff;
@@ -454,9 +454,26 @@ body .mobile-mode.light-theme .text-container,
   -webkit-background-color: rgba(248, 249, 250, 0.95) !important;
 }
 
-.mobile-mode.dark-theme {
+/* Stronger specificity for dark theme to prevent overrides */
+.mobile-mode.dark-theme,
+html .mobile-mode.dark-theme,
+body .mobile-mode.dark-theme,
+.mobile-mode[class*="dark-theme"],
+.mobile-mode[class*="theme-mode-dark"],
+html[data-theme="dark"] .mobile-mode {
   color: #f8f9fa !important;
   background-color: #222 !important;
+  -webkit-text-fill-color: #f8f9fa !important;
+  -webkit-background-color: #222 !important;
+}
+
+/* Dark theme text container */
+.mobile-mode.dark-theme .text-container,
+html .mobile-mode.dark-theme .text-container,
+body .mobile-mode.dark-theme .text-container,
+.mobile-mode[class*="dark-theme"] .text-container {
+  background-color: #222 !important;
+  -webkit-background-color: #222 !important;
 }
 
 /* Text color themes for mobile */
