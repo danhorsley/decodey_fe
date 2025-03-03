@@ -637,6 +637,23 @@ function App() {
     );
   }
 
+  // Create a game over message style based on theme
+  const gameOverStyle = {
+    position: 'fixed',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    zIndex: 1100,
+    backgroundColor: settings.theme === "dark" ? '#333' : '#f0f8ff',
+    color: settings.theme === "dark" ? '#f8f9fa' : '#212529',
+    padding: '25px',
+    borderRadius: '12px',
+    boxShadow: '0 5px 15px rgba(0, 0, 0, 0.3)',
+    textAlign: 'center',
+    maxWidth: '300px',
+    width: '80%'
+  };
+
   // Default Desktop Game View
   return (
     <div
@@ -775,17 +792,21 @@ function App() {
             guessedMappings={guessedMappings}
           />
         ) : mistakes >= maxMistakes ? (
-          <div className="game-message">
-            <p>Game Over! Too many mistakes.</p>
+          <div className="game-message" style={gameOverStyle}>
+            <p style={{
+              fontSize: '1.2rem',
+              marginBottom: '20px',
+              fontWeight: 'bold'
+            }}>Game Over! Too many mistakes.</p>
             <button 
               onClick={startGame}
               style={{
-                margin: '15px auto',
+                margin: '0 auto',
                 padding: '12px 25px',
                 fontSize: '1.1rem',
                 display: 'block',
-                width: '80%',
-                maxWidth: '200px',
+                width: '100%',
+                maxWidth: '180px',
                 textAlign: 'center',
                 fontWeight: 'bold',
                 boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
