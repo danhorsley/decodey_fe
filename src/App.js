@@ -556,6 +556,7 @@ function App() {
               dangerouslySetInnerHTML={createStructuralMatch(
                 encrypted,
                 display,
+                settings.placeholderStyle,
               )}
             ></pre>
             {settings.hardcoreMode && (
@@ -681,7 +682,7 @@ function App() {
     >
       {isAboutOpen && <About isOpen={isAboutOpen} onClose={closeAbout} />}
       <div
-        className={`App ${settings.theme === "dark" ? "dark-theme" : ""} text-${settings.textColor}`}
+        className={`App ${settings.theme === "dark" ? "dark-theme" : ""} text-${settings.textColor} placeholder-${settings.placeholderStyle}`}
       >
         <div className="game-header">
           <button className="about-icon" onClick={openAbout} aria-label="About">
@@ -730,7 +731,11 @@ function App() {
           <pre className="encrypted">{encrypted || "Loading..."}</pre>
           <pre
             className="display"
-            dangerouslySetInnerHTML={createStructuralMatch(encrypted, display)}
+            dangerouslySetInnerHTML={createStructuralMatch(
+              encrypted,
+              display,
+              settings.placeholderStyle,
+            )}
           ></pre>
           {settings.hardcoreMode && (
             <div className="hardcore-badge">HARDCORE MODE</div>

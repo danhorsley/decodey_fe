@@ -30,7 +30,8 @@ const MobileLayout = ({ children, isLandscape }) => {
   const mobileClasses = `
     mobile-mode 
     ${theme === "dark" ? "dark-theme" : ""} 
-    text-${textColor || "default"} 
+    text-${settings.textColor || "default"}
+    placeholder-${settings.placeholderStyle}
     ${!isLandscape ? "portrait" : "landscape"}
   `
     .trim()
