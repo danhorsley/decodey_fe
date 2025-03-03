@@ -46,6 +46,9 @@ export const formatMajorAttribution = (text) => {
       } else {
         return word;
       }
+    })
+    .join(" ");
+};
 
 /**
  * Splits a long line into multiple chunks of a reasonable size
@@ -57,20 +60,20 @@ const splitLongLine = (line, maxLength) => {
   if (!line || line.length <= maxLength) {
     return [line];
   }
-  
+
   const chunks = [];
   let currentIndex = 0;
-  
+
   while (currentIndex < line.length) {
     // Try to find a space to break at
     let breakIndex = currentIndex + maxLength;
-    
+
     if (breakIndex < line.length) {
       // Look backward for a space to break at
-      while (breakIndex > currentIndex && line[breakIndex] !== ' ') {
+      while (breakIndex > currentIndex && line[breakIndex] !== " ") {
         breakIndex--;
       }
-      
+
       // If no space found, just break at the max length
       if (breakIndex === currentIndex) {
         breakIndex = currentIndex + maxLength;
@@ -81,11 +84,11 @@ const splitLongLine = (line, maxLength) => {
     } else {
       breakIndex = line.length;
     }
-    
+
     chunks.push(line.substring(currentIndex, breakIndex));
     currentIndex = breakIndex;
   }
-  
+
   return chunks;
 };
 
@@ -100,28 +103,33 @@ const splitLineToMatch = (displayLine, encryptedChunks, encryptedLine) => {
   if (!displayLine || encryptedChunks.length <= 1) {
     return [displayLine];
   }
-  
+
   const displayChunks = [];
   let currentDisplayIndex = 0;
-  
+
   // For each encrypted chunk, find the corresponding display text
   for (let i = 0; i < encryptedChunks.length; i++) {
     const encryptedChunk = encryptedChunks[i];
-    const startIndexInFull = encryptedLine.indexOf(encryptedChunk, i === 0 ? 0 : encryptedLine.indexOf(encryptedChunks[i-1]) + encryptedChunks[i-1].length);
-    
+    const startIndexInFull = encryptedLine.indexOf(
+      encryptedChunk,
+      i === 0
+        ? 0
+        : encryptedLine.indexOf(encryptedChunks[i - 1]) +
+            encryptedChunks[i - 1].length,
+    );
+
     // Calculate end index in the full line
     const endIndexInFull = startIndexInFull + encryptedChunk.length;
-    
+
     // Get the corresponding portion of the display line
-    const displayChunk = displayLine.substring(startIndexInFull, endIndexInFull);
+    const displayChunk = displayLine.substring(
+      startIndexInFull,
+      endIndexInFull,
+    );
     displayChunks.push(displayChunk);
   }
-  
-  return displayChunks;
-};
 
-    })
-    .join(" ");
+  return displayChunks;
 };
 
 /**
@@ -134,14 +142,16 @@ const splitLineToMatch = (displayLine, encryptedChunks, encryptedLine) => {
 
 // Helper function to determine if we're on a real mobile device vs desktop emulation
 const isRealMobileDevice = () => {
-  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) && 
-         ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+  return (
+    /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) &&
+    ("ontouchstart" in window || navigator.maxTouchPoints > 0)
+  );
 };
 
 // Determine placeholder character based on device
 const getPlaceholderChar = () => {
   // Use a slightly narrower character on real mobile devices
-  return isRealMobileDevice() ? '■' : '█';
+  return isRealMobileDevice() ? "■" : "█";
 };
 export const createStructuralMatch = (
   encrypted,
@@ -219,11 +229,12 @@ export const formatAlternatingLines = (
 
   // Mobile detection
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  const isRealMobileDevice = isMobile && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
-  
+  const isRealMobileDevice =
+    isMobile && ("ontouchstart" in window || navigator.maxTouchPoints > 0);
+
   // Use a mobile-friendly placeholder char for better alignment
-  const placeholderChar = isRealMobileDevice ? '■' : '█';
-  
+  const placeholderChar = isRealMobileDevice ? "■" : "█";
+
   // Process display text to use mobile-friendly placeholder
   if (isMobile) {
     display = display.replace(/█/g, placeholderChar);
@@ -238,46 +249,54 @@ export const formatAlternatingLines = (
   for (let i = 0; i < encryptedLines.length; i++) {
     let encryptedLine = encryptedLines[i];
     let displayLine = i < displayLines.length ? displayLines[i] : "";
-    
+
     // Split long lines into chunks for better mobile display
     // Use a reasonable character limit based on screen width
     const maxLineLength = isRealMobileDevice ? 40 : 60;
-    
+
     // Process encrypted line
     const encryptedChunks = splitLongLine(encryptedLine, maxLineLength);
-    
+
     // Process display line (must match encrypted chunks)
-    const displayChunks = splitLineToMatch(displayLine, encryptedChunks, encryptedLine);
-    
+    const displayChunks = splitLineToMatch(
+      displayLine,
+      encryptedChunks,
+      encryptedLine,
+    );
+
     // Create grids for each chunk
-    for (let chunkIndex = 0; chunkIndex < encryptedChunks.length; chunkIndex++) {
+    for (
+      let chunkIndex = 0;
+      chunkIndex < encryptedChunks.length;
+      chunkIndex++
+    ) {
       const encryptedChunk = encryptedChunks[chunkIndex];
-      const displayChunk = displayChunks[chunkIndex] || '';
-      
+      const displayChunk = displayChunks[chunkIndex] || "";
+
       // Create character grid for encrypted line chunk
       let encryptedGrid = '<div class="char-grid encrypted-line">';
       for (let j = 0; j < encryptedChunk.length; j++) {
         const char = encryptedChunk[j];
-        if (char === ' ') {
+        if (char === " ") {
           encryptedGrid += `<div class="grid-cell space-cell"><span class="space-dot">·</span></div>`;
         } else {
           encryptedGrid += `<div class="grid-cell">${char}</div>`;
         }
       }
-      encryptedGrid += '</div>';
-      
+      encryptedGrid += "</div>";
+
       // Create character grid for display line chunk
       let displayGrid = '<div class="char-grid display-line">';
       for (let j = 0; j < displayChunk.length; j++) {
         const char = displayChunk[j];
-        if (char === ' ') {
+        if (char === " ") {
           displayGrid += `<div class="grid-cell space-cell"><span class="space-dot">·</span></div>`;
         } else {
           displayGrid += `<div class="grid-cell">${char}</div>`;
         }
       }
-      displayGrid += '</div>';
-      
+      displayGrid += "</div>";
+
       // Add both grids
       result += encryptedGrid + displayGrid;
     }
