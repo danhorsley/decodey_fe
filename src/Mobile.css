@@ -254,7 +254,7 @@
   margin-left: 8px;
   position: relative;
   left: 0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  /* box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); */
   border-radius: 10px;
   z-index: 10;
   padding: 10px;
@@ -266,7 +266,7 @@
   margin-right: 5px;
   position: relative;
   right: 0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  /* box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); */
   border-radius: 10px;
   z-index: 10;
   background-color: rgba(255, 255, 255, 0.05);
@@ -275,7 +275,7 @@
 /* Dark theme grid adjustments */
 .mobile-mode.dark-theme .encrypted-grid,
 .mobile-mode.dark-theme .guess-grid {
-  background-color: #333 !important;
+  background-color: #222 !important;
   box-shadow: none !important;
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
@@ -283,14 +283,14 @@
 /* Theme-specific styles */
 .mobile-mode.text-scifi-blue .encrypted-grid,
 .mobile-mode.text-scifi-blue .guess-grid {
-  background-color: rgba(76, 201, 240, 0.05) !important;
-  box-shadow: 0 1px 3px rgba(76, 201, 240, 0.1) !important;
+  background-color: rgba(2, 2, 2, 0.05) !important;
+  /* box-shadow: 0 1px 3px rgba(76, 201, 240, 0.1) !important; */
 }
 
 .mobile-mode.text-retro-green .encrypted-grid,
 .mobile-mode.text-retro-green .guess-grid {
-  background-color: rgba(0, 255, 65, 0.05) !important;
-  box-shadow: 0 1px 3px rgba(0, 255, 65, 0.1) !important;
+  background-color: rgba(2, 2, 2, 0.05) !important;
+  /* box-shadow: 0 1px 3px rgba(0, 255, 65, 0.1) !important; */
 }
 
 .mobile-mode .letter-cell {
@@ -341,8 +341,10 @@
 .mobile-mode .controls button {
   padding: 5px 12px;
   font-size: 0.9rem;
-  color: white !important; /* Ensure hint button text is always visible */
-  -webkit-text-fill-color: white !important; /* For WebKit browsers */
+  color: white !important;
+  /* Ensure hint button text is always visible */
+  -webkit-text-fill-color: white !important;
+  /* For WebKit browsers */
 }
 
 /* Dark theme control adjustments */
@@ -545,8 +547,8 @@ html .mobile-mode.dark-theme.text-scifi-blue .display-line {
 /* Theme grid backgrounds */
 .mobile-mode.text-scifi-blue .encrypted-grid,
 .mobile-mode.text-scifi-blue .guess-grid {
-  background-color: rgba(76, 201, 240, 0.1) !important;
-  box-shadow: 0 2px 8px rgba(76, 201, 240, 0.2) !important;
+  background-color: rgba(2, 2, 2, 0.1) !important;
+  /* box-shadow: 0 2px 8px rgba(76, 201, 240, 0.2) !important; */
 }
 
 /* Ensure mistakes counter and hint button get the theme color */
@@ -585,8 +587,8 @@ html .mobile-mode.dark-theme.text-retro-green .display-line {
 /* Theme grid backgrounds */
 .mobile-mode.text-retro-green .encrypted-grid,
 .mobile-mode.text-retro-green .guess-grid {
-  background-color: rgba(0, 255, 65, 0.1) !important;
-  box-shadow: 0 2px 8px rgba(0, 255, 65, 0.2) !important;
+  background-color: rgba(2, 2, 2, 0.1) !important;
+  /* box-shadow: 0 2px 8px rgba(0, 255, 65, 0.2) !important; */
 }
 
 /* Ensure mistakes counter and hint button get the theme color */
@@ -866,7 +868,8 @@ html .mobile-mode.dark-theme.text-retro-green .display-line {
 .mobile-mode .about-button,
 .mobile-mode .settings-button,
 .mobile-mode .hint-button {
-  background-color: inherit; /* Inherit background from parent */
+  background-color: inherit;
+  /* Inherit background from parent */
   border: none;
   padding: 8px 12px;
   border-radius: 8px;
