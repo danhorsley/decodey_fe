@@ -318,14 +318,14 @@
   margin: 15px 0;
   padding: 15px;
   background-color: #f8f9fa;
-  border-radius: 8px;
+  border-radius: 4px;
 }
 
 .controls p {
   margin: 0;
   padding: 6px 12px;
   background-color: white;
-  border-radius: 20px;
+  border-radius: 4px;
   font-weight: bold;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
@@ -949,4 +949,9 @@ button:hover:not(:disabled) {
     bottom: 1px;
     right: 2px;
   }
+}
+
+.dark-theme .encrypted-line,
+.dark-theme .display-line {
+  color: white;
 }
