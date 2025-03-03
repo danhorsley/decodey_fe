@@ -143,52 +143,54 @@ export const formatAlternatingLines = (
 ) => {
   if (!encrypted || !display) return { __html: "" };
 
-  // Mobile detection - use a simpler approach for actual mobile
+  // Mobile detection
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  const spaceChar = isMobile ? "·" : "";
+  const isRealMobileDevice = isMobile && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
   
   // Use a mobile-friendly placeholder char for better alignment
-  const placeholderChar = getPlaceholderChar();
+  const placeholderChar = isRealMobileDevice ? '■' : '█';
   
   // Process display text to use mobile-friendly placeholder
   if (isMobile) {
     display = display.replace(/█/g, placeholderChar);
   }
 
-  // Simplified space replacement for better mobile compatibility
-  const replaceSpaces = (text) => {
-    return text.replace(/ /g, (match) => {
-      return isMobile
-        ? `<span class="space-char-mobile">${spaceChar}</span>`
-        : `<span class="space-char"></span>`;
-    });
-  };
-
   // Split into lines if text contains newlines
   const encryptedLines = encrypted.split("\n");
   const displayLines = display.split("\n");
 
-  // Create alternating encrypted/display pattern with proper HTML
+  // Create alternating encrypted/display pattern with grid-based HTML
   let result = "";
   for (let i = 0; i < encryptedLines.length; i++) {
-    // Process lines
     let encryptedLine = encryptedLines[i];
     let displayLine = i < displayLines.length ? displayLines[i] : "";
-
-    // Apply space replacement
-    encryptedLine = replaceSpaces(encryptedLine);
-    displayLine = replaceSpaces(displayLine);
-
-    // Add encrypted line with a class for styling
-    result += `<div class="encrypted-line">${encryptedLine}</div>`;
-
-    // Add display line with a class for styling
-    if (displayLine) {
-      result += `<div class="display-line">${displayLine}</div>`;
-    } else {
-      // Fallback if display has fewer lines
-      result += `<div class="display-line"></div>`;
+    
+    // Create character grid for encrypted line
+    let encryptedGrid = '<div class="char-grid encrypted-line">';
+    for (let j = 0; j < encryptedLine.length; j++) {
+      const char = encryptedLine[j];
+      if (char === ' ') {
+        encryptedGrid += `<div class="grid-cell space-cell"><span class="space-dot">·</span></div>`;
+      } else {
+        encryptedGrid += `<div class="grid-cell">${char}</div>`;
+      }
     }
+    encryptedGrid += '</div>';
+    
+    // Create character grid for display line
+    let displayGrid = '<div class="char-grid display-line">';
+    for (let j = 0; j < displayLine.length; j++) {
+      const char = displayLine[j];
+      if (char === ' ') {
+        displayGrid += `<div class="grid-cell space-cell"><span class="space-dot">·</span></div>`;
+      } else {
+        displayGrid += `<div class="grid-cell">${char}</div>`;
+      }
+    }
+    displayGrid += '</div>';
+    
+    // Add both grids
+    result += encryptedGrid + displayGrid;
   }
 
   return { __html: result };
