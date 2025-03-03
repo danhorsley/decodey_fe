@@ -436,30 +436,30 @@
   .mobile-mode .win-celebration .celebration-content {
     padding: 8px;
   }
-  
+
   .mobile-mode .win-celebration .victory-title {
     font-size: 1rem;
     margin-bottom: 2px;
   }
-  
+
   .mobile-mode .win-celebration .quote-container {
     margin-top: 4px;
     padding: 4px;
   }
-  
+
   .mobile-mode .win-celebration .stats-container {
     gap: 3px !important;
     margin: 4px 0 !important;
   }
-  
+
   .mobile-mode .win-celebration .stat-value {
     font-size: 1.1rem;
   }
-  
+
   .mobile-mode .win-celebration .stat-item.score .stat-value {
     font-size: 1.3rem;
   }
-  
+
   .mobile-mode .win-celebration .play-again-button {
     padding: 6px 12px;
     margin-top: 3px;
@@ -860,4 +860,41 @@ html .mobile-mode.dark-theme.text-retro-green .display-line {
     font-size: 0.75rem;
     min-height: 26px;
   }
+}
+
+/* Add styles for about, settings, and hint buttons */
+.mobile-mode .about-button,
+.mobile-mode .settings-button,
+.mobile-mode .hint-button {
+  background-color: inherit; /* Inherit background from parent */
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+
+/* Light mode only button backgrounds for themed colors */
+.mobile-mode:not(.dark-theme).text-scifi-blue .about-button,
+.mobile-mode:not(.dark-theme).text-scifi-blue .settings-button,
+.mobile-mode:not(.dark-theme).text-scifi-blue .hint-button,
+.mobile-mode:not(.dark-theme).text-retro-green .about-button,
+.mobile-mode:not(.dark-theme).text-retro-green .settings-button,
+.mobile-mode:not(.dark-theme).text-retro-green .hint-button {
+  background-color: white;
+}
+
+/* Preserve dark button backgrounds in dark mode for themed colors */
+.mobile-mode.dark-theme.text-scifi-blue .about-button,
+.mobile-mode.dark-theme.text-scifi-blue .settings-button,
+.mobile-mode.dark-theme.text-scifi-blue .hint-button,
+.mobile-mode.dark-theme.text-retro-green .about-button,
+.mobile-mode.dark-theme.text-retro-green .settings-button,
+.mobile-mode.dark-theme.text-retro-green .hint-button {
+  background-color: #444;
+}
+
+.mobile-mode.text-scifi-blue button,
+.mobile-mode.text-retro-green button {
+  color: inherit !important;
+  text-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
 }

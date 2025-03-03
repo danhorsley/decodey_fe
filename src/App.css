@@ -952,9 +952,9 @@ button:hover:not(:disabled) {
   color: white !important;
 }
 
-/* Themed button backgrounds for both light and dark mode */
-.text-scifi-blue button,
-.text-retro-green button {
+/* Themed button backgrounds for light mode only */
+:not(.dark-theme).text-scifi-blue button,
+:not(.dark-theme).text-retro-green button {
   background-color: white;
 }
 
@@ -963,6 +963,12 @@ button:hover:not(:disabled) {
 .text-retro-green .controls button {
   color: inherit !important;
   text-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Preserve dark button backgrounds in dark mode with themed text */
+.dark-theme.text-scifi-blue button,
+.dark-theme.text-retro-green button {
+  background-color: #444;
 }
 
 
