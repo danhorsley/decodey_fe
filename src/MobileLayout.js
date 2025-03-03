@@ -26,10 +26,11 @@ const MobileLayout = ({ children, isLandscape }) => {
   // Determine if we should show portrait warning
   const showPortraitWarning = !isLandscape && !dismissedWarning;
 
-  // Apply appropriate classes with stronger theming
+  // Apply appropriate classes with stronger theming and data attributes for Samsung Browser
   const mobileClasses = `
     mobile-mode 
     ${theme === "dark" ? "dark-theme" : "light-theme"} 
+    theme-mode-${theme} 
     theme-${theme} 
     text-${settings.textColor || "default"}
     placeholder-${settings.placeholderStyle}

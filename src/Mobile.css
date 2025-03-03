@@ -415,12 +415,25 @@
   background-color: #ffffff;
 }
 
-/* Explicit rules for light theme with higher specificity */
+/* Explicit rules for light theme with higher specificity - Samsung Browser support */
 .mobile-mode.light-theme,
 html .mobile-mode.light-theme,
-body .mobile-mode.light-theme {
+body .mobile-mode.light-theme,
+.mobile-mode[class*="light-theme"],
+html[data-theme="light"] .mobile-mode {
   color: #212529 !important;
   background-color: #ffffff !important;
+  -webkit-text-fill-color: #212529 !important;
+  -webkit-background-color: #ffffff !important;
+}
+
+/* Force text container background in light mode */
+.mobile-mode.light-theme .text-container,
+html .mobile-mode.light-theme .text-container,
+body .mobile-mode.light-theme .text-container,
+.mobile-mode[class*="light-theme"] .text-container {
+  background-color: rgba(248, 249, 250, 0.95) !important;
+  -webkit-background-color: rgba(248, 249, 250, 0.95) !important;
 }
 
 .mobile-mode.dark-theme {
@@ -556,19 +569,34 @@ body .mobile-mode.light-theme {
 
 /* Screen-size specific adjustments for text */
 @media (max-width: 480px) {
-  /* Force theme enforcement on small screens */
+  /* Force theme enforcement on small screens - with Samsung Browser support */
   .mobile-mode.light-theme,
   html .mobile-mode.light-theme,
-  body .mobile-mode.light-theme {
+  body .mobile-mode.light-theme,
+  .mobile-mode[class*="light-theme"],
+  .mobile-mode[class*="theme-mode-light"],
+  html[data-theme="light"] .mobile-mode {
     color: #212529 !important;
     background-color: #ffffff !important;
+    -webkit-text-fill-color: #212529 !important;
+  }
+  
+  /* Light theme text container - stronger specificity */
+  .mobile-mode.light-theme .text-container,
+  html .mobile-mode.light-theme .text-container,
+  .mobile-mode[class*="light-theme"] .text-container {
+    background-color: rgba(248, 249, 250, 0.95) !important;
   }
   
   .mobile-mode.dark-theme,
   html .mobile-mode.dark-theme,
-  body .mobile-mode.dark-theme {
+  body .mobile-mode.dark-theme,
+  .mobile-mode[class*="dark-theme"],
+  .mobile-mode[class*="theme-mode-dark"],
+  html[data-theme="dark"] .mobile-mode {
     color: #f8f9fa !important;
     background-color: #222 !important;
+    -webkit-text-fill-color: #f8f9fa !important;
   }
 
   .mobile-mode .encrypted-line,
