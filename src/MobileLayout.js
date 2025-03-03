@@ -26,10 +26,11 @@ const MobileLayout = ({ children, isLandscape }) => {
   // Determine if we should show portrait warning
   const showPortraitWarning = !isLandscape && !dismissedWarning;
 
-  // Apply appropriate classes
+  // Apply appropriate classes with stronger theming
   const mobileClasses = `
     mobile-mode 
     ${theme === "dark" ? "dark-theme" : "light-theme"} 
+    theme-${theme} 
     text-${settings.textColor || "default"}
     placeholder-${settings.placeholderStyle}
     ${!isLandscape ? "portrait" : "landscape"}

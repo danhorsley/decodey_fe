@@ -415,7 +415,10 @@
   background-color: #ffffff;
 }
 
-.mobile-mode.light-theme {
+/* Explicit rules for light theme with higher specificity */
+.mobile-mode.light-theme,
+html .mobile-mode.light-theme,
+body .mobile-mode.light-theme {
   color: #212529 !important;
   background-color: #ffffff !important;
 }
@@ -539,10 +542,34 @@
     position: absolute;
     right: 10px;
   }
+  
+  /* Ensure light theme works on mid-sized devices */
+  .mobile-mode.light-theme {
+    color: #212529 !important;
+    background-color: #ffffff !important;
+  }
+  
+  .mobile-mode.light-theme .text-container {
+    background-color: rgba(248, 249, 250, 0.95) !important;
+  }
 }
 
 /* Screen-size specific adjustments for text */
 @media (max-width: 480px) {
+  /* Force theme enforcement on small screens */
+  .mobile-mode.light-theme,
+  html .mobile-mode.light-theme,
+  body .mobile-mode.light-theme {
+    color: #212529 !important;
+    background-color: #ffffff !important;
+  }
+  
+  .mobile-mode.dark-theme,
+  html .mobile-mode.dark-theme,
+  body .mobile-mode.dark-theme {
+    color: #f8f9fa !important;
+    background-color: #222 !important;
+  }
 
   .mobile-mode .encrypted-line,
   .mobile-mode .display-line {
