@@ -777,7 +777,24 @@ function App() {
         ) : mistakes >= maxMistakes ? (
           <div className="game-message">
             <p>Game Over! Too many mistakes.</p>
-            <button onClick={startGame}>Try Again</button>
+            <button 
+              onClick={startGame}
+              style={{
+                margin: '15px auto',
+                padding: '12px 25px',
+                fontSize: '1.1rem',
+                display: 'block',
+                width: '80%',
+                maxWidth: '200px',
+                textAlign: 'center',
+                fontWeight: 'bold',
+                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+                position: 'relative',
+                zIndex: 1010
+              }}
+            >
+              Try Again
+            </button>
           </div>
         ) : null}
       </div>
