@@ -95,15 +95,6 @@ const MobileLayout = ({ children, isLandscape }) => {
 
   // Process all children to restructure for mobile layout
   const renderMobileLayout = (children) => {
-    // If children is a fragment, process its children
-    if (
-      React.isValidElement(children) &&
-      (children.type === React.Fragment ||
-        (typeof children.type === "string" && children.type === "div"))
-    ) {
-      return renderMobileLayout(children.props.children);
-    }
-
     // Extract components
     const {
       gameHeader,
@@ -117,39 +108,74 @@ const MobileLayout = ({ children, isLandscape }) => {
       otherElements,
     } = extractComponents(Array.isArray(children) ? children : [children]);
 
-    // Restructure for our new layout with text container between grids
-    // and controls below sidebar
-    return (
-      <>
-        {gameHeader}
+    // Check orientation to apply different layouts
+    const isLandscape = window.innerWidth > window.innerHeight;
 
-        {/* Main gameplay container with text between grids */}
-        <div className="mobile-layout-flex-container">
-          {grids}
+    if (isLandscape) {
+      // Landscape layout - three column
+      return (
+        <>
+          {gameHeader}
+
+          {/* Main three-column container */}
+          <div className="mobile-layout-container">
+            {/* Left column - encrypted grid */}
+            <div className="encrypted-grid-container">
+              {grids && React.Children.toArray(grids.props.children)[0]}
+            </div>
+
+            {/* Center column - text */}
+            {textContainer}
+
+            {/* Right column - guess grid */}
+            <div className="guess-grid-container">
+              {grids && React.Children.toArray(grids.props.children)[1]}
+            </div>
+          </div>
+
+          {/* Bottom container for other elements */}
+          <div className="bottom-container">
+            {sidebar}
+            <div className="controls-container">{controls}</div>
+            {keyboardHint}
+            {gameMessage}
+          </div>
+
+          {/* Win celebration overlay */}
+          {winCelebration}
+
+          {/* Other elements */}
+          {otherElements.map((element, index) => (
+            <React.Fragment key={index}>{element}</React.Fragment>
+          ))}
+        </>
+      );
+    } else {
+      // Portrait layout - vertical stack
+      return (
+        <>
+          {gameHeader}
+
+          {/* Text container */}
           {textContainer}
-        </div>
 
-        {/* Sidebar with frequency bars */}
-        {sidebar}
+          {/* Grids */}
+          {grids}
 
-        {/* Controls in a container below sidebar with minimal gap */}
-        <div className="controls-container">{controls}</div>
+          {/* Bottom elements */}
+          {sidebar}
+          <div className="controls-container">{controls}</div>
+          {keyboardHint}
+          {gameMessage}
+          {winCelebration}
 
-        {/* Keyboard hint */}
-        {keyboardHint}
-
-        {/* Game message (win/lose state) */}
-        {gameMessage}
-
-        {/* Win celebration overlay (takes full screen) */}
-        {winCelebration}
-
-        {/* Include any other elements */}
-        {otherElements.map((element, index) => (
-          <React.Fragment key={index}>{element}</React.Fragment>
-        ))}
-      </>
-    );
+          {/* Other elements */}
+          {otherElements.map((element, index) => (
+            <React.Fragment key={index}>{element}</React.Fragment>
+          ))}
+        </>
+      );
+    }
   };
 
   return (

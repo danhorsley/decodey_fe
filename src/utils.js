@@ -72,7 +72,7 @@ export const createStructuralMatch = (
 
   // For normal mode with spaces and punctuation, we need to maintain structure
   // Extract only the letters from the display text (removing spaces/punctuation)
-  const displayLetters = display.replace(/[^A-Z?]/g, "");
+  const displayLetters = display.replace(/[^A-Z█]/g, "");
   let letterIndex = 0;
   let structuredDisplay = "";
 
@@ -86,7 +86,7 @@ export const createStructuralMatch = (
         structuredDisplay += displayChar;
         letterIndex++;
       } else {
-        structuredDisplay += "?";
+        structuredDisplay += "█";
       }
     } else {
       // For non-letters (spaces, punctuation), keep the original character
@@ -112,7 +112,55 @@ export const createDisplayHTML = (display, placeholderStyle) => {
     return { __html: display };
   }
 
-  // For contrasting style, wrap each ? in a span for styling
-  const html = display.replace(/\?/g, '<span class="placeholder">?</span>');
+  // For contrasting style, wrap each block character in a span for styling
+  const html = display.replace(/█/g, '<span class="placeholder">█</span>');
   return { __html: html };
+};
+
+/**
+ * Formats encrypted and display text into alternating lines
+ * @param {string} encrypted - The encrypted text
+ * @param {string} display - The display text with solved letters and blocks
+ * @returns {Object} - HTML object for dangerouslySetInnerHTML
+ */
+export const formatAlternatingLines = (encrypted, display) => {
+  if (!encrypted || !display) return { __html: "" };
+
+  // Split into lines if text contains newlines
+  const encryptedLines = encrypted.split("\n");
+  const displayLines = display.split("\n");
+
+  // Create alternating encrypted/display pattern with proper HTML
+  let result = "";
+  for (let i = 0; i < encryptedLines.length; i++) {
+    // Add encrypted line with a class for styling
+    result += `<div class="encrypted-line">${encryptedLines[i]}</div>`;
+
+    // Add display line with a class for styling
+    if (i < displayLines.length) {
+      result += `<div class="display-line">${displayLines[i]}</div>`;
+    } else {
+      // Fallback if display has fewer lines
+      result += `<div class="display-line"></div>`;
+    }
+  }
+
+  return { __html: result };
+};
+
+/**
+ * Prevents words from breaking across lines, useful for mobile display
+ * By adding non-breaking spaces between letters within words
+ * @param {string} text - The text to process
+ * @returns {string} - Text with non-breaking spaces within words
+ */
+export const preventWordBreaks = (text) => {
+  if (!text) return "";
+
+  // Replace spaces within words with non-breaking spaces
+  // This keeps words together on the same line
+  return text.replace(/(\w+)/g, (match) => {
+    // For each word, join the letters with non-breaking spaces
+    return match.split("").join("\u00A0");
+  });
 };

@@ -95,17 +95,19 @@
 /* NEW: Make text in containers more compact and left-aligned with no cutoff */
 .mobile-mode .mobile-layout-flex-container .text-container .encrypted,
 .mobile-mode .mobile-layout-flex-container .text-container .display {
-  padding: 8px 12px;
   font-size: 0.85rem;
   line-height: 1.3;
   max-height: 120px;
   min-height: 80px;
   overflow-y: auto;
-  overflow-x: auto;
   /* Allow horizontal scrolling if needed */
   text-align: left;
-  word-break: keep-all;
-  white-space: pre-wrap;
+  word-break: break-all !important; /* Allow breaks anywhere for better formatting */
+  word-wrap: break-word !important;
+  white-space: pre-wrap !important;
+  overflow-x: auto !important;
+/* Add horizontal padding to prevent text touching edges */
+  padding: 8px 8px !important;
 }
 
 /* Grid layout for thumb operation */
@@ -776,5 +778,214 @@
   .mobile-mode .win-celebration .play-again-button {
     padding: 8px 15px;
     font-size: 0.9rem;
+  }
+}
+
+/* Ensure block characters align properly with letters */
+.mobile-mode .display .placeholder,
+.mobile-mode .encrypted .placeholder {
+  display: inline-block !important;
+  width: 1ch !important; /* Force exact character width */
+  text-align: center !important;
+}
+
+/* Alternating text display styles for mobile */
+
+/* Modify the text container styling */
+.mobile-mode .text-container {
+  max-width: 100%;
+  margin: 5px 0;
+  padding: 10px;
+  max-height: 35vh;
+  overflow-y: auto;
+  background-color: rgba(248, 249, 250, 0.95);
+  border-radius: 10px;
+}
+
+/* Dark theme styling for text container */
+.mobile-mode.dark-theme .text-container {
+  background-color: rgba(51, 51, 51, 0.95);
+}
+
+/* Update styling for the alternating text container */
+.mobile-mode .alternating-text {
+  font-family: 'Courier New', monospace;
+  line-height: 1.4;
+  font-size: 0.9rem;
+  white-space: pre-wrap;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  padding: 0;
+}
+
+/* Encrypted line in mobile */
+.mobile-mode .encrypted-line {
+  padding: 4px 0 2px 0;
+  margin: 0;
+  color: #495057;
+  font-weight: 600;
+  text-align: left;
+}
+
+/* Display line in mobile */
+.mobile-mode .display-line {
+  padding: 0 0 6px 0;
+  margin: 0 0 6px 0;
+  color: #212529;
+  font-weight: bold;
+  text-align: left;
+}
+
+/* Dark theme adjustments */
+.mobile-mode.dark-theme .encrypted-line {
+  color: #e9ecef;
+}
+
+.mobile-mode.dark-theme .display-line {
+  color: #f8f9fa;
+}
+
+/* Text color themes */
+.mobile-mode.text-scifi-blue .encrypted-line {
+  color: #4cc9f0;
+}
+
+.mobile-mode.text-scifi-blue .display-line {
+  color: #4cc9f0;
+}
+
+.mobile-mode.text-retro-green .encrypted-line {
+  color: #00ff41;
+}
+
+.mobile-mode.text-retro-green .display-line {
+  color: #00ff41;
+}
+
+/* Ensure text container is visible in the mobile layout */
+.mobile-mode .mobile-layout-flex-container .text-container {
+  position: relative;
+  left: auto;
+  top: auto;
+  transform: none;
+  max-width: 100%;
+  width: 100%;
+  margin: 10px 0;
+  max-height: 35vh;
+  min-height: unset;
+  z-index: 5;
+  padding: 12px;
+}
+
+/* Remove the floating hint icon to prevent overlap */
+.mobile-mode .mobile-layout-flex-container .text-container::after {
+  display: none;
+}
+
+/* For landscape mode, ensure text is readable */
+@media (orientation: landscape) {
+  .mobile-mode .mobile-layout-flex-container .text-container {
+    max-height: 40vh;
+  }
+
+  .mobile-mode .alternating-text {
+    font-size: 0.85rem;
+    line-height: 1.3;
+  }
+
+  .mobile-mode .encrypted-line {
+    padding: 2px 0 1px 0;
+  }
+
+  .mobile-mode .display-line {
+    padding: 0 0 4px 0;
+    margin: 0 0 4px 0;
+  }
+}
+
+/* For small screens, further reduce font size */
+@media (max-width: 375px) {
+  .mobile-mode .alternating-text {
+    font-size: 0.8rem;
+  }
+}
+
+/* 
+   This is a focused fix ONLY for the alternating text display 
+   Add these rules to Mobile.css
+*/
+
+/* Override existing styles that might be causing issues */
+.mobile-mode .text-container,
+.mobile-mode .mobile-layout-flex-container .text-container {
+  padding: 12px !important;
+  position: relative !important;
+  max-width: 100% !important;
+  width: auto !important;
+  min-height: auto !important;
+  max-height: 35vh !important;
+  transform: none !important;
+  left: auto !important;
+  top: auto !important;
+  background-color: rgba(248, 249, 250, 0.95) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Dark theme overrides */
+.mobile-mode.dark-theme .text-container,
+.mobile-mode.dark-theme .mobile-layout-flex-container .text-container {
+  background-color: rgba(51, 51, 51, 0.95) !important;
+}
+
+/* Remove the old pre elements that aren't needed anymore */
+.mobile-mode .text-container pre.encrypted,
+.mobile-mode .text-container pre.display {
+  display: none !important;
+}
+
+/* Style the alternating text */
+.mobile-mode .alternating-text {
+  font-family: 'Courier New', monospace !important;
+  font-size: 0.9rem !important;
+  line-height: 1.4 !important;
+  white-space: pre-wrap !important;
+  word-break: keep-all !important;
+  overflow-wrap: break-word !important;
+  text-align: left !important;
+}
+
+/* Encrypted lines */
+.mobile-mode .encrypted-line {
+  padding: 4px 0 0 0 !important;
+  margin: 0 !important;
+  font-weight: 600 !important;
+}
+
+/* Display lines */
+.mobile-mode .display-line {
+  padding: 0 0 4px 0 !important;
+  margin: 0 0 8px 0 !important;
+  font-weight: bold !important;
+}
+
+/* Remove the hint icon */
+.mobile-mode .mobile-layout-flex-container .text-container::after {
+  display: none !important;
+}
+
+/* Landscape mode adjustments */
+@media (orientation: landscape) {
+  .mobile-mode .text-container,
+  .mobile-mode .mobile-layout-flex-container .text-container {
+    max-height: 30vh !important;
+  }
+
+  .mobile-mode .alternating-text {
+    font-size: 0.85rem !important;
+  }
+
+  .mobile-mode .display-line {
+    margin-bottom: 6px !important;
   }
 }

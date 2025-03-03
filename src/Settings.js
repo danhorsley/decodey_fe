@@ -202,7 +202,7 @@ function Settings({ currentSettings, onSave, onCancel }) {
               onChange={() => handleChange("placeholderStyle", "matching")}
             />
             <span className="option-label">Matching Color</span>
-            <span className="placeholder-preview matching">A?</span>
+            <span className="placeholder-preview matching">A█</span>
           </label>
           <label className="settings-option">
             <input
@@ -213,7 +213,7 @@ function Settings({ currentSettings, onSave, onCancel }) {
             />
             <span className="option-label">Contrasting Color</span>
             <span className="placeholder-preview contrasting">
-              A<span className="placeholder">?</span>
+              A<span className="placeholder">█</span>
             </span>
           </label>
           <p className="settings-description">

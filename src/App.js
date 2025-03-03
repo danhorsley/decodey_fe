@@ -6,6 +6,7 @@ import { useAppContext } from "./AppContext";
 import useSound from "./SoundManager";
 import useKeyboardInput from "./KeyboardController";
 import { createStructuralMatch } from "./utils";
+import { formatAlternatingLines, preventWordBreaks } from "./utils";
 import SaveButton from "./SaveButton";
 import WinCelebration from "./WinCelebration";
 import About from "./About";
@@ -112,7 +113,7 @@ function App() {
 
         if (settings.hardcoreMode) {
           encryptedText = encryptedText.replace(/[^A-Z]/g, "");
-          displayText = displayText.replace(/[^A-Z?]/g, "");
+          displayText = displayText.replace(/[^A-Z█]/g, ""); // Keep block characters in regex
         }
         const calculatedFrequency = {};
         for (const char of encryptedText) {
@@ -223,7 +224,7 @@ function App() {
         // Process display text for hardcore mode if enabled
         let displayText = data.display;
         if (settings.hardcoreMode) {
-          displayText = displayText.replace(/[^A-Z?]/g, "");
+          displayText = displayText.replace(/[^A-Z█]/g, ""); // Keep block characters in regex
         }
 
         setDisplay(displayText);
@@ -337,7 +338,7 @@ function App() {
         // Process display text for hardcore mode if enabled
         let displayText = data.display;
         if (settings.hardcoreMode) {
-          displayText = displayText.replace(/[^A-Z?]/g, "");
+          displayText = displayText.replace(/[^A-Z█]/g, ""); // Keep block characters in regex
         }
 
         // Update state with server response
@@ -550,15 +551,14 @@ function App() {
           <div
             className={`text-container ${settings.hardcoreMode ? "hardcore-mode" : ""}`}
           >
-            <pre className="encrypted">{encrypted || "Loading..."}</pre>
-            <pre
-              className="display"
-              dangerouslySetInnerHTML={createStructuralMatch(
-                encrypted,
-                display,
-                settings.placeholderStyle,
+            {/* For mobile, prevent word breaks across lines */}
+            <div
+              className="alternating-text"
+              dangerouslySetInnerHTML={formatAlternatingLines(
+                useMobileMode ? preventWordBreaks(encrypted) : encrypted,
+                useMobileMode ? preventWordBreaks(display) : display,
               )}
-            ></pre>
+            ></div>
             {settings.hardcoreMode && (
               <div className="hardcore-badge">HARDCORE MODE</div>
             )}
@@ -728,15 +728,14 @@ function App() {
         <div
           className={`text-container ${settings.hardcoreMode ? "hardcore-mode" : ""}`}
         >
-          <pre className="encrypted">{encrypted || "Loading..."}</pre>
-          <pre
-            className="display"
-            dangerouslySetInnerHTML={createStructuralMatch(
-              encrypted,
-              display,
-              settings.placeholderStyle,
+          {/* For mobile, prevent word breaks across lines */}
+          <div
+            className="alternating-text"
+            dangerouslySetInnerHTML={formatAlternatingLines(
+              useMobileMode ? preventWordBreaks(encrypted) : encrypted,
+              useMobileMode ? preventWordBreaks(display) : display,
             )}
-          ></pre>
+          ></div>
           {settings.hardcoreMode && (
             <div className="hardcore-badge">HARDCORE MODE</div>
           )}

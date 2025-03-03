@@ -205,6 +205,7 @@
   color: #dc3545; /* Red for placeholders in light theme */
   font-weight: bold;
   text-shadow: 0 0 2px rgba(220, 53, 69, 0.4);
+  opacity: 0.9; /* Slightly transparent for better visual distinction */
 }
 
 /* Contrasting placeholder styles - Dark theme */
@@ -216,6 +217,7 @@
   color: #00ff41; /* Green for placeholders in dark theme */
   font-weight: bold;
   text-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
+  opacity: 0.9; /* Slightly transparent for better visual distinction */
 }
 
 /* Sci-fi blue theme contrasting placeholders */
@@ -226,6 +228,7 @@
 .text-scifi-blue.placeholder-contrasting .display .placeholder {
   color: #00ff41; /* Green placeholders with blue text */
   text-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
+  opacity: 0.9;
 }
 
 /* Retro green theme contrasting placeholders */
@@ -236,6 +239,7 @@
 .text-retro-green.placeholder-contrasting .display .placeholder {
   color: #4cc9f0; /* Blue placeholders with green text */
   text-shadow: 0 0 5px rgba(76, 201, 240, 0.5);
+  opacity: 0.9;
 }
 
 @media (max-width: 768px) {
@@ -1219,3 +1223,97 @@ button:hover:not(:disabled) {
   .text-retro-green .hardcore-badge {
     background-color: #198754;
   }
+
+/* Alternating text display styles */
+
+/* Container styles */
+.text-container {
+  font-family: 'Courier New', monospace;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  width: 100%;
+  box-sizing: border-box;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Encrypted line styles */
+.encrypted-line {
+  padding: 4px 0 0 0;
+  margin: 0;
+  color: #495057;
+  font-weight: 600;
+}
+
+/* Display line styles */
+.display-line {
+  padding: 0 0 8px 0;
+  margin: 0;
+  color: #212529;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+/* Dark theme styles */
+.dark-theme .encrypted-line {
+  color: #e9ecef;
+}
+
+.dark-theme .display-line {
+  color: #f8f9fa;
+}
+
+/* Text color themes */
+.text-scifi-blue .encrypted-line {
+  color: #4cc9f0;
+  text-shadow: 0 0 5px rgba(76, 201, 240, 0.3);
+}
+
+.text-retro-green .encrypted-line {
+  color: #00ff41;
+  text-shadow: 0 0 5px rgba(0, 255, 65, 0.3);
+}
+
+.text-scifi-blue .display-line {
+  color: #4cc9f0;
+  text-shadow: 0 0 5px rgba(76, 201, 240, 0.5);
+}
+
+.text-retro-green .display-line {
+  color: #00ff41;
+  text-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
+}
+
+/* Mobile-specific styles to prevent word breaks across lines */
+.mobile-mode .encrypted-line,
+.mobile-mode .display-line {
+  white-space: pre-wrap;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+/* On very small screens, adjust font size */
+@media (max-width: 350px) {
+  .mobile-mode .encrypted-line,
+  .mobile-mode .display-line {
+    font-size: 0.85rem;
+  }
+}
+
+/* Ensure contrast for placeholder blocks in different themes */
+.placeholder {
+  opacity: 0.9;
+}
+
+.text-scifi-blue .display-line .placeholder {
+  color: #00ff41; /* Green placeholders with blue text */
+  text-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
+}
+
+.text-retro-green .display-line .placeholder {
+  color: #4cc9f0; /* Blue placeholders with green text */
+  text-shadow: 0 0 5px rgba(76, 201, 240, 0.5);
+}
