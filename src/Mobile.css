@@ -43,66 +43,68 @@
 
 .mobile-mode .game-header {
 
-/* ===== GRID-BASED CHARACTER STYLES ===== */
-.mobile-mode .char-grid {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: min-content;
-  width: 100%;
-  font-family: 'Courier New', monospace !important;
-  font-variant-numeric: tabular-nums !important;
-  font-feature-settings: "tnum" !important;
-  justify-content: center !important;
-}
+  /* ===== GRID-BASED CHARACTER STYLES ===== */
+  .mobile-mode .char-grid {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: min-content;
+    width: 100%;
+    font-family: 'Courier New', monospace !important;
+    font-variant-numeric: tabular-nums !important;
+    font-feature-settings: "tnum" !important;
+    justify-content: center !important;
+  }
 
-.mobile-mode .char-grid.encrypted-line {
-  margin-bottom: 0 !important;
-  padding: 0 1px 0 !important;
-  font-weight: 600 !important;
-}
+  .mobile-mode .char-grid.encrypted-line {
+    margin-bottom: 0 !important;
+    padding: 0 1px 0 !important;
+    font-weight: 600 !important;
+  }
 
-.mobile-mode .char-grid.display-line {
-  margin-bottom: 0 !important; /* Reduced from 2px */
-  padding: 0 1px 0 !important;
-  font-weight: bold !important;
-}
+  .mobile-mode .char-grid.display-line {
+    margin-bottom: 0 !important;
+    /* Reduced from 2px */
+    padding: 0 1px 0 !important;
+    font-weight: bold !important;
+  }
 
-.mobile-mode .grid-cell {
-  width: 1ch;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  box-sizing: border-box;
-}
+  .mobile-mode .grid-cell {
+    width: 1ch;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    box-sizing: border-box;
+  }
 
-.mobile-mode .space-cell {
-  position: relative;
-}
+  .mobile-mode .space-cell {
+    position: relative;
+  }
 
-.mobile-mode .space-dot {
-  position: absolute;
-  font-size: 0.7em;
-  opacity: 0.6;
-  color: currentColor;
-}
+  .mobile-mode .space-dot {
+    position: absolute;
+    font-size: 0.7em;
+    opacity: 0.6;
+    color: currentColor;
+  }
 
-/* Ensure display cells are properly aligned */
-.mobile-mode .char-grid.encrypted-line .grid-cell,
-.mobile-mode .char-grid.display-line .grid-cell {
-  min-width: 1ch;
-  max-width: 1ch;
-  overflow: visible;
-  position: relative;
-}
-
-@media (max-width: 360px) {
+  /* Ensure display cells are properly aligned */
   .mobile-mode .char-grid.encrypted-line .grid-cell,
   .mobile-mode .char-grid.display-line .grid-cell {
-    min-width: 0.9ch;
-    max-width: 0.9ch;
+    min-width: 1ch;
+    max-width: 1ch;
+    overflow: visible;
+    position: relative;
   }
-}
+
+  @media (max-width: 360px) {
+
+    .mobile-mode .char-grid.encrypted-line .grid-cell,
+    .mobile-mode .char-grid.display-line .grid-cell {
+      min-width: 0.9ch;
+      max-width: 0.9ch;
+    }
+  }
 
   margin-bottom: 2px;
 }
@@ -176,7 +178,8 @@
 /* Ensure placeholder square has consistent width on mobile */
 .mobile-mode .display-line .placeholder {
   display: inline-block !important;
-  width: 1ch !important;  /* Force consistent character width */
+  width: 1ch !important;
+  /* Force consistent character width */
   text-align: center !important;
 }
 
@@ -555,13 +558,13 @@ body .mobile-mode.light-theme .text-container,
     position: absolute;
     right: 10px;
   }
-  
+
   /* Ensure light theme works on mid-sized devices */
   .mobile-mode.light-theme {
     color: #212529 !important;
     background-color: #ffffff !important;
   }
-  
+
   .mobile-mode.light-theme .text-container {
     background-color: rgba(248, 249, 250, 0.95) !important;
   }
@@ -569,6 +572,7 @@ body .mobile-mode.light-theme .text-container,
 
 /* Screen-size specific adjustments for text */
 @media (max-width: 480px) {
+
   /* Force theme enforcement on small screens - with Samsung Browser support */
   .mobile-mode.light-theme,
   html .mobile-mode.light-theme,
@@ -580,14 +584,14 @@ body .mobile-mode.light-theme .text-container,
     background-color: #ffffff !important;
     -webkit-text-fill-color: #212529 !important;
   }
-  
+
   /* Light theme text container - stronger specificity */
   .mobile-mode.light-theme .text-container,
   html .mobile-mode.light-theme .text-container,
   .mobile-mode[class*="light-theme"] .text-container {
     background-color: rgba(248, 249, 250, 0.95) !important;
   }
-  
+
   .mobile-mode.dark-theme,
   html .mobile-mode.dark-theme,
   body .mobile-mode.dark-theme,
