@@ -865,7 +865,7 @@ button:hover:not(:disabled) {
   background-color: #333;
 }
 
-.dark-theme .button {
+.dark-theme button {
   background-color: #444;
   color: #444
 }
