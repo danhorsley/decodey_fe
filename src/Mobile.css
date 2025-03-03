@@ -57,13 +57,13 @@
 
 .mobile-mode .char-grid.encrypted-line {
   margin-bottom: 0 !important;
-  padding: 4px 2px 0 !important;
+  padding: 2px 2px 0 !important;
   font-weight: 600 !important;
 }
 
 .mobile-mode .char-grid.display-line {
-  margin-bottom: 8px !important;
-  padding: 0 2px 6px !important;
+  margin-bottom: 4px !important;
+  padding: 0 2px 2px !important;
   font-weight: bold !important;
 }
 
@@ -124,7 +124,7 @@
 
 /* Dark theme for text container */
 .mobile-mode.dark-theme .text-container {
-  background-color: rgba(51, 51, 51, 0.95) !important;
+  background-color: #222 !important;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3) !important;
 }
 
@@ -270,6 +270,11 @@
   z-index: 10;
 }
 
+.mobile-mode.dark-theme .encrypted-grid,
+.mobile-mode.dark-theme .guess-grid {
+  background-color: #222 !important;
+}
+
 .mobile-mode .letter-cell {
   width: 45px;
   height: 45px;
@@ -322,12 +327,12 @@
 
 /* Dark theme control adjustments */
 .mobile-mode.dark-theme .controls {
-  background-color: rgba(51, 51, 51, 0.95);
+  background-color: #222;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .mobile-mode.dark-theme .controls p {
-  background-color: rgba(68, 68, 68, 0.8);
+  background-color: #333;
 }
 
 /* ===== KEYBOARD HINT ===== */
