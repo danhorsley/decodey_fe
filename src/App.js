@@ -576,6 +576,9 @@ function App() {
                   onClick={() => handleEncryptedClick(letter)}
                 >
                   {letter}
+                  <span className="frequency-indicator">
+                    {letterFrequency[letter] || 0}
+                  </span>
                 </div>
               ))}
             </div>
@@ -593,37 +596,6 @@ function App() {
             </div>
           </div>
 
-          <div className="sidebar">
-            {Array.from("ABCDEFGHIJKLMNOPQRSTUVWXYZ").map((letter) => {
-              // Check if letter is guessed correctly
-              const isGuessed =
-                letter in guessedMappings || correctlyGuessed.includes(letter);
-
-              return (
-                <div key={letter} className="frequency-bar">
-                  {/* Letter display */}
-                  <span className={isGuessed ? "guessed" : ""}>{letter}</span>
-
-                  {/* Frequency display */}
-                  {settings.frequencyDisplay === "numeric" ? (
-                    // Numeric display
-                    <span className={isGuessed ? "guessed" : ""}>
-                      {letterFrequency[letter] || 0}
-                    </span>
-                  ) : (
-                    // Bar display
-                    <div
-                      className={`bar ${isGuessed ? "guessed" : ""}`}
-                      style={{
-                        height: `${(letterFrequency[letter] || 0) * 10}px`,
-                      }}
-                    ></div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
           {/* Controls now directly within the layout */}
           <div className="controls">
             <p>
@@ -637,17 +609,6 @@ function App() {
               Hint
             </button>
           </div>
-
-          {settings.speedMode && (
-            <div className="keyboard-hint">
-              <p>
-                Keyboard Mode:
-                {!selectedEncrypted
-                  ? "Press a letter key to select."
-                  : `${selectedEncrypted} - Press letter to guess.`}
-              </p>
-            </div>
-          )}
 
           {completionTime ? (
             <WinCelebration
@@ -742,6 +703,7 @@ function App() {
         </div>
 
         <div className="grids">
+          {/* // Desktop view encrypted grid */}
           <div className="encrypted-grid">
             {sortedEncryptedLetters.map((letter) => (
               <div
@@ -752,10 +714,12 @@ function App() {
                 onClick={() => handleEncryptedClick(letter)}
               >
                 {letter}
+                <span className="frequency-indicator">
+                  {letterFrequency[letter] || 0}
+                </span>
               </div>
             ))}
           </div>
-
           <div className="guess-grid">
             {originalLetters.map((letter) => (
               <div
@@ -792,37 +756,6 @@ function App() {
             </p>
           </div>
         )}
-
-        <div className="sidebar">
-          {Array.from("ABCDEFGHIJKLMNOPQRSTUVWXYZ").map((letter) => {
-            // FIX: Use the same fixed logic for mobile view
-            const isGuessed =
-              letter in guessedMappings || correctlyGuessed.includes(letter);
-
-            return (
-              <div key={letter} className="frequency-bar">
-                {/* Letter display */}
-                <span className={isGuessed ? "guessed" : ""}>{letter}</span>
-
-                {/* Frequency display */}
-                {settings.frequencyDisplay === "numeric" ? (
-                  // Numeric display
-                  <span className={isGuessed ? "guessed" : ""}>
-                    {letterFrequency[letter] || 0}
-                  </span>
-                ) : (
-                  // Bar display
-                  <div
-                    className={`bar ${isGuessed ? "guessed" : ""}`}
-                    style={{
-                      height: `${(letterFrequency[letter] || 0) * 10}px`,
-                    }}
-                  ></div>
-                )}
-              </div>
-            );
-          })}
-        </div>
 
         {completionTime ? (
           <WinCelebration

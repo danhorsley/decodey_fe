@@ -38,13 +38,14 @@
 
 /* Fix for the text container to ensure visibility */
 .mobile-mode .text-container {
-  max-width: 100%;
-  margin: 10px 0;
-  padding-bottom: 0;
-  max-height: 30vh;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
+  margin: 5px auto !important;
+  padding: 10px !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1) !important;
+  max-height: 30vh !important;
+  overflow-y: auto !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 .mobile-mode .encrypted,
@@ -820,20 +821,27 @@
 
 /* Encrypted line in mobile */
 .mobile-mode .encrypted-line {
-  padding: 4px 0 2px 0;
-  margin: 0;
-  color: #495057;
-  font-weight: 600;
-  text-align: left;
+  white-space: pre-wrap !important; /* Preserve whitespace but allow wrapping */
+  word-spacing: 0 !important; /* Reset word spacing to default */
+  letter-spacing: 0 !important; /* Reset letter spacing to default */
+  font-family: 'Courier New', monospace !important; /* Use monospace font for consistent character width */
+  font-variant-numeric: tabular-nums !important; /* Use monospace numbers */
+  font-feature-settings: "tnum" !important; /* Use monospace tabular numbers */
+  line-height: 1.5 !important;
+  padding: 4px 2px !important;
 }
 
 /* Display line in mobile */
 .mobile-mode .display-line {
-  padding: 0 0 6px 0;
-  margin: 0 0 6px 0;
-  color: #212529;
-  font-weight: bold;
-  text-align: left;
+  white-space: pre-wrap !important;
+  word-spacing: 0 !important;
+  letter-spacing: 0 !important;
+  font-family: 'Courier New', monospace !important;
+  font-variant-numeric: tabular-nums !important;
+  font-feature-settings: "tnum" !important;
+  line-height: 1.5 !important;
+  padding: 2px 2px 6px !important;
+  margin-bottom: 8px !important;
 }
 
 /* Dark theme adjustments */
@@ -988,4 +996,116 @@
   .mobile-mode .display-line {
     margin-bottom: 6px !important;
   }
+}
+
+.mobile-mode .encrypted-line,
+.mobile-mode .display-line {
+  font-family: 'Courier New', monospace !important;
+  letter-spacing: 0 !important;
+  word-spacing: normal !important;
+  white-space: pre-wrap !important;
+  font-variant-numeric: tabular-nums !important;
+  font-feature-settings: "tnum" !important;
+}
+
+/* Make spaces more visible in encrypted text */
+.mobile-mode .encrypted-line span.space-char {
+  display: inline-block;
+  width: 0.6em;
+  height: 1em;
+  position: relative;
+  margin: 0 0.2em;
+}
+
+.mobile-mode .encrypted-line span.space-char::after {
+  content: "·";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.8em;
+  opacity: 0.5;
+  color: currentColor;
+}
+
+/* Enhance alternating text container to ensure proper display */
+.mobile-mode .alternating-text {
+  font-size: 0.9rem !important;
+  line-height: 1.5 !important;
+  padding: 0 5px !important;
+  text-align: left !important;
+}
+
+/* Add these styles to Mobile.css to fix UI element positioning */
+
+/* Adjust bottom section positioning */
+.mobile-mode .bottom-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px; /* Increase space between grids and bottom elements */
+  padding-bottom: 15px;
+  width: 100%;
+}
+
+/* Adjust sidebar positioning */
+.mobile-mode .sidebar {
+  margin: 0 auto;
+  max-width: 95%;
+  padding: 10px 5px;
+  background-color: rgba(248, 249, 250, 0.95);
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow-x: auto;
+}
+
+/* Ensure controls are properly positioned */
+.mobile-mode .controls-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin: 5px 0 10px 0;
+}
+
+.mobile-mode .controls {
+  padding: 8px 15px;
+  border-radius: 20px;
+  background-color: rgba(248, 249, 250, 0.95);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Ensure controls are spaced properly */
+.mobile-mode .controls p {
+  margin: 0 10px 0 0;
+}
+
+/* Dark theme adjustments */
+.mobile-mode.dark-theme .sidebar,
+.mobile-mode.dark-theme .controls {
+  background-color: rgba(51, 51, 51, 0.95);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.mobile-mode .space-char {
+  display: inline-block !important;
+  width: 0.6em !important;
+  background-color: rgba(128, 128, 128, 0.1) !important;
+  height: 1em !important;
+  vertical-align: middle !important;
+  border-radius: 2px !important;
+  margin: 0 1px !important;
+}
+
+/* Dark theme adjustments */
+.mobile-mode.dark-theme .space-char {
+  background-color: rgba(128, 128, 128, 0.2) !important;
+}
+
+/* For text themes */
+.mobile-mode.text-scifi-blue .space-char {
+  background-color: rgba(76, 201, 240, 0.1) !important;
+}
+
+.mobile-mode.text-retro-green .space-char {
+  background-color: rgba(0, 255, 65, 0.1) !important;
 }

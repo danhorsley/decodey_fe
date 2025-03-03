@@ -111,45 +111,58 @@ const MobileLayout = ({ children, isLandscape }) => {
     // Check orientation to apply different layouts
     const isLandscape = window.innerWidth > window.innerHeight;
 
-    if (isLandscape) {
-      // Landscape layout - three column
-      return (
-        <>
-          {gameHeader}
+      if (isLandscape) {
+        // Landscape layout with text at top
+        return (
+          <>
+            {gameHeader}
 
-          {/* Main three-column container */}
-          <div className="mobile-layout-container">
-            {/* Left column - encrypted grid */}
-            <div className="encrypted-grid-container">
-              {grids && React.Children.toArray(grids.props.children)[0]}
+            {/* Text container now at the top for prominence */}
+            <div className="text-container-wrapper" style={{
+              width: '100%',
+              maxWidth: '100%',
+              margin: '5px auto 15px',
+              padding: '0 5px'
+            }}>
+              {textContainer}
             </div>
 
-            {/* Center column - text */}
-            {textContainer}
+            {/* Two-column grid layout below text */}
+            <div className="grids-container" style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              width: '100%',
+              padding: '0 5px',
+              marginBottom: '10px'
+            }}>
+              {/* Left column - encrypted grid */}
+              <div className="encrypted-grid-container" style={{ flex: '1 1 auto', maxWidth: '48%' }}>
+                {grids && React.Children.toArray(grids.props.children)[0]}
+              </div>
 
-            {/* Right column - guess grid */}
-            <div className="guess-grid-container">
-              {grids && React.Children.toArray(grids.props.children)[1]}
+              {/* Right column - guess grid */}
+              <div className="guess-grid-container" style={{ flex: '1 1 auto', maxWidth: '48%' }}>
+                {grids && React.Children.toArray(grids.props.children)[1]}
+              </div>
             </div>
-          </div>
 
-          {/* Bottom container for other elements */}
-          <div className="bottom-container">
-            {sidebar}
-            <div className="controls-container">{controls}</div>
-            {keyboardHint}
-            {gameMessage}
-          </div>
+            {/* Bottom container for other elements with more spacing */}
+            <div className="bottom-container" style={{ marginTop: '5px' }}>
+              <div className="controls-container">{controls}</div>
+              {keyboardHint}
+              {gameMessage}
+            </div>
 
-          {/* Win celebration overlay */}
-          {winCelebration}
+            {/* Win celebration overlay */}
+            {winCelebration}
 
-          {/* Other elements */}
-          {otherElements.map((element, index) => (
-            <React.Fragment key={index}>{element}</React.Fragment>
-          ))}
-        </>
-      );
+            {/* Other elements */}
+            {otherElements.map((element, index) => (
+              <React.Fragment key={index}>{element}</React.Fragment>
+            ))}
+          </>
+        );
+      }
     } else {
       // Portrait layout - vertical stack
       return (

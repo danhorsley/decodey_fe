@@ -118,12 +118,17 @@ export const createDisplayHTML = (display, placeholderStyle) => {
 };
 
 /**
- * Formats encrypted and display text into alternating lines
+ * Formats encrypted and display text into alternating lines with improved space handling
  * @param {string} encrypted - The encrypted text
  * @param {string} display - The display text with solved letters and blocks
+ * @param {boolean} enhanceSpaces - Whether to enhance spaces with special styling (for mobile view)
  * @returns {Object} - HTML object for dangerouslySetInnerHTML
  */
-export const formatAlternatingLines = (encrypted, display) => {
+export const formatAlternatingLines = (
+  encrypted,
+  display,
+  enhanceSpaces = false,
+) => {
   if (!encrypted || !display) return { __html: "" };
 
   // Split into lines if text contains newlines
@@ -133,8 +138,19 @@ export const formatAlternatingLines = (encrypted, display) => {
   // Create alternating encrypted/display pattern with proper HTML
   let result = "";
   for (let i = 0; i < encryptedLines.length; i++) {
+    // Process encrypted line with space enhancement if needed
+    let encryptedLine = encryptedLines[i];
+
+    if (enhanceSpaces) {
+      // Replace spaces with styled space markers
+      encryptedLine = encryptedLine.replace(
+        / /g,
+        '<span class="space-char"></span>',
+      );
+    }
+
     // Add encrypted line with a class for styling
-    result += `<div class="encrypted-line">${encryptedLines[i]}</div>`;
+    result += `<div class="encrypted-line">${encryptedLine}</div>`;
 
     // Add display line with a class for styling
     if (i < displayLines.length) {
@@ -147,7 +163,6 @@ export const formatAlternatingLines = (encrypted, display) => {
 
   return { __html: result };
 };
-
 /**
  * Prevents words from breaking across lines, useful for mobile display
  * By adding non-breaking spaces between letters within words

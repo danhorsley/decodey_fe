@@ -21,31 +21,7 @@ function Settings({ currentSettings, onSave, onCancel }) {
     <div className="settings-container">
       <h1 className="settings-title">Game Settings</h1>
 
-      {/* Frequency Display Setting */}
-      <div className="settings-section">
-        <h2>Frequency Display</h2>
-        <div className="settings-options">
-          <label className="settings-option">
-            <input
-              type="radio"
-              name="frequencyDisplay"
-              checked={settings.frequencyDisplay === "visual"}
-              onChange={() => handleChange("frequencyDisplay", "visual")}
-            />
-            <span className="option-label">Visual Bars</span>
-          </label>
-          <label className="settings-option">
-            <input
-              type="radio"
-              name="frequencyDisplay"
-              checked={settings.frequencyDisplay === "numeric"}
-              onChange={() => handleChange("frequencyDisplay", "numeric")}
-            />
-            <span className="option-label">Numbers</span>
-          </label>
-        </div>
-      </div>
-
+    
       {/* Hardcore Mode Setting */}
       <div className="settings-section">
         <h2>Gameplay Mode</h2>

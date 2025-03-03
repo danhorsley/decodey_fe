@@ -1317,3 +1317,73 @@ button:hover:not(:disabled) {
   color: #4cc9f0; /* Blue placeholders with green text */
   text-shadow: 0 0 5px rgba(76, 201, 240, 0.5);
 }
+
+/* Add these styles to App.css for both desktop and mobile */
+
+/* Position the frequency indicator in the bottom-right corner */
+.letter-cell {
+  position: relative;
+}
+
+.frequency-indicator {
+  position: absolute;
+  bottom: 1px;
+  right: 2px;
+  font-size: 0.55em;
+  opacity: 0.7;
+  font-weight: normal;
+  line-height: 1;
+}
+
+/* When a letter is selected, make the frequency more visible */
+.letter-cell.selected .frequency-indicator {
+  opacity: 0.9;
+}
+
+/* When a letter is guessed, make the frequency less prominent */
+.letter-cell.guessed .frequency-indicator {
+  opacity: 0.4;
+}
+
+/* Adjust sizing for desktop vs mobile */
+@media (min-width: 768px) {
+  .frequency-indicator {
+    font-size: 0.75em;
+    bottom: 1px;
+    right: 2px;
+  }
+}
+
+/* For very small mobile screens */
+@media (max-width: 350px) {
+  .frequency-indicator {
+    font-size: 0.45em;
+    bottom: 1px;
+    right: 2px;
+  }
+}
+
+/* Theme-specific styles for frequency indicators */
+.text-scifi-blue .frequency-indicator {
+  color: rgba(76, 201, 240, 0.9);
+}
+
+.text-retro-green .frequency-indicator {
+  color: rgba(0, 255, 65, 0.9);
+}
+
+.dark-theme .frequency-indicator {
+  opacity: 0.8; /* Slightly higher opacity for better visibility in dark mode */
+}
+
+/* Remove the original frequency sidebar since it's no longer needed */
+.sidebar {
+  display: none;
+}
+
+/* Additional rule for showing zero frequencies with less prominence */
+.frequency-indicator:empty::after,
+.frequency-indicator:contains("0") {
+  content: "0";
+  opacity: 0.3;
+}
