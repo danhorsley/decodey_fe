@@ -318,16 +318,14 @@ export const formatAlternatingLines = (
 };
 /**
  * Prevents words from breaking across lines, useful for mobile display
- * By adding non-breaking spaces between letters within words
+ * This function now just returns the original text to avoid unwanted word breaks
  * @param {string} text - The text to process
- * @returns {string} - Text with non-breaking spaces within words
+ * @returns {string} - The original text unchanged
  */
 export const preventWordBreaks = (text) => {
   if (!text) return "";
-
-  // Only add special handling for very long words that might cause layout issues
-  return text.replace(/(\w{10,})/g, (match) => {
-    // For only exceptionally long words, add zero-width space to allow smart breaking
-    return match.replace(/(.{5})/g, "$1\u200B");
-  });
+  
+  // Return the text unchanged - no special handling for long words
+  // to prevent unwanted spaces in the middle of words
+  return text;
 };
