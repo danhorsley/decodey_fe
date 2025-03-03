@@ -206,7 +206,7 @@ const WinCelebration = ({
   return (
     <div 
       ref={containerRef} 
-      className={`win-celebration ${theme === 'dark' ? 'dark-theme' : ''} text-${textColor} ${hasWon ? '' : 'game-over-container'}`}
+      className={`win-celebration ${theme === 'dark' ? 'dark-theme' : 'light-theme'} text-${textColor} ${hasWon ? '' : 'game-over-container'}`}
       style={{ zIndex: 1200 }} /* Ensure this is higher than any other content */
     >
       {/* Matrix Rain effect */}
@@ -259,7 +259,8 @@ const WinCelebration = ({
             flexWrap: 'wrap',
             justifyContent: 'center',
             gap: '20px',
-            margin: '25px 0'
+            margin: '25px 0',
+            color: theme === 'dark' ? 'white' : '#333'
           }}
         >
           <div className="stat-item">
