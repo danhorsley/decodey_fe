@@ -57,13 +57,13 @@
 
 .mobile-mode .char-grid.encrypted-line {
   margin-bottom: 0 !important;
-  padding: 0 2px 0 !important;
+  padding: 0 1px 0 !important;
   font-weight: 600 !important;
 }
 
 .mobile-mode .char-grid.display-line {
-  margin-bottom: 2px !important;
-  padding: 0 2px 0 !important;
+  margin-bottom: 0 !important; /* Reduced from 2px */
+  padding: 0 1px 0 !important;
   font-weight: bold !important;
 }
 

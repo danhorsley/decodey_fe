@@ -309,7 +309,7 @@ export const formatAlternatingLines = (
       }
       displayGrid += "</div>";
 
-      // Add both grids
+      // Add both grids with minimal spacing
       result += encryptedGrid + displayGrid;
     }
   }
