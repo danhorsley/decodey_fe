@@ -275,7 +275,7 @@
 /* Dark theme grid adjustments */
 .mobile-mode.dark-theme .encrypted-grid,
 .mobile-mode.dark-theme .guess-grid {
-  background-color: rgba(34, 34, 34, 0.3) !important;
+  background-color: #333 !important;
   box-shadow: none !important;
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
@@ -721,6 +721,15 @@ html .mobile-mode.dark-theme.text-retro-green .display-line {
     color: #f8f9fa !important;
     background-color: #222 !important;
     -webkit-text-fill-color: #f8f9fa !important;
+  }
+
+  /* Ensure themed text is visible in dark mode */
+  .mobile-mode.dark-theme.text-scifi-blue,
+  html .mobile-mode.dark-theme.text-scifi-blue,
+  .mobile-mode.dark-theme.text-retro-green,
+  html .mobile-mode.dark-theme.text-retro-green {
+    color: inherit !important;
+    -webkit-text-fill-color: inherit !important;
   }
 
   .mobile-mode .encrypted-line,

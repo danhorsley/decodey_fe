@@ -414,7 +414,7 @@ button:hover:not(:disabled) {
 }
 
 /* Keyboard hint */
-/* .keyboard-hint {
+.keyboard-hint {
   text-align: center;
   font-size: 0.8rem;
   color: #6c757d;
@@ -422,7 +422,23 @@ button:hover:not(:disabled) {
   padding: 5px;
   background-color: rgba(0, 0, 0, 0.03);
   border-radius: 4px;
-} */
+}
+
+/* Themed keyboard hints */
+.text-scifi-blue .keyboard-hint {
+  color: #4cc9f0;
+  text-shadow: 0 0 5px rgba(76, 201, 240, 0.3);
+}
+
+.text-retro-green .keyboard-hint {
+  color: #00ff41;
+  text-shadow: 0 0 5px rgba(0, 255, 65, 0.3);
+}
+
+.dark-theme .keyboard-hint {
+  color: #adb5bd;
+  background-color: rgba(255, 255, 255, 0.05);
+}
 
 /* ===== 6. SPACE CHARACTER ===== */
 /* Space character styling for desktop view */
@@ -934,6 +950,19 @@ button:hover:not(:disabled) {
 .dark-theme button {
   background-color: #444;
   color: white !important;
+}
+
+/* Themed button backgrounds for both light and dark mode */
+.text-scifi-blue button,
+.text-retro-green button {
+  background-color: white;
+}
+
+/* Ensure hint text is visible on themed buttons */
+.text-scifi-blue .controls button,
+.text-retro-green .controls button {
+  color: inherit !important;
+  text-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
 }
 
 
