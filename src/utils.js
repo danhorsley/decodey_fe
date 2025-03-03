@@ -57,6 +57,18 @@ export const formatMajorAttribution = (text) => {
  * @param {string} placeholderStyle - Style for placeholders ("matching" or "contrasting")
  * @returns {Object} - HTML object for dangerouslySetInnerHTML
  */
+
+// Helper function to determine if we're on a real mobile device vs desktop emulation
+const isRealMobileDevice = () => {
+  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) && 
+         ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+};
+
+// Determine placeholder character based on device
+const getPlaceholderChar = () => {
+  // Use a slightly narrower character on real mobile devices
+  return isRealMobileDevice() ? '■' : '█';
+};
 export const createStructuralMatch = (
   encrypted,
   display,
@@ -134,6 +146,14 @@ export const formatAlternatingLines = (
   // Mobile detection - use a simpler approach for actual mobile
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   const spaceChar = isMobile ? "·" : "";
+  
+  // Use a mobile-friendly placeholder char for better alignment
+  const placeholderChar = getPlaceholderChar();
+  
+  // Process display text to use mobile-friendly placeholder
+  if (isMobile) {
+    display = display.replace(/█/g, placeholderChar);
+  }
 
   // Simplified space replacement for better mobile compatibility
   const replaceSpaces = (text) => {

@@ -90,6 +90,8 @@
   line-height: 1.5 !important;
   padding: 4px 2px !important;
   font-weight: 600 !important;
+  text-align: left !important;
+  letter-spacing: 0 !important;
 }
 
 /* Display line styles */
@@ -104,6 +106,15 @@
   padding: 2px 2px 6px !important;
   margin-bottom: 8px !important;
   font-weight: bold !important;
+  text-align: left !important;
+  letter-spacing: 0 !important;
+}
+
+/* Ensure placeholder square has consistent width on mobile */
+.mobile-mode .display-line .placeholder {
+  display: inline-block !important;
+  width: 1ch !important;  /* Force consistent character width */
+  text-align: center !important;
 }
 
 /* ===== SPACE CHARACTER STYLING ===== */
