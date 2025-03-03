@@ -127,9 +127,18 @@ const MobileLayout = ({ children, isLandscape }) => {
               maxWidth: "100%",
               margin: "5px auto 15px",
               padding: "0 5px",
+              overflow: "hidden", // Prevent any overflow
             }}
           >
-            {textContainer}
+            {textContainer &&
+              React.cloneElement(textContainer, {
+                style: {
+                  maxHeight: "35vh",
+                  overflowX: "hidden",
+                  overflowY: "auto",
+                  fontSize: window.innerWidth < 500 ? "0.85rem" : "0.9rem",
+                },
+              })}
           </div>
 
           {/* Two-column grid layout below text */}

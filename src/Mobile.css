@@ -53,19 +53,28 @@
     font-variant-numeric: tabular-nums !important;
     font-feature-settings: "tnum" !important;
     justify-content: center !important;
+    overflow-x: visible !important;
+    /* Prevent horizontal scrollbar */
+    overflow-y: visible !important;
+    /* Prevent vertical scrollbar */
   }
 
   .mobile-mode .char-grid.encrypted-line {
-    margin-bottom: 0 !important;
+    margin-bottom: -6px !important;
     padding: 0 1px 0 !important;
     font-weight: 600 !important;
+    line-height: 1.2 !important;
+    /* Tighter line height */
   }
 
   .mobile-mode .char-grid.display-line {
-    margin-bottom: 0 !important;
+    margin-bottom: 2px !important;
+    margin-top: -10px !important;
     /* Reduced from 2px */
     padding: 0 1px 0 !important;
     font-weight: bold !important;
+    line-height: 1.2 !important;
+    /* Tighter line height */
   }
 
   .mobile-mode .grid-cell {
@@ -682,10 +691,16 @@ body .mobile-mode.light-theme .text-container,
 
   .mobile-mode .text-container {
     max-height: 30vh !important;
+    width: 98% !important;
+    max-width: 98% !important;
   }
 
   .mobile-mode .alternating-text {
     font-size: 0.85rem !important;
+    white-space: normal !important;
+    /* Allow text to flow */
+    word-break: break-word !important;
+    width: 100% !important;
   }
 
   .mobile-mode .display-line {

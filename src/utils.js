@@ -70,10 +70,10 @@ const splitLongLine = (line, maxLength) => {
       chunks.push(line.substring(currentIndex));
       break;
     }
-    
+
     // Try to find a space to break at
     let breakIndex = currentIndex + maxLength;
-    
+
     // Look backward for a space to break at
     while (breakIndex > currentIndex && line[breakIndex] !== " ") {
       breakIndex--;
@@ -82,16 +82,19 @@ const splitLongLine = (line, maxLength) => {
     // If no space found within reasonable distance, look forward instead
     if (breakIndex === currentIndex) {
       breakIndex = currentIndex + maxLength;
-      
+
       // Look forward for the next space to avoid breaking words
       let nextSpaceIndex = line.indexOf(" ", breakIndex);
-      
+
       // If the next space is within a reasonable distance, use it
-      if (nextSpaceIndex !== -1 && nextSpaceIndex - breakIndex < Math.min(maxLength / 2, 10)) {
+      if (
+        nextSpaceIndex !== -1 &&
+        nextSpaceIndex - breakIndex < Math.min(maxLength / 2, 10)
+      ) {
         breakIndex = nextSpaceIndex;
       }
     }
-    
+
     // Include the space in the current chunk
     if (line[breakIndex] === " ") {
       breakIndex++;
@@ -244,6 +247,9 @@ export const formatAlternatingLines = (
   const isRealMobileDevice =
     isMobile && ("ontouchstart" in window || navigator.maxTouchPoints > 0);
 
+  // Check orientation
+  const isLandscape = window.innerWidth > window.innerHeight;
+
   // Use a mobile-friendly placeholder char for better alignment
   const placeholderChar = isRealMobileDevice ? "■" : "█";
 
@@ -262,9 +268,23 @@ export const formatAlternatingLines = (
     let encryptedLine = encryptedLines[i];
     let displayLine = i < displayLines.length ? displayLines[i] : "";
 
-    // Split long lines into chunks for better mobile display
-    // Use a reasonable character limit based on screen width
-    const maxLineLength = isRealMobileDevice ? 40 : 60;
+    // Calculate max line length based on device & orientation
+    let maxLineLength;
+    if (isRealMobileDevice) {
+      // For mobile devices, use more space in landscape
+      maxLineLength = isLandscape ? 80 : 40;
+
+      // Further adjust based on screen width
+      const screenWidth = window.innerWidth;
+      if (screenWidth < 360) {
+        maxLineLength = isLandscape ? 60 : 30;
+      } else if (screenWidth > 700) {
+        maxLineLength = isLandscape ? 100 : 50;
+      }
+    } else {
+      // For desktop
+      maxLineLength = 80;
+    }
 
     // Process encrypted line
     const encryptedChunks = splitLongLine(encryptedLine, maxLineLength);
@@ -285,8 +305,13 @@ export const formatAlternatingLines = (
       const encryptedChunk = encryptedChunks[chunkIndex];
       const displayChunk = displayChunks[chunkIndex] || "";
 
+      // Add inline styles based on device
+      const mobileStyles = isRealMobileDevice
+        ? 'style="line-height:1.1 !important; margin-bottom:-6px !important;"'
+        : "";
+
       // Create character grid for encrypted line chunk
-      let encryptedGrid = '<div class="char-grid encrypted-line">';
+      let encryptedGrid = `<div class="char-grid encrypted-line" ${mobileStyles}>`;
       for (let j = 0; j < encryptedChunk.length; j++) {
         const char = encryptedChunk[j];
         if (char === " ") {
@@ -297,8 +322,13 @@ export const formatAlternatingLines = (
       }
       encryptedGrid += "</div>";
 
-      // Create character grid for display line chunk
-      let displayGrid = '<div class="char-grid display-line">';
+      // Adjust spacing between lines more aggressively on mobile
+      const spacingStyle = isRealMobileDevice
+        ? 'style="margin-top:-10px !important; line-height:1.1 !important;"'
+        : 'style="margin-top:-4px;"';
+
+      // Create character grid for display line chunk with closer spacing
+      let displayGrid = `<div class="char-grid display-line" ${spacingStyle}>`;
       for (let j = 0; j < displayChunk.length; j++) {
         const char = displayChunk[j];
         if (char === " ") {
@@ -324,7 +354,7 @@ export const formatAlternatingLines = (
  */
 export const preventWordBreaks = (text) => {
   if (!text) return "";
-  
+
   // Return the text unchanged - no special handling for long words
   // to prevent unwanted spaces in the middle of words
   return text;
