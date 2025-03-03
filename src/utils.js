@@ -131,9 +131,18 @@ export const formatAlternatingLines = (
 ) => {
   if (!encrypted || !display) return { __html: "" };
 
-  // Add data attribute to help with responsive styling
-  const isTinyScreen = window.innerWidth <= 360;
-  const spaceClass = isTinyScreen ? "space-char tiny-screen" : "space-char";
+  // Mobile detection - use a simpler approach for actual mobile
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  const spaceChar = isMobile ? "·" : "";
+
+  // Simplified space replacement for better mobile compatibility
+  const replaceSpaces = (text) => {
+    return text.replace(/ /g, (match) => {
+      return isMobile
+        ? `<span class="space-char-mobile">${spaceChar}</span>`
+        : `<span class="space-char"></span>`;
+    });
+  };
 
   // Split into lines if text contains newlines
   const encryptedLines = encrypted.split("\n");
@@ -142,20 +151,13 @@ export const formatAlternatingLines = (
   // Create alternating encrypted/display pattern with proper HTML
   let result = "";
   for (let i = 0; i < encryptedLines.length; i++) {
-    // Process encrypted line with improved space handling
+    // Process lines
     let encryptedLine = encryptedLines[i];
     let displayLine = i < displayLines.length ? displayLines[i] : "";
 
-    // Always enhance spaces to ensure consistent display across platforms
-    // Replace each space with a styled span for better visibility
-    encryptedLine = encryptedLine.replace(/ /g, (match) => {
-      return `<span class="${spaceClass}"></span>`;
-    });
-
-    // Also handle spaces in the display line for consistency
-    displayLine = displayLine.replace(/ /g, (match) => {
-      return `<span class="${spaceClass}"></span>`;
-    });
+    // Apply space replacement
+    encryptedLine = replaceSpaces(encryptedLine);
+    displayLine = replaceSpaces(displayLine);
 
     // Add encrypted line with a class for styling
     result += `<div class="encrypted-line">${encryptedLine}</div>`;

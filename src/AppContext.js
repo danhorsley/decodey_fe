@@ -71,12 +71,33 @@ export const AppProvider = ({ children }) => {
 
   // Apply theme whenever settings change
   useEffect(() => {
-    if (settings.theme === "dark") {
-      document.documentElement.classList.add("dark-theme");
-      document.body.classList.add("dark-theme");
-    } else {
-      document.documentElement.classList.remove("dark-theme");
-      document.body.classList.remove("dark-theme");
+    try {
+      // Use a forced timeout to ensure theme is applied on all browsers
+      setTimeout(() => {
+        if (settings.theme === "dark") {
+          document.documentElement.classList.add("dark-theme");
+          document.body.classList.add("dark-theme");
+
+          // Force mobile browser compatibility
+          if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+            document.documentElement.style.backgroundColor = "#222";
+            document.body.style.backgroundColor = "#222";
+            document.body.style.color = "#f8f9fa";
+          }
+        } else {
+          document.documentElement.classList.remove("dark-theme");
+          document.body.classList.remove("dark-theme");
+
+          // Force mobile browser compatibility
+          if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+            document.documentElement.style.backgroundColor = "#ffffff";
+            document.body.style.backgroundColor = "#ffffff";
+            document.body.style.color = "#212529";
+          }
+        }
+      }, 100);
+    } catch (e) {
+      console.error("Error applying theme:", e);
     }
   }, [settings.theme]);
 

@@ -748,7 +748,7 @@ function App() {
           </button>
         </div>
 
-        {settings.speedMode && (
+        {/* {settings.speedMode && (
           <div className="keyboard-hint">
             <p>
               Keyboard Speed Mode:
@@ -757,7 +757,7 @@ function App() {
                 : `Selected ${selectedEncrypted} - Press a letter key to make a guess or ESC to cancel.`}
             </p>
           </div>
-        )}
+        )} */}
 
         {completionTime ? (
           <WinCelebration

@@ -16,6 +16,7 @@
     13. RESPONSIVE ADJUSTMENTS - Screen size adaptations
 */
 
+
 /* ===== BASIC CONTAINER STYLES ===== */
 .mobile-mode {
   margin: 0 !important;
@@ -106,6 +107,17 @@
 }
 
 /* ===== SPACE CHARACTER STYLING ===== */
+/* Simplified space character for mobile devices */
+.mobile-mode .space-char-mobile {
+  display: inline-block;
+  width: 0.4em;
+  color: rgba(128, 128, 128, 0.6);
+  margin: 0 1px;
+  font-weight: normal;
+  user-select: none;
+}
+
+/* Original space character styling (used on desktop) */
 .mobile-mode .space-char {
   display: inline-block !important;
   width: 0.5em !important;
@@ -301,32 +313,35 @@
 }
 
 /* ===== THEME COLOR STYLES ===== */
+/* Force theme colors for mobile devices regardless of theme setting */
+.mobile-mode {
+  color: #212529;
+  background-color: #ffffff;
+}
+
+.mobile-mode.dark-theme {
+  color: #f8f9fa !important;
+  background-color: #222 !important;
+}
+
 /* Text color themes for mobile */
 .mobile-mode.text-scifi-blue .encrypted-line,
 .mobile-mode.text-scifi-blue .display-line {
-  color: #4cc9f0;
+  color: #4cc9f0 !important;
 }
 
 .mobile-mode.text-retro-green .encrypted-line,
 .mobile-mode.text-retro-green .display-line {
-  color: #00ff41;
+  color: #00ff41 !important;
 }
 
 /* Space colors for themes */
-.mobile-mode.text-scifi-blue .space-char {
-  background-color: rgba(76, 201, 240, 0.2) !important;
+.mobile-mode.text-scifi-blue .space-char-mobile {
+  color: rgba(76, 201, 240, 0.7) !important;
 }
 
-.mobile-mode.text-scifi-blue .space-char::after {
-  color: rgba(76, 201, 240, 0.8) !important;
-}
-
-.mobile-mode.text-retro-green .space-char {
-  background-color: rgba(0, 255, 65, 0.2) !important;
-}
-
-.mobile-mode.text-retro-green .space-char::after {
-  color: rgba(0, 255, 65, 0.8) !important;
+.mobile-mode.text-retro-green .space-char-mobile {
+  color: rgba(0, 255, 65, 0.7) !important;
 }
 
 /* ===== ORIENTATION WARNING ===== */

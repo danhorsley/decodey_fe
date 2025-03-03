@@ -49,7 +49,32 @@ const useDeviceDetection = () => {
       height: currentHeight,
     };
 
-    // Improved mobile detection using multiple factors
+    // First check: detect real mobile devices by user agent
+    const mobileRegex =
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
+    const isRealMobileDevice = mobileRegex.test(userAgent);
+
+    // If it's a real mobile device, always set isMobile to true
+    if (isRealMobileDevice) {
+      detectedAsMobileRef.current = true;
+
+      const newInfo = {
+        isMobile: true,
+        isLandscape: currentWidth > currentHeight,
+        screenWidth: currentWidth,
+        screenHeight: currentHeight,
+        isRealMobileDevice: true,
+      };
+
+      deviceInfoRef.current = newInfo;
+      setDeviceInfo(newInfo);
+
+      // Log mobile device detection for debugging
+      console.log("Real mobile device detected:", userAgent);
+      return;
+    }
+
+    // For non-mobile devices, use the original detection logic
     let isMobile = false;
 
     // 1. If we previously detected as mobile, keep that state
@@ -57,8 +82,6 @@ const useDeviceDetection = () => {
       isMobile = true;
     } else {
       // 2. Regular expressions to check for common mobile devices
-      const mobileRegex =
-        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
       const tabletRegex = /iPad|tablet|Nexus 7|Nexus 10|KFAPWI/i;
 
       // 3. Check device pixel ratio (typically > 2 on modern phones)
@@ -101,6 +124,7 @@ const useDeviceDetection = () => {
         isLandscape,
         screenWidth: currentWidth,
         screenHeight: currentHeight,
+        isRealMobileDevice: false,
       };
 
       // Update the ref first
@@ -110,7 +134,6 @@ const useDeviceDetection = () => {
       setDeviceInfo(newInfo);
     }
   }, []); // Empty dependency array ensures this function doesn't change
-
   // Set up event listeners and initial detection
   useEffect(() => {
     // Initial detection
