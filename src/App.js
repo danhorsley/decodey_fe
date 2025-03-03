@@ -627,9 +627,31 @@ function App() {
               guessedMappings={guessedMappings}
             />
           ) : mistakes >= maxMistakes ? (
-            <div className="game-message">
-              <p>Game Over! Too many mistakes.</p>
-              <button onClick={startGame}>Try Again</button>
+            <div className="game-message" style={gameOverStyle}>
+              <p style={{
+                fontSize: '1.2rem',
+                marginBottom: '20px',
+                fontWeight: 'bold'
+              }}>Game Over! Too many mistakes.</p>
+              <button 
+                onClick={startGame}
+                style={{
+                  margin: '15px auto 0',
+                  padding: '12px 20px',
+                  fontSize: '1.1rem',
+                  display: 'block',
+                  width: '90%',
+                  maxWidth: '160px',
+                  textAlign: 'center',
+                  fontWeight: 'bold',
+                  boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+                  position: 'relative',
+                  zIndex: 1010,
+                  borderRadius: '8px'
+                }}
+              >
+                Try Again
+              </button>
             </div>
           ) : null}
         </MobileLayout>
