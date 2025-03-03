@@ -65,24 +65,36 @@ const splitLongLine = (line, maxLength) => {
   let currentIndex = 0;
 
   while (currentIndex < line.length) {
+    // If we're near the end of the line, just include the rest
+    if (currentIndex + maxLength >= line.length) {
+      chunks.push(line.substring(currentIndex));
+      break;
+    }
+    
     // Try to find a space to break at
     let breakIndex = currentIndex + maxLength;
+    
+    // Look backward for a space to break at
+    while (breakIndex > currentIndex && line[breakIndex] !== " ") {
+      breakIndex--;
+    }
 
-    if (breakIndex < line.length) {
-      // Look backward for a space to break at
-      while (breakIndex > currentIndex && line[breakIndex] !== " ") {
-        breakIndex--;
+    // If no space found within reasonable distance, look forward instead
+    if (breakIndex === currentIndex) {
+      breakIndex = currentIndex + maxLength;
+      
+      // Look forward for the next space to avoid breaking words
+      let nextSpaceIndex = line.indexOf(" ", breakIndex);
+      
+      // If the next space is within a reasonable distance, use it
+      if (nextSpaceIndex !== -1 && nextSpaceIndex - breakIndex < Math.min(maxLength / 2, 10)) {
+        breakIndex = nextSpaceIndex;
       }
-
-      // If no space found, just break at the max length
-      if (breakIndex === currentIndex) {
-        breakIndex = currentIndex + maxLength;
-      } else {
-        // Include the space in the current chunk
-        breakIndex++;
-      }
-    } else {
-      breakIndex = line.length;
+    }
+    
+    // Include the space in the current chunk
+    if (line[breakIndex] === " ") {
+      breakIndex++;
     }
 
     chunks.push(line.substring(currentIndex, breakIndex));
