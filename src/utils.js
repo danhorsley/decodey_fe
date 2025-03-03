@@ -46,6 +46,80 @@ export const formatMajorAttribution = (text) => {
       } else {
         return word;
       }
+
+/**
+ * Splits a long line into multiple chunks of a reasonable size
+ * @param {string} line - The text line to split
+ * @param {number} maxLength - Maximum length for each chunk
+ * @returns {Array<string>} Array of chunks
+ */
+const splitLongLine = (line, maxLength) => {
+  if (!line || line.length <= maxLength) {
+    return [line];
+  }
+  
+  const chunks = [];
+  let currentIndex = 0;
+  
+  while (currentIndex < line.length) {
+    // Try to find a space to break at
+    let breakIndex = currentIndex + maxLength;
+    
+    if (breakIndex < line.length) {
+      // Look backward for a space to break at
+      while (breakIndex > currentIndex && line[breakIndex] !== ' ') {
+        breakIndex--;
+      }
+      
+      // If no space found, just break at the max length
+      if (breakIndex === currentIndex) {
+        breakIndex = currentIndex + maxLength;
+      } else {
+        // Include the space in the current chunk
+        breakIndex++;
+      }
+    } else {
+      breakIndex = line.length;
+    }
+    
+    chunks.push(line.substring(currentIndex, breakIndex));
+    currentIndex = breakIndex;
+  }
+  
+  return chunks;
+};
+
+/**
+ * Split a display line to match the encrypted chunks pattern
+ * @param {string} displayLine - The display line to split
+ * @param {Array<string>} encryptedChunks - The encrypted chunks to match
+ * @param {string} encryptedLine - The full encrypted line
+ * @returns {Array<string>} - Matching display chunks
+ */
+const splitLineToMatch = (displayLine, encryptedChunks, encryptedLine) => {
+  if (!displayLine || encryptedChunks.length <= 1) {
+    return [displayLine];
+  }
+  
+  const displayChunks = [];
+  let currentDisplayIndex = 0;
+  
+  // For each encrypted chunk, find the corresponding display text
+  for (let i = 0; i < encryptedChunks.length; i++) {
+    const encryptedChunk = encryptedChunks[i];
+    const startIndexInFull = encryptedLine.indexOf(encryptedChunk, i === 0 ? 0 : encryptedLine.indexOf(encryptedChunks[i-1]) + encryptedChunks[i-1].length);
+    
+    // Calculate end index in the full line
+    const endIndexInFull = startIndexInFull + encryptedChunk.length;
+    
+    // Get the corresponding portion of the display line
+    const displayChunk = displayLine.substring(startIndexInFull, endIndexInFull);
+    displayChunks.push(displayChunk);
+  }
+  
+  return displayChunks;
+};
+
     })
     .join(" ");
 };
@@ -165,32 +239,48 @@ export const formatAlternatingLines = (
     let encryptedLine = encryptedLines[i];
     let displayLine = i < displayLines.length ? displayLines[i] : "";
     
-    // Create character grid for encrypted line
-    let encryptedGrid = '<div class="char-grid encrypted-line">';
-    for (let j = 0; j < encryptedLine.length; j++) {
-      const char = encryptedLine[j];
-      if (char === ' ') {
-        encryptedGrid += `<div class="grid-cell space-cell"><span class="space-dot">·</span></div>`;
-      } else {
-        encryptedGrid += `<div class="grid-cell">${char}</div>`;
-      }
-    }
-    encryptedGrid += '</div>';
+    // Split long lines into chunks for better mobile display
+    // Use a reasonable character limit based on screen width
+    const maxLineLength = isRealMobileDevice ? 40 : 60;
     
-    // Create character grid for display line
-    let displayGrid = '<div class="char-grid display-line">';
-    for (let j = 0; j < displayLine.length; j++) {
-      const char = displayLine[j];
-      if (char === ' ') {
-        displayGrid += `<div class="grid-cell space-cell"><span class="space-dot">·</span></div>`;
-      } else {
-        displayGrid += `<div class="grid-cell">${char}</div>`;
-      }
-    }
-    displayGrid += '</div>';
+    // Process encrypted line
+    const encryptedChunks = splitLongLine(encryptedLine, maxLineLength);
     
-    // Add both grids
-    result += encryptedGrid + displayGrid;
+    // Process display line (must match encrypted chunks)
+    const displayChunks = splitLineToMatch(displayLine, encryptedChunks, encryptedLine);
+    
+    // Create grids for each chunk
+    for (let chunkIndex = 0; chunkIndex < encryptedChunks.length; chunkIndex++) {
+      const encryptedChunk = encryptedChunks[chunkIndex];
+      const displayChunk = displayChunks[chunkIndex] || '';
+      
+      // Create character grid for encrypted line chunk
+      let encryptedGrid = '<div class="char-grid encrypted-line">';
+      for (let j = 0; j < encryptedChunk.length; j++) {
+        const char = encryptedChunk[j];
+        if (char === ' ') {
+          encryptedGrid += `<div class="grid-cell space-cell"><span class="space-dot">·</span></div>`;
+        } else {
+          encryptedGrid += `<div class="grid-cell">${char}</div>`;
+        }
+      }
+      encryptedGrid += '</div>';
+      
+      // Create character grid for display line chunk
+      let displayGrid = '<div class="char-grid display-line">';
+      for (let j = 0; j < displayChunk.length; j++) {
+        const char = displayChunk[j];
+        if (char === ' ') {
+          displayGrid += `<div class="grid-cell space-cell"><span class="space-dot">·</span></div>`;
+        } else {
+          displayGrid += `<div class="grid-cell">${char}</div>`;
+        }
+      }
+      displayGrid += '</div>';
+      
+      // Add both grids
+      result += encryptedGrid + displayGrid;
+    }
   }
 
   return { __html: result };

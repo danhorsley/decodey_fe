@@ -186,7 +186,9 @@
   background-color: #f8f9fa;
   border-radius: 10px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  max-height: 50vh;
 }
 
 .encrypted,
@@ -280,11 +282,13 @@
 .char-grid {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: 1fr;
+  grid-auto-columns: min-content;
   width: 100%;
+  max-width: 100%;
   font-family: monospace;
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
+  justify-content: center;
 }
 
 .char-grid.encrypted-line {
@@ -302,10 +306,17 @@
 
 .grid-cell {
   width: 1ch;
+  min-width: 1ch;
+  max-width: 1ch;
   display: flex;
   justify-content: center;
   align-items: center;
   box-sizing: border-box;
+}
+
+/* For very small amount of text, ensure minimum width */
+.char-grid:only-child {
+  min-width: 40ch;
 }
 
 .space-cell {
