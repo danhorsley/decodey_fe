@@ -57,13 +57,13 @@
 
 .mobile-mode .char-grid.encrypted-line {
   margin-bottom: 0 !important;
-  padding: 2px 2px 0 !important;
+  padding: 0 2px 0 !important;
   font-weight: 600 !important;
 }
 
 .mobile-mode .char-grid.display-line {
-  margin-bottom: 4px !important;
-  padding: 0 2px 2px !important;
+  margin-bottom: 2px !important;
+  padding: 0 2px 0 !important;
   font-weight: bold !important;
 }
 
@@ -109,8 +109,8 @@
 
 /* ===== TEXT CONTAINER STYLES ===== */
 .mobile-mode .text-container {
-  margin: 5px auto !important;
-  padding: 12px !important;
+  margin: 3px auto !important;
+  padding: 6px 12px !important;
   border-radius: 8px !important;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1) !important;
   max-height: 35vh !important;
@@ -125,7 +125,7 @@
 /* Dark theme for text container */
 .mobile-mode.dark-theme .text-container {
   background-color: #222 !important;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3) !important;
+  box-shadow: none !important;
 }
 
 /* ===== ALTERNATING TEXT STYLES ===== */
@@ -232,7 +232,7 @@
   justify-content: space-between;
   width: 100%;
   padding: 0;
-  margin: 10px 0;
+  margin: 6px 0;
   position: relative;
   min-height: 200px;
 }
@@ -246,6 +246,11 @@
   border-radius: 10px;
   z-index: 10;
   padding: 10px;
+}
+
+.mobile-mode.dark-theme .encrypted-grid,
+.mobile-mode.dark-theme .guess-grid {
+  box-shadow: none !important;
 }
 
 .mobile-mode.text-scifi-blue .encrypted-grid,
