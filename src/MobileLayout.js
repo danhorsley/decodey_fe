@@ -29,7 +29,7 @@ const MobileLayout = ({ children, isLandscape }) => {
   // Apply appropriate classes
   const mobileClasses = `
     mobile-mode 
-    ${theme === "dark" ? "dark-theme" : ""} 
+    ${theme === "dark" ? "dark-theme" : "light-theme"} 
     text-${settings.textColor || "default"}
     placeholder-${settings.placeholderStyle}
     ${!isLandscape ? "portrait" : "landscape"}

@@ -415,6 +415,11 @@
   background-color: #ffffff;
 }
 
+.mobile-mode.light-theme {
+  color: #212529 !important;
+  background-color: #ffffff !important;
+}
+
 .mobile-mode.dark-theme {
   color: #f8f9fa !important;
   background-color: #222 !important;
