@@ -62,22 +62,25 @@ const WinCelebration = ({
   else if (score >= 500) rating = 'Cabinet Noir';
   else rating = 'Cryptanalyst';
   
-  // Get the decrypted text
+  // Get the decrypted text in proper case
   const getDecryptedText = () => {
-    // If display is available, use it directly
+    // If display is available, use it as a base but convert to proper case
     if (display) {
-      return display;
+      // Convert to lowercase first then capitalize where needed
+      return display.toLowerCase().replace(/([.!?]\s*\w|^\w)/g, match => match.toUpperCase());
     }
     
     // Fallback: Try to reconstruct from encrypted and mappings
     try {
-      return encrypted.replace(/[A-Z]/g, (match) => {
+      const decrypted = encrypted.replace(/[A-Z]/g, (match) => {
         // Find this encrypted letter's original letter
         for (const [enc, orig] of Object.entries(guessedMappings)) {
           if (enc === match) return orig;
         }
         return match; // Return the encrypted letter if mapping not found
       });
+      // Convert to lowercase first then capitalize where needed
+      return decrypted.toLowerCase().replace(/([.!?]\s*\w|^\w)/g, match => match.toUpperCase());
     } catch (error) {
       console.error("Error generating decrypted text:", error);
       return encrypted || "Error displaying text";

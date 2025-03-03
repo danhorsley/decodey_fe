@@ -933,7 +933,7 @@ button:hover:not(:disabled) {
 
 .dark-theme button {
   background-color: #444;
-  color: #444
+  color: white !important;
 }
 
 

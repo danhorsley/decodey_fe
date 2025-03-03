@@ -254,27 +254,11 @@
   margin-left: 8px;
   position: relative;
   left: 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   border-radius: 10px;
   z-index: 10;
   padding: 10px;
-}
-
-.mobile-mode.dark-theme .encrypted-grid,
-.mobile-mode.dark-theme .guess-grid {
-  box-shadow: none !important;
-}
-
-.mobile-mode.text-scifi-blue .encrypted-grid,
-.mobile-mode.text-scifi-blue .guess-grid {
-  background-color: rgba(76, 201, 240, 0.1) !important;
-  box-shadow: 0 2px 8px rgba(76, 201, 240, 0.2) !important;
-}
-
-.mobile-mode.text-retro-green .encrypted-grid,
-.mobile-mode.text-retro-green .guess-grid {
-  background-color: rgba(0, 255, 65, 0.1) !important;
-  box-shadow: 0 2px 8px rgba(0, 255, 65, 0.2) !important;
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 .mobile-mode .guess-grid {
@@ -282,14 +266,31 @@
   margin-right: 5px;
   position: relative;
   right: 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   border-radius: 10px;
   z-index: 10;
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
+/* Dark theme grid adjustments */
 .mobile-mode.dark-theme .encrypted-grid,
 .mobile-mode.dark-theme .guess-grid {
-  background-color: #222 !important;
+  background-color: rgba(34, 34, 34, 0.3) !important;
+  box-shadow: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Theme-specific styles */
+.mobile-mode.text-scifi-blue .encrypted-grid,
+.mobile-mode.text-scifi-blue .guess-grid {
+  background-color: rgba(76, 201, 240, 0.05) !important;
+  box-shadow: 0 1px 3px rgba(76, 201, 240, 0.1) !important;
+}
+
+.mobile-mode.text-retro-green .encrypted-grid,
+.mobile-mode.text-retro-green .guess-grid {
+  background-color: rgba(0, 255, 65, 0.05) !important;
+  box-shadow: 0 1px 3px rgba(0, 255, 65, 0.1) !important;
 }
 
 .mobile-mode .letter-cell {
