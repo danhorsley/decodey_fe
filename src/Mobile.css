@@ -477,36 +477,84 @@ body .mobile-mode.dark-theme .text-container,
 }
 
 /* Text color themes for mobile */
-/* Sci-fi blue theme */
+/* Sci-fi blue theme - higher specificity for all themed elements */
 .mobile-mode.text-scifi-blue .game-title,
 .mobile-mode.text-scifi-blue .encrypted-line,
 .mobile-mode.text-scifi-blue .display-line,
+.mobile-mode.text-scifi-blue .char-grid.encrypted-line,
+.mobile-mode.text-scifi-blue .char-grid.display-line,
 .mobile-mode.text-scifi-blue .letter-cell,
 .mobile-mode.text-scifi-blue button,
-.mobile-mode.text-scifi-blue .controls p {
+.mobile-mode.text-scifi-blue .controls p,
+html .mobile-mode.text-scifi-blue .encrypted-grid,
+html .mobile-mode.text-scifi-blue .guess-grid,
+html .mobile-mode.text-scifi-blue .grid-cell,
+html .mobile-mode.dark-theme.text-scifi-blue .encrypted-line,
+html .mobile-mode.dark-theme.text-scifi-blue .display-line {
   color: #4cc9f0 !important;
   text-shadow: 0 0 5px rgba(76, 201, 240, 0.5) !important;
+  -webkit-text-fill-color: #4cc9f0 !important;
 }
 
 .mobile-mode.text-scifi-blue .game-title {
   color: #4cc9f0 !important;
   text-shadow: 0 0 8px rgba(76, 201, 240, 0.5) !important;
+  -webkit-text-fill-color: #4cc9f0 !important;
 }
 
-/* Retro green theme */
+/* Theme grid backgrounds */
+.mobile-mode.text-scifi-blue .encrypted-grid,
+.mobile-mode.text-scifi-blue .guess-grid {
+  background-color: rgba(76, 201, 240, 0.1) !important;
+  box-shadow: 0 2px 8px rgba(76, 201, 240, 0.2) !important;
+}
+
+/* Ensure mistakes counter and hint button get the theme color */
+.mobile-mode.text-scifi-blue .controls p,
+.mobile-mode.text-scifi-blue button {
+  color: #4cc9f0 !important;
+  text-shadow: 0 0 5px rgba(76, 201, 240, 0.5) !important;
+  -webkit-text-fill-color: #4cc9f0 !important;
+}
+
+/* Retro green theme - higher specificity for all themed elements */
 .mobile-mode.text-retro-green .game-title,
 .mobile-mode.text-retro-green .encrypted-line,
 .mobile-mode.text-retro-green .display-line,
+.mobile-mode.text-retro-green .char-grid.encrypted-line,
+.mobile-mode.text-retro-green .char-grid.display-line,
 .mobile-mode.text-retro-green .letter-cell,
 .mobile-mode.text-retro-green button,
-.mobile-mode.text-retro-green .controls p {
+.mobile-mode.text-retro-green .controls p,
+html .mobile-mode.text-retro-green .encrypted-grid,
+html .mobile-mode.text-retro-green .guess-grid,
+html .mobile-mode.text-retro-green .grid-cell,
+html .mobile-mode.dark-theme.text-retro-green .encrypted-line,
+html .mobile-mode.dark-theme.text-retro-green .display-line {
   color: #00ff41 !important;
   text-shadow: 0 0 5px rgba(0, 255, 65, 0.5) !important;
+  -webkit-text-fill-color: #00ff41 !important;
 }
 
 .mobile-mode.text-retro-green .game-title {
   color: #00ff41 !important;
   text-shadow: 0 0 8px rgba(0, 255, 65, 0.5) !important;
+  -webkit-text-fill-color: #00ff41 !important;
+}
+
+/* Theme grid backgrounds */
+.mobile-mode.text-retro-green .encrypted-grid,
+.mobile-mode.text-retro-green .guess-grid {
+  background-color: rgba(0, 255, 65, 0.1) !important;
+  box-shadow: 0 2px 8px rgba(0, 255, 65, 0.2) !important;
+}
+
+/* Ensure mistakes counter and hint button get the theme color */
+.mobile-mode.text-retro-green .controls p,
+.mobile-mode.text-retro-green button {
+  color: #00ff41 !important;
+  text-shadow: 0 0 5px rgba(0, 255, 65, 0.5) !important;
+  -webkit-text-fill-color: #00ff41 !important;
 }
 
 /* Selected state for themes */
