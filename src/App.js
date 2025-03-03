@@ -551,12 +551,13 @@ function App() {
           <div
             className={`text-container ${settings.hardcoreMode ? "hardcore-mode" : ""}`}
           >
-            {/* For mobile, prevent word breaks across lines */}
+            {/* For mobile, prevent word breaks across lines and enhance spaces */}
             <div
               className="alternating-text"
               dangerouslySetInnerHTML={formatAlternatingLines(
                 useMobileMode ? preventWordBreaks(encrypted) : encrypted,
                 useMobileMode ? preventWordBreaks(display) : display,
+                true, // Always enable enhanced spaces for mobile
               )}
             ></div>
             {settings.hardcoreMode && (
@@ -689,13 +690,13 @@ function App() {
         <div
           className={`text-container ${settings.hardcoreMode ? "hardcore-mode" : ""}`}
         >
-          {/* For mobile, enhance spaces for better visibility */}
+          {/* Don't use preventWordBreaks as it's causing spacing issues */}
           <div
             className="alternating-text"
             dangerouslySetInnerHTML={formatAlternatingLines(
-              useMobileMode ? preventWordBreaks(encrypted) : encrypted,
-              useMobileMode ? preventWordBreaks(display) : display,
-              useMobileMode, // Pass true for enhanceSpaces in mobile view
+              encrypted,
+              display,
+              true, // Always enable enhanced spaces for mobile
             )}
           ></div>
           {settings.hardcoreMode && (

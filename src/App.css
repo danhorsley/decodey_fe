@@ -1387,3 +1387,65 @@ button:hover:not(:disabled) {
   content: "0";
   opacity: 0.3;
 }
+
+
+/* Position the frequency indicator in the bottom-right corner */
+.letter-cell {
+  position: relative;
+}
+
+.frequency-indicator {
+  position: absolute;
+  bottom: 1px;
+  right: 2px;
+  font-size: 0.55em;
+  opacity: 0.7;
+  font-weight: normal;
+  line-height: 1;
+}
+
+/* Space character styling for desktop view */
+.space-char {
+  display: inline-block;
+  width: 0.6em;
+  background-color: rgba(128, 128, 128, 0.1);
+  height: 1em;
+  vertical-align: middle;
+  border-radius: 2px;
+  margin: 0 2px;
+  position: relative;
+}
+
+/* Add a central dot to make spaces more visible */
+.space-char::after {
+  content: "·";
+  position: absolute;
+  top: 60%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.7em;
+  opacity: 0.5;
+  color: currentColor;
+}
+
+/* Dark theme spaces */
+.dark-theme .space-char {
+  background-color: rgba(128, 128, 128, 0.2);
+}
+
+/* Theme-specific space styling */
+.text-scifi-blue .space-char {
+  background-color: rgba(76, 201, 240, 0.1);
+}
+
+.text-scifi-blue .space-char::after {
+  color: rgba(76, 201, 240, 0.7);
+}
+
+.text-retro-green .space-char {
+  background-color: rgba(0, 255, 65, 0.1);
+}
+
+.text-retro-green .space-char::after {
+  color: rgba(0, 255, 65, 0.7);
+}

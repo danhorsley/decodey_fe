@@ -131,6 +131,10 @@ export const formatAlternatingLines = (
 ) => {
   if (!encrypted || !display) return { __html: "" };
 
+  // Add data attribute to help with responsive styling
+  const isTinyScreen = window.innerWidth <= 360;
+  const spaceClass = isTinyScreen ? "space-char tiny-screen" : "space-char";
+
   // Split into lines if text contains newlines
   const encryptedLines = encrypted.split("\n");
   const displayLines = display.split("\n");
@@ -138,23 +142,27 @@ export const formatAlternatingLines = (
   // Create alternating encrypted/display pattern with proper HTML
   let result = "";
   for (let i = 0; i < encryptedLines.length; i++) {
-    // Process encrypted line with space enhancement if needed
+    // Process encrypted line with improved space handling
     let encryptedLine = encryptedLines[i];
+    let displayLine = i < displayLines.length ? displayLines[i] : "";
 
-    if (enhanceSpaces) {
-      // Replace spaces with styled space markers
-      encryptedLine = encryptedLine.replace(
-        / /g,
-        '<span class="space-char"></span>',
-      );
-    }
+    // Always enhance spaces to ensure consistent display across platforms
+    // Replace each space with a styled span for better visibility
+    encryptedLine = encryptedLine.replace(/ /g, (match) => {
+      return `<span class="${spaceClass}"></span>`;
+    });
+
+    // Also handle spaces in the display line for consistency
+    displayLine = displayLine.replace(/ /g, (match) => {
+      return `<span class="${spaceClass}"></span>`;
+    });
 
     // Add encrypted line with a class for styling
     result += `<div class="encrypted-line">${encryptedLine}</div>`;
 
     // Add display line with a class for styling
-    if (i < displayLines.length) {
-      result += `<div class="display-line">${displayLines[i]}</div>`;
+    if (displayLine) {
+      result += `<div class="display-line">${displayLine}</div>`;
     } else {
       // Fallback if display has fewer lines
       result += `<div class="display-line"></div>`;
@@ -172,10 +180,9 @@ export const formatAlternatingLines = (
 export const preventWordBreaks = (text) => {
   if (!text) return "";
 
-  // Replace spaces within words with non-breaking spaces
-  // This keeps words together on the same line
-  return text.replace(/(\w+)/g, (match) => {
-    // For each word, join the letters with non-breaking spaces
-    return match.split("").join("\u00A0");
+  // Only add special handling for very long words that might cause layout issues
+  return text.replace(/(\w{10,})/g, (match) => {
+    // For only exceptionally long words, add zero-width space to allow smart breaking
+    return match.replace(/(.{5})/g, "$1\u200B");
   });
 };

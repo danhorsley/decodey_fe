@@ -1,11 +1,23 @@
 /* 
    Mobile.css - Dedicated styles for mobile devices 
-   Focused on landscape orientation with thumb-based gameplay
+   Streamlined and organized for better maintainability
+    1. BASIC CONTAINER STYLES - Core layout containers
+    2. HEADER ELEMENTS - Title and header styling
+    3. TEXT CONTAINER STYLES - Text display areas
+    4. ALTERNATING TEXT STYLES - Encrypted and display line formatting
+    5. SPACE CHARACTER STYLING - Space block appearance
+    6. GRID LAYOUTS - Letter selection grids
+    7. CONTROLS - Game control buttons and indicators
+    8. KEYBOARD HINT - Keyboard usage messages
+    9. GAME MESSAGE - Win/lose messages
+    10. WIN CELEBRATION STYLES - Victory screen
+    11. THEME COLOR STYLES - Visual theme variations
+    12. ORIENTATION WARNING - Portrait mode warning
+    13. RESPONSIVE ADJUSTMENTS - Screen size adaptations
 */
 
-/* Base mobile adjustments */
+/* ===== BASIC CONTAINER STYLES ===== */
 .mobile-mode {
-  /* Override base container styles for mobile */
   margin: 0 !important;
   padding: 10px !important;
   max-width: 100% !important;
@@ -14,104 +26,121 @@
   box-sizing: border-box;
 }
 
-/* Container adjustments for thumb-friendly layout */
 .mobile-mode .game-content {
   display: flex;
   flex-direction: column;
   height: calc(100vh - 20px);
   justify-content: flex-start;
   gap: 2px;
-  /* Reduce gap between flex items */
 }
 
-/* Adjust title size for mobile */
+/* ===== HEADER ELEMENTS ===== */
 .mobile-mode .game-title {
   font-size: 1.5rem;
   margin-bottom: 0;
-  /* Reduced margin */
 }
 
-/* Reduced margin below header */
 .mobile-mode .game-header {
   margin-bottom: 2px;
 }
 
-/* Fix for the text container to ensure visibility */
+/* ===== TEXT CONTAINER STYLES ===== */
 .mobile-mode .text-container {
   margin: 5px auto !important;
-  padding: 10px !important;
+  padding: 12px !important;
   border-radius: 8px !important;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1) !important;
-  max-height: 30vh !important;
+  max-height: 35vh !important;
   overflow-y: auto !important;
   width: 100% !important;
   box-sizing: border-box !important;
+  background-color: rgba(248, 249, 250, 0.95) !important;
+  position: relative !important;
 }
 
-.mobile-mode .encrypted,
-.mobile-mode .display {
-  padding: 10px;
-  font-size: 1rem;
-  min-height: 40px;
-  max-height: 15vh;
-  overflow-y: auto;
-  width: 100%;
-  flex-shrink: 0;
+/* Dark theme for text container */
+.mobile-mode.dark-theme .text-container {
+  background-color: rgba(51, 51, 51, 0.95) !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3) !important;
 }
 
-/* NEW: Adjust the main flex container for our new layout */
-.mobile-mode .mobile-layout-flex-container {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  margin: 0;
-  /* Reduced margin */
-  position: relative;
-  min-height: 230px;
-  /* Slightly reduced height */
+/* ===== ALTERNATING TEXT STYLES ===== */
+.mobile-mode .alternating-text {
+  font-family: 'Courier New', monospace;
+  line-height: 1.4;
+  font-size: 0.9rem;
+  white-space: pre-wrap;
+  word-break: normal;
+  word-spacing: normal;
+  letter-spacing: normal;
+  overflow-wrap: break-word;
+  padding: 0 5px !important;
+  text-align: left !important;
 }
 
-/* NEW: Reposition text container to be in the middle */
-.mobile-mode .mobile-layout-flex-container .text-container {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  max-width: calc(100% - 140px);
-  width: 30%;
-  margin: 0;
-  max-height: 280px;
-  min-height: 180px;
-  z-index: 5;
-  background-color: rgba(248, 249, 250, 0.9);
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  padding: 8px;
-  /* Add padding */
-  box-sizing: border-box;
-}
-
-/* NEW: Make text in containers more compact and left-aligned with no cutoff */
-.mobile-mode .mobile-layout-flex-container .text-container .encrypted,
-.mobile-mode .mobile-layout-flex-container .text-container .display {
-  font-size: 0.85rem;
-  line-height: 1.3;
-  max-height: 120px;
-  min-height: 80px;
-  overflow-y: auto;
-  /* Allow horizontal scrolling if needed */
-  text-align: left;
-  word-break: break-all !important; /* Allow breaks anywhere for better formatting */
-  word-wrap: break-word !important;
+/* Encrypted line styles */
+.mobile-mode .encrypted-line {
   white-space: pre-wrap !important;
-  overflow-x: auto !important;
-/* Add horizontal padding to prevent text touching edges */
-  padding: 8px 8px !important;
+  word-spacing: normal !important;
+  letter-spacing: normal !important;
+  font-family: 'Courier New', monospace !important;
+  font-variant-numeric: tabular-nums !important;
+  font-feature-settings: "tnum" !important;
+  line-height: 1.5 !important;
+  padding: 4px 2px !important;
+  font-weight: 600 !important;
 }
 
-/* Grid layout for thumb operation */
+/* Display line styles */
+.mobile-mode .display-line {
+  white-space: pre-wrap !important;
+  word-spacing: normal !important;
+  letter-spacing: normal !important;
+  font-family: 'Courier New', monospace !important;
+  font-variant-numeric: tabular-nums !important;
+  font-feature-settings: "tnum" !important;
+  line-height: 1.5 !important;
+  padding: 2px 2px 6px !important;
+  margin-bottom: 8px !important;
+  font-weight: bold !important;
+}
+
+/* ===== SPACE CHARACTER STYLING ===== */
+.mobile-mode .space-char {
+  display: inline-block !important;
+  width: 0.5em !important;
+  background-color: rgba(128, 128, 128, 0.2) !important;
+  height: 1em !important;
+  vertical-align: middle !important;
+  border-radius: 2px !important;
+  margin: 0 1px !important;
+  position: relative !important;
+}
+
+/* Central dot in spaces */
+.mobile-mode .space-char::after {
+  content: "·" !important;
+  position: absolute !important;
+  top: 60% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  font-size: 0.7em !important;
+  opacity: 0.6 !important;
+  color: currentColor !important;
+}
+
+/* Tiny screen spaces */
+.mobile-mode .space-char.tiny-screen {
+  width: 0.3em !important;
+  margin: 0 !important;
+}
+
+.mobile-mode .space-char.tiny-screen::after {
+  font-size: 0.5em !important;
+  opacity: 0.5 !important;
+}
+
+/* ===== GRID LAYOUTS ===== */
 .mobile-mode .grids {
   display: flex;
   justify-content: space-between;
@@ -122,11 +151,9 @@
   min-height: 200px;
 }
 
-/* Position encrypted grid on left with margin */
 .mobile-mode .encrypted-grid {
   margin-right: 0;
   margin-left: 8px;
-  /* Reduced margin */
   position: relative;
   left: 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
@@ -135,11 +162,9 @@
   padding: 10px;
 }
 
-/* Position guess grid on right with margin */
 .mobile-mode .guess-grid {
   margin-left: 0;
   margin-right: 5px;
-  /* Reduced margin */
   position: relative;
   right: 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
@@ -147,27 +172,6 @@
   z-index: 10;
 }
 
-/* Enhance the separation for better thumb access */
-@media (min-width: 450px) {
-  .mobile-mode .grids {
-    padding: 0 5%;
-  }
-}
-
-/* For wider screens, ensure grids stay at edges */
-@media (min-width: 600px) {
-  .mobile-mode .encrypted-grid {
-    position: absolute;
-    left: 10px;
-  }
-
-  .mobile-mode .guess-grid {
-    position: absolute;
-    right: 10px;
-  }
-}
-
-/* Slightly smaller letter cells for more space */
 .mobile-mode .letter-cell {
   width: 45px;
   height: 45px;
@@ -179,68 +183,30 @@
   transition: all 0.2s ease;
 }
 
-/* Make selected letters even more prominent */
 .mobile-mode .letter-cell.selected {
   transform: scale(1.1);
   box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.5);
 }
 
-/* Adjust grid spacing to accommodate larger cells */
-.mobile-mode .encrypted-grid,
-.mobile-mode .guess-grid {
-  gap: 8px;
-  padding: 12px;
-}
-
-/* Better touch feedback */
-.mobile-mode .letter-cell:active {
-  transform: scale(0.9);
-  opacity: 0.8;
-}
-
-/* Larger touch area for letter cells */
-.mobile-mode .letter-cell::before {
-  content: "";
-  position: absolute;
-  top: -5px;
-  left: -5px;
-  right: -5px;
-  bottom: -5px;
-  z-index: -1;
-}
-
-/* NEW: Improve sidebar positioning */
-.mobile-mode .sidebar {
-  padding: 8px 5px;
-  max-width: 100%;
-  margin: 2px 0;
-  /* Reduced margin */
-  background-color: rgba(248, 249, 250, 0.8);
-  flex-wrap: wrap;
+/* ===== CONTROLS ===== */
+.mobile-mode .controls-container {
+  display: flex;
   justify-content: center;
+  width: 100%;
+  margin: 5px 0 10px 0;
 }
 
-/* Make frequency bars more compact */
-.mobile-mode .frequency-bar {
-  width: 18px;
-  margin: 0 1px;
-}
-
-/* NEW: Make controls more compact */
 .mobile-mode .controls {
-  padding: 8px;
+  padding: 8px 15px;
   gap: 10px;
   margin: 2px 0 5px;
-  /* Minimal margin */
   background-color: rgba(248, 249, 250, 0.95);
-  /* More opaque */
   border-radius: 20px;
   width: auto;
   min-width: 200px;
   display: inline-flex;
   justify-content: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  /* Add subtle shadow */
 }
 
 .mobile-mode .controls p {
@@ -256,22 +222,6 @@
   font-size: 0.9rem;
 }
 
-/* NEW: Center the controls */
-.mobile-mode .controls-container {
-  display: flex;
-  justify-content: center;
-  width: 100%;
-  margin-top: 0;
-  padding-top: 0;
-}
-
-/* NEW: Make keyboard hint more compact */
-.mobile-mode .keyboard-hint {
-  font-size: 0.7rem;
-  padding: 3px;
-  margin: 3px 0;
-}
-
 /* Dark theme control adjustments */
 .mobile-mode.dark-theme .controls {
   background-color: rgba(51, 51, 51, 0.95);
@@ -282,16 +232,104 @@
   background-color: rgba(68, 68, 68, 0.8);
 }
 
-/* NEW: Dark theme adjustments for text container */
-.mobile-mode.dark-theme .mobile-layout-flex-container .text-container {
-  background-color: rgba(51, 51, 51, 0.9);
+/* ===== KEYBOARD HINT ===== */
+.mobile-mode .keyboard-hint {
+  font-size: 0.7rem;
+  padding: 3px;
+  margin: 3px 0;
 }
 
-.mobile-mode.dark-theme .sidebar {
-  background-color: rgba(51, 51, 51, 0.8);
+/* ===== GAME MESSAGE ===== */
+.mobile-mode .game-message {
+  margin: 10px auto;
+  padding: 10px;
+  max-width: 90%;
 }
 
-/* Portrait warning for better experience */
+/* ===== WIN CELEBRATION STYLES ===== */
+.mobile-mode .win-celebration .celebration-content {
+  max-width: 90%;
+  width: 90%;
+  padding: 15px;
+  margin: 0;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.mobile-mode .win-celebration .victory-title {
+  font-size: 1.8rem;
+  margin-bottom: 10px;
+}
+
+.mobile-mode .win-celebration .quote-container {
+  margin-top: 15px;
+  padding: 10px;
+  max-height: 120px;
+}
+
+.mobile-mode .win-celebration .decrypted-quote {
+  font-size: 0.9rem;
+  line-height: 1.3;
+  margin-bottom: 10px;
+}
+
+.mobile-mode .win-celebration .stats-container {
+  gap: 10px !important;
+  margin: 15px 0 !important;
+}
+
+.mobile-mode .win-celebration .stat-item {
+  min-width: 70px;
+  padding: 8px 5px;
+}
+
+.mobile-mode .win-celebration .stat-value {
+  font-size: 1.5rem;
+}
+
+.mobile-mode .win-celebration .stat-item.score .stat-value {
+  font-size: 1.8rem;
+}
+
+.mobile-mode .win-celebration .play-again-button {
+  padding: 10px 20px;
+  font-size: 1rem;
+  width: 100%;
+  max-width: 200px;
+  margin: 0 auto;
+}
+
+/* ===== THEME COLOR STYLES ===== */
+/* Text color themes for mobile */
+.mobile-mode.text-scifi-blue .encrypted-line,
+.mobile-mode.text-scifi-blue .display-line {
+  color: #4cc9f0;
+}
+
+.mobile-mode.text-retro-green .encrypted-line,
+.mobile-mode.text-retro-green .display-line {
+  color: #00ff41;
+}
+
+/* Space colors for themes */
+.mobile-mode.text-scifi-blue .space-char {
+  background-color: rgba(76, 201, 240, 0.2) !important;
+}
+
+.mobile-mode.text-scifi-blue .space-char::after {
+  color: rgba(76, 201, 240, 0.8) !important;
+}
+
+.mobile-mode.text-retro-green .space-char {
+  background-color: rgba(0, 255, 65, 0.2) !important;
+}
+
+.mobile-mode.text-retro-green .space-char::after {
+  color: rgba(0, 255, 65, 0.8) !important;
+}
+
+/* ===== ORIENTATION WARNING ===== */
 .mobile-orientation-warning {
   display: none;
   position: fixed;
@@ -329,358 +367,125 @@
   font-weight: bold;
 }
 
-/* Dark theme adjustments for mobile */
-.mobile-mode.dark-theme {
-  background-color: #222;
-}
-
-/* Text color themes for mobile */
-.mobile-mode.text-scifi-blue .encrypted,
-.mobile-mode.text-scifi-blue .display,
-.mobile-mode.text-scifi-blue .letter-cell,
-.mobile-mode.text-scifi-blue button {
-  color: #4cc9f0;
-  text-shadow: 0 0 5px rgba(76, 201, 240, 0.5);
-}
-
-.mobile-mode.text-retro-green .encrypted,
-.mobile-mode.text-retro-green .display,
-.mobile-mode.text-retro-green .letter-cell,
-.mobile-mode.text-retro-green button {
-  color: #00ff41;
-  text-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
-}
-
-.mobile-mode.text-scifi-blue .game-title {
-  color: #4cc9f0;
-  text-shadow: 0 0 8px rgba(76, 201, 240, 0.5);
-}
-
-.mobile-mode.text-retro-green .game-title {
-  color: #00ff41;
-  text-shadow: 0 0 8px rgba(0, 255, 65, 0.5);
-}
-
-/* Guessed letters in theme colors */
-.mobile-mode.text-scifi-blue .guessed {
-  color: rgba(76, 201, 240, 0.5);
-}
-
-.mobile-mode.text-retro-green .guessed {
-  color: rgba(0, 255, 65, 0.5);
-}
-
-/* Selected letters in theme colors */
-.mobile-mode.text-scifi-blue .selected {
-  color: white;
-  text-shadow: 0 0 8px rgba(76, 201, 240, 0.8);
-}
-
-.mobile-mode.text-retro-green .selected {
-  color: white;
-  text-shadow: 0 0 8px rgba(0, 255, 65, 0.8);
-}
-
-/* Text color themes for mobile */
-.mobile-mode.text-scifi-blue .orientation-dismiss {
-  background-color: #4cc9f0;
-}
-
-.mobile-mode.text-retro-green .orientation-dismiss {
-  background-color: #00ff41;
-  color: #003b00;
-}
-
-/* NEW: Add a mobile-only floating hint icon for the text container */
-.mobile-mode .mobile-layout-flex-container .text-container::after {
-  content: "👆";
-  position: absolute;
-  top: auto;
-  bottom: -20px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 18px;
-  opacity: 0.7;
-  animation: float 2s infinite ease-in-out;
-  pointer-events: none;
-}
-
-@keyframes float {
-
-  0%,
-  100% {
-    transform: translateX(-50%) translateY(0px);
+/* ===== RESPONSIVE ADJUSTMENTS ===== */
+/* For wider screens, ensure grids stay at edges */
+@media (min-width: 600px) {
+  .mobile-mode .encrypted-grid {
+    position: absolute;
+    left: 10px;
   }
 
-  50% {
-    transform: translateX(-50%) translateY(-5px);
-  }
-}
-
-/* NEW: Ensure game-message fits properly */
-.mobile-mode .game-message {
-  margin: 10px auto;
-  padding: 10px;
-  max-width: 90%;
-}
-
-/* Mobile-optimized win celebration styles */
-.mobile-mode .win-celebration .celebration-content {
-  max-width: 90%;
-  width: 90%;
-  padding: 15px;
-  margin: 0;
-  max-height: 80vh;
-  overflow-y: auto;
-  box-sizing: border-box;
-}
-
-/* Reduce title size */
-.mobile-mode .win-celebration .victory-title {
-  font-size: 1.8rem;
-  margin-bottom: 10px;
-}
-
-/* Make the quote container more compact */
-.mobile-mode .win-celebration .quote-container {
-  margin-top: 15px;
-  padding: 10px;
-  max-height: 120px;
-}
-
-.mobile-mode .win-celebration .decrypted-quote {
-  font-size: 0.9rem;
-  line-height: 1.3;
-  margin-bottom: 10px;
-}
-
-/* Make stats more compact */
-.mobile-mode .win-celebration .stats-container {
-  gap: 10px !important;
-  margin: 15px 0 !important;
-}
-
-.mobile-mode .win-celebration .stat-item {
-  min-width: 70px;
-  padding: 8px 5px;
-}
-
-.mobile-mode .win-celebration .stat-value {
-  font-size: 1.5rem;
-}
-
-.mobile-mode .win-celebration .stat-item.score .stat-value {
-  font-size: 1.8rem;
-}
-
-/* Adjust buttons for better touch targets */
-.mobile-mode .win-celebration .play-again-button {
-  padding: 10px 20px;
-  font-size: 1rem;
-  width: 100%;
-  max-width: 200px;
-  margin: 0 auto;
-}
-
-/* Specifically for landscape mode, ensure text is visible */
-@media (orientation: landscape) {
-
-  /* Use available vertical space better */
-  .mobile-mode .game-content {
-    height: 98vh;
-    justify-content: flex-start;
-  }
-
-  /* Optimize mobile layout container */
-  .mobile-mode .mobile-layout-flex-container {
-    flex: 1;
-    min-height: 40vh;
-    max-height: 50vh;
-    margin: 1px 0;
-    padding: 0;
-  }
-
-  .mobile-mode .text-container {
-    max-height: 25vh;
-    min-height: 80px;
-    margin-bottom: 10px;
-  }
-
-  .mobile-mode .encrypted,
-  .mobile-mode .display {
-    min-height: 30px;
-    max-height: 12vh;
-  }
-
-  /* Reduce height for controls and sidebar */
-  .mobile-mode .sidebar {
-    max-height: 20vh;
-    padding: 2px 5px;
-    overflow-x: auto;
-  }
-
-  .mobile-mode .controls {
-    padding: 4px 12px;
-  }
-
-  .mobile-mode .encrypted-grid,
   .mobile-mode .guess-grid {
-    margin: 0 5px;
-  }
-
-  /* Layout adjustments for orientation */
-  .mobile-mode .bottom-controls-container {
-    margin: 2px 0 5px;
-  }
-
-  .mobile-mode .bottom-controls-container .controls {
-    padding: 5px 12px;
+    position: absolute;
+    right: 10px;
   }
 }
 
-/* Landscape-specific adjustments for win celebration */
-@media (orientation: landscape) and (max-height: 450px) {
-  .mobile-mode .win-celebration .celebration-content {
-    max-height: 90vh;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: flex-start;
-    padding: 10px;
+/* Screen-size specific adjustments for text */
+@media (max-width: 480px) {
+
+  .mobile-mode .encrypted-line,
+  .mobile-mode .display-line {
+    font-size: 0.9rem !important;
+    letter-spacing: -0.01em !important;
+    /* Slightly tighten letter spacing */
   }
 
-  .mobile-mode .win-celebration .victory-message {
-    width: 100%;
-    margin-bottom: 10px;
-  }
-
-  .mobile-mode .win-celebration .stats-container {
-    width: 45%;
-    margin: 0 !important;
-  }
-
-  .mobile-mode .win-celebration .celebration-actions {
-    width: 45%;
-    margin: 0;
-  }
-
-  .mobile-mode .win-celebration .quote-container {
-    order: 10;
-    /* Push to bottom */
-    width: 100%;
-    margin-top: 10px;
-    max-height: 80px;
-  }
-
-  .mobile-mode .win-celebration .victory-title {
-    font-size: 1.5rem;
-    margin-bottom: 5px;
-  }
-
-  .mobile-mode .mobile-layout-flex-container {
-    min-height: 190px;
-    /* Reduce height further on small screens */
-  }
-}
-
-/* NEW: Make the text container scrollable on very small screens */
-@media (max-height: 400px) {
-  .mobile-mode .mobile-layout-flex-container .text-container {
-    max-height: 150px;
-  }
-
-  .mobile-mode .mobile-layout-flex-container .text-container .encrypted,
-  .mobile-mode .mobile-layout-flex-container .text-container .display {
-    max-height: 60px;
-  }
-}
-
-/* Screen size-specific adjustments */
-/* Small devices in landscape mode */
-@media (max-height: 450px) and (orientation: landscape) {
-  .mobile-mode .game-title {
-    font-size: 1.2rem;
-    margin-bottom: 5px;
+  .mobile-mode .alternating-text {
+    font-size: 0.85rem;
   }
 
   .mobile-mode .text-container {
-    max-height: 22vh;
-    min-height: 60px;
+    max-width: 100% !important;
+    padding: 8px !important;
   }
 
-  .mobile-mode .letter-cell {
-    width: 40px;
-    height: 40px;
-    font-size: 1.2em;
+  /* Reduce padding on lines to save space */
+  .mobile-mode .encrypted-line {
+    padding: 2px 1px !important;
   }
 
-  .mobile-mode .controls {
-    padding: 5px 8px;
+  .mobile-mode .display-line {
+    padding: 2px 1px 4px !important;
+    margin-bottom: 4px !important;
   }
 
-  .mobile-mode .controls p {
-    margin-bottom: 6px;
-    padding: 4px 8px;
-  }
-}
-
-/* Improve letter cell touchability for small screens */
-@media (max-width: 450px) {
-  .mobile-mode .letter-cell {
-    width: 42px;
-    height: 42px;
-    font-size: 1.2em;
+  .mobile-mode .space-char {
+    width: 0.4em !important;
+    /* Even narrower for phone-sized screens */
+    margin: 0 1px !important;
   }
 
-  .mobile-mode .mobile-layout-flex-container .text-container {
-    max-width: calc(100% - 170px);
-    width: 30%;
+  .mobile-mode .space-char::after {
+    font-size: 0.6em !important;
+    /* Smaller dot for smaller screens */
   }
 }
 
-/* Improve letter cell touchability for small screens */
-@media (max-width: 400px) {
-  .mobile-mode .letter-cell {
-    width: 38px;
-    height: 38px;
-    font-size: 1.2em;
+/* For very small screens */
+@media (max-width: 360px) {
+
+  .mobile-mode .encrypted-line,
+  .mobile-mode .display-line {
+    font-size: 0.8rem !important;
+    letter-spacing: -0.02em !important;
+    /* More tightly spaced for very small screens */
   }
 
-  .mobile-mode .mobile-layout-flex-container .text-container {
-    max-width: calc(100% - 100px);
-    width: 28%;
+  .mobile-mode .alternating-text {
+    font-size: 0.8rem;
   }
-}
 
-/* Very small screens need more compact layout */
-@media (max-width: 350px) {
+  .mobile-mode .text-container {
+    padding: 6px !important;
+  }
+
+  .mobile-mode .space-char {
+    width: 0.35em !important;
+    /* Minimum width for very small screens */
+    margin: 0 !important;
+    /* No extra margin */
+  }
+
   .mobile-mode .letter-cell {
     width: 36px;
     height: 36px;
     font-size: 1.1em;
   }
+}
 
-  .mobile-mode .mobile-layout-flex-container .text-container {
-    max-width: calc(100% - 90px);
+/* Landscape-specific adjustments */
+@media (orientation: landscape) {
+  .mobile-mode .game-content {
+    height: 98vh;
+    justify-content: flex-start;
+  }
+
+  .mobile-mode .text-container {
+    max-height: 30vh !important;
+  }
+
+  .mobile-mode .alternating-text {
+    font-size: 0.85rem !important;
+  }
+
+  .mobile-mode .display-line {
+    margin-bottom: 6px !important;
+  }
+
+  /* Layout adjustments for landscape */
+  .mobile-mode .game-title {
+    font-size: 1.2rem;
+    margin-bottom: 5px;
   }
 }
 
 /* Extra small devices (like iPhone SE in landscape) */
 @media (max-height: 375px) and (orientation: landscape) {
-  .mobile-mode .game-title {
-    font-size: 1rem;
-    margin-bottom: 2px;
-  }
-
   .mobile-mode .letter-cell {
     width: 32px;
     height: 32px;
     font-size: 0.9em;
-  }
-
-  .mobile-mode .text-container {
-    max-height: 20vh;
   }
 
   .mobile-mode .encrypted,
@@ -696,416 +501,9 @@
     padding: 4px 8px;
   }
 
-  .mobile-mode button {
-    padding: 8px 14px;
-    font-size: 0.8rem;
-  }
-
-  .mobile-mode .sidebar {
-    padding: 5px 2px;
-    margin: 5px 0;
-  }
-
-  .mobile-mode .frequency-bar {
-    width: 16px;
-    margin: 0 1px;
-  }
-
-  .mobile-mode .bottom-controls-container {
-    margin: 0 0 5px;
-  }
-
-  .mobile-mode .bottom-controls-container .controls {
-    min-width: 160px;
-    padding: 3px 8px;
-  }
-
-  .mobile-mode .bottom-controls-container .hint-button {
+  .mobile-mode .controls button {
     padding: 3px 8px;
     font-size: 0.75rem;
     min-height: 26px;
   }
-}
-
-/* Extra small screens need ultra-compact layout */
-@media (max-height: 400px) and (orientation: landscape) {
-  .mobile-mode .letter-cell {
-    width: 38px;
-    height: 38px;
-    font-size: 1.2em;
-  }
-
-  /* Improve spacing of text container */
-  .mobile-mode .mobile-layout-flex-container .text-container {
-    max-height: 100px;
-  }
-
-  /* Further reduce controls size */
-  .mobile-mode .controls {
-    padding: 3px 10px;
-  }
-
-  .mobile-mode .controls p {
-    padding: 3px 6px;
-    font-size: 0.8rem;
-  }
-
-  .mobile-mode .controls button {
-    padding: 3px 8px;
-    font-size: 0.8rem;
-  }
-
-  /* Make frequency bars more compact */
-  .mobile-mode .frequency-bar {
-    width: 15px;
-    margin: 0;
-  }
-}
-
-/* Very small screens need even more compact celebration */
-@media (max-width: 350px) or (max-height: 350px) {
-  .mobile-mode .win-celebration .victory-title {
-    font-size: 1.4rem;
-  }
-
-  .mobile-mode .win-celebration .stat-value {
-    font-size: 1.3rem;
-  }
-
-  .mobile-mode .win-celebration .stat-item.score .stat-value {
-    font-size: 1.5rem;
-  }
-
-  .mobile-mode .win-celebration .play-again-button {
-    padding: 8px 15px;
-    font-size: 0.9rem;
-  }
-}
-
-/* Ensure block characters align properly with letters */
-.mobile-mode .display .placeholder,
-.mobile-mode .encrypted .placeholder {
-  display: inline-block !important;
-  width: 1ch !important; /* Force exact character width */
-  text-align: center !important;
-}
-
-/* Alternating text display styles for mobile */
-
-/* Modify the text container styling */
-.mobile-mode .text-container {
-  max-width: 100%;
-  margin: 5px 0;
-  padding: 10px;
-  max-height: 35vh;
-  overflow-y: auto;
-  background-color: rgba(248, 249, 250, 0.95);
-  border-radius: 10px;
-}
-
-/* Dark theme styling for text container */
-.mobile-mode.dark-theme .text-container {
-  background-color: rgba(51, 51, 51, 0.95);
-}
-
-/* Update styling for the alternating text container */
-.mobile-mode .alternating-text {
-  font-family: 'Courier New', monospace;
-  line-height: 1.4;
-  font-size: 0.9rem;
-  white-space: pre-wrap;
-  word-break: keep-all;
-  overflow-wrap: break-word;
-  padding: 0;
-}
-
-/* Encrypted line in mobile */
-.mobile-mode .encrypted-line {
-  white-space: pre-wrap !important; /* Preserve whitespace but allow wrapping */
-  word-spacing: 0 !important; /* Reset word spacing to default */
-  letter-spacing: 0 !important; /* Reset letter spacing to default */
-  font-family: 'Courier New', monospace !important; /* Use monospace font for consistent character width */
-  font-variant-numeric: tabular-nums !important; /* Use monospace numbers */
-  font-feature-settings: "tnum" !important; /* Use monospace tabular numbers */
-  line-height: 1.5 !important;
-  padding: 4px 2px !important;
-}
-
-/* Display line in mobile */
-.mobile-mode .display-line {
-  white-space: pre-wrap !important;
-  word-spacing: 0 !important;
-  letter-spacing: 0 !important;
-  font-family: 'Courier New', monospace !important;
-  font-variant-numeric: tabular-nums !important;
-  font-feature-settings: "tnum" !important;
-  line-height: 1.5 !important;
-  padding: 2px 2px 6px !important;
-  margin-bottom: 8px !important;
-}
-
-/* Dark theme adjustments */
-.mobile-mode.dark-theme .encrypted-line {
-  color: #e9ecef;
-}
-
-.mobile-mode.dark-theme .display-line {
-  color: #f8f9fa;
-}
-
-/* Text color themes */
-.mobile-mode.text-scifi-blue .encrypted-line {
-  color: #4cc9f0;
-}
-
-.mobile-mode.text-scifi-blue .display-line {
-  color: #4cc9f0;
-}
-
-.mobile-mode.text-retro-green .encrypted-line {
-  color: #00ff41;
-}
-
-.mobile-mode.text-retro-green .display-line {
-  color: #00ff41;
-}
-
-/* Ensure text container is visible in the mobile layout */
-.mobile-mode .mobile-layout-flex-container .text-container {
-  position: relative;
-  left: auto;
-  top: auto;
-  transform: none;
-  max-width: 100%;
-  width: 100%;
-  margin: 10px 0;
-  max-height: 35vh;
-  min-height: unset;
-  z-index: 5;
-  padding: 12px;
-}
-
-/* Remove the floating hint icon to prevent overlap */
-.mobile-mode .mobile-layout-flex-container .text-container::after {
-  display: none;
-}
-
-/* For landscape mode, ensure text is readable */
-@media (orientation: landscape) {
-  .mobile-mode .mobile-layout-flex-container .text-container {
-    max-height: 40vh;
-  }
-
-  .mobile-mode .alternating-text {
-    font-size: 0.85rem;
-    line-height: 1.3;
-  }
-
-  .mobile-mode .encrypted-line {
-    padding: 2px 0 1px 0;
-  }
-
-  .mobile-mode .display-line {
-    padding: 0 0 4px 0;
-    margin: 0 0 4px 0;
-  }
-}
-
-/* For small screens, further reduce font size */
-@media (max-width: 375px) {
-  .mobile-mode .alternating-text {
-    font-size: 0.8rem;
-  }
-}
-
-/* 
-   This is a focused fix ONLY for the alternating text display 
-   Add these rules to Mobile.css
-*/
-
-/* Override existing styles that might be causing issues */
-.mobile-mode .text-container,
-.mobile-mode .mobile-layout-flex-container .text-container {
-  padding: 12px !important;
-  position: relative !important;
-  max-width: 100% !important;
-  width: auto !important;
-  min-height: auto !important;
-  max-height: 35vh !important;
-  transform: none !important;
-  left: auto !important;
-  top: auto !important;
-  background-color: rgba(248, 249, 250, 0.95) !important;
-  border-radius: 10px !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
-}
-
-/* Dark theme overrides */
-.mobile-mode.dark-theme .text-container,
-.mobile-mode.dark-theme .mobile-layout-flex-container .text-container {
-  background-color: rgba(51, 51, 51, 0.95) !important;
-}
-
-/* Remove the old pre elements that aren't needed anymore */
-.mobile-mode .text-container pre.encrypted,
-.mobile-mode .text-container pre.display {
-  display: none !important;
-}
-
-/* Style the alternating text */
-.mobile-mode .alternating-text {
-  font-family: 'Courier New', monospace !important;
-  font-size: 0.9rem !important;
-  line-height: 1.4 !important;
-  white-space: pre-wrap !important;
-  word-break: keep-all !important;
-  overflow-wrap: break-word !important;
-  text-align: left !important;
-}
-
-/* Encrypted lines */
-.mobile-mode .encrypted-line {
-  padding: 4px 0 0 0 !important;
-  margin: 0 !important;
-  font-weight: 600 !important;
-}
-
-/* Display lines */
-.mobile-mode .display-line {
-  padding: 0 0 4px 0 !important;
-  margin: 0 0 8px 0 !important;
-  font-weight: bold !important;
-}
-
-/* Remove the hint icon */
-.mobile-mode .mobile-layout-flex-container .text-container::after {
-  display: none !important;
-}
-
-/* Landscape mode adjustments */
-@media (orientation: landscape) {
-  .mobile-mode .text-container,
-  .mobile-mode .mobile-layout-flex-container .text-container {
-    max-height: 30vh !important;
-  }
-
-  .mobile-mode .alternating-text {
-    font-size: 0.85rem !important;
-  }
-
-  .mobile-mode .display-line {
-    margin-bottom: 6px !important;
-  }
-}
-
-.mobile-mode .encrypted-line,
-.mobile-mode .display-line {
-  font-family: 'Courier New', monospace !important;
-  letter-spacing: 0 !important;
-  word-spacing: normal !important;
-  white-space: pre-wrap !important;
-  font-variant-numeric: tabular-nums !important;
-  font-feature-settings: "tnum" !important;
-}
-
-/* Make spaces more visible in encrypted text */
-.mobile-mode .encrypted-line span.space-char {
-  display: inline-block;
-  width: 0.6em;
-  height: 1em;
-  position: relative;
-  margin: 0 0.2em;
-}
-
-.mobile-mode .encrypted-line span.space-char::after {
-  content: "·";
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 0.8em;
-  opacity: 0.5;
-  color: currentColor;
-}
-
-/* Enhance alternating text container to ensure proper display */
-.mobile-mode .alternating-text {
-  font-size: 0.9rem !important;
-  line-height: 1.5 !important;
-  padding: 0 5px !important;
-  text-align: left !important;
-}
-
-/* Add these styles to Mobile.css to fix UI element positioning */
-
-/* Adjust bottom section positioning */
-.mobile-mode .bottom-container {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 20px; /* Increase space between grids and bottom elements */
-  padding-bottom: 15px;
-  width: 100%;
-}
-
-/* Adjust sidebar positioning */
-.mobile-mode .sidebar {
-  margin: 0 auto;
-  max-width: 95%;
-  padding: 10px 5px;
-  background-color: rgba(248, 249, 250, 0.95);
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  overflow-x: auto;
-}
-
-/* Ensure controls are properly positioned */
-.mobile-mode .controls-container {
-  display: flex;
-  justify-content: center;
-  width: 100%;
-  margin: 5px 0 10px 0;
-}
-
-.mobile-mode .controls {
-  padding: 8px 15px;
-  border-radius: 20px;
-  background-color: rgba(248, 249, 250, 0.95);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* Ensure controls are spaced properly */
-.mobile-mode .controls p {
-  margin: 0 10px 0 0;
-}
-
-/* Dark theme adjustments */
-.mobile-mode.dark-theme .sidebar,
-.mobile-mode.dark-theme .controls {
-  background-color: rgba(51, 51, 51, 0.95);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.mobile-mode .space-char {
-  display: inline-block !important;
-  width: 0.6em !important;
-  background-color: rgba(128, 128, 128, 0.1) !important;
-  height: 1em !important;
-  vertical-align: middle !important;
-  border-radius: 2px !important;
-  margin: 0 1px !important;
-}
-
-/* Dark theme adjustments */
-.mobile-mode.dark-theme .space-char {
-  background-color: rgba(128, 128, 128, 0.2) !important;
-}
-
-/* For text themes */
-.mobile-mode.text-scifi-blue .space-char {
-  background-color: rgba(76, 201, 240, 0.1) !important;
-}
-
-.mobile-mode.text-retro-green .space-char {
-  background-color: rgba(0, 255, 65, 0.1) !important;
 }
