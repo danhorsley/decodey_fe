@@ -22,10 +22,10 @@ function About({ isOpen, onClose }) {
             <strong>How to play:</strong>
           </p>
           <ol>
-            <li>Select a letter from the encrypted text (left grid)</li>
-            <li>Guess what original letter it represents (right grid)</li>
+            <li>Select a letter from the encrypted text (<span className="left-grid-reference">left grid</span>)</li>
+            <li>Guess what original letter it represents (<span className="right-grid-reference">right grid</span>)</li>
             <li>
-              Use letter frequency numbers in the left grid to help analyze the
+              Use letter frequency numbers in the <span className="left-grid-reference">left grid</span> to help analyze the
               pattern
             </li>
             <li>Solve before running out of try again</li>
