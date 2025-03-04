@@ -25,6 +25,7 @@
   border-radius: 0 !important;
   height: 100vh;
   box-sizing: border-box;
+  background-color: white;
 }
 
 .mobile-mode .game-content {
@@ -123,14 +124,23 @@
   margin: 3px auto !important;
   padding: 6px 12px !important;
   border-radius: 8px !important;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1) !important;
+  /* box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1) !important; */
   max-height: 35vh !important;
   overflow-y: auto !important;
   overflow-x: hidden !important;
   width: 100% !important;
   box-sizing: border-box !important;
-  background-color: rgba(248, 249, 250, 0.95) !important;
+  background-color: rgb(255, 255, 255, 0.95) !important;
   position: relative !important;
+}
+
+.mobile-mode .text-container {
+  background-color: white;
+}
+
+.dark-theme .mobile-mode .text-container,
+.dark-theme .mobile-mode .controls-container {
+  background-color: #222
 }
 
 /* Dark theme for text container */
@@ -181,9 +191,11 @@
   margin-bottom: 8px !important;
   font-weight: bold !important;
   text-align: left !important;
-  letter-spacing: 0 !important;
-  color: rgb(0, 66, 170) !important; /* Blue color from App.css */
-  -webkit-text-fill-color: rgb(0, 66, 170) !important; /* For WebKit */
+  /* letter-spacing: 0 !important; */
+  color: rgb(0, 66, 170) !important;
+  /* Blue color from App.css */
+  -webkit-text-fill-color: rgb(0, 66, 170) !important;
+  /* For WebKit */
 }
 
 /* Ensure placeholder square has consistent width on mobile */
@@ -199,7 +211,7 @@
 .mobile-mode .space-char-mobile {
   display: inline-block;
   width: 0.4em;
-  color: rgba(128, 128, 128, 0.6);
+  /* color: rgba(128, 128, 128, 0.6); */
   margin: 0 1px;
   font-weight: normal;
   user-select: none;
@@ -209,7 +221,7 @@
 .mobile-mode .space-char {
   display: inline-block !important;
   width: 0.5em !important;
-  background-color: rgba(128, 128, 128, 0.2) !important;
+  /* background-color: rgba(128, 128, 128, 0.2) !important; */
   height: 1em !important;
   vertical-align: middle !important;
   border-radius: 2px !important;
@@ -271,13 +283,16 @@
   /* box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); */
   border-radius: 10px;
   z-index: 10;
-  background-color: rgba(51, 51, 51, 0.1); /* Light charcoal grey background */
+  /* background-color: rgba(51, 51, 51, 0.1); */
+  /* Light charcoal grey background */
 }
 
 /* Default styling for letter cells in guess grid */
 .mobile-mode .guess-grid .letter-cell {
-  color: rgb(0, 66, 170) !important; /* Blue color from App.css */
-  -webkit-text-fill-color: rgb(0, 66, 170) !important; /* For WebKit */
+  color: rgb(0, 66, 170) !important;
+  /* Blue color from App.css */
+  -webkit-text-fill-color: rgb(0, 66, 170) !important;
+  /* For WebKit */
 }
 
 /* Dark theme grid adjustments */
@@ -312,19 +327,20 @@
   justify-content: center;
   width: 100%;
   margin: 5px 0 10px 0;
+  background-color: white;
 }
 
 .mobile-mode .controls {
   padding: 8px 15px;
   gap: 10px;
   margin: 2px 0 5px;
-  background-color: rgba(248, 249, 250, 0.95);
+  background-color: rgb(255, 255, 255, 0.95);
   border-radius: 20px;
   width: auto;
   min-width: 200px;
   display: inline-flex;
   justify-content: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  /* box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); */
 }
 
 .mobile-mode .controls p {
@@ -335,12 +351,19 @@
   background-color: rgba(255, 255, 255, 0.8);
 }
 
+.mobile-mode button {
+  color: black
+}
+
+
+
 .mobile-mode .controls button {
   padding: 5px 12px;
   font-size: 0.9rem;
-  color: white !important;
+  background-color: white;
+  /* color: white !important; */
   /* Ensure hint button text is always visible */
-  -webkit-text-fill-color: white !important;
+  /* -webkit-text-fill-color: white !important; */
   /* For WebKit browsers */
 }
 
@@ -352,13 +375,6 @@
 
 .mobile-mode.dark-theme .controls p {
   background-color: #333;
-}
-
-/* ===== KEYBOARD HINT ===== */
-.mobile-mode .keyboard-hint {
-  font-size: 0.7rem;
-  padding: 3px;
-  margin: 3px 0;
 }
 
 /* ===== GAME MESSAGE ===== */
@@ -485,13 +501,13 @@ html[data-theme="light"] .mobile-mode {
 }
 
 /* Force text container background in light mode */
-.mobile-mode.light-theme .text-container,
+/* .mobile-mode.light-theme .text-container,
 html .mobile-mode.light-theme .text-container,
 body .mobile-mode.light-theme .text-container,
 .mobile-mode[class*="light-theme"] .text-container {
   background-color: rgba(248, 249, 250, 0.95) !important;
   -webkit-background-color: rgba(248, 249, 250, 0.95) !important;
-}
+} */
 
 /* Stronger specificity for dark theme to prevent overrides */
 .mobile-mode.dark-theme,
@@ -542,7 +558,7 @@ html .mobile-mode.dark-theme .grid-cell {
 /* Mobile display line for dark theme - matched to guess grid color */
 .mobile-mode.dark-theme .display-line,
 .mobile-mode.dark-theme .char-grid.display-line {
-  color: rgb(0, 225, 152) !important; 
+  color: rgb(0, 225, 152) !important;
   text-shadow: 0 0 5px rgba(0, 225, 152, 0.5) !important;
   -webkit-text-fill-color: rgb(0, 225, 152) !important;
 }
@@ -625,6 +641,7 @@ html .mobile-mode.dark-theme .grid-cell {
   }
 
   .mobile-mode .guess-grid {
+    background-color: white;
     position: absolute;
     right: 10px;
   }
@@ -636,7 +653,7 @@ html .mobile-mode.dark-theme .grid-cell {
   }
 
   .mobile-mode.light-theme .text-container {
-    background-color: rgba(248, 249, 250, 0.95) !important;
+    background-color: rgb(255, 255, 255, 0.95) !important;
   }
 }
 
@@ -657,59 +674,60 @@ html .mobile-mode.dark-theme .grid-cell {
 
   /* Light theme text container - stronger specificity */
 
-/* ===== GAME OVER STYLES ===== */
-.mobile-mode .game-over-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;  /* High z-index to overlay everything */
-  background-color: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(3px);
-}
+  /* ===== GAME OVER STYLES ===== */
+  .mobile-mode .game-over-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    /* High z-index to overlay everything */
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(3px);
+  }
 
-.mobile-mode .game-over-message {
-  background-color: #333;
-  color: white;
-  padding: 20px;
-  border-radius: 10px;
-  text-align: center;
-  width: 80%;
-  max-width: 400px;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-}
+  .mobile-mode .game-over-message {
+    background-color: #333;
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    width: 80%;
+    max-width: 400px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  }
 
-.mobile-mode .play-again-button {
-  margin-top: 15px;
-  padding: 10px 20px;
-  font-size: 1rem;
-  background-color: #4CAF50;
-  color: white !important;
-  -webkit-text-fill-color: white !important;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
+  .mobile-mode .play-again-button {
+    margin-top: 15px;
+    padding: 10px 20px;
+    font-size: 1rem;
+    background-color: #4CAF50;
+    color: white !important;
+    -webkit-text-fill-color: white !important;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
 
-.mobile-mode .play-again-button:hover {
-  background-color: #45a049;
-}
+  .mobile-mode .play-again-button:hover {
+    background-color: #45a049;
+  }
 
-/* Theme-specific styles for game over */
-.mobile-mode.dark-theme .game-over-message {
-  border: 1px solid #4cc9f0;
-  box-shadow: 0 0 20px rgba(76, 201, 240, 0.3);
-}
+  /* Theme-specific styles for game over */
+  .mobile-mode.dark-theme .game-over-message {
+    border: 1px solid #4cc9f0;
+    box-shadow: 0 0 20px rgba(76, 201, 240, 0.3);
+  }
 
-.mobile-mode.dark-theme .play-again-button {
-  background-color: #4cc9f0;
-  text-shadow: none;
-}
+  .mobile-mode.dark-theme .play-again-button {
+    background-color: #4cc9f0;
+    text-shadow: none;
+  }
 
   .mobile-mode.light-theme .text-container,
   html .mobile-mode.light-theme .text-container,
@@ -856,20 +874,23 @@ html .mobile-mode.dark-theme .grid-cell {
   .mobile-mode .controls p {
     font-size: 0.8rem;
     padding: 4px 8px;
+    background-color: white;
   }
 
   .mobile-mode .controls button {
     padding: 3px 8px;
     font-size: 0.75rem;
     min-height: 26px;
+    background-color: white;
   }
 }
 
 /* Add styles for about, settings, and hint buttons */
-.mobile-mode .about-button,
-.mobile-mode .settings-button,
+.mobile-mode .about-icon,
+.mobile-mode .settings-icon,
 .mobile-mode .hint-button {
-  background-color: inherit;
+  /* background-color: inherit;
+  color: black; */
   /* Inherit background from parent */
   border: none;
   padding: 8px 12px;
@@ -878,44 +899,59 @@ html .mobile-mode.dark-theme .grid-cell {
 
 
 /* Light mode button backgrounds */
-.mobile-mode:not(.dark-theme) .about-button,
+/* .mobile-mode:not(.dark-theme) .about-button,
 .mobile-mode:not(.dark-theme) .settings-button,
 .mobile-mode:not(.dark-theme) .hint-button {
   background-color: white;
-}
+  color: black;
+} */
 
 /* Preserve dark button backgrounds in dark mode */
-.mobile-mode.dark-theme .about-button,
-.mobile-mode.dark-theme .settings-button,
+.mobile-mode.dark-theme .about-icon,
+.mobile-mode.dark-theme .settings-icon,
 .mobile-mode.dark-theme .hint-button {
-  background-color: #444;
+  background-color: #222;
+  /* color: rgb(0, 66, 170) */
+}
+
+.mobile-mode.dark-theme .about-icon:hover,
+.mobile-mode.dark-theme .settings-icon:hover {
+  color: rgb(0, 225, 152) !important;
+  /* Dark mode color - match title */
+  text-shadow: 0 0 8px rgba(0, 225, 152, 0.5);
+  -webkit-text-fill-color: rgb(0, 225, 152);
+  /* color: rgb(0, 66, 170) */
+}
+
+.mobile-mode.dark-theme .hint-button:hover {
+  background-color: rgb(56, 87, 26) !important;
+  color: #222
 }
 
 /* Match about button to encrypted-line color in mobile view */
-.mobile-mode .about-button {
-  color: #212529 !important; /* Default color */
+.mobile-mode .about-icon {
+  color: #212529;
+  /* Default color */
 }
 
-.mobile-mode.dark-theme .about-button,
-.mobile-mode.dark-theme .settings-button {
-  color: #4cc9f0 !important; /* Dark mode color - match title */
-  text-shadow: 0 0 8px rgba(76, 201, 240, 0.5) !important;
-  -webkit-text-fill-color: #4cc9f0 !important;
+.mobile-mode.dark-theme .about-icon,
+.mobile-mode.dark-theme .settings-icon {
+  color: #4cc9f0 !important;
+  /* Dark mode color - match title */
+  text-shadow: 0 0 8px rgba(76, 201, 240, 0.5);
+  -webkit-text-fill-color: #4cc9f0;
 }
 
-/* Match settings and hint buttons to display-line color in mobile view */
-.mobile-mode .settings-button {
-  color: #333333 !important; /* Charcoal grey */
-}
 
 .mobile-mode .hint-button {
-  color: black !important; /* Black text for hint button in light theme */
-  -webkit-text-fill-color: black !important;
+  color: black;
+  -webkit-text-fill-color: black;
 }
 
 .mobile-mode.dark-theme .hint-button {
-  color: rgb(0, 225, 152) !important; /* Dark mode color */
-  text-shadow: 0 0 5px rgba(0, 225, 152, 0.5) !important;
+  color: rgb(0, 225, 152);
+  /* Dark mode color */
+  text-shadow: 0 0 5px rgba(0, 225, 152, 0.5);
   -webkit-text-fill-color: rgb(0, 225, 152) !important;
 }
 
