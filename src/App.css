@@ -24,14 +24,9 @@
 }
 
 .App.dark-theme .game-title,
-.dark-theme .game-title {
-  background-image: linear-gradient(135deg, #4cc9f0, rgb(0, 225, 152));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  position: relative;
-  text-shadow: none;
-  filter: url(#pixelate-filter);
+.text-dark-theme .game-title {
+  color: #4cc9f0;
+  text-shadow: 0 0 8px rgba(76, 201, 240, 0.5);
 }
 
 
@@ -1017,11 +1012,4 @@ body:not(.dark-theme) .celebration-content .quote-container {
 body:not(.dark-theme) .celebration-content .quote-attribution,
 body:not(.dark-theme) .celebration-content .decrypted-quote {
   color: #333;
-}
-
-/* Add pixelated effect with SVG filter */
-.dark-theme .game-header svg {
-  position: absolute;
-  width: 0;
-  height: 0;
 }

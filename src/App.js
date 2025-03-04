@@ -34,7 +34,7 @@ function App() {
     isLandscape,
     useMobileMode,
   } = useAppContext();
-
+  
   // Define gameOverStyle early to prevent initialization errors
   const gameOverStyle = {
     position: 'fixed',
@@ -705,10 +705,7 @@ function App() {
               <line x1="12" y1="8" x2="12.01" y2="8"></line>
             </svg>
           </button>
-          <h1 className="game-title" style={{
-            background: `linear-gradient(to bottom right, #4cc9f0, rgb(0, 225, 152))`,
-            filter: 'pixelate(3px)',
-          }}>uncrypt</h1>
+          <h1 className="game-title">uncrypt</h1>
           <button
             className="settings-icon"
             onClick={showSettings}
@@ -797,7 +794,7 @@ function App() {
             <p>
               Keyboard Speed Mode:
               {!selectedEncrypted
-                ? "Press a letter key to selectfrom the encrypted grid."
+                ? "Press a letter key to select from the encrypted grid."
                 : `Selected ${selectedEncrypted} - Press a letter key to make a guess or ESC to cancel.`}
             </p>
           </div>
