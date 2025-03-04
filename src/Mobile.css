@@ -990,6 +990,40 @@ html .mobile-mode.dark-theme.text-retro-green .display-line {
   background-color: #444;
 }
 
+/* Match about button to encrypted-line color in mobile view */
+.mobile-mode .about-button {
+  color: #212529 !important; /* Default color */
+}
+
+.mobile-mode.dark-theme .about-button {
+  color: #e9ecef !important; /* Dark mode color */
+}
+
+/* Match settings and hint buttons to display-line color in mobile view */
+.mobile-mode .settings-button,
+.mobile-mode .hint-button {
+  color: #333333 !important; /* Charcoal grey */
+}
+
+.mobile-mode.dark-theme .settings-button,
+.mobile-mode.dark-theme .hint-button {
+  color: #f8f9fa !important; /* Dark mode color */
+}
+
+/* Sci-fi blue theme colors for mobile */
+.mobile-mode.text-scifi-blue .about-button {
+  color: #4cc9f0 !important; /* Encrypted-line color */
+  text-shadow: 0 0 5px rgba(76, 201, 240, 0.5) !important;
+  -webkit-text-fill-color: #4cc9f0 !important;
+}
+
+.mobile-mode.text-scifi-blue .settings-button,
+.mobile-mode.text-scifi-blue .hint-button {
+  color: rgb(0, 225, 152) !important; /* Display-line color */
+  text-shadow: 0 0 5px rgba(0, 225, 152, 0.5) !important;
+  -webkit-text-fill-color: rgb(0, 225, 152) !important;
+}
+
 .mobile-mode.text-scifi-blue button,
 .mobile-mode.text-retro-green button {
   color: inherit !important;

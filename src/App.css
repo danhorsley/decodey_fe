@@ -70,6 +70,22 @@
   color: rgba(76, 201, 240, 0.5);
 }
 
+/* About icon color for sci-fi blue theme */
+.App.text-scifi-blue .about-icon,
+.text-scifi-blue .about-icon {
+  color: #4cc9f0; /* Match encrypted-line color */
+  text-shadow: 0 0 5px rgba(76, 201, 240, 0.5);
+}
+
+/* Settings and hint button color for sci-fi blue theme */
+.App.text-scifi-blue .settings-icon,
+.App.text-scifi-blue .hint-button,
+.text-scifi-blue .settings-icon,
+.text-scifi-blue .hint-button {
+  color: rgb(0, 225, 152); /* Match display-line color (purple) */
+  text-shadow: 0 0 5px rgba(0, 225, 152, 0.5);
+}
+
 .App.text-retro-green .guessed,
 .text-retro-green .guessed {
   color: rgba(0, 255, 65, 0.5);
@@ -149,6 +165,16 @@
   justify-content: center;
   color: #495057;
   transition: all 0.2s ease;
+}
+
+/* Match about icon to encrypted-line color, settings icon to display-line color */
+.about-icon {
+  color: #212529; /* Default color - same as encrypted-line */
+}
+
+.settings-icon, 
+.hint-button {
+  color: #333333; /* Charcoal grey - same as display-line */
 }
 
 .settings-icon {
@@ -1010,11 +1036,17 @@ button:hover:not(:disabled) {
   background-color: #344055;
 }
 
-.dark-theme .settings-icon {
-  color: #adb5bd;
+.dark-theme .about-icon {
+  color: #e9ecef; /* Match encrypted-line color in dark theme */
 }
 
-.dark-theme .settings-icon:hover {
+.dark-theme .settings-icon,
+.dark-theme .hint-button {
+  color: #f8f9fa; /* Match display-line color in dark theme */
+}
+
+.dark-theme .settings-icon:hover,
+.dark-theme .about-icon:hover {
   background-color: #444;
   color: #0d6efd;
 }
