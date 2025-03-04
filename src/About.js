@@ -24,16 +24,19 @@ function About({ isOpen, onClose }) {
           </p>
           <ol>
             <li>
-              Select a letter from the encrypted text (<span className="left-grid-reference">left grid</span>)
+              Select a letter from the encrypted text{" "}
+              <span className="left-grid-reference"> left grid</span>
             </li>
             <li>
-              Guess what original letter it represents (<span className="right-grid-reference">right grid</span>)
+              Guess what original letter it represents{" "}
+              <span className="right-grid-reference"> right grid</span>
             </li>
             <li>
-              Use letter frequency numbers in the <span className="left-grid-reference">left grid</span> to help
+              Use letter frequency numbers in the{" "}
+              <span className="left-grid-reference">left grid</span> to help
               analyze the pattern
             </li>
-            <li>Solve before running out of try again</li>
+            <li>Solve before running out of mistakes!</li>
           </ol>
           <p>Need help? Use the hint button (costs one mistake).</p>
         </div>

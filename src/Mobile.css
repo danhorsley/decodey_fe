@@ -37,9 +37,36 @@
 }
 
 /* ===== HEADER ELEMENTS ===== */
-.mobile-mode .game-title {
+.mobile-mode .retro-title {
   font-size: 1.5rem;
   margin-bottom: 0;
+}
+
+.mobile-mode.dark-theme .retro-title {
+  /* Font styling for 80s monitor feel */
+  font-family: "Courier New", Courier, monospace;
+  font-size: 1.5rem;
+  /* Adjust size as needed */
+  font-weight: bold;
+
+  /* Diagonal gradient background */
+  background: linear-gradient(135deg,
+      /* Low angle for subtle diagonal */
+      #4cc9f0 25%,
+      /* Bright green, classic 80s terminal color */
+      rgb(0, 249, 0) 100%
+      /* Fade to black */
+    );
+
+  /* Text color is transparent to show gradient through it */
+  color: transparent;
+  -webkit-background-clip: text;
+  /* For Safari/Chrome */
+  background-clip: text;
+  /* Standard property */
+
+  /* Optional: Add a subtle glow for monitor effect */
+  text-shadow: 0 0 5px rgba(0, 225, 152, 0.75);
 }
 
 .mobile-mode .game-header {
@@ -747,11 +774,11 @@ html .mobile-mode.dark-theme .grid-cell {
   }
 
   /* Ensure themed text is visible in dark mode */
-  .mobile-mode.dark-theme,
+  /* .mobile-mode.dark-theme,
   html .mobile-mode.dark-theme {
     color: inherit !important;
     -webkit-text-fill-color: inherit !important;
-  }
+  } */
 
   .mobile-mode .encrypted-line,
   .mobile-mode .display-line {
@@ -850,6 +877,7 @@ html .mobile-mode.dark-theme .grid-cell {
 
   /* Layout adjustments for landscape */
   .mobile-mode .game-title {
+    color: black;
     font-size: 1.2rem;
     margin-bottom: 5px;
   }
