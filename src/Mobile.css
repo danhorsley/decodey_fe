@@ -109,12 +109,12 @@
 }
 
 .mobile-mode .char-grid.encrypted-line {
-  margin-bottom: -6px;
+  margin-bottom: 8px;  /* Increased to prevent overlap */
   padding: 0 1px;
 }
 
 .mobile-mode .char-grid.display-line {
-  margin: -10px 0 2px;
+  margin: 5px 0 12px;  /* Adjusted to prevent overlap */
   padding: 0 1px;
 }
 
@@ -127,19 +127,29 @@
 
 .mobile-mode .grids {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;  /* Changed to space-between */
   gap: 6px;
   width: 100%;
-  margin: 6px 0;
+  margin: 20px 0 6px;  /* Increased top margin to prevent overlap with text container */
   flex-wrap: nowrap;
   flex-grow: 1;
-  /* Allow grids to take remaining space */
   overflow-x: auto;
-  /* Scroll horizontally if too many letters */
   overflow-y: hidden;
+  position: relative;  /* Added for positioning controls */
 }
 
-.mobile-mode .encrypted-grid,
+.mobile-mode .encrypted-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 38px);
+  gap: 6px;
+  padding: 10px;
+  border-radius: 8px;
+  background-color: #fff;
+  width: auto;
+  font-size: 1.3em;
+  margin-right: auto;  /* Push to the left */
+}
+
 .mobile-mode .guess-grid {
   display: grid;
   grid-template-columns: repeat(5, 38px);
@@ -149,17 +159,22 @@
   background-color: #fff;
   width: auto;
   font-size: 1.3em;
+  margin-left: auto;  /* Push to the right */
 }
 
 /* ===== CONTROLS ===== */
 .mobile-mode .controls-container {
   display: flex;
   justify-content: center;
-  width: 100%;
-  margin: 5px 0 10px;
+  width: auto;
+  margin: 5px 0;
   background: #fff;
   flex-shrink: 0;
-  /* Prevent controls from being squashed */
+  position: absolute;  /* Position in the middle */
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 5;  /* Ensure it's above other elements */
 }
 
 .mobile-mode .controls {
@@ -291,10 +306,33 @@
   .mobile-mode .text-container {
     max-height: 30vh;
     width: 98%;
+    margin-bottom: 20px;  /* Added space below text container */
   }
 
   .mobile-mode .alternating-text {
     white-space: normal;
     word-break: break-word;
+  }
+  
+  /* Adjust layout for landscape mode */
+  .mobile-mode .grids {
+    justify-content: space-between;
+    margin-top: 25px;  /* More space from text container */
+  }
+  
+  .mobile-mode .controls-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.85);  /* Semi-transparent background */
+    padding: 5px 10px;
+    border-radius: 20px;
+  }
+  
+  /* Ensure text doesn't overlap with grids */
+  .mobile-mode .char-grid.encrypted-line,
+  .mobile-mode .char-grid.display-line {
+    margin: 10px 0;
   }
 }
