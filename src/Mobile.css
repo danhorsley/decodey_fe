@@ -288,18 +288,7 @@
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-/* Theme-specific styles */
-.mobile-mode.text-scifi-blue .encrypted-grid,
-.mobile-mode.text-scifi-blue .guess-grid {
-  background-color: rgba(2, 2, 2, 0.05) !important;
-  /* box-shadow: 0 1px 3px rgba(76, 201, 240, 0.1) !important; */
-}
-
-.mobile-mode.text-retro-green .encrypted-grid,
-.mobile-mode.text-retro-green .guess-grid {
-  background-color: rgba(2, 2, 2, 0.05) !important;
-  /* box-shadow: 0 1px 3px rgba(0, 255, 65, 0.1) !important; */
-}
+/* No specific theme grid backgrounds - using defaults as requested */
 
 .mobile-mode .letter-cell {
   width: 45px;
@@ -526,135 +515,67 @@ body .mobile-mode.dark-theme .text-container,
   -webkit-background-color: #222 !important;
 }
 
-/* Text color themes for mobile */
-/* Sci-fi blue theme - higher specificity for all themed elements */
-.mobile-mode.text-scifi-blue .game-title,
-.mobile-mode.text-scifi-blue .encrypted-line,
-.mobile-mode.text-scifi-blue .display-line,
-.mobile-mode.text-scifi-blue .char-grid.encrypted-line,
-.mobile-mode.text-scifi-blue .char-grid.display-line,
-.mobile-mode.text-scifi-blue .letter-cell,
-.mobile-mode.text-scifi-blue button,
-.mobile-mode.text-scifi-blue .controls p,
-html .mobile-mode.text-scifi-blue .encrypted-grid,
-html .mobile-mode.text-scifi-blue .guess-grid,
-html .mobile-mode.text-scifi-blue .grid-cell,
-html .mobile-mode.dark-theme.text-scifi-blue .encrypted-line,
-html .mobile-mode.dark-theme.text-scifi-blue .display-line {
+/* Text color themes for mobile - Dark theme only */
+/* Dark theme styles - higher specificity for all themed elements */
+.mobile-mode.dark-theme .game-title,
+.mobile-mode.dark-theme .encrypted-line,
+.mobile-mode.dark-theme .display-line,
+.mobile-mode.dark-theme .char-grid.encrypted-line,
+.mobile-mode.dark-theme .char-grid.display-line,
+.mobile-mode.dark-theme .letter-cell,
+.mobile-mode.dark-theme button,
+.mobile-mode.dark-theme .controls p,
+html .mobile-mode.dark-theme .encrypted-grid,
+html .mobile-mode.dark-theme .guess-grid,
+html .mobile-mode.dark-theme .grid-cell {
   color: #4cc9f0 !important;
   text-shadow: 0 0 5px rgba(76, 201, 240, 0.5) !important;
   -webkit-text-fill-color: #4cc9f0 !important;
 }
 
-.mobile-mode.text-scifi-blue .game-title {
+.mobile-mode.dark-theme .game-title {
   color: #4cc9f0 !important;
   text-shadow: 0 0 8px rgba(76, 201, 240, 0.5) !important;
   -webkit-text-fill-color: #4cc9f0 !important;
 }
 
-/* Theme grid backgrounds */
-.mobile-mode.text-scifi-blue .encrypted-grid,
-.mobile-mode.text-scifi-blue .guess-grid {
-  background-color: rgba(2, 2, 2, 0.1) !important;
-  /* box-shadow: 0 2px 8px rgba(76, 201, 240, 0.2) !important; */
+/* Mobile display line for dark theme */
+.mobile-mode.dark-theme .display-line,
+.mobile-mode.dark-theme .char-grid.display-line {
+  color: rgb(0, 225, 152) !important; 
+  text-shadow: 0 0 5px rgba(0, 225, 152, 0.5) !important;
+  -webkit-text-fill-color: rgb(0, 225, 152) !important;
 }
 
-/* Mobile display line for sci-fi blue theme */
-.mobile-mode.text-scifi-blue .display-line,
-.mobile-mode.text-scifi-blue .char-grid.display-line {
-  color: #b14cf0 !important; /* Purple color */
-  text-shadow: 0 0 5px rgba(177, 76, 240, 0.5) !important;
-  -webkit-text-fill-color: #b14cf0 !important;
-}
-
-/* Mobile guess grid for sci-fi blue theme */
-.mobile-mode.text-scifi-blue .guess-grid {
-  background-color: rgba(177, 76, 240, 0.1) !important; /* Light purple background */
-}
-
-.mobile-mode.text-scifi-blue .guess-grid .letter-cell {
-  color: #b14cf0 !important; /* Purple text */
-  text-shadow: 0 0 5px rgba(177, 76, 240, 0.5) !important;
-  -webkit-text-fill-color: #b14cf0 !important;
+/* Mobile guess grid for dark theme */
+.mobile-mode.dark-theme .guess-grid .letter-cell {
+  color: rgb(0, 225, 152) !important;
+  text-shadow: 0 0 5px rgba(0, 225, 152, 0.5) !important;
+  -webkit-text-fill-color: rgb(0, 225, 152) !important;
 }
 
 /* Ensure mistakes counter and hint button get the theme color */
-.mobile-mode.text-scifi-blue .controls p,
-.mobile-mode.text-scifi-blue button {
+.mobile-mode.dark-theme .controls p {
   color: #4cc9f0 !important;
   text-shadow: 0 0 5px rgba(76, 201, 240, 0.5) !important;
   -webkit-text-fill-color: #4cc9f0 !important;
 }
 
-/* Retro green theme - higher specificity for all themed elements */
-.mobile-mode.text-retro-green .game-title,
-.mobile-mode.text-retro-green .encrypted-line,
-.mobile-mode.text-retro-green .display-line,
-.mobile-mode.text-retro-green .char-grid.encrypted-line,
-.mobile-mode.text-retro-green .char-grid.display-line,
-.mobile-mode.text-retro-green .letter-cell,
-.mobile-mode.text-retro-green button,
-.mobile-mode.text-retro-green .controls p,
-html .mobile-mode.text-retro-green .encrypted-grid,
-html .mobile-mode.text-retro-green .guess-grid,
-html .mobile-mode.text-retro-green .grid-cell,
-html .mobile-mode.dark-theme.text-retro-green .encrypted-line,
-html .mobile-mode.dark-theme.text-retro-green .display-line {
-  color: #00ff41 !important;
-  text-shadow: 0 0 5px rgba(0, 255, 65, 0.5) !important;
-  -webkit-text-fill-color: #00ff41 !important;
-}
-
-.mobile-mode.text-retro-green .game-title {
-  color: #00ff41 !important;
-  text-shadow: 0 0 8px rgba(0, 255, 65, 0.5) !important;
-  -webkit-text-fill-color: #00ff41 !important;
-}
-
-/* Theme grid backgrounds */
-.mobile-mode.text-retro-green .encrypted-grid,
-.mobile-mode.text-retro-green .guess-grid {
-  background-color: rgba(2, 2, 2, 0.1) !important;
-  /* box-shadow: 0 2px 8px rgba(0, 255, 65, 0.2) !important; */
-}
-
-/* Ensure mistakes counter and hint button get the theme color */
-.mobile-mode.text-retro-green .controls p,
-.mobile-mode.text-retro-green button {
-  color: #00ff41 !important;
-  text-shadow: 0 0 5px rgba(0, 255, 65, 0.5) !important;
-  -webkit-text-fill-color: #00ff41 !important;
-}
-
-/* Selected state for themes */
-.mobile-mode.text-scifi-blue .letter-cell.selected {
+/* Selected state for dark theme */
+.mobile-mode.dark-theme .letter-cell.selected {
   color: white !important;
   text-shadow: 0 0 8px rgba(76, 201, 240, 0.8) !important;
   box-shadow: 0 0 0 4px rgba(76, 201, 240, 0.5) !important;
 }
 
-.mobile-mode.text-retro-green .letter-cell.selected {
-  color: white !important;
-  text-shadow: 0 0 8px rgba(0, 255, 65, 0.8) !important;
-  box-shadow: 0 0 0 4px rgba(0, 255, 65, 0.5) !important;
-}
-
-/* Guessed state for themes */
-.mobile-mode.text-scifi-blue .letter-cell.guessed {
+/* Guessed state for dark theme */
+.mobile-mode.dark-theme .letter-cell.guessed {
   color: rgba(76, 201, 240, 0.5) !important;
 }
 
-.mobile-mode.text-retro-green .letter-cell.guessed {
-  color: rgba(0, 255, 65, 0.5) !important;
-}
-
-/* Space colors for themes */
-.mobile-mode.text-scifi-blue .space-char-mobile {
+/* Space colors for dark theme */
+.mobile-mode.dark-theme .space-char-mobile {
   color: rgba(76, 201, 240, 0.7) !important;
-}
-
-.mobile-mode.text-retro-green .space-char-mobile {
-  color: rgba(0, 255, 65, 0.7) !important;
 }
 
 /* ===== ORIENTATION WARNING ===== */
@@ -780,25 +701,13 @@ html .mobile-mode.dark-theme.text-retro-green .display-line {
 }
 
 /* Theme-specific styles for game over */
-.mobile-mode.text-scifi-blue .game-over-message {
+.mobile-mode.dark-theme .game-over-message {
   border: 1px solid #4cc9f0;
   box-shadow: 0 0 20px rgba(76, 201, 240, 0.3);
 }
 
-.mobile-mode.text-scifi-blue .play-again-button {
+.mobile-mode.dark-theme .play-again-button {
   background-color: #4cc9f0;
-  text-shadow: none;
-}
-
-.mobile-mode.text-retro-green .game-over-message {
-  border: 1px solid #00ff41;
-  box-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
-}
-
-.mobile-mode.text-retro-green .play-again-button {
-  background-color: #00ff41;
-  color: #000 !important;
-  -webkit-text-fill-color: #000 !important;
   text-shadow: none;
 }
 
@@ -820,10 +729,8 @@ html .mobile-mode.dark-theme.text-retro-green .display-line {
   }
 
   /* Ensure themed text is visible in dark mode */
-  .mobile-mode.dark-theme.text-scifi-blue,
-  html .mobile-mode.dark-theme.text-scifi-blue,
-  .mobile-mode.dark-theme.text-retro-green,
-  html .mobile-mode.dark-theme.text-retro-green {
+  .mobile-mode.dark-theme,
+  html .mobile-mode.dark-theme {
     color: inherit !important;
     -webkit-text-fill-color: inherit !important;
   }
@@ -970,23 +877,17 @@ html .mobile-mode.dark-theme.text-retro-green .display-line {
 }
 
 
-/* Light mode only button backgrounds for themed colors */
-.mobile-mode:not(.dark-theme).text-scifi-blue .about-button,
-.mobile-mode:not(.dark-theme).text-scifi-blue .settings-button,
-.mobile-mode:not(.dark-theme).text-scifi-blue .hint-button,
-.mobile-mode:not(.dark-theme).text-retro-green .about-button,
-.mobile-mode:not(.dark-theme).text-retro-green .settings-button,
-.mobile-mode:not(.dark-theme).text-retro-green .hint-button {
+/* Light mode button backgrounds */
+.mobile-mode:not(.dark-theme) .about-button,
+.mobile-mode:not(.dark-theme) .settings-button,
+.mobile-mode:not(.dark-theme) .hint-button {
   background-color: white;
 }
 
-/* Preserve dark button backgrounds in dark mode for themed colors */
-.mobile-mode.dark-theme.text-scifi-blue .about-button,
-.mobile-mode.dark-theme.text-scifi-blue .settings-button,
-.mobile-mode.dark-theme.text-scifi-blue .hint-button,
-.mobile-mode.dark-theme.text-retro-green .about-button,
-.mobile-mode.dark-theme.text-retro-green .settings-button,
-.mobile-mode.dark-theme.text-retro-green .hint-button {
+/* Preserve dark button backgrounds in dark mode */
+.mobile-mode.dark-theme .about-button,
+.mobile-mode.dark-theme .settings-button,
+.mobile-mode.dark-theme .hint-button {
   background-color: #444;
 }
 
@@ -996,7 +897,9 @@ html .mobile-mode.dark-theme.text-retro-green .display-line {
 }
 
 .mobile-mode.dark-theme .about-button {
-  color: #e9ecef !important; /* Dark mode color */
+  color: #4cc9f0 !important; /* Dark mode color */
+  text-shadow: 0 0 5px rgba(76, 201, 240, 0.5) !important;
+  -webkit-text-fill-color: #4cc9f0 !important;
 }
 
 /* Match settings and hint buttons to display-line color in mobile view */
@@ -1007,25 +910,12 @@ html .mobile-mode.dark-theme.text-retro-green .display-line {
 
 .mobile-mode.dark-theme .settings-button,
 .mobile-mode.dark-theme .hint-button {
-  color: #f8f9fa !important; /* Dark mode color */
-}
-
-/* Sci-fi blue theme colors for mobile */
-.mobile-mode.text-scifi-blue .about-button {
-  color: #4cc9f0 !important; /* Encrypted-line color */
-  text-shadow: 0 0 5px rgba(76, 201, 240, 0.5) !important;
-  -webkit-text-fill-color: #4cc9f0 !important;
-}
-
-.mobile-mode.text-scifi-blue .settings-button,
-.mobile-mode.text-scifi-blue .hint-button {
-  color: rgb(0, 225, 152) !important; /* Display-line color */
+  color: rgb(0, 225, 152) !important; /* Dark mode color */
   text-shadow: 0 0 5px rgba(0, 225, 152, 0.5) !important;
   -webkit-text-fill-color: rgb(0, 225, 152) !important;
 }
 
-.mobile-mode.text-scifi-blue button,
-.mobile-mode.text-retro-green button {
+.mobile-mode.dark-theme button {
   color: inherit !important;
   text-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
 }
