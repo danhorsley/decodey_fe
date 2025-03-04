@@ -890,13 +890,24 @@ button:hover:not(:disabled) {
 /* Dark Theme Styles */
 .dark-theme {
   background-color: #333;
-  color: #f8f9fa;
 }
 
-/* .dark-theme .game-title {
-  color: #f8f9fa;
+body.dark-theme {
+  background-color: #333;
 }
- */
+
+html.dark-theme {
+  background-color: #333;
+}
+
+.App.dark-theme {
+  background-color: #333;
+}
+
+.App container.dark-theme {
+  background-color: #333;
+}
+
 .dark-theme .text-container {
   background-color: #333;
   /* box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3); */
