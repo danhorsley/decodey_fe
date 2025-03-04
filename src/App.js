@@ -34,24 +34,24 @@ function App() {
     isLandscape,
     useMobileMode,
   } = useAppContext();
-  
+
   // Define gameOverStyle early to prevent initialization errors
   const gameOverStyle = {
-    position: 'fixed',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
+    position: "fixed",
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%, -50%)",
     zIndex: 1100,
-    backgroundColor: settings.theme === "dark" ? '#333' : '#f0f8ff',
-    color: settings.theme === "dark" ? '#f8f9fa' : '#212529',
-    padding: '25px',
-    borderRadius: '12px',
-    boxShadow: '0 5px 15px rgba(0, 0, 0, 0.3)',
-    textAlign: 'center',
-    maxWidth: '280px',
-    width: '85%',
-    margin: '0 auto',
-    boxSizing: 'border-box'
+    backgroundColor: settings.theme === "dark" ? "#333" : "#f0f8ff",
+    color: settings.theme === "dark" ? "#f8f9fa" : "#212529",
+    padding: "25px",
+    borderRadius: "12px",
+    boxShadow: "0 5px 15px rgba(0, 0, 0, 0.3)",
+    textAlign: "center",
+    maxWidth: "280px",
+    width: "85%",
+    margin: "0 auto",
+    boxSizing: "border-box",
   };
 
   // ==== STATE DECLARATIONS ====
@@ -543,7 +543,7 @@ function App() {
                 <line x1="12" y1="8" x2="12.01" y2="8"></line>
               </svg>
             </button>
-            <h1 className="game-title">uncrypt</h1>
+            <h1 className="retro-title">uncrypt</h1>
             <button
               className="settings-icon"
               onClick={showSettings}
@@ -647,26 +647,30 @@ function App() {
             />
           ) : mistakes >= maxMistakes ? (
             <div className="game-message" style={gameOverStyle}>
-              <p style={{
-                fontSize: '1.2rem',
-                marginBottom: '20px',
-                fontWeight: 'bold'
-              }}>Game Over! Too many mistakes.</p>
-              <button 
+              <p
+                style={{
+                  fontSize: "1.2rem",
+                  marginBottom: "20px",
+                  fontWeight: "bold",
+                }}
+              >
+                Game Over! Too many mistakes.
+              </p>
+              <button
                 onClick={startGame}
                 style={{
-                  margin: '15px auto 0',
-                  padding: '12px 20px',
-                  fontSize: '1.1rem',
-                  display: 'block',
-                  width: '90%',
-                  maxWidth: '160px',
-                  textAlign: 'center',
-                  fontWeight: 'bold',
-                  boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
-                  position: 'relative',
+                  margin: "15px auto 0",
+                  padding: "12px 20px",
+                  fontSize: "1.1rem",
+                  display: "block",
+                  width: "90%",
+                  maxWidth: "160px",
+                  textAlign: "center",
+                  fontWeight: "bold",
+                  boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+                  position: "relative",
                   zIndex: 1010,
-                  borderRadius: '8px'
+                  borderRadius: "8px",
                 }}
               >
                 Try Again
@@ -705,7 +709,7 @@ function App() {
               <line x1="12" y1="8" x2="12.01" y2="8"></line>
             </svg>
           </button>
-          <h1 className="game-title">uncrypt</h1>
+          <h1 className="retro-title">uncrypt</h1>
           <button
             className="settings-icon"
             onClick={showSettings}
@@ -817,26 +821,30 @@ function App() {
           />
         ) : mistakes >= maxMistakes ? (
           <div className="game-message" style={gameOverStyle}>
-            <p style={{
-              fontSize: '1.2rem',
-              marginBottom: '20px',
-              fontWeight: 'bold'
-            }}>Game Over! Too many mistakes.</p>
-            <button 
+            <p
+              style={{
+                fontSize: "1.2rem",
+                marginBottom: "20px",
+                fontWeight: "bold",
+              }}
+            >
+              Game Over! Too many mistakes.
+            </p>
+            <button
               onClick={startGame}
               style={{
-                margin: '15px auto 0',
-                padding: '12px 20px',
-                fontSize: '1.1rem',
-                display: 'block',
-                width: '90%',
-                maxWidth: '160px',
-                textAlign: 'center',
-                fontWeight: 'bold',
-                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
-                position: 'relative',
+                margin: "15px auto 0",
+                padding: "12px 20px",
+                fontSize: "1.1rem",
+                display: "block",
+                width: "90%",
+                maxWidth: "160px",
+                textAlign: "center",
+                fontWeight: "bold",
+                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+                position: "relative",
                 zIndex: 1010,
-                borderRadius: '8px'
+                borderRadius: "8px",
               }}
             >
               Try Again

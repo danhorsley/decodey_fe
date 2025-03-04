@@ -23,10 +23,38 @@
   /* Default colors handled by light/dark theme */
 }
 
+.dark-theme .retro-title {
+  /* Font styling for 80s monitor feel */
+  font-family: "Courier New", Courier, monospace;
+  font-size: 1.5rem;
+  /* Adjust size as needed */
+  font-weight: bold;
+
+  /* Diagonal gradient background */
+  background: linear-gradient(135deg,
+      /* Low angle for subtle diagonal */
+      #4cc9f0 25%,
+      /* Bright green, classic 80s terminal color */
+      rgb(0, 249, 0) 100%
+      /* Fade to black */
+    );
+
+  /* Text color is transparent to show gradient through it */
+  color: transparent;
+  -webkit-background-clip: text;
+  /* For Safari/Chrome */
+  background-clip: text;
+  /* Standard property */
+
+  /* Optional: Add a subtle glow for monitor effect */
+  text-shadow: 0 0 5px rgba(0, 225, 152, 0.75);
+}
+
 .App.dark-theme .game-title,
 .text-dark-theme .game-title {
   color: #4cc9f0;
   text-shadow: 0 0 8px rgba(76, 201, 240, 0.5);
+  filter: url(#pixelate-filter);
 }
 
 
@@ -80,7 +108,7 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.game-title {
+.retro-title {
   font-size: 1.75rem;
   color: #333;
   margin-bottom: 20px;
@@ -855,10 +883,10 @@ button:hover:not(:disabled) {
   color: #f8f9fa;
 }
 
-.dark-theme .game-title {
+/* .dark-theme .game-title {
   color: #f8f9fa;
 }
-
+ */
 .dark-theme .text-container {
   background-color: #333;
   /* box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3); */
