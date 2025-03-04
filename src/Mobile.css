@@ -182,6 +182,8 @@
   font-weight: bold !important;
   text-align: left !important;
   letter-spacing: 0 !important;
+  color: #333333 !important; /* Charcoal grey */
+  -webkit-text-fill-color: #333333 !important; /* For WebKit */
 }
 
 /* Ensure placeholder square has consistent width on mobile */
@@ -269,7 +271,13 @@
   /* box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); */
   border-radius: 10px;
   z-index: 10;
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: rgba(51, 51, 51, 0.1); /* Light charcoal grey background */
+}
+
+/* Default styling for letter cells in guess grid */
+.mobile-mode .guess-grid .letter-cell {
+  color: #333333 !important; /* Charcoal grey */
+  -webkit-text-fill-color: #333333 !important; /* For WebKit */
 }
 
 /* Dark theme grid adjustments */
