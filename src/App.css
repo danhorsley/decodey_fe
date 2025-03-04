@@ -256,11 +256,15 @@
 }
 
 .App.text-scifi-blue .encrypted-line,
-.App.text-scifi-blue .display-line,
-.text-scifi-blue .encrypted-line,
-.text-scifi-blue .display-line {
+.text-scifi-blue .encrypted-line {
   color: #4cc9f0;
   text-shadow: 0 0 8px rgba(76, 201, 240, 0.5);
+}
+
+.App.text-scifi-blue .display-line,
+.text-scifi-blue .display-line {
+  color: #b14cf0; /* Purple for display line */
+  text-shadow: 0 0 8px rgba(177, 76, 240, 0.5);
 }
 
 .App.text-retro-green .encrypted-line,
@@ -950,6 +954,16 @@ button:hover:not(:disabled) {
 .dark-theme button {
   background-color: #444;
   color: white !important;
+}
+
+/* Sci-fi blue guess grid */
+.text-scifi-blue .guess-grid {
+  background-color: rgba(177, 76, 240, 0.1); /* Light purple background */
+}
+
+.text-scifi-blue .guess-grid .letter-cell {
+  color: #b14cf0; /* Purple text */
+  text-shadow: 0 0 5px rgba(177, 76, 240, 0.5);
 }
 
 /* Themed button backgrounds for light mode only */

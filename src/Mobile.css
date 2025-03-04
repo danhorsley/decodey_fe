@@ -551,6 +551,25 @@ html .mobile-mode.dark-theme.text-scifi-blue .display-line {
   /* box-shadow: 0 2px 8px rgba(76, 201, 240, 0.2) !important; */
 }
 
+/* Mobile display line for sci-fi blue theme */
+.mobile-mode.text-scifi-blue .display-line,
+.mobile-mode.text-scifi-blue .char-grid.display-line {
+  color: #b14cf0 !important; /* Purple color */
+  text-shadow: 0 0 5px rgba(177, 76, 240, 0.5) !important;
+  -webkit-text-fill-color: #b14cf0 !important;
+}
+
+/* Mobile guess grid for sci-fi blue theme */
+.mobile-mode.text-scifi-blue .guess-grid {
+  background-color: rgba(177, 76, 240, 0.1) !important; /* Light purple background */
+}
+
+.mobile-mode.text-scifi-blue .guess-grid .letter-cell {
+  color: #b14cf0 !important; /* Purple text */
+  text-shadow: 0 0 5px rgba(177, 76, 240, 0.5) !important;
+  -webkit-text-fill-color: #b14cf0 !important;
+}
+
 /* Ensure mistakes counter and hint button get the theme color */
 .mobile-mode.text-scifi-blue .controls p,
 .mobile-mode.text-scifi-blue button {
