@@ -148,6 +148,7 @@
   border-radius: 8px;
   background-color: #fff;
   width: auto;
+  font-size: 1.3em;
 }
 
 /* ===== CONTROLS ===== */
@@ -261,7 +262,7 @@
   .mobile-mode .letter-cell {
     width: 36px;
     height: 36px;
-    font-size: 1.1em;
+    font-size: 2em;
   }
 }
 
