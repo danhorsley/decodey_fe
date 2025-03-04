@@ -11,17 +11,85 @@ function Settings({ currentSettings, onSave, onCancel }) {
   }, [currentSettings]);
 
   const handleChange = (setting, value) => {
-    setSettings((prev) => ({
-      ...prev,
-      [setting]: value,
-    }));
+    // For theme changes, also update textColor accordingly
+    if (setting === "theme") {
+      setSettings((prev) => ({
+        ...prev,
+        [setting]: value,
+        // Auto-set textColor based on theme
+        textColor: value === "dark" ? "scifi-blue" : "default"
+      }));
+    } else {
+      setSettings((prev) => ({
+        ...prev,
+        [setting]: value,
+      }));
+    }
   };
 
   return (
     <div className="settings-container">
       <h1 className="settings-title">Game Settings</h1>
 
-    
+      {/* Theme Setting - Now at the top */}
+      <div className="settings-section">
+        <h2>Theme</h2>
+        <div className="settings-options">
+          <label className="settings-option">
+            <input
+              type="radio"
+              name="theme"
+              checked={settings.theme === "light"}
+              onChange={() => handleChange("theme", "light")}
+            />
+            <span className="option-label">Light Mode (Default Colors)</span>
+          </label>
+          <label className="settings-option">
+            <input
+              type="radio"
+              name="theme"
+              checked={settings.theme === "dark"}
+              onChange={() => handleChange("theme", "dark")}
+            />
+            <span className="option-label">Dark Mode (Sci-Fi Blue)</span>
+          </label>
+        </div>
+      </div>
+
+      {/* Difficulty Setting - Now second */}
+      <div className="settings-section">
+        <h2>Difficulty</h2>
+        <div className="settings-options">
+          <label className="settings-option">
+            <input
+              type="radio"
+              name="difficulty"
+              checked={settings.difficulty === "easy"}
+              onChange={() => handleChange("difficulty", "easy")}
+            />
+            <span className="option-label">Easy (8 mistakes)</span>
+          </label>
+          <label className="settings-option">
+            <input
+              type="radio"
+              name="difficulty"
+              checked={settings.difficulty === "normal"}
+              onChange={() => handleChange("difficulty", "normal")}
+            />
+            <span className="option-label">Normal (5 mistakes)</span>
+          </label>
+          <label className="settings-option">
+            <input
+              type="radio"
+              name="difficulty"
+              checked={settings.difficulty === "hard"}
+              onChange={() => handleChange("difficulty", "hard")}
+            />
+            <span className="option-label">Hard (3 mistakes)</span>
+          </label>
+        </div>
+      </div>
+
       {/* Hardcore Mode Setting */}
       <div className="settings-section">
         <h2>Gameplay Mode</h2>
@@ -67,155 +135,6 @@ function Settings({ currentSettings, onSave, onCancel }) {
             />
             <span className="option-label">Alphabetical Order</span>
           </label>
-        </div>
-      </div>
-
-      {/* Theme Setting */}
-      <div className="settings-section">
-        <h2>Theme</h2>
-        <div className="settings-options">
-          <label className="settings-option">
-            <input
-              type="radio"
-              name="theme"
-              checked={settings.theme === "light"}
-              onChange={() => handleChange("theme", "light")}
-            />
-            <span className="option-label">Light Mode</span>
-          </label>
-          <label className="settings-option">
-            <input
-              type="radio"
-              name="theme"
-              checked={settings.theme === "dark"}
-              onChange={() => handleChange("theme", "dark")}
-            />
-            <span className="option-label">Dark Mode</span>
-          </label>
-        </div>
-      </div>
-
-      {/* Difficulty Setting */}
-      <div className="settings-section">
-        <h2>Difficulty</h2>
-        <div className="settings-options">
-          <label className="settings-option">
-            <input
-              type="radio"
-              name="difficulty"
-              checked={settings.difficulty === "easy"}
-              onChange={() => handleChange("difficulty", "easy")}
-            />
-            <span className="option-label">Easy (8 mistakes)</span>
-          </label>
-          <label className="settings-option">
-            <input
-              type="radio"
-              name="difficulty"
-              checked={settings.difficulty === "normal"}
-              onChange={() => handleChange("difficulty", "normal")}
-            />
-            <span className="option-label">Normal (5 mistakes)</span>
-          </label>
-          <label className="settings-option">
-            <input
-              type="radio"
-              name="difficulty"
-              checked={settings.difficulty === "hard"}
-              onChange={() => handleChange("difficulty", "hard")}
-            />
-            <span className="option-label">Hard (3 mistakes)</span>
-          </label>
-        </div>
-      </div>
-
-      {/* Text Color Setting */}
-      <div className="settings-section">
-        <h2>Text Color</h2>
-        <div className="settings-options">
-          <label className="settings-option">
-            <input
-              type="radio"
-              name="textColor"
-              checked={settings.textColor === "default"}
-              onChange={() => handleChange("textColor", "default")}
-            />
-            <span className="option-label">Default</span>
-            <span className="color-preview default"></span>
-          </label>
-          <label className="settings-option">
-            <input
-              type="radio"
-              name="textColor"
-              checked={settings.textColor === "scifi-blue"}
-              onChange={() => handleChange("textColor", "scifi-blue")}
-            />
-            <span className="option-label">Sci-Fi Blue</span>
-            <span className="color-preview scifi-blue"></span>
-          </label>
-          <label className="settings-option">
-            <input
-              type="radio"
-              name="textColor"
-              checked={settings.textColor === "retro-green"}
-              onChange={() => handleChange("textColor", "retro-green")}
-            />
-            <span className="option-label">Retro Green</span>
-            <span className="color-preview retro-green"></span>
-          </label>
-        </div>
-      </div>
-
-      {/* Text Contrast Setting */}
-      <div className="settings-section">
-        <h2>Placeholder Style</h2>
-        <div className="settings-options">
-          <label className="settings-option">
-            <input
-              type="radio"
-              name="placeholderStyle"
-              checked={settings.placeholderStyle === "matching"}
-              onChange={() => handleChange("placeholderStyle", "matching")}
-            />
-            <span className="option-label">Matching Color</span>
-            <span className="placeholder-preview matching">A█</span>
-          </label>
-          <label className="settings-option">
-            <input
-              type="radio"
-              name="placeholderStyle"
-              checked={settings.placeholderStyle === "contrasting"}
-              onChange={() => handleChange("placeholderStyle", "contrasting")}
-            />
-            <span className="option-label">Contrasting Color</span>
-            <span className="placeholder-preview contrasting">
-              A<span className="placeholder">█</span>
-            </span>
-          </label>
-          <p className="settings-description">
-            Contrasting mode shows encrypted text and placeholder characters (?)
-            in different colors for better visual distinction.
-          </p>
-        </div>
-      </div>
-
-      {/* Speed Mode */}
-      <div className="settings-section">
-        <h2>Speed Mode</h2>
-        <div className="settings-options">
-          <label className="settings-option">
-            <input
-              type="checkbox"
-              checked={settings.speedMode}
-              onChange={() => handleChange("speedMode", !settings.speedMode)}
-            />
-            <span className="option-label">Enable Keyboard Speed Mode</span>
-          </label>
-          <p className="settings-description">
-            When enabled, press a key to select an encrypted letter, then press
-            another key to guess. ESC cancels selection. Makes for faster
-            gameplay.
-          </p>
         </div>
       </div>
 
