@@ -17,7 +17,7 @@ function Settings({ currentSettings, onSave, onCancel }) {
         ...prev,
         [setting]: value,
         // Auto-set textColor based on theme
-        textColor: value === "dark" ? "scifi-blue" : "default"
+        textColor: value === "dark" ? "dark" : "default",
       }));
     } else {
       setSettings((prev) => ({

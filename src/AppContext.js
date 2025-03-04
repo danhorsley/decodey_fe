@@ -6,15 +6,15 @@ const AppContext = createContext();
 
 // Default settings
 const defaultSettings = {
-  frequencyDisplay: "numeric",
-  theme: "dark", 
+  // frequencyDisplay: "numeric",
+  theme: "dark",
   difficulty: "easy",
-  textColor: "scifi-blue", // This will be auto-set based on theme
+  // textColor: "scifi-blue", // This will be auto-set based on theme
   speedMode: true, // Always on - cannot be changed
   gridSorting: "default",
   hardcoreMode: false,
   mobileMode: "auto",
-  placeholderStyle: "matching" // Default placeholder style
+  // placeholderStyle: "matching" // Default placeholder style
 };
 
 // Get max mistakes based on difficulty
@@ -112,8 +112,8 @@ export const AppProvider = ({ children }) => {
     // Always ensure textColor matches theme
     const updatedSettings = {
       ...newSettings,
-      textColor: newSettings.theme === 'dark' ? 'scifi-blue' : 'default',
-      speedMode: true // Always ensure speed mode is on
+      textColor: newSettings.theme === "dark" ? "scifi-blue" : "default",
+      speedMode: true, // Always ensure speed mode is on
     };
     setSettings(updatedSettings);
   };
