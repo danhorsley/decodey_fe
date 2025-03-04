@@ -376,6 +376,8 @@
     padding: 8px;
     margin-top: 8px;
     overflow-y: auto;
+    text-align: center;
+    width: 100%;
   }
 
   .mobile-mode .stats-container {
@@ -446,13 +448,13 @@
       width: 100%;
       margin-top: 6px;
     }
-    
+
     /* Even smaller text for extreme cases */
     .mobile-mode .decrypted-quote {
       font-size: 0.9em;
       margin: 4px 0;
     }
-    
+
     .mobile-mode .quote-attribution {
       font-size: 0.8em;
     }
@@ -631,7 +633,7 @@
     .mobile-mode.dark-theme .controls {
       background-color: rgba(0, 0, 0, 0.2);
     }
-  
+
 
   /* Responsive adjustments for smaller portrait screens */
   @media (max-width: 480px) {
