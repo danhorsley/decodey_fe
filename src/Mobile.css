@@ -353,75 +353,108 @@
   }
 
   .mobile-mode .celebration-content {
-    max-width: 70%; /* Reduce width */
-    max-height: 85vh; /* Adjust height */
-    padding: 15px;
-     position: relative; /* Change from absolute to relative */
-      top: auto; /* Remove positioning */
-      left: auto;
-      transform: none; /* Remove transform */
-      margin: 0 auto; /* Center with margin auto */
+    max-width: 60%; /* Narrower width */
+    max-height: 80vh; /* Smaller height */
+    padding: 12px;
+    position: absolute; /* Use absolute positioning */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* Center perfectly */
+    margin: 0; /* Remove margins */
+    overflow-y: auto; /* Allow scrolling if content is too tall */
   }
 
   /* Make content more compact */
   .mobile-mode .victory-title {
-    font-size: 1.4rem;
-    margin-bottom: 10px;
+    font-size: 1.3rem;
+    margin-bottom: 8px;
+    text-align: center;
   }
 
   .mobile-mode .quote-container {
-    max-height: 80px; /* Make quote container smaller */
-    padding: 10px;
-    margin-top: 10px;
+    max-height: 70px; /* Smaller quote container */
+    padding: 8px;
+    margin-top: 8px;
+    overflow-y: auto;
   }
 
   .mobile-mode .stats-container {
-    margin: 10px 0 !important;
-    gap: 10px !important;
+    margin: 8px 0 !important;
+    gap: 8px !important;
+    justify-content: center !important;
+    display: flex !important;
+    width: 100% !important;
   }
 
   .mobile-mode .stat-value {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
   }
 
   .mobile-mode .stat-item.score .stat-value {
-    font-size: 1.4rem;
+    font-size: 1.3rem;
   }
 
   /* Make play again button smaller */
   .mobile-mode .play-again-button {
-    padding: 8px 16px;
-    font-size: 1rem;
+    padding: 6px 14px;
+    font-size: 0.9rem;
+    margin: 8px auto;
+    display: block;
   }
 
   /* For very low-height screens */
   @media (max-height: 450px) {
     .mobile-mode .celebration-content {
-      max-width: 80%;
+      max-width: 85%;
       max-height: 90vh;
       display: flex;
       flex-wrap: wrap;
       justify-content: space-between;
+      align-items: center;
+      padding: 10px;
     }
 
     .mobile-mode .victory-message {
       width: 100%;
-      margin-bottom: 5px;
+      margin-bottom: 4px;
+    }
+
+    .mobile-mode .victory-title {
+      font-size: 1.1rem;
+      margin-bottom: 4px;
     }
 
     .mobile-mode .quote-container {
       width: 48%;
-      max-height: 70px;
+      max-height: 60px;
+      margin: 0;
+      padding: 6px;
     }
 
     .mobile-mode .stats-container {
       width: 48%;
       margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    .mobile-mode .stat-item {
+      min-width: unset;
+      padding: 0 5px;
     }
 
     .mobile-mode .celebration-actions {
       width: 100%;
-      margin-top: 10px;
+      margin-top: 6px;
+    }
+    
+    /* Even smaller text for extreme cases */
+    .mobile-mode .decrypted-quote {
+      font-size: 0.9em;
+      margin: 4px 0;
+    }
+    
+    .mobile-mode .quote-attribution {
+      font-size: 0.8em;
     }
   }
 }

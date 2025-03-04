@@ -228,7 +228,7 @@ const WinCelebration = ({
       )}
 
       {/* Main celebration content */}
-      <div className={`celebration-content ${hasWon ? '' : 'game-over-message'}`} style={{ zIndex: 1500, position: "relative" }}>
+      <div className={`celebration-content ${hasWon ? '' : 'game-over-message'}`} style={{ zIndex: 1500 }}>
         {/* Victory message */}
         <div ref={messageRef} className="victory-message">
           <h2 className="victory-title">Solved! Rating: </h2>
