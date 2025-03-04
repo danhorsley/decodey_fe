@@ -357,32 +357,32 @@
 /* New container for the three-column layout in landscape */
 .mobile-mode .mobile-gameplay-container {
   display: flex;
-  justify-content: center; /* Center the entire layout */
+  justify-content: space-between; /* Distribute space evenly */
   align-items: center;
   width: 100%;
   padding: 0;
   margin-bottom: 10px;
   flex-grow: 1;
   position: relative;
-  gap: 4px; /* Increased gap to prevent overlap */
-  padding: 0 5px; /* Add horizontal padding */
+  gap: 0; /* Remove gap to control spacing with padding instead */
+  padding: 0 8px; /* Increased horizontal padding */
 }
 
 /* Adjust grid containers to have consistent width */
 .mobile-mode .encrypted-grid-container{
   flex: 1 1 auto; /* Take available space */
-  max-width: calc(50% - 40px); /* Half minus half of controls width */
+  max-width: calc(50% - 20px); /* Increased width */
   display: flex;
   justify-content: flex-end; /* Push content to right edge (toward center) */
-  padding-right: 4px; /* Small gap between grid and controls */
+  padding-right: 8px; /* Increased padding for more space */
   order: 1; /* First in flex layout */
 }
 .mobile-mode .guess-grid-container {
   flex: 1 1 auto; /* Take available space */
-  max-width: calc(50% - 40px); /* Half minus half of controls width */
+  max-width: calc(50% - 20px); /* Increased width */
   display: flex;
   justify-content: flex-start; /* Push content to left edge (toward center) */
-  padding-left: 4px; /* Small gap between grid and controls */
+  padding-left: 8px; /* Increased padding for more space */
   order: 3; /* Last in flex layout */
 }
 
@@ -434,9 +434,8 @@
   grid-template-columns: repeat(5, 26px); /* Slightly smaller */
   gap: 3px;
   padding: 5px;
-  overflow-x: auto;
+  overflow-x: visible; /* Prevent scrollbars */
   max-width: 100%;
-  -webkit-overflow-scrolling: touch;
   justify-content: center; /* Ensure centered layout */
 }
 
@@ -948,19 +947,14 @@
   -webkit-overflow-scrolling: touch;
 }
 
-/* Add some visual indication when grid is scrollable */
+/* Hide scrollbars completely */
 .mobile-mode .encrypted-grid::-webkit-scrollbar,
 .mobile-mode .guess-grid::-webkit-scrollbar {
-  height: 3px;
+  display: none;
 }
 
-.mobile-mode .encrypted-grid::-webkit-scrollbar-thumb,
-.mobile-mode .guess-grid::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 3px;
-}
-
-.dark-theme.mobile-mode .encrypted-grid::-webkit-scrollbar-thumb,
-.dark-theme.mobile-mode .guess-grid::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+.mobile-mode .encrypted-grid,
+.mobile-mode .guess-grid {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 }
