@@ -47,7 +47,7 @@
   /* Standard property */
 
   /* Optional: Add a subtle glow for monitor effect */
-  text-shadow: 0 0 5px rgba(0, 225, 152, 0.75);
+  text-shadow: 0 0 5px rgba(0, 225, 152, 0.85);
 }
 
 .App.dark-theme .game-title,
@@ -346,6 +346,16 @@
 }
 
 /* ===== 4. GRID LAYOUTS ===== */
+
+/* ===== BASE GRID STYLES ===== */
+/* Common styles for both grids */
+/* .base-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  padding: 12px;
+  border-radius: 8px;
+} */
 .grids {
   display: flex;
   justify-content: center;

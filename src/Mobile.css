@@ -1,351 +1,153 @@
-/* 
-   Mobile.css - Dedicated styles for mobile devices 
-   Streamlined and organized for better maintainability
-    1. BASIC CONTAINER STYLES - Core layout containers
-    2. HEADER ELEMENTS - Title and header styling
-    3. TEXT CONTAINER STYLES - Text display areas
-    4. ALTERNATING TEXT STYLES - Encrypted and display line formatting
-    5. SPACE CHARACTER STYLING - Space block appearance
-    6. GRID LAYOUTS - Letter selection grids
-    7. CONTROLS - Game control buttons and indicators
-    8. KEYBOARD HINT - Keyboard usage messages
-    9. GAME MESSAGE - Win/lose messages
-    10. WIN CELEBRATION STYLES - Victory screen
-    11. THEME COLOR STYLES - Visual theme variations
-    12. ORIENTATION WARNING - Portrait mode warning
-    13. RESPONSIVE ADJUSTMENTS - Screen size adaptations
+/*
+  Mobile.css - Streamlined styles for mobile devices
+  1. CORE LAYOUT - Containers and structure
+  2. TYPOGRAPHY - Text and font styles
+  3. GRIDS - Character and letter grids
+  4. CONTROLS - Buttons and game controls
+  5. THEMES - Light and dark theme variations
+  6. RESPONSIVE - Media query adjustments
 */
 
-
-/* ===== BASIC CONTAINER STYLES ===== */
+/* ===== CORE LAYOUT ===== */
 .mobile-mode {
-  margin: 0 !important;
-  padding: 10px !important;
-  max-width: 100% !important;
-  border-radius: 0 !important;
+  margin: 0;
+  padding: 10px;
+  max-width: 100%;
   height: 100vh;
   box-sizing: border-box;
-  background-color: white;
+  background: #fff;
 }
 
 .mobile-mode .game-content {
   display: flex;
   flex-direction: column;
   height: calc(100vh - 20px);
-  justify-content: flex-start;
   gap: 2px;
+  overflow: hidden;
+  /* Prevent content from spilling out */
 }
 
-/* ===== HEADER ELEMENTS ===== */
+.mobile-mode .text-container {
+  margin: 3px auto;
+  padding: 6px 12px;
+  border-radius: 8px;
+  max-height: 35vh;
+  /* Limit height to keep grids below */
+  overflow-y: auto;
+  /* Scroll if text exceeds max-height */
+  overflow-x: hidden;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.95);
+  flex-shrink: 0;
+  /* Prevent shrinking below content */
+}
+
+/* ===== TYPOGRAPHY ===== */
+.mobile-mode {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
 .mobile-mode .retro-title {
   font-size: 1.5rem;
+  font-weight: bold;
+  color: #000;
   margin-bottom: 0;
 }
 
-.mobile-mode.dark-theme .retro-title {
-  /* Font styling for 80s monitor feel */
-  font-family: "Courier New", Courier, monospace;
-  font-size: 1.5rem;
-  /* Adjust size as needed */
-  font-weight: bold;
-
-  /* Diagonal gradient background */
-  background: linear-gradient(135deg,
-      /* Low angle for subtle diagonal */
-      #4cc9f0 25%,
-      /* Bright green, classic 80s terminal color */
-      rgb(0, 249, 0) 100%
-      /* Fade to black */
-    );
-
-  /* Text color is transparent to show gradient through it */
-  color: transparent;
-  -webkit-background-clip: text;
-  /* For Safari/Chrome */
-  background-clip: text;
-  /* Standard property */
-
-  /* Optional: Add a subtle glow for monitor effect */
-  text-shadow: 0 0 5px rgba(0, 225, 152, 0.75);
-}
-
-.mobile-mode .game-header {
-
-  /* ===== GRID-BASED CHARACTER STYLES ===== */
-  .mobile-mode .char-grid {
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: min-content;
-    width: 100%;
-    font-family: 'Courier New', monospace !important;
-    font-variant-numeric: tabular-nums !important;
-    font-feature-settings: "tnum" !important;
-    justify-content: center !important;
-    overflow-x: visible !important;
-    /* Prevent horizontal scrollbar */
-    overflow-y: visible !important;
-    /* Prevent vertical scrollbar */
-  }
-
-  .mobile-mode .char-grid.encrypted-line {
-    margin-bottom: -6px !important;
-    padding: 0 1px 0 !important;
-    font-weight: 600 !important;
-    line-height: 1.2 !important;
-    /* Tighter line height */
-  }
-
-  .mobile-mode .char-grid.display-line {
-    margin-bottom: 2px !important;
-    margin-top: -10px !important;
-    /* Reduced from 2px */
-    padding: 0 1px 0 !important;
-    font-weight: bold !important;
-    line-height: 1.2 !important;
-    /* Tighter line height */
-  }
-
-  .mobile-mode .grid-cell {
-    width: 1ch;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
-    box-sizing: border-box;
-  }
-
-  .mobile-mode .space-cell {
-    position: relative;
-  }
-
-  .mobile-mode .space-dot {
-    position: absolute;
-    font-size: 0.7em;
-    opacity: 0.6;
-    color: currentColor;
-  }
-
-  /* Ensure display cells are properly aligned */
-  .mobile-mode .char-grid.encrypted-line .grid-cell,
-  .mobile-mode .char-grid.display-line .grid-cell {
-    min-width: 1ch;
-    max-width: 1ch;
-    overflow: visible;
-    position: relative;
-  }
-
-  @media (max-width: 360px) {
-
-    .mobile-mode .char-grid.encrypted-line .grid-cell,
-    .mobile-mode .char-grid.display-line .grid-cell {
-      min-width: 0.9ch;
-      max-width: 0.9ch;
-    }
-  }
-
-  margin-bottom: 2px;
-}
-
-/* ===== TEXT CONTAINER STYLES ===== */
-.mobile-mode .text-container {
-  margin: 3px auto !important;
-  padding: 6px 12px !important;
-  border-radius: 8px !important;
-  /* box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1) !important; */
-  max-height: 35vh !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-  width: 100% !important;
-  box-sizing: border-box !important;
-  background-color: rgb(255, 255, 255, 0.95) !important;
-  position: relative !important;
-}
-
-.mobile-mode .text-container {
-  background-color: white;
-}
-
-.dark-theme .mobile-mode .text-container,
-.dark-theme .mobile-mode .controls-container {
-  background-color: #222
-}
-
-/* Dark theme for text container */
-.mobile-mode.dark-theme .text-container {
-  background-color: #222 !important;
-  box-shadow: none !important;
-}
-
-/* ===== ALTERNATING TEXT STYLES ===== */
 .mobile-mode .alternating-text {
-  font-family: 'Courier New', monospace;
-  line-height: 1.4;
-  font-size: 0.9rem;
   white-space: pre-wrap;
-  word-break: normal;
-  word-spacing: normal;
-  letter-spacing: normal;
-  overflow-wrap: break-word;
-  padding: 0 5px !important;
-  text-align: left !important;
+  padding: 0 5px;
+  text-align: left;
 }
 
-/* Encrypted line styles */
-.mobile-mode .encrypted-line {
-  white-space: pre-wrap !important;
-  word-spacing: normal !important;
-  letter-spacing: normal !important;
-  font-family: 'Courier New', monospace !important;
-  font-variant-numeric: tabular-nums !important;
-  font-feature-settings: "tnum" !important;
-  line-height: 1.5 !important;
-  padding: 4px 2px !important;
-  font-weight: 600 !important;
-  text-align: left !important;
-  letter-spacing: 0 !important;
-}
-
-/* Display line styles */
+.mobile-mode .encrypted-line,
 .mobile-mode .display-line {
-  white-space: pre-wrap !important;
-  word-spacing: normal !important;
-  letter-spacing: normal !important;
-  font-family: 'Courier New', monospace !important;
-  font-variant-numeric: tabular-nums !important;
-  font-feature-settings: "tnum" !important;
-  line-height: 1.5 !important;
-  padding: 2px 2px 6px !important;
-  margin-bottom: 8px !important;
-  font-weight: bold !important;
-  text-align: left !important;
-  /* letter-spacing: 0 !important; */
-  color: rgb(0, 66, 170) !important;
-  /* Blue color from App.css */
-  -webkit-text-fill-color: rgb(0, 66, 170) !important;
-  /* For WebKit */
+  white-space: pre-wrap;
+  line-height: 1.5;
+  padding: 4px 2px;
+  text-align: left;
 }
 
-/* Ensure placeholder square has consistent width on mobile */
-.mobile-mode .display-line .placeholder {
-  display: inline-block !important;
-  width: 1ch !important;
-  /* Force consistent character width */
-  text-align: center !important;
+.mobile-mode .encrypted-line {
+  font-weight: 600;
 }
 
-/* ===== SPACE CHARACTER STYLING ===== */
-/* Simplified space character for mobile devices */
-.mobile-mode .space-char-mobile {
-  display: inline-block;
-  width: 0.4em;
-  /* color: rgba(128, 128, 128, 0.6); */
-  margin: 0 1px;
-  font-weight: normal;
-  user-select: none;
+.mobile-mode .display-line {
+  font-weight: bold;
+  color: rgb(0, 66, 170);
+  margin-bottom: 8px;
 }
 
-/* Original space character styling (used on desktop) */
 .mobile-mode .space-char {
-  display: inline-block !important;
-  width: 0.5em !important;
-  /* background-color: rgba(128, 128, 128, 0.2) !important; */
-  height: 1em !important;
-  vertical-align: middle !important;
-  border-radius: 2px !important;
-  margin: 0 1px !important;
-  position: relative !important;
+  display: inline-block;
+  width: 0.5em;
+  height: 1em;
+  margin: 0 1px;
+  position: relative;
 }
 
-/* Central dot in spaces */
 .mobile-mode .space-char::after {
-  content: "·" !important;
-  position: absolute !important;
-  top: 60% !important;
-  left: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  font-size: 0.7em !important;
-  opacity: 0.6 !important;
-  color: currentColor !important;
+  content: "·";
+  position: absolute;
+  top: 60%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.7em;
+  opacity: 0.6;
 }
 
-/* Tiny screen spaces */
-.mobile-mode .space-char.tiny-screen {
-  width: 0.3em !important;
-  margin: 0 !important;
+/* ===== GRIDS ===== */
+.mobile-mode .char-grid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: min-content;
+  width: 100%;
+  justify-content: center;
+  overflow: visible;
 }
 
-.mobile-mode .space-char.tiny-screen::after {
-  font-size: 0.5em !important;
-  opacity: 0.5 !important;
+.mobile-mode .char-grid.encrypted-line {
+  margin-bottom: -6px;
+  padding: 0 1px;
 }
 
-/* ===== GRID LAYOUTS ===== */
+.mobile-mode .char-grid.display-line {
+  margin: -10px 0 2px;
+  padding: 0 1px;
+}
+
+.mobile-mode .grid-cell {
+  width: 1ch;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .mobile-mode .grids {
   display: flex;
-  justify-content: space-between;
-  width: 100%;
-  padding: 0;
-  margin: 6px 0;
-  position: relative;
-  min-height: 200px;
-}
-
-.mobile-mode .encrypted-grid {
-  margin-right: 0;
-  margin-left: 8px;
-  position: relative;
-  left: 0;
-  /* box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); */
-  border-radius: 10px;
-  z-index: 10;
-  padding: 10px;
-  background-color: rgba(255, 255, 255, 0.05);
-}
-
-.mobile-mode .guess-grid {
-  margin-left: 0;
-  margin-right: 5px;
-  position: relative;
-  right: 0;
-  /* box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); */
-  border-radius: 10px;
-  z-index: 10;
-  /* background-color: rgba(51, 51, 51, 0.1); */
-  /* Light charcoal grey background */
-}
-
-/* Default styling for letter cells in guess grid */
-.mobile-mode .guess-grid .letter-cell {
-  color: rgb(0, 66, 170) !important;
-  /* Blue color from App.css */
-  -webkit-text-fill-color: rgb(0, 66, 170) !important;
-  /* For WebKit */
-}
-
-/* Dark theme grid adjustments */
-.mobile-mode.dark-theme .encrypted-grid,
-.mobile-mode.dark-theme .guess-grid {
-  background-color: #222 !important;
-  box-shadow: none !important;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-/* No specific theme grid backgrounds - using defaults as requested */
-
-.mobile-mode .letter-cell {
-  width: 45px;
-  height: 45px;
-  font-size: 1.4em;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  gap: 6px;
+  width: 100%;
+  margin: 6px 0;
+  flex-wrap: nowrap;
+  flex-grow: 1;
+  /* Allow grids to take remaining space */
+  overflow-x: auto;
+  /* Scroll horizontally if too many letters */
+  overflow-y: hidden;
 }
 
-.mobile-mode .letter-cell.selected {
-  transform: scale(1.1);
-  box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.5);
+.mobile-mode .encrypted-grid,
+.mobile-mode .guess-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 38px);
+  gap: 6px;
+  padding: 10px;
+  border-radius: 8px;
+  background-color: #fff;
+  width: auto;
 }
 
 /* ===== CONTROLS ===== */
@@ -353,21 +155,19 @@
   display: flex;
   justify-content: center;
   width: 100%;
-  margin: 5px 0 10px 0;
-  background-color: white;
+  margin: 5px 0 10px;
+  background: #fff;
+  flex-shrink: 0;
+  /* Prevent controls from being squashed */
 }
 
 .mobile-mode .controls {
   padding: 8px 15px;
   gap: 10px;
-  margin: 2px 0 5px;
-  background-color: rgb(255, 255, 255, 0.95);
   border-radius: 20px;
-  width: auto;
-  min-width: 200px;
   display: inline-flex;
   justify-content: center;
-  /* box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); */
+  min-width: 200px;
 }
 
 .mobile-mode .controls p {
@@ -375,472 +175,73 @@
   padding: 5px 8px;
   font-size: 0.9rem;
   border-radius: 15px;
-  background-color: rgba(255, 255, 255, 0.8);
 }
 
 .mobile-mode button {
-  color: black
-}
-
-
-
-.mobile-mode .controls button {
   padding: 5px 12px;
   font-size: 0.9rem;
-  background-color: white;
-  /* color: white !important; */
-  /* Ensure hint button text is always visible */
-  /* -webkit-text-fill-color: white !important; */
-  /* For WebKit browsers */
+  color: #000;
 }
 
-/* Dark theme control adjustments */
-.mobile-mode.dark-theme .controls {
-  background-color: #222;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.mobile-mode.dark-theme .controls p {
-  background-color: #333;
-}
-
-/* ===== GAME MESSAGE ===== */
-.mobile-mode .game-message {
-  margin: 10px auto;
-  padding: 10px;
-  max-width: 90%;
-}
-
-/* ===== WIN CELEBRATION STYLES ===== */
-.mobile-mode .win-celebration .celebration-content {
-  max-width: 90%;
-  width: 90%;
-  padding: 10px;
-  margin: 0;
-  max-height: 85vh;
-  overflow-y: auto;
-  box-sizing: border-box;
-  background-color: rgba(51, 51, 51, 0.85) !important;
-  /* Translucent background */
-  backdrop-filter: blur(3px);
-  /* Optional blur effect */
-  display: flex;
-  flex-direction: column;
-}
-
-.mobile-mode .win-celebration .victory-title {
-  font-size: 1.2rem;
-  margin-bottom: 3px;
-}
-
-.mobile-mode .win-celebration .quote-container {
-  margin-top: 6px;
-  padding: 8px;
-  max-height: 80px;
-  background-color: rgba(0, 0, 0, 0.2);
-  /* More translucent */
-}
-
-.mobile-mode .win-celebration .decrypted-quote {
-  font-size: 0.85rem;
-  line-height: 1.2;
-  margin-bottom: 6px;
-}
-
-.mobile-mode .win-celebration .stats-container {
-  gap: 5px !important;
-  margin: 6px 0 !important;
-}
-
-.mobile-mode .win-celebration .stat-item {
-  min-width: 50px;
-  padding: 3px;
-}
-
-.mobile-mode .win-celebration .stat-value {
-  font-size: 1.3rem;
-}
-
-.mobile-mode .win-celebration .stat-item.score .stat-value {
-  font-size: 1.5rem;
-}
-
-.mobile-mode .win-celebration .play-again-button {
-  padding: 8px 16px;
-  font-size: 1rem;
-  width: 100%;
-  max-width: 180px;
-  margin: 5px auto;
-}
-
-/* Additional adjustments for very small screens */
-@media (max-height: 600px) {
-  .mobile-mode .win-celebration .celebration-content {
-    padding: 8px;
-  }
-
-  .mobile-mode .win-celebration .victory-title {
-    font-size: 1rem;
-    margin-bottom: 2px;
-  }
-
-  .mobile-mode .win-celebration .quote-container {
-    margin-top: 4px;
-    padding: 4px;
-  }
-
-  .mobile-mode .win-celebration .stats-container {
-    gap: 3px !important;
-    margin: 4px 0 !important;
-  }
-
-  .mobile-mode .win-celebration .stat-value {
-    font-size: 1.1rem;
-  }
-
-  .mobile-mode .win-celebration .stat-item.score .stat-value {
-    font-size: 1.3rem;
-  }
-
-  .mobile-mode .win-celebration .play-again-button {
-    padding: 6px 12px;
-    margin-top: 3px;
-  }
-}
-
-/* ===== THEME COLOR STYLES ===== */
-/* Initial theme defaults */
-.mobile-mode {
+/* ===== THEMES ===== */
+.mobile-mode.light-theme {
   color: #212529;
-  background-color: #ffffff;
+  background: #fff;
 }
 
-/* Explicit rules for light theme with higher specificity - Samsung Browser support */
-.mobile-mode.light-theme,
-html .mobile-mode.light-theme,
-body .mobile-mode.light-theme,
-.mobile-mode[class*="light-theme"],
-html[data-theme="light"] .mobile-mode {
-  color: #212529 !important;
-  background-color: #ffffff !important;
-  -webkit-text-fill-color: #212529 !important;
-  -webkit-background-color: #ffffff !important;
+.mobile-mode.dark-theme {
+  color: #f8f9fa;
+  background: #222;
 }
 
-/* Force text container background in light mode */
-/* .mobile-mode.light-theme .text-container,
-html .mobile-mode.light-theme .text-container,
-body .mobile-mode.light-theme .text-container,
-.mobile-mode[class*="light-theme"] .text-container {
-  background-color: rgba(248, 249, 250, 0.95) !important;
-  -webkit-background-color: rgba(248, 249, 250, 0.95) !important;
-} */
-
-/* Stronger specificity for dark theme to prevent overrides */
-.mobile-mode.dark-theme,
-html .mobile-mode.dark-theme,
-body .mobile-mode.dark-theme,
-.mobile-mode[class*="dark-theme"],
-.mobile-mode[class*="theme-mode-dark"],
-html[data-theme="dark"] .mobile-mode {
-  color: #f8f9fa !important;
-  background-color: #222 !important;
-  -webkit-text-fill-color: #f8f9fa !important;
-  -webkit-background-color: #222 !important;
-}
-
-/* Dark theme text container */
 .mobile-mode.dark-theme .text-container,
-html .mobile-mode.dark-theme .text-container,
-body .mobile-mode.dark-theme .text-container,
-.mobile-mode[class*="dark-theme"] .text-container {
-  background-color: #222 !important;
-  -webkit-background-color: #222 !important;
+.mobile-mode.dark-theme .controls-container,
+.mobile-mode.dark-theme .controls,
+.mobile-mode.dark-theme .controls p {
+  color: #4cc9f0;
+  background: #222;
 }
 
-/* Text color themes for mobile - Dark theme only */
-/* Dark theme styles - higher specificity for all themed elements */
-.mobile-mode.dark-theme .game-title,
+.mobile-mode.dark-theme .retro-title {
+  background: linear-gradient(135deg, #4cc9f0 25%, rgb(0, 249, 0) 100%);
+  color: transparent;
+  background-clip: text;
+  -webkit-background-clip: text;
+  text-shadow: 0 0 5px rgba(0, 225, 152, 0.75);
+}
+
 .mobile-mode.dark-theme .encrypted-line,
-.mobile-mode.dark-theme .display-line,
-.mobile-mode.dark-theme .char-grid.encrypted-line,
-.mobile-mode.dark-theme .char-grid.display-line,
 .mobile-mode.dark-theme .letter-cell,
-.mobile-mode.dark-theme button,
-.mobile-mode.dark-theme .controls p,
-html .mobile-mode.dark-theme .encrypted-grid,
-html .mobile-mode.dark-theme .guess-grid,
-html .mobile-mode.dark-theme .grid-cell {
+.mobile-mode.dark-theme button {
   color: #4cc9f0 !important;
-  text-shadow: 0 0 5px rgba(76, 201, 240, 0.5) !important;
-  -webkit-text-fill-color: #4cc9f0 !important;
+  text-shadow: 0 0 5px rgba(76, 201, 240, 0.5);
 }
 
-.mobile-mode.dark-theme .game-title {
-  color: #4cc9f0 !important;
-  text-shadow: 0 0 8px rgba(76, 201, 240, 0.5) !important;
-  -webkit-text-fill-color: #4cc9f0 !important;
-}
-
-/* Mobile display line for dark theme - matched to guess grid color */
 .mobile-mode.dark-theme .display-line,
-.mobile-mode.dark-theme .char-grid.display-line {
-  color: rgb(0, 225, 152) !important;
-  text-shadow: 0 0 5px rgba(0, 225, 152, 0.5) !important;
-  -webkit-text-fill-color: rgb(0, 225, 152) !important;
-}
-
-/* Mobile guess grid for dark theme */
 .mobile-mode.dark-theme .guess-grid .letter-cell {
   color: rgb(0, 225, 152) !important;
-  text-shadow: 0 0 5px rgba(0, 225, 152, 0.5) !important;
-  -webkit-text-fill-color: rgb(0, 225, 152) !important;
+  text-shadow: 0 0 5px rgba(0, 225, 152, 0.5);
 }
 
-/* Ensure mistakes counter and hint button get the theme color */
-.mobile-mode.dark-theme .controls p {
-  color: #4cc9f0 !important;
-  text-shadow: 0 0 5px rgba(76, 201, 240, 0.5) !important;
-  -webkit-text-fill-color: #4cc9f0 !important;
+.mobile-mode.dark-theme .encrypted-grid,
+.mobile-mode.dark-theme .guess-grid {
+  background-color: #222;
 }
 
-/* Selected state for dark theme */
-.mobile-mode.dark-theme .letter-cell.selected {
-  color: white !important;
-  text-shadow: 0 0 8px rgba(76, 201, 240, 0.8) !important;
-  box-shadow: 0 0 0 4px rgba(76, 201, 240, 0.5) !important;
-}
-
-/* Guessed state for dark theme */
-.mobile-mode.dark-theme .letter-cell.guessed {
-  color: rgba(76, 201, 240, 0.5) !important;
-}
-
-/* Space colors for dark theme */
-.mobile-mode.dark-theme .space-char-mobile {
-  color: rgba(76, 201, 240, 0.7) !important;
-}
-
-/* ===== ORIENTATION WARNING ===== */
-.mobile-orientation-warning {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.8);
-  z-index: 1000;
-  justify-content: center;
-  align-items: center;
-  color: white;
-  text-align: center;
-  padding: 20px;
-}
-
-.mobile-mode.portrait .mobile-orientation-warning {
-  display: flex;
-}
-
-.orientation-message {
-  background-color: #333;
-  padding: 20px;
-  border-radius: 10px;
-  max-width: 80%;
-}
-
-.orientation-dismiss {
-  margin-top: 20px;
-  padding: 10px 20px;
-  background-color: #007bff;
-  border: none;
-  border-radius: 5px;
-  color: white;
-  font-weight: bold;
-}
-
-/* ===== RESPONSIVE ADJUSTMENTS ===== */
-/* For wider screens, ensure grids stay at edges */
-@media (min-width: 600px) {
-  .mobile-mode .encrypted-grid {
-    position: absolute;
-    left: 10px;
-  }
-
-  .mobile-mode .guess-grid {
-    background-color: white;
-    position: absolute;
-    right: 10px;
-  }
-
-  /* Ensure light theme works on mid-sized devices */
-  .mobile-mode.light-theme {
-    color: #212529 !important;
-    background-color: #ffffff !important;
-  }
-
-  .mobile-mode.light-theme .text-container {
-    background-color: rgb(255, 255, 255, 0.95) !important;
-  }
-}
-
-/* Screen-size specific adjustments for text */
+/* ===== RESPONSIVE ===== */
 @media (max-width: 480px) {
-
-  /* Force theme enforcement on small screens - with Samsung Browser support */
-  .mobile-mode.light-theme,
-  html .mobile-mode.light-theme,
-  body .mobile-mode.light-theme,
-  .mobile-mode[class*="light-theme"],
-  .mobile-mode[class*="theme-mode-light"],
-  html[data-theme="light"] .mobile-mode {
-    color: #212529 !important;
-    background-color: #ffffff !important;
-    -webkit-text-fill-color: #212529 !important;
+  .mobile-mode .retro-title {
+    font-size: 1.25rem;
   }
-
-  /* Light theme text container - stronger specificity */
-
-  /* ===== GAME OVER STYLES ===== */
-  .mobile-mode .game-over-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    /* High z-index to overlay everything */
-    background-color: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(3px);
-  }
-
-  .mobile-mode .game-over-message {
-    background-color: #333;
-    color: white;
-    padding: 20px;
-    border-radius: 10px;
-    text-align: center;
-    width: 80%;
-    max-width: 400px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-  }
-
-  .mobile-mode .play-again-button {
-    margin-top: 15px;
-    padding: 10px 20px;
-    font-size: 1rem;
-    background-color: #4CAF50;
-    color: white !important;
-    -webkit-text-fill-color: white !important;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-  }
-
-  .mobile-mode .play-again-button:hover {
-    background-color: #45a049;
-  }
-
-  /* Theme-specific styles for game over */
-  .mobile-mode.dark-theme .game-over-message {
-    border: 1px solid #4cc9f0;
-    box-shadow: 0 0 20px rgba(76, 201, 240, 0.3);
-  }
-
-  .mobile-mode.dark-theme .play-again-button {
-    background-color: #4cc9f0;
-    text-shadow: none;
-  }
-
-  .mobile-mode.light-theme .text-container,
-  html .mobile-mode.light-theme .text-container,
-  .mobile-mode[class*="light-theme"] .text-container {
-    background-color: rgba(248, 249, 250, 0.95) !important;
-  }
-
-  .mobile-mode.dark-theme,
-  html .mobile-mode.dark-theme,
-  body .mobile-mode.dark-theme,
-  .mobile-mode[class*="dark-theme"],
-  .mobile-mode[class*="theme-mode-dark"],
-  html[data-theme="dark"] .mobile-mode {
-    color: #f8f9fa !important;
-    background-color: #222 !important;
-    -webkit-text-fill-color: #f8f9fa !important;
-  }
-
-  /* Ensure themed text is visible in dark mode */
-  /* .mobile-mode.dark-theme,
-  html .mobile-mode.dark-theme {
-    color: inherit !important;
-    -webkit-text-fill-color: inherit !important;
-  } */
 
   .mobile-mode .encrypted-line,
   .mobile-mode .display-line {
-    font-size: 0.9rem !important;
-    letter-spacing: -0.01em !important;
-    /* Slightly tighten letter spacing */
-  }
-
-  .mobile-mode .alternating-text {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
+    padding: 2px 1px;
   }
 
   .mobile-mode .text-container {
-    max-width: 100% !important;
-    padding: 8px !important;
-  }
-
-  /* Reduce padding on lines to save space */
-  .mobile-mode .encrypted-line {
-    padding: 2px 1px !important;
-  }
-
-  .mobile-mode .display-line {
-    padding: 2px 1px 4px !important;
-    margin-bottom: 4px !important;
-  }
-
-  .mobile-mode .space-char {
-    width: 0.4em !important;
-    /* Even narrower for phone-sized screens */
-    margin: 0 1px !important;
-  }
-
-  .mobile-mode .space-char::after {
-    font-size: 0.6em !important;
-    /* Smaller dot for smaller screens */
-  }
-}
-
-/* For very small screens */
-@media (max-width: 360px) {
-
-  .mobile-mode .encrypted-line,
-  .mobile-mode .display-line {
-    font-size: 0.8rem !important;
-    letter-spacing: -0.02em !important;
-    /* More tightly spaced for very small screens */
-  }
-
-  .mobile-mode .alternating-text {
-    font-size: 0.8rem;
-  }
-
-  .mobile-mode .text-container {
-    padding: 6px !important;
-  }
-
-  .mobile-mode .space-char {
-    width: 0.35em !important;
-    /* Minimum width for very small screens */
-    margin: 0 !important;
-    /* No extra margin */
+    padding: 8px;
   }
 
   .mobile-mode .letter-cell {
@@ -850,140 +251,35 @@ html .mobile-mode.dark-theme .grid-cell {
   }
 }
 
-/* Landscape-specific adjustments */
-@media (orientation: landscape) {
-  .mobile-mode .game-content {
-    height: 98vh;
-    justify-content: flex-start;
+@media (max-width: 360px) {
+
+  .mobile-mode .encrypted-line,
+  .mobile-mode .display-line {
+    font-size: 0.8rem;
   }
 
   .mobile-mode .text-container {
-    max-height: 30vh !important;
-    width: 98% !important;
-    max-width: 98% !important;
+    padding: 6px;
+  }
+
+  .mobile-mode .space-char {
+    width: 0.35em;
+    margin: 0;
+  }
+}
+
+@media (orientation: landscape) {
+  .mobile-mode .game-content {
+    height: 98vh;
+  }
+
+  .mobile-mode .text-container {
+    max-height: 30vh;
+    width: 98%;
   }
 
   .mobile-mode .alternating-text {
-    font-size: 0.85rem !important;
-    white-space: normal !important;
-    /* Allow text to flow */
-    word-break: break-word !important;
-    width: 100% !important;
+    white-space: normal;
+    word-break: break-word;
   }
-
-  .mobile-mode .display-line {
-    margin-bottom: 6px !important;
-  }
-
-  /* Layout adjustments for landscape */
-  .mobile-mode .game-title {
-    color: black;
-    font-size: 1.2rem;
-    margin-bottom: 5px;
-  }
-}
-
-/* Extra small devices (like iPhone SE in landscape) */
-@media (max-height: 375px) and (orientation: landscape) {
-  .mobile-mode .letter-cell {
-    width: 32px;
-    height: 32px;
-    font-size: 0.9em;
-  }
-
-  .mobile-mode .encrypted,
-  .mobile-mode .display {
-    padding: 5px;
-    font-size: 0.8rem;
-    line-height: 1.4;
-  }
-
-  /* Compress controls */
-  .mobile-mode .controls p {
-    font-size: 0.8rem;
-    padding: 4px 8px;
-    background-color: white;
-  }
-
-  .mobile-mode .controls button {
-    padding: 3px 8px;
-    font-size: 0.75rem;
-    min-height: 26px;
-    background-color: white;
-  }
-}
-
-/* Add styles for about, settings, and hint buttons */
-.mobile-mode .about-icon,
-.mobile-mode .settings-icon,
-.mobile-mode .hint-button {
-  /* background-color: inherit;
-  color: black; */
-  /* Inherit background from parent */
-  border: none;
-  padding: 8px 12px;
-  border-radius: 8px;
-}
-
-
-/* Light mode button backgrounds */
-/* .mobile-mode:not(.dark-theme) .about-button,
-.mobile-mode:not(.dark-theme) .settings-button,
-.mobile-mode:not(.dark-theme) .hint-button {
-  background-color: white;
-  color: black;
-} */
-
-/* Preserve dark button backgrounds in dark mode */
-.mobile-mode.dark-theme .about-icon,
-.mobile-mode.dark-theme .settings-icon,
-.mobile-mode.dark-theme .hint-button {
-  background-color: #222;
-  /* color: rgb(0, 66, 170) */
-}
-
-.mobile-mode.dark-theme .about-icon:hover,
-.mobile-mode.dark-theme .settings-icon:hover {
-  color: rgb(0, 225, 152) !important;
-  /* Dark mode color - match title */
-  text-shadow: 0 0 8px rgba(0, 225, 152, 0.5);
-  -webkit-text-fill-color: rgb(0, 225, 152);
-  /* color: rgb(0, 66, 170) */
-}
-
-.mobile-mode.dark-theme .hint-button:hover {
-  background-color: rgb(56, 87, 26) !important;
-  color: #222
-}
-
-/* Match about button to encrypted-line color in mobile view */
-.mobile-mode .about-icon {
-  color: #212529;
-  /* Default color */
-}
-
-.mobile-mode.dark-theme .about-icon,
-.mobile-mode.dark-theme .settings-icon {
-  color: #4cc9f0 !important;
-  /* Dark mode color - match title */
-  text-shadow: 0 0 8px rgba(76, 201, 240, 0.5);
-  -webkit-text-fill-color: #4cc9f0;
-}
-
-
-.mobile-mode .hint-button {
-  color: black;
-  -webkit-text-fill-color: black;
-}
-
-.mobile-mode.dark-theme .hint-button {
-  color: rgb(0, 225, 152);
-  /* Dark mode color */
-  text-shadow: 0 0 5px rgba(0, 225, 152, 0.5);
-  -webkit-text-fill-color: rgb(0, 225, 152) !important;
-}
-
-.mobile-mode.dark-theme button {
-  color: inherit !important;
-  text-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
 }
