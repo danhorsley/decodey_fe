@@ -142,7 +142,8 @@
 .settings-icon,
 .hint-button {
   background-color: rgb(0, 66, 170);
-  color: white
+  color: white;
+  font-size: 0.8rem;
 }
 
 .dark-theme .hint-button {
