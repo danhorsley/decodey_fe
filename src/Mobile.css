@@ -397,7 +397,7 @@
   padding: 2px;
   text-align: center;
   margin: 0 auto; /* Center horizontally */
-  order:2;
+  order: 2;
 }
 
 /* Keep controls vertical in landscape mode */
@@ -406,9 +406,11 @@
   max-width: 70px;
   transform: scale(0.7);
   padding: 2px;
-  margin: 0;
+  margin: 0 auto; /* Ensure horizontal centering */
   display: flex;
   flex-direction: column;
+  align-items: center; /* Center content horizontally */
+  justify-content: center; /* Center content vertically */
   gap: 4px;
 }
 
@@ -478,21 +480,33 @@
   .mobile-mode .controls-container-fixed {
     flex: 0 0 14%; /* Make controls column much narrower */
     max-width: 14%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 
   .mobile-mode .controls {
     min-width: 65px;
     transform: scale(0.65);
+    margin: 0 auto;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    text-align: center;
   }
 
   .mobile-mode .controls p {
     font-size: 0.8rem;
     padding: 3px 6px;
+    text-align: center;
+    width: 100%;
   }
 
   .mobile-mode .controls button {
     padding: 6px 10px;
     font-size: 0.8rem;
+    text-align: center;
+    width: 100%;
   }
 }
 
