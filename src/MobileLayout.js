@@ -30,10 +30,7 @@ const MobileLayout = ({ children, isLandscape }) => {
   const mobileClasses = `
     mobile-mode 
     ${theme === "dark" ? "dark-theme" : "light-theme"} 
-    theme-mode-${theme} 
-    theme-${theme} 
-    text-${settings.textColor || "default"}
-    placeholder-${settings.placeholderStyle}
+    text-${textColor || "default"}
     ${!isLandscape ? "portrait" : "landscape"}
   `
     .trim()
@@ -43,14 +40,12 @@ const MobileLayout = ({ children, isLandscape }) => {
     setDismissedWarning(true);
   };
 
-  // Find the different components we need to rearrange
+  // Extract components
   const extractComponents = (children) => {
     let gameHeader = null;
     let textContainer = null;
     let controls = null;
-    let sidebar = null;
     let grids = null;
-    let keyboardHint = null;
     let gameMessage = null;
     let winCelebration = null;
     let otherElements = [];
@@ -67,12 +62,8 @@ const MobileLayout = ({ children, isLandscape }) => {
         textContainer = child;
       } else if (child.props.className?.includes("controls")) {
         controls = child;
-      } else if (child.props.className?.includes("sidebar")) {
-        sidebar = child;
       } else if (child.props.className?.includes("grids")) {
         grids = child;
-      } else if (child.props.className?.includes("keyboard-hint")) {
-        keyboardHint = child;
       } else if (child.props.className?.includes("game-message")) {
         gameMessage = child;
       } else if (child.props.className?.includes("win-celebration")) {
@@ -86,9 +77,7 @@ const MobileLayout = ({ children, isLandscape }) => {
       gameHeader,
       textContainer,
       controls,
-      sidebar,
       grids,
-      keyboardHint,
       gameMessage,
       winCelebration,
       otherElements,
@@ -102,54 +91,27 @@ const MobileLayout = ({ children, isLandscape }) => {
       gameHeader,
       textContainer,
       controls,
-      sidebar,
       grids,
-      keyboardHint,
       gameMessage,
       winCelebration,
       otherElements,
     } = extractComponents(Array.isArray(children) ? children : [children]);
 
-    // Check orientation to apply different layouts
-    const isLandscape = window.innerWidth > window.innerHeight;
-
     if (isLandscape) {
-      // Landscape layout with text at top
+      // Landscape layout
       return (
         <>
           {gameHeader}
 
-          {/* Text container now at the top for prominence */}
-          <div
-            className="text-container-wrapper"
-            style={{
-              width: "100%",
-              maxWidth: "100%",
-              margin: "5px auto 8px", // Reduced bottom margin
-              padding: "0 5px",
-              overflow: "hidden",
-            }}
-          >
-            {textContainer &&
-              React.cloneElement(textContainer, {
-                style: {
-                  maxHeight: "30vh", // Reduced from 35vh to give more space below
-                  overflowX: "hidden",
-                  overflowY: "auto",
-                  fontSize: window.innerWidth < 500 ? "0.85rem" : "0.9rem",
-                },
-              })}
-          </div>
+          {/* Text container - close to the title */}
+          <div className="text-container-wrapper">{textContainer}</div>
 
-          {/* Main content area with controls between grids */}
+          {/* Main content area with grids aligned from center */}
           <div className="mobile-gameplay-container">
             {/* Left column - encrypted grid */}
             <div className="encrypted-grid-container">
               {grids && React.Children.toArray(grids.props.children)[0]}
             </div>
-
-            {/* Center column - controls */}
-            <div className="controls-container-fixed">{controls}</div>
 
             {/* Right column - guess grid */}
             <div className="guess-grid-container">
@@ -157,41 +119,40 @@ const MobileLayout = ({ children, isLandscape }) => {
             </div>
           </div>
 
-          {/* Bottom area for any additional elements */}
-          <div className="bottom-container">
-            {keyboardHint}
-            {gameMessage}
-          </div>
-
-          {/* Win celebration overlay */}
-          {winCelebration}
+          {/* Controls in a thin line at the bottom */}
+          <div className="controls-container-fixed">{controls}</div>
 
           {/* Other elements */}
+          {gameMessage}
+          {winCelebration}
           {otherElements.map((element, index) => (
             <React.Fragment key={index}>{element}</React.Fragment>
           ))}
         </>
       );
     } else {
-      // Portrait layout - vertical stack
+      // Portrait layout - simplified vertical stack
       return (
         <>
           {gameHeader}
-
-          {/* Text container */}
           {textContainer}
 
-          {/* Grids */}
-          {grids}
+          <div className="mobile-gameplay-container">
+            {/* Encrypted grid on top */}
+            <div className="encrypted-grid-container">
+              {grids && React.Children.toArray(grids.props.children)[0]}
+            </div>
 
-          {/* Bottom elements */}
-          {sidebar}
-          <div className="controls-container">{controls}</div>
-          {keyboardHint}
+            {/* Guess grid below */}
+            <div className="guess-grid-container">
+              {grids && React.Children.toArray(grids.props.children)[1]}
+            </div>
+          </div>
+
+          <div className="controls-container-fixed">{controls}</div>
+
           {gameMessage}
           {winCelebration}
-
-          {/* Other elements */}
           {otherElements.map((element, index) => (
             <React.Fragment key={index}>{element}</React.Fragment>
           ))}
@@ -201,7 +162,7 @@ const MobileLayout = ({ children, isLandscape }) => {
   };
 
   return (
-    <div className={mobileClasses}>
+    <div className={mobileClasses} data-theme={theme}>
       {/* Orientation warning overlay */}
       {showPortraitWarning && (
         <div className="mobile-orientation-warning">
@@ -226,25 +187,6 @@ const MobileLayout = ({ children, isLandscape }) => {
 
       {/* Main content with mobile-specific structure */}
       <div className="game-content">{renderMobileLayout(children)}</div>
-
-      {/* Optional debug information - can be removed in production */}
-      {process.env.NODE_ENV === "development" && (
-        <div
-          className="debug-info"
-          style={{
-            position: "fixed",
-            bottom: 0,
-            right: 0,
-            background: "rgba(0,0,0,0.7)",
-            color: "white",
-            padding: "5px",
-            fontSize: "10px",
-            zIndex: 9999,
-          }}
-        >
-          {isLandscape ? "Landscape" : "Portrait"} Mode
-        </div>
-      )}
     </div>
   );
 };
