@@ -168,6 +168,8 @@ const getPlaceholderChar = () => {
   // Use a slightly narrower character on real mobile devices
   return isRealMobileDevice() ? "■" : "█";
 };
+
+// ■
 export const createStructuralMatch = (
   encrypted,
   display,
@@ -307,7 +309,7 @@ export const formatAlternatingLines = (
 
       // Add inline styles based on device
       const mobileStyles = isRealMobileDevice
-        ? 'style="line-height:1.1 !important; margin-bottom:-6px !important;"'
+        ? 'style="line-height:1.1 !important; margin-bottom:1px !important;"'
         : "";
 
       // Create character grid for encrypted line chunk
@@ -324,8 +326,8 @@ export const formatAlternatingLines = (
 
       // Adjust spacing between lines more aggressively on mobile
       const spacingStyle = isRealMobileDevice
-        ? 'style="margin-top:-10px !important; line-height:1.1 !important;"'
-        : 'style="margin-top:-4px;"';
+        ? 'style="margin-top:-1px !important; line-height:1.1 ;"'
+        : 'style="margin-top:-1px;"';
 
       // Create character grid for display line chunk with closer spacing
       let displayGrid = `<div class="char-grid display-line" ${spacingStyle}>`;

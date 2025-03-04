@@ -125,15 +125,15 @@ const MobileLayout = ({ children, isLandscape }) => {
             style={{
               width: "100%",
               maxWidth: "100%",
-              margin: "5px auto 15px",
+              margin: "5px auto 8px", // Reduced bottom margin
               padding: "0 5px",
-              overflow: "hidden", // Prevent any overflow
+              overflow: "hidden",
             }}
           >
             {textContainer &&
               React.cloneElement(textContainer, {
                 style: {
-                  maxHeight: "35vh",
+                  maxHeight: "30vh", // Reduced from 35vh to give more space below
                   overflowX: "hidden",
                   overflowY: "auto",
                   fontSize: window.innerWidth < 500 ? "0.85rem" : "0.9rem",
@@ -141,37 +141,24 @@ const MobileLayout = ({ children, isLandscape }) => {
               })}
           </div>
 
-          {/* Two-column grid layout below text */}
-          <div
-            className="grids-container"
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              width: "100%",
-              padding: "0 5px",
-              marginBottom: "10px",
-            }}
-          >
+          {/* Main content area with controls between grids */}
+          <div className="mobile-gameplay-container">
             {/* Left column - encrypted grid */}
-            <div
-              className="encrypted-grid-container"
-              style={{ flex: "1 1 auto", maxWidth: "48%" }}
-            >
+            <div className="encrypted-grid-container">
               {grids && React.Children.toArray(grids.props.children)[0]}
             </div>
 
+            {/* Center column - controls */}
+            <div className="controls-container-fixed">{controls}</div>
+
             {/* Right column - guess grid */}
-            <div
-              className="guess-grid-container"
-              style={{ flex: "1 1 auto", maxWidth: "48%" }}
-            >
+            <div className="guess-grid-container">
               {grids && React.Children.toArray(grids.props.children)[1]}
             </div>
           </div>
 
-          {/* Bottom container for other elements with more spacing */}
-          <div className="bottom-container" style={{ marginTop: "5px" }}>
-            <div className="controls-container">{controls}</div>
+          {/* Bottom area for any additional elements */}
+          <div className="bottom-container">
             {keyboardHint}
             {gameMessage}
           </div>

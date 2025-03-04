@@ -160,7 +160,7 @@
   width: auto;
   font-size: 1.3em;
   margin-left: auto;  /* Push to the right */
-  margin-right: 10px;  /* Add space from the right edge */
+  margin-right: 25px;  /* Add space from the right edge */
   position: relative;
   right: 0;  /* Align to the right edge */
 }
@@ -195,15 +195,15 @@
 .mobile-mode .controls p {
   margin: 0;
   padding: 5px 8px;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   border-radius: 15px;
 }
 
-.mobile-mode .controls button {
+/* .mobile-mode .controls button {
   padding: 4px 10px;
   font-size: 0.85rem;
   color: #000;
-}
+} */
 
 /* ===== THEMES ===== */
 .mobile-mode.light-theme {
@@ -260,7 +260,8 @@
 }
 
 .mobile-mode.dark-theme .encrypted-grid,
-.mobile-mode.dark-theme .guess-grid {
+.mobile-mode.dark-theme .guess-grid, 
+.mobile-mode.dark-theme .hint-button{
   background-color: #222;
 }
 
@@ -349,4 +350,574 @@
   .mobile-mode .char-grid.display-line {
     margin: 10px 0;
   }
+}
+
+/* Add these styles to your Mobile.css file */
+
+/* New container for the three-column layout in landscape */
+.mobile-mode .mobile-gameplay-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0 5px;
+  margin-bottom: 10px;
+  flex-grow: 1;
+  position: relative;
+}
+
+/* Adjust grid containers to have consistent width */
+.mobile-mode .encrypted-grid-container,
+.mobile-mode .guess-grid-container {
+  flex: 0 0 43%; /* Fixed width percentage */
+  max-width: 43%;
+  display: flex;
+  justify-content: center;
+}
+
+/* Update the controls container to work in the new layout */
+.mobile-mode .controls-container-fixed {
+  flex: 0 0 14%; /* Make controls column much narrower */
+  max-width: 14%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 5;
+  padding: 4px;
+}
+
+/* Keep controls vertical in landscape mode */
+.mobile-mode .controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 5px 10px;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 20px;
+  min-width: 130px;
+  max-width: 150px;
+  margin: 0 auto;
+}
+
+/* Make controls more compact */
+.mobile-mode .controls p {
+  margin: 0;
+  padding: 4px 8px;
+  font-size: 0.65rem;
+  text-align: center;
+}
+
+.mobile-mode .controls button {
+  padding: 8px 12px;
+  font-size: 0.65rem;
+}
+
+/* Remove the old absolute positioning */
+.mobile-mode .controls-container {
+  position: static; /* Override the absolute positioning */
+  transform: none;
+  left: auto;
+  top: auto;
+}
+
+/* Dark theme adjustments */
+/* .mobile-mode.dark-theme .controls {
+  background: rgba(51, 51, 51, 0.85);
+} */
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .mobile-mode .encrypted-grid-container,
+  .mobile-mode .guess-grid-container {
+    flex: 0 0 43%;
+    max-width: 43%;
+  }
+
+  .mobile-mode .controls-container-fixed {
+    flex: 0 0 14%; /* Make controls column much narrower */
+    max-width: 14%;
+  }
+
+  .mobile-mode .controls {
+    min-width: 110px;
+    padding: 4px 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .mobile-mode .encrypted-grid-container,
+  .mobile-mode .guess-grid-container {
+    flex: 0 0 43%;
+    max-width: 43%;
+  }
+
+  .mobile-mode .controls-container-fixed {
+    flex: 0 0 14%; /* Make controls column much narrower */
+    max-width: 14%;
+  }
+
+  .mobile-mode .controls {
+    min-width: 100px;
+    transform: scale(0.9);
+  }
+
+  .mobile-mode .controls p {
+    font-size: 0.8rem;
+    padding: 3px 6px;
+  }
+
+  .mobile-mode .controls button {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+  }
+}
+
+/* Handle iPad and larger tablets */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+  .mobile-mode .encrypted-grid-container,
+  .mobile-mode .guess-grid-container {
+    flex: 0 0 43%;
+    max-width: 43%;
+  }
+
+  .mobile-mode .controls-container-fixed {
+    flex: 0 0 14%; /* Make controls column much narrower */
+    max-width: 14%;
+  }
+
+  .mobile-mode .controls {
+    min-width: 140px;
+    transform: scale(1); /* Reset any scaling */
+  }
+}
+
+/* Mobile-friendly win celebration styles */
+
+/* Base adjustments for all mobile devices */
+@media (max-width: 768px) {
+  .win-celebration {
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+  }
+
+  .celebration-content {
+    max-width: 90%;
+    width: auto;
+    max-height: 80vh;
+    overflow-y: auto;
+    padding: 20px 15px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .victory-title {
+    font-size: 1.8rem;
+    margin-bottom: 10px;
+  }
+
+  .victory-message {
+    margin-bottom: 15px;
+  }
+
+  .quote-container {
+    margin-top: 15px;
+    padding: 12px;
+    max-height: 120px;
+  }
+
+  .decrypted-quote {
+    font-size: 0.9rem;
+    line-height: 1.4;
+    margin-bottom: 10px;
+  }
+
+  .stats-container {
+    margin: 12px 0 !important;
+    gap: 15px !important;
+  }
+
+  .stat-item {
+    min-width: 70px;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+  }
+
+  .stat-item.score .stat-value {
+    font-size: 1.8rem;
+  }
+
+  .celebration-actions {
+    margin-top: 15px;
+  }
+
+  .play-again-button {
+    padding: 10px 20px;
+    font-size: 1rem;
+  }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+  .celebration-content {
+    padding: 15px 12px;
+    max-height: 85vh;
+  }
+
+  .victory-title {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+  }
+
+  .quote-container {
+    max-height: 100px;
+    padding: 10px;
+    margin-top: 12px;
+  }
+
+  .decrypted-quote {
+    font-size: 0.85rem;
+    line-height: 1.3;
+  }
+
+  .quote-attribution {
+    font-size: 0.8rem;
+  }
+
+  .stats-container {
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+  }
+
+  .stat-item {
+    min-width: 60px;
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
+  }
+
+  .stat-value {
+    font-size: 1.3rem;
+  }
+
+  .stat-item.score .stat-value {
+    font-size: 1.5rem;
+  }
+
+  .play-again-button {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 360px) {
+  .celebration-content {
+    padding: 12px 10px;
+    max-height: 90vh;
+  }
+
+  .victory-title {
+    font-size: 1.3rem;
+  }
+
+  .quote-container {
+    max-height: 80px;
+    padding: 8px;
+  }
+
+  .decrypted-quote {
+    font-size: 0.8rem;
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+
+  .stat-item {
+    min-width: 50px;
+  }
+
+  .stat-value {
+    font-size: 1.1rem;
+  }
+
+  .stat-item.score .stat-value {
+    font-size: 1.3rem;
+  }
+}
+
+/* Specific adjustment for landscape orientation on small screens */
+@media (max-height: 500px) and (orientation: landscape) {
+  .celebration-content {
+    max-height: 90vh;
+    padding: 12px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .victory-message {
+    flex: 1 1 100%;
+    margin-bottom: 5px;
+  }
+
+  .quote-container {
+    flex: 1 1 45%;
+    max-height: 100px;
+    margin-top: 0;
+  }
+
+  .stats-container {
+    flex: 1 1 45%;
+    margin: 0 !important;
+  }
+
+  .celebration-actions {
+    flex: 1 1 100%;
+    margin-top: 10px;
+  }
+
+  .victory-title {
+    font-size: 1.4rem;
+    margin-bottom: 5px;
+  }
+}
+
+/* Ensure scrollability for very small screens */
+@media (max-height: 400px) {
+  .celebration-content {
+    overflow-y: auto;
+    max-height: 95vh;
+  }
+
+  /* Adjust matrix rain to be less intrusive on very small screens */
+  .matrix-canvas {
+    opacity: 0.6;
+  }
+}
+
+/* ===== OLDER PHONE OPTIMIZATION ===== */
+/* Galaxy S9+, iPhone SE, and other narrower phones */
+
+/* Galaxy S9+ is approximately 412 × 846px */
+/* iPhone SE is approximately 320 × 568px (1st gen) or 375 × 667px (2020) */
+
+/* General fixes for narrower phones */
+@media (max-width: 420px) {
+  /* Make text container smaller to give more room for grids */
+  .mobile-mode .text-container {
+    max-height: 25vh;
+    margin: 2px auto;
+    padding: 5px 8px;
+  }
+
+  /* Reduce overall padding */
+  .mobile-mode .App-container,
+  .mobile-mode .game-content {
+    padding: 5px;
+  }
+
+  /* Adjust the mobile gameplay container for more efficient space usage */
+  .mobile-mode .mobile-gameplay-container {
+    gap: 1px;
+    padding: 0;
+    margin-top: 5px;
+  }
+
+  /* Make grids smaller and font size smaller */
+  .mobile-mode .encrypted-grid-container,
+  .mobile-mode .guess-grid-container {
+    flex: 0 0 43%; /* Smaller width */
+    max-width: 43%;
+  }
+
+  .mobile-mode .controls-container-fixed {
+    flex: 0 0 14%; /* Make controls column much narrower */
+    max-width: 14%;
+  }
+
+  /* Make letter cells smaller */
+  .mobile-mode .letter-cell {
+    width: 32px;
+    height: 32px;
+    font-size: 0.95em;
+  }
+
+  /* Ensure encrypted/display line text is small enough */
+  .mobile-mode .char-grid.encrypted-line,
+  .mobile-mode .char-grid.display-line {
+    font-size: 0.85rem;
+  }
+
+  /* Frequency indicators smaller */
+  .mobile-mode .frequency-indicator {
+    font-size: 0.4em;
+    bottom: 1px;
+    right: 1px;
+  }
+
+  /* Optimize the controls even further for small screens */
+  .mobile-mode .controls {
+    min-width: 95px;
+    max-width: 115px;
+    transform: scale(0.85);
+    padding: 3px 6px;
+  }
+
+  .mobile-mode .controls p {
+    padding: 2px 4px;
+    font-size: 0.75rem;
+  }
+
+  .mobile-mode .controls button {
+    padding: 5px 8px;
+    font-size: 0.75rem;
+  }
+}
+
+/* iPhone SE (1st gen) and other very narrow phones */
+@media (max-width: 330px) {
+  /* Further reduce sizes for extremely narrow screens */
+  .mobile-mode .letter-cell {
+    width: 28px;
+    height: 28px;
+    font-size: 0.9em;
+  }
+
+  /* Make grids even smaller */
+  .mobile-mode .encrypted-grid-container,
+  .mobile-mode .guess-grid-container {
+    flex: 0 0 43%;
+    max-width: 43%;
+  }
+
+  .mobile-mode .controls-container-fixed {
+    flex: 0 0 14%; /* Make controls column much narrower */
+    max-width: 14%;
+  }
+
+  /* Even smaller controls */
+  .mobile-mode .controls {
+    min-width: 80px;
+    max-width: 100px;
+    transform: scale(0.8);
+    padding: 2px 4px;
+  }
+
+  /* Reduce header size */
+  .mobile-mode .retro-title {
+    font-size: 1.2rem;
+    margin: 0;
+  }
+
+  /* Make sure the grid adjusts to screen */
+  .mobile-mode .encrypted-grid,
+  .mobile-mode .guess-grid {
+    grid-template-columns: repeat(5, 28px);
+    gap: 4px;
+    padding: 6px;
+  }
+
+  /* Smaller text */
+  .mobile-mode .char-grid.encrypted-line,
+  .mobile-mode .char-grid.display-line {
+    font-size: 0.8rem;
+  }
+}
+
+/* Galaxy S9+ specific height issues - ensure grid doesn't overlap with text */
+@media (min-width: 400px) and (max-width: 420px) and (min-height: 800px) and (max-height: 850px) {
+  .mobile-mode .text-container {
+    max-height: 22vh; /* Slightly smaller for this specific height range */
+  }
+
+  .mobile-mode .mobile-gameplay-container {
+    margin-top: 8px;
+    gap:1px;
+  }
+}
+
+/* Landscape mode for older narrow phones - this is where most issues occur */
+@media (max-height: 420px) and (orientation: landscape) {
+  /* Significantly reduce text container height */
+  .mobile-mode .text-container {
+    max-height: 22vh;
+    margin-bottom: 2px;
+  }
+
+  /* Adjust layout to be more horizontal */
+  .mobile-mode .mobile-gameplay-container {
+    align-items: flex-start; /* Align to top */
+    margin-top: 0;
+    height: 65vh; /* Control the height explicitly */
+    gap: 1px;
+  }
+
+  /* Adjust grid containers to take less vertical space */
+  .mobile-mode .encrypted-grid-container,
+  .mobile-mode .guess-grid-container {
+    align-items: flex-start;
+    flex: 0 0 43%; /* Give more space to grids */
+    max-width: 43%;
+  }
+
+  /* Make letter cells smaller in landscape */
+  .mobile-mode .letter-cell {
+    width: 30px;
+    height: 30px;
+    font-size: 0.9em;
+  }
+
+  /* Ensure controls are visible */
+  .mobile-mode .controls-container-fixed {
+    align-self: center; /* Center vertically */
+    flex: 0 0 14%; /* Make controls column much narrower */
+    max-width: 14%;
+  }
+
+  /* Force horizontal scrolling for grids if needed */
+  .mobile-mode .encrypted-grid,
+  .mobile-mode .guess-grid {
+    overflow-x: auto;
+    max-width: 100%;
+    padding: 5px;
+  }
+
+  /* Ensure text doesn't overflow */
+  .mobile-mode .char-grid.encrypted-line,
+  .mobile-mode .char-grid.display-line {
+    font-size: 0.8rem;
+  }
+
+  /* Bottom elements need less space */
+  .mobile-mode .bottom-container {
+    margin-top: 2px;
+  }
+}
+
+/* Make sure horizontal scrolling is smooth */
+.mobile-mode .encrypted-grid,
+.mobile-mode .guess-grid {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Add some visual indication when grid is scrollable */
+.mobile-mode .encrypted-grid::-webkit-scrollbar,
+.mobile-mode .guess-grid::-webkit-scrollbar {
+  height: 3px;
+}
+
+.mobile-mode .encrypted-grid::-webkit-scrollbar-thumb,
+.mobile-mode .guess-grid::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.dark-theme.mobile-mode .encrypted-grid::-webkit-scrollbar-thumb,
+.dark-theme.mobile-mode .guess-grid::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
 }
