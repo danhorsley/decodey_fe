@@ -91,32 +91,32 @@
     cursor: pointer;
 
 /* Grid reference styling in About modal */
-.left-grid-reference {
+.about-container .left-grid-reference {
   color: #4cc9f0; /* Dark theme encrypted-line color */
   font-weight: 600;
 }
 
-.right-grid-reference {
+.about-container .right-grid-reference {
   color: rgb(0, 225, 152); /* Dark theme display-line color */
   font-weight: 600;
 }
 
 /* Light theme colors */
-body:not(.dark-theme) .left-grid-reference {
+body:not(.dark-theme) .about-container .left-grid-reference {
   color: #333; /* Light theme encrypted-line color */
 }
 
-body:not(.dark-theme) .right-grid-reference {
+body:not(.dark-theme) .about-container .right-grid-reference {
   color: rgb(0, 66, 170); /* Light theme display-line color (blue) */
 }
 
 /* Mobile dark theme */
-.mobile-mode.dark-theme .left-grid-reference {
+.mobile-mode.dark-theme .about-container .left-grid-reference {
   color: #4cc9f0 !important;
   -webkit-text-fill-color: #4cc9f0 !important;
 }
 
-.mobile-mode.dark-theme .right-grid-reference {
+.mobile-mode.dark-theme .about-container .right-grid-reference {
   color: rgb(0, 225, 152) !important;
   -webkit-text-fill-color: rgb(0, 225, 152) !important;
 }
