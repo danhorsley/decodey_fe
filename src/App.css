@@ -263,8 +263,8 @@
 
 .App.text-scifi-blue .display-line,
 .text-scifi-blue .display-line {
-  color: #b14cf0; /* Purple for display line */
-  text-shadow: 0 0 8px rgba(177, 76, 240, 0.5);
+  color: rgb(0,225,152); /* Purple for display line */
+  text-shadow: 0 0 8px rgb(0,225,152, 0.5);
 }
 
 .App.text-retro-green .encrypted-line,
@@ -958,12 +958,12 @@ button:hover:not(:disabled) {
 
 /* Sci-fi blue guess grid */
 .text-scifi-blue .guess-grid {
-  background-color: rgba(177, 76, 240, 0.1); /* Light purple background */
+  background-color:#333; /* Light purple background */
 }
 
 .text-scifi-blue .guess-grid .letter-cell {
-  color: #b14cf0; /* Purple text */
-  text-shadow: 0 0 5px rgba(177, 76, 240, 0.5);
+  color: rgb(0,225,152); /* Purple text */
+  text-shadow: 0 0 5px rgb(0,225,152, 0.5);
 }
 
 /* Themed button backgrounds for light mode only */
