@@ -182,8 +182,8 @@
   font-weight: bold !important;
   text-align: left !important;
   letter-spacing: 0 !important;
-  color: #333333 !important; /* Charcoal grey */
-  -webkit-text-fill-color: #333333 !important; /* For WebKit */
+  color: rgb(0, 66, 170) !important; /* Blue color from App.css */
+  -webkit-text-fill-color: rgb(0, 66, 170) !important; /* For WebKit */
 }
 
 /* Ensure placeholder square has consistent width on mobile */
@@ -276,8 +276,8 @@
 
 /* Default styling for letter cells in guess grid */
 .mobile-mode .guess-grid .letter-cell {
-  color: #333333 !important; /* Charcoal grey */
-  -webkit-text-fill-color: #333333 !important; /* For WebKit */
+  color: rgb(0, 66, 170) !important; /* Blue color from App.css */
+  -webkit-text-fill-color: rgb(0, 66, 170) !important; /* For WebKit */
 }
 
 /* Dark theme grid adjustments */
@@ -539,7 +539,7 @@ html .mobile-mode.dark-theme .grid-cell {
   -webkit-text-fill-color: #4cc9f0 !important;
 }
 
-/* Mobile display line for dark theme */
+/* Mobile display line for dark theme - matched to guess grid color */
 .mobile-mode.dark-theme .display-line,
 .mobile-mode.dark-theme .char-grid.display-line {
   color: rgb(0, 225, 152) !important; 
@@ -896,19 +896,23 @@ html .mobile-mode.dark-theme .grid-cell {
   color: #212529 !important; /* Default color */
 }
 
-.mobile-mode.dark-theme .about-button {
-  color: #4cc9f0 !important; /* Dark mode color */
-  text-shadow: 0 0 5px rgba(76, 201, 240, 0.5) !important;
+.mobile-mode.dark-theme .about-button,
+.mobile-mode.dark-theme .settings-button {
+  color: #4cc9f0 !important; /* Dark mode color - match title */
+  text-shadow: 0 0 8px rgba(76, 201, 240, 0.5) !important;
   -webkit-text-fill-color: #4cc9f0 !important;
 }
 
 /* Match settings and hint buttons to display-line color in mobile view */
-.mobile-mode .settings-button,
-.mobile-mode .hint-button {
+.mobile-mode .settings-button {
   color: #333333 !important; /* Charcoal grey */
 }
 
-.mobile-mode.dark-theme .settings-button,
+.mobile-mode .hint-button {
+  color: black !important; /* Black text for hint button in light theme */
+  -webkit-text-fill-color: black !important;
+}
+
 .mobile-mode.dark-theme .hint-button {
   color: rgb(0, 225, 152) !important; /* Dark mode color */
   text-shadow: 0 0 5px rgba(0, 225, 152, 0.5) !important;
