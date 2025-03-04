@@ -1,5 +1,6 @@
 import React from "react";
 import "./About.css";
+import Settings from "./Settings";
 import { useAppContext } from "./AppContext";
 
 function About({ isOpen, onClose }) {
@@ -22,11 +23,18 @@ function About({ isOpen, onClose }) {
             <strong>How to play:</strong>
           </p>
           <ol>
-            <li>Select a letter from the encrypted text (<span className="left-grid-reference">left grid</span>)</li>
-            <li>Guess what original letter it represents (<span className="right-grid-reference">right grid</span>)</li>
             <li>
-              Use letter frequency numbers in the <span className="left-grid-reference">left grid</span> to help analyze the
-              pattern
+              Select a letter from the encrypted text (
+              <span className="left-grid-reference">left grid</span>)
+            </li>
+            <li>
+              Guess what original letter it represents (
+              <span className="right-grid-reference">right grid</span>)
+            </li>
+            <li>
+              Use letter frequency numbers in the{" "}
+              <span className="left-grid-reference">left grid</span> to help
+              analyze the pattern
             </li>
             <li>Solve before running out of try again</li>
           </ol>
