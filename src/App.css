@@ -894,6 +894,7 @@ button:hover:not(:disabled) {
 
 body.dark-theme {
   background-color: #333;
+  color: #333;
 }
 
 html.dark-theme {
@@ -913,10 +914,9 @@ html.dark-theme {
   /* box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3); */
 }
 
-.dark-theme .encrypted {
-  background-color: black;
-  color: #e9ecef;
-  border-bottom: 1px solid #555;
+.dark-theme .encrypted-line {
+  background-color: #333;
+  color: #4cc9f0;
 }
 
 .dark-theme .display {
@@ -932,7 +932,7 @@ html.dark-theme {
 
 .dark-theme .letter-cell {
   background-color: #444;
-  color: #f8f9fa;
+  color: #4cc9f0;
   border-color: #555;
 }
 
@@ -958,8 +958,8 @@ html.dark-theme {
 
 
 .dark-theme .controls p {
-  background-color: #444;
-  color: #f8f9fa;
+  background-color: #333;
+  color: #4cc9f0;
 }
 
 .dark-theme .game-message {
@@ -1034,9 +1034,12 @@ html.dark-theme {
   }
 }
 
-.dark-theme .encrypted-line,
+.dark-theme .encrypted-line {
+  color: #4cc9f0
+}
+
 .dark-theme .display-line {
-  color: white;
+  color: rgb(0, 225, 152);
 }
 
 /* Light theme adjustment */

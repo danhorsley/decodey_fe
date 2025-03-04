@@ -645,15 +645,12 @@ function App() {
       className={`App-container ${settings.theme === "dark" ? "dark-theme" : ""}`}
     >
       {isAboutOpen && <About isOpen={isAboutOpen} onClose={closeAbout} />}
-      <div
-        className={`App text-${settings.textColor} placeholder-${settings.placeholderStyle}`}
-      >
-        {renderGameHeader()}
-        {renderTextContainer()}
-        {renderGrids()}
-        {renderControls()}
-        {renderGameOverCelebration()}
-      </div>
+
+      {renderGameHeader()}
+      {renderTextContainer()}
+      {renderGrids()}
+      {renderControls()}
+      {renderGameOverCelebration()}
     </div>
   );
 }

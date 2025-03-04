@@ -211,6 +211,11 @@
 }
 
 .mobile-mode.dark-theme .encrypted-line,
+.mobile-mode.dark-theme .char-grid encrypted-line {
+  background-color: #222;
+}
+
+.mobile-mode.dark-theme .encrypted-line,
 .mobile-mode.dark-theme .letter-cell,
 .mobile-mode.dark-theme button {
   color: #4cc9f0 !important;
