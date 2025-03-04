@@ -168,6 +168,7 @@
 /* ===== CONTROLS ===== */
 .mobile-mode .controls-container {
   display: flex;
+  flex-direction: column; /* Stack buttons vertically */
   justify-content: center;
   width: auto;
   margin: 5px 0;
@@ -178,13 +179,15 @@
   top: 50%;
   transform: translate(-50%, -50%) scale(0.8);  /* Make controls smaller */
   z-index: 5;  /* Ensure it's above other elements */
+  gap: 8px; /* Add gap between buttons */
 }
 
 .mobile-mode .controls {
   padding: 5px 10px;  /* Smaller padding */
   gap: 8px;  /* Reduced gap */
   border-radius: 20px;
-  display: inline-flex;
+  display: flex; /* Maintain flex for alignment */
+  flex-direction: column; /* Stack buttons vertically */
   justify-content: center;
   min-width: 150px;  /* Smaller minimum width */
 }
@@ -316,21 +319,21 @@
     white-space: normal;
     word-break: break-word;
   }
-  
+
   /* Adjust layout for landscape mode */
   .mobile-mode .grids {
     justify-content: space-between;
     margin-top: 25px;  /* More space from text container */
   }
-  
+
   .mobile-mode .encrypted-grid {
     margin-right: 20%;  /* More space for the controls in the middle */
   }
-  
+
   .mobile-mode .guess-grid {
     margin-left: 20%;  /* Move further right */
   }
-  
+
   .mobile-mode .controls-container {
     position: absolute;
     top: 50%;
@@ -340,7 +343,7 @@
     padding: 4px 8px;  /* Smaller padding */
     border-radius: 20px;
   }
-  
+
   /* Ensure text doesn't overlap with grids */
   .mobile-mode .char-grid.encrypted-line,
   .mobile-mode .char-grid.display-line {
