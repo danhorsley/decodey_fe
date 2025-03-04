@@ -341,6 +341,90 @@
     padding-bottom: 5px;
   }
 }
+/* Adjust win celebration for mobile landscape mode */
+@media (orientation: landscape) {
+  .mobile-mode .win-celebration {
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+  }
+
+  .mobile-mode .celebration-content {
+    max-width: 70%; /* Reduce width */
+    max-height: 85vh; /* Adjust height */
+    padding: 15px;
+     position: relative; /* Change from absolute to relative */
+      top: auto; /* Remove positioning */
+      left: auto;
+      transform: none; /* Remove transform */
+      margin: 0 auto; /* Center with margin auto */
+  }
+
+  /* Make content more compact */
+  .mobile-mode .victory-title {
+    font-size: 1.4rem;
+    margin-bottom: 10px;
+  }
+
+  .mobile-mode .quote-container {
+    max-height: 80px; /* Make quote container smaller */
+    padding: 10px;
+    margin-top: 10px;
+  }
+
+  .mobile-mode .stats-container {
+    margin: 10px 0 !important;
+    gap: 10px !important;
+  }
+
+  .mobile-mode .stat-value {
+    font-size: 1.2rem;
+  }
+
+  .mobile-mode .stat-item.score .stat-value {
+    font-size: 1.4rem;
+  }
+
+  /* Make play again button smaller */
+  .mobile-mode .play-again-button {
+    padding: 8px 16px;
+    font-size: 1rem;
+  }
+
+  /* For very low-height screens */
+  @media (max-height: 450px) {
+    .mobile-mode .celebration-content {
+      max-width: 80%;
+      max-height: 90vh;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+    }
+
+    .mobile-mode .victory-message {
+      width: 100%;
+      margin-bottom: 5px;
+    }
+
+    .mobile-mode .quote-container {
+      width: 48%;
+      max-height: 70px;
+    }
+
+    .mobile-mode .stats-container {
+      width: 48%;
+      margin: 0 !important;
+    }
+
+    .mobile-mode .celebration-actions {
+      width: 100%;
+      margin-top: 10px;
+    }
+  }
+}
 
 /* iPhone SE and other very narrow phones in landscape */
 @media (max-height: 380px) and (orientation: landscape) {
@@ -402,7 +486,12 @@
 
 /* Win celebration adjustments for mobile */
 .mobile-mode .win-celebration {
-  padding: 10px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
 }
 
 .mobile-mode .celebration-content {
@@ -539,5 +628,44 @@
       height: 36px;
       font-size: 1.1em;
     }
+  }
+}
+/*MOBILE LETTER SPACING*/
+/* Add spacing between letters in char grid for mobile */
+.mobile-mode .char-grid .grid-cell {
+  width: 1.2ch; /* Increase from 1ch to add more space */
+  min-width: 1.2ch;
+  max-width: 1.2ch;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0 1px; /* Add small horizontal padding */
+}
+
+/* Ensure block characters have breathing room */
+.mobile-mode .display-line .grid-cell:contains('█') {
+  margin: 0 1px;
+}
+
+/* Since :contains isn't widely supported, let's use an alternative approach */
+.mobile-mode .char-grid.display-line {
+  letter-spacing: 1px; /* Add letter spacing across the whole line */
+}
+
+.mobile-mode .char-grid.encrypted-line {
+  letter-spacing: 1px; /* Match spacing in encrypted line */
+}
+
+/* For very small screens, adjust accordingly */
+@media (max-width: 360px) {
+  .mobile-mode .char-grid .grid-cell {
+    width: 1.1ch; /* Slightly smaller on tiny screens */
+    min-width: 1.1ch;
+    max-width: 1.1ch;
+  }
+
+  .mobile-mode .char-grid.display-line,
+  .mobile-mode .char-grid.encrypted-line {
+    letter-spacing: 0.5px; /* Reduce letter spacing on tiny screens */
   }
 }
