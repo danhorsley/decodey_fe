@@ -1,8 +1,8 @@
-import React, { useReducer, useEffect, useCallback, useMemo } from "react";
+import React, { useReducer, useEffect, useCallback, useMemo, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import "./Styles/App.css";
 import "./Styles/Mobile.css";
-import Settings from "./Settings";
+// import Settings from "./Settings"; // Removed unused import
 import { useAppContext } from "./AppContext";
 import useSound from "./SoundManager";
 import useKeyboardInput from "./KeyboardController";
@@ -490,10 +490,12 @@ function Game() {
     [updateSettings, showGame],
   );
 
+  const [isAboutOpen, setIsAboutOpen] = useState(isAboutOpen); //Added state for about modal
+
   // Render logic
   const renderGameHeader = () => (
     <div className="game-header">
-      <button className="about-icon" onClick={openAbout} aria-label="About">
+      <button className="about-icon" onClick={() => setIsAboutOpen(true)} aria-label="About">
         {ABOUT_ICON_SVG}
       </button>
       <h1 className="retro-title">uncrypt</h1>
@@ -632,7 +634,7 @@ function Game() {
   if (useMobileMode) {
     return (
       <div className="App-container">
-        {isAboutOpen && <About isOpen={isAboutOpen} onClose={closeAbout} />}
+        {isAboutOpen && <About isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />}
         <MobileLayout isLandscape={isLandscape}>
           {renderGameHeader()}
           {renderTextContainer()}
@@ -648,8 +650,7 @@ function Game() {
     <div
       className={`App-container ${settings.theme === "dark" ? "dark-theme" : ""}`}
     >
-      {isAboutOpen && <About isOpen={isAboutOpen} onClose={closeAbout} />}
-
+      {isAboutOpen && <About isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />}
       {renderGameHeader()}
       {renderTextContainer()}
       {renderGrids()}

@@ -1,6 +1,5 @@
 import React from "react";
 import "./Styles/About.css";
-import Settings from "./Settings";
 import { useAppContext } from "./AppContext";
 
 function About({ isOpen, onClose }) {
