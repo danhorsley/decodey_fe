@@ -71,13 +71,13 @@
 .mobile-mode .char-grid.encrypted-line {
   margin-bottom: 2px; /* Reduced spacing between lines */
   padding: 2px 1px;
-  font-size: 1.5rem; /* Increased font size for mobile */
+  font-size: 1.275rem; /* Reduced by 15% from 1.5rem */
 }
 
 .mobile-mode .char-grid.display-line {
   margin: 0 0 8px; /* Reduced spacing between lines */
   padding: 0 1px;
-  font-size: 1.5rem; /* Increased font size for mobile */
+  font-size: 1.275rem; /* Reduced by 15% from 1.5rem */
 }
 
 .mobile-mode .grid-cell {
@@ -242,14 +242,9 @@
   cursor: pointer;
 }
 
-/* Hide scrollbars on mobile */
-.mobile-mode .text-container::-webkit-scrollbar {
-  display: none;
-}
-
+/* Text container no longer needs scrollbar styles */
 .mobile-mode .text-container {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  overflow: visible;
 }
 
 /*MOBILE LETTER SPACING*/
@@ -616,9 +611,10 @@
     font-size: 1.4em;
   }
 
-  /* Adjust text container to be smaller */
+  /* Allow text container to expand */
   .mobile-mode .text-container {
-    max-height: 25vh;
+    max-height: none;
+    overflow: visible;
   }
 
   /* Position controls at the bottom */
