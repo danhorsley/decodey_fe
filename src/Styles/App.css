@@ -298,6 +298,7 @@
   padding: 4px 0 0 0;
   color: #333;
   font-weight: 600;
+  letter-spacing: 2px; /* Added spacing for consistency with display line */
 }
 
 .char-grid.display-line {
@@ -307,6 +308,7 @@
   font-weight: bold;
   margin-bottom: 8px;
   margin-top: 8px;
+  letter-spacing: 2px; /* Added spacing between letters for improved readability */
 }
 
 .grid-cell {
