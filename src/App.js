@@ -689,6 +689,9 @@ function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
 
+  // Get settings from context for the App component
+  const { settings } = useAppContext();
+  
   return (
     <div>
       <About isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
@@ -697,7 +700,7 @@ function App() {
 
       {/* Login Button */}
       <button 
-        className={`login-icon ${settings.theme === "dark" ? "dark-theme" : ""}`}
+        className={`login-icon ${settings?.theme === "dark" ? "dark-theme" : ""}`}
         onClick={() => setIsLoginOpen(true)}
         aria-label="Login"
       >
