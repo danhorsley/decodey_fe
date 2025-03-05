@@ -113,7 +113,7 @@ const useGame = () => {
         );
         setIsStartingGame(false); // Release the lock even on error
       });
-  }, [settings.hardcoreMode, settings.useLongQuotes]);
+  }, [settings.hardcoreMode, settings.useLongQuotes, isStartingGame]);
 
   // Handle letter selection
   const handleEncryptedClick = useCallback(
@@ -136,7 +136,7 @@ const useGame = () => {
         submitGuess(guessedLetter);
       }
     },
-    [selectedEncrypted]
+    [selectedEncrypted, submitGuess]
   );
 
   // Submit a guess

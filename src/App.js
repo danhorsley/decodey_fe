@@ -81,16 +81,16 @@ function App() {
     playSound,
   });
 
+  // Ref to track if game has been started
+  const gameStarted = useRef(false);
+  
   // Start game on mount, but only once
   useEffect(() => {
-    // Use a ref to track if game has been started
-    const gameStarted = React.useRef(false);
-    
     if (!gameStarted.current) {
       gameStarted.current = true;
       startGame();
     }
-  }, []);
+  }, [startGame]);
 
   // Apply theme based on settings
   useEffect(() => {
