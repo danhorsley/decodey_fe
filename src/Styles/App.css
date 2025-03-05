@@ -67,7 +67,7 @@
   text-shadow: 0 0 5px rgba(76, 201, 240, 0.5);
 }
 
-*/ .App.dark-theme .guessed,
+/* .App.dark-theme .guessed, */
 .dark-theme .guessed {
   color: rgba(76, 201, 240, 0.5);
 }
@@ -1035,8 +1035,8 @@ html.dark-theme {
   }
 }
 
-.dark-theme .encrypted-line {
-  color: #4cc9f0
+.dark-theme .encryptedline {
+  color: #4cc9f0;
 }
 
 .dark-theme .display-line {
