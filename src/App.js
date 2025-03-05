@@ -201,8 +201,8 @@ function App() {
   // Memoized event handlers
   const startGame = useCallback(() => {
     if (DEBUG) console.log("Starting new game...");
-    apiService.startGame(settings.useLongQuotes)
-      .then((data) => {
+    apiService
+      .startGame(settings.useLongQuotes)
       .then((data) => {
         if (DEBUG) console.log("Game data received:", data);
         if (data.game_id) localStorage.setItem("uncrypt-game-id", data.game_id);
