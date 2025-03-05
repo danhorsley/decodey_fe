@@ -2,9 +2,11 @@
 
 /* Tablets and larger screens */
 @media (min-width: 768px) {
+
   .mobile-mode .encrypted-grid-container,
   .mobile-mode .guess-grid-container {
-    max-width: 42%; /* More space for thumbs on tablets */
+    max-width: 42%;
+    /* More space for thumbs on tablets */
   }
 
   .mobile-mode .controls {
@@ -14,6 +16,7 @@
 
 /* Medium screens */
 @media (max-width: 600px) {
+
   .mobile-mode .encrypted-grid,
   .mobile-mode .guess-grid {
     grid-template-columns: repeat(5, 42px);
@@ -29,6 +32,7 @@
 
 /* Small screens */
 @media (max-width: 480px) {
+
   .mobile-mode .encrypted-grid,
   .mobile-mode .guess-grid {
     grid-template-columns: repeat(5, 40px);
@@ -55,6 +59,7 @@
 
 /* Very small screens - prevent overlap */
 @media (max-width: 360px) {
+
   .mobile-mode .encrypted-grid,
   .mobile-mode .guess-grid {
     grid-template-columns: repeat(5, 42px);
@@ -72,6 +77,8 @@
     flex-wrap: wrap;
   }
 }
+
+
 
 /* Landscape mode adjustments */
 @media (orientation: landscape) {
@@ -109,18 +116,35 @@
   }
 }
 
-/* Samsung Galaxy S9+ in landscape mode */
-@media (min-height: 319px) and (max-height: 380px) and (min-width: 655px) and (max-width: 850px) and (orientation: landscape) {
+/* Smasung25+ and similar in landscape mode */
+@media (min-height: 351px) and (max-height: 380px) and (min-width: 676px) and (max-width: 850px) and (orientation: landscape) {
+
   .mobile-mode .encrypted-grid,
   .mobile-mode .guess-grid {
-    grid-template-columns: repeat(7, 35px);
+    grid-template-columns: repeat(6, 40px);
+    gap: 4px;
+  }
+
+  .mobile-mode .letter-cell {
+    width: 40px;
+    height: 40px;
+    font-size: 1.1em;
+  }
+}
+
+/* Samsung Galaxy S9+ in landscape mode */
+@media (min-height: 319px) and (max-height: 350px) and (min-width: 655px) and (max-width: 675px) and (orientation: landscape) {
+
+  .mobile-mode .encrypted-grid,
+  .mobile-mode .guess-grid {
+    grid-template-columns: repeat(6, 35px);
     gap: 4px;
   }
 
   .mobile-mode .letter-cell {
     width: 35px;
     height: 35px;
-    font-size: 1.05em;
+    font-size: 1.0em;
   }
 
   /* Adjust text container to be smaller */
@@ -151,6 +175,7 @@
 
 /* Samsung Galaxy S8+ in landscape mode - even smaller cells */
 @media (min-height: 340px) and (max-height: 359px) and (min-width: 730px) and (max-width: 780px) and (orientation: landscape) {
+
   .mobile-mode .encrypted-grid,
   .mobile-mode .guess-grid {
     grid-template-columns: repeat(7, 31px);
@@ -191,6 +216,7 @@
 
 /* Portrait mode - stack grids vertically */
 @media (orientation: portrait) {
+
   /* Change the gameplay container to vertical */
   .mobile-mode .mobile-gameplay-container {
     flex-direction: column;
@@ -236,10 +262,13 @@
 
   /* Position controls at the bottom */
   .mobile-mode .controls-container-fixed {
-    margin-top: 10px; /* Small space after grids */
-    margin-bottom: auto; /* Push content up instead of down */
+    margin-top: 10px;
+    /* Small space after grids */
+    margin-bottom: auto;
+    /* Push content up instead of down */
     padding-top: 0;
-    order: 3; /* Ensure it comes after grids */
+    order: 3;
+    /* Ensure it comes after grids */
   }
 
   /* Add some style to make controls stand out */
@@ -251,6 +280,7 @@
 
   /* Responsive adjustments for smaller portrait screens */
   @media (max-width: 480px) {
+
     .mobile-mode .encrypted-grid,
     .mobile-mode .guess-grid {
       grid-template-columns: repeat(5, 42px);
@@ -266,6 +296,7 @@
 
   /* Very small screens */
   @media (max-width: 360px) {
+
     .mobile-mode .encrypted-grid,
     .mobile-mode .guess-grid {
       grid-template-columns: repeat(5, 34px);
@@ -283,13 +314,15 @@
 /* For very small screens, adjust accordingly */
 @media (max-width: 360px) {
   .mobile-mode .char-grid .grid-cell {
-    width: 1.1ch; /* Slightly smaller on tiny screens */
+    width: 1.1ch;
+    /* Slightly smaller on tiny screens */
     min-width: 1.1ch;
     max-width: 1.1ch;
   }
 
   .mobile-mode .char-grid.display-line,
   .mobile-mode .char-grid.encrypted-line {
-    letter-spacing: 0.5px; /* Reduce letter spacing on tiny screens */
+    letter-spacing: 0.5px;
+    /* Reduce letter spacing on tiny screens */
   }
 }

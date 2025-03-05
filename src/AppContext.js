@@ -7,7 +7,7 @@ const AppContext = createContext();
 // Default settings
 const defaultSettings = {
   // frequencyDisplay: "numeric",
-  theme: "dark",
+  theme: "light",
   difficulty: "easy",
   longText: false,
   speedMode: true, // Always on - cannot be changed

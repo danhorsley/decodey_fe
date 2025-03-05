@@ -187,7 +187,9 @@ function Settings({ currentSettings, onSave, onCancel }) {
               checked={settings.longText}
               onChange={() => handleChange("longText", !settings.longText)}
             />
-            <span className="option-label">Use Longer Quotes</span>
+            <span className="option-label">
+              Use Longer Quotes - over 65 characters
+            </span>
           </label>
           <p className="settings-description warning-text">
             <strong>Warning:</strong> Longer quotes may not display well on

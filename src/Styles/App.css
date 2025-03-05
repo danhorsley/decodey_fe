@@ -179,17 +179,21 @@
 /* ===== 3. TEXT DISPLAY ===== */
 .text-container {
   margin: 0 auto 10px;
-  border: 1px solid #ced4da;
+  /* border: 1px solid #ced4da; */
   border-radius: 8px;
   overflow: hidden;
-  width: 95%;
+  width: 90%;
   max-width: 800px;
-  background-color: #f8f9fa;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  background-color: white;
+  /* box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); */
   display: flex;
   flex-direction: column;
-  padding: 10px 5px;
-  font-size: 1.4rem; /* Base font size increase */
+  padding-left: 12;
+  padding-right: 12;
+  padding-bottom: 1;
+  padding-top: 1;
+  font-size: 1.10rem;
+  /* Base font size increase */
 }
 
 .encrypted,
