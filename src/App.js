@@ -167,7 +167,7 @@ function Game() {
   } = state;
 
   // Sound and keyboard hooks
-  const { playSound } = useSound();
+  const { playSound, loadSounds } = useSound();
   const isGameActive = !completionTime && mistakes < maxMistakes;
 
   // Memoized computed values
@@ -420,6 +420,21 @@ function Game() {
   // Effects
   useEffect(() => startGame(), [startGame]);
   useThemeEffect(settings.theme);
+  useEffect(() => {
+    const handleFirstInteraction = () => {
+      loadSounds();
+      window.removeEventListener("click", handleFirstInteraction);
+      window.removeEventListener("keydown", handleFirstInteraction);
+    };
+
+    window.addEventListener("click", handleFirstInteraction);
+    window.addEventListener("keydown", handleFirstInteraction);
+
+    return () => {
+      window.removeEventListener("click", handleFirstInteraction);
+      window.removeEventListener("keydown", handleFirstInteraction);
+    };
+  }, [loadSounds]);
 
   useKeyboardInput({
     enabled: isGameActive,
