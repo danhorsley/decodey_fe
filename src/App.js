@@ -167,15 +167,15 @@ function Game() {
     isLandscape,
     useMobileMode,
   } = useAppContext();
-
+  
   // State for login modal
   const [isLoginOpen, setIsLoginOpen] = useState(false);
-
+  
   // Login handlers
   const openLogin = () => {
     setIsLoginOpen(true);
   };
-
+  
   const closeLogin = () => {
     setIsLoginOpen(false);
   };
@@ -685,56 +685,14 @@ function Game() {
 
 // Main App with Router
 function App() {
-  // We'll use the context for all state management to avoid duplications
-  const { 
-    settings, 
-    isAboutOpen, 
-    closeAbout, 
-    showSettings, 
-    showGame,
-    updateSettings
-  } = useAppContext();
-
-  const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false); // Added state for settings modal
-
   return (
-    <div className="app-wrapper">
-      {/* These components are conditionally rendered */}
-      <Login isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
-      <Settings 
-        isOpen={isSettingsOpen} 
-        onClose={() => {
-          setIsSettingsOpen(false);
-          showGame();
-        }} 
-      />
-
-      {/* Settings Button in fixed position */}
-      <button
-        className="settings-icon"
-        style={{
-          position: 'fixed', 
-          top: '20px', 
-          right: '20px',
-          zIndex: 1000
-        }}
-        onClick={() => {
-          setIsSettingsOpen(true);
-        }}
-        aria-label="Settings"
-      >
-        {SETTINGS_ICON_SVG}
-      </button>
-
-      <Router>
-        <Routes>
-          <Route path="/" element={<Game />} />
-          <Route path="/wctest" element={<WinCelebrationTest />} />
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </Router>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Game />} />
+        <Route path="/wctest" element={<WinCelebrationTest />} />
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+    </Router>
   );
 }
 

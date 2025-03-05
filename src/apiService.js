@@ -6,15 +6,15 @@ const logApiOperation = (method, endpoint, requestData = null, response = null, 
     const timestamp = new Date().toISOString();
     console.group(`🌐 API ${method} - ${endpoint} (${timestamp})`);
     console.log(`URL: ${config.apiUrl}${endpoint}`);
-
+    
     // Log origin info for debugging cross-origin issues
     console.log('Current Origin:', window.location.origin);
     console.log('API Target Origin:', new URL(config.apiUrl).origin);
-
+    
     if (requestData) {
       console.log('Request Data:', requestData);
     }
-
+    
     if (response) {
       console.log('Response Status:', response.status);
       console.log('Response OK:', response.ok);
@@ -26,7 +26,7 @@ const logApiOperation = (method, endpoint, requestData = null, response = null, 
         });
       }
     }
-
+    
     if (error) {
       console.error('Error:', error);
       if (error.message && error.message.includes('postMessage') || error.name === 'SecurityError') {
@@ -37,7 +37,7 @@ const logApiOperation = (method, endpoint, requestData = null, response = null, 
         });
       }
     }
-
+    
     console.groupEnd();
   }
 };
@@ -46,21 +46,21 @@ const apiService = {
   // Login functionality
   login: async (username, password) => {
     const endpoint = '/login';
-
+    
     try {
       const requestBody = {
         username,
         password
       };
-
+      
       const headers = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
         ...config.session.getHeaders()
       };
-
+      
       logApiOperation('POST', endpoint, { username });
-
+      
       const response = await fetch(`${config.apiUrl}${endpoint}`, {
         method: 'POST',
         credentials: 'include',
@@ -68,18 +68,18 @@ const apiService = {
         headers: headers,
         body: JSON.stringify(requestBody)
       });
-
+      
       logApiOperation('POST', endpoint, { username }, response);
-
+      
       if (!response.ok) {
         const errorText = await response.text();
         console.error(`HTTP error! Status: ${response.status}, Response:`, errorText);
         throw new Error(`Login failed with status: ${response.status}`);
       }
-
+      
       // Save session if applicable
       config.session.saveSession(response.headers);
-
+      
       const data = await response.json();
       return data;
     } catch (error) {
@@ -88,13 +88,13 @@ const apiService = {
       throw error;
     }
   },
-
+  
   // Function to check API health status
   checkHealth: async () => {
     const endpoint = '/health';
     try {
       logApiOperation('GET', endpoint);
-
+      
       const response = await fetch(`${config.apiUrl}${endpoint}`, {
         method: 'GET',
         headers: {
@@ -103,7 +103,7 @@ const apiService = {
         credentials: 'include',
         mode: 'cors'
       });
-
+      
       logApiOperation('GET', endpoint, null, response);
       return response.ok;
     } catch (error) {
@@ -116,14 +116,14 @@ const apiService = {
   // Other API methods can be added here
   startGame: async (useLongQuotes = false) => {
     const endpoint = useLongQuotes ? '/longstart' : '/start';
-
+    
     try {
       const headers = {
         ...config.session.getHeaders()
       };
-
+      
       logApiOperation('GET', endpoint, { headers });
-
+      
       const response = await fetch(`${config.apiUrl}${endpoint}`, {
         method: 'GET',
         credentials: 'include',
@@ -153,7 +153,7 @@ const apiService = {
 
   submitGuess: async (gameId, encryptedLetter, guessedLetter) => {
     const endpoint = '/guess';
-
+    
     try {
       const requestBody = {
         encrypted_letter: encryptedLetter,
@@ -163,13 +163,13 @@ const apiService = {
       if (gameId) {
         requestBody.game_id = gameId;
       }
-
+      
       const headers = { 
         'Content-Type': 'application/json',
         'Accept': 'application/json',
         ...config.session.getHeaders()
       };
-
+      
       logApiOperation('POST', endpoint, { requestBody, headers });
 
       const response = await fetch(`${config.apiUrl}${endpoint}`, {
@@ -179,7 +179,7 @@ const apiService = {
         headers: headers,
         body: JSON.stringify(requestBody)
       });
-
+      
       logApiOperation('POST', endpoint, { requestBody }, response);
 
       if (!response.ok) {
@@ -201,16 +201,16 @@ const apiService = {
   },
   getHint: async () => {
     const endpoint = '/hint';
-
+    
     try {
       const headers = {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
         ...config.session.getHeaders()
       };
-
+      
       logApiOperation('POST', endpoint, { headers });
-
+      
       const response = await fetch(`${config.apiUrl}${endpoint}`, {
         method: 'POST',
         credentials: 'include',
@@ -218,7 +218,7 @@ const apiService = {
         headers: headers,
         body: JSON.stringify({})
       });
-
+      
       logApiOperation('POST', endpoint, {}, response);
 
       if (!response.ok) {
@@ -252,16 +252,16 @@ const apiService = {
         'Accept': 'application/json',
         ...config.session.getHeaders()
       };
-
+      
       logApiOperation('GET', endpoint, { headers });
-
+      
       const response = await fetch(`${config.apiUrl}${endpoint}`, {
         method: 'GET',
         credentials: 'include',
         mode: 'cors',
         headers: headers
       });
-
+      
       logApiOperation('GET', endpoint, { gameId }, response);
 
       if (!response.ok) {
@@ -287,16 +287,16 @@ const apiService = {
   },
   saveQuote: async () => {
     const endpoint = '/save_quote';
-
+    
     try {
       const headers = {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
         ...config.session.getHeaders()
       };
-
+      
       logApiOperation('POST', endpoint, { headers });
-
+      
       const response = await fetch(`${config.apiUrl}${endpoint}`, {
         method: 'POST',
         credentials: 'include',
@@ -304,7 +304,7 @@ const apiService = {
         headers: headers,
         body: JSON.stringify({})
       });
-
+      
       logApiOperation('POST', endpoint, {}, response);
 
       if (!response.ok) {
@@ -321,48 +321,6 @@ const apiService = {
     } catch (error) {
       logApiOperation('POST', endpoint, {}, null, error);
       console.error('Error saving quote:', error);
-      throw error;
-    }
-  },
-  async signup(username, email, password) {
-    const endpoint = '/signup';
-    const requestBody = { username, email, password };
-    try {
-      const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json', ...config.session.getHeaders() };
-      logApiOperation('POST', endpoint, requestBody);
-      const response = await fetch(`${config.apiUrl}${endpoint}`, { method: 'POST', credentials: 'include', mode: 'cors', headers, body: JSON.stringify(requestBody) });
-      logApiOperation('POST', endpoint, requestBody, response);
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`HTTP error! Status: ${response.status}, Response:`, errorText);
-        throw new Error(`Signup failed with status: ${response.status}`);
-      }
-      config.session.saveSession(response.headers);
-      return await response.json();
-    } catch (error) {
-      logApiOperation('POST', endpoint, requestBody, null, error);
-      console.error('Error during signup:', error);
-      throw error;
-    }
-  },
-  async forgotPassword(email) {
-    const endpoint = '/forgot-password';
-    try {
-      const requestBody = { email };
-      const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json', ...config.session.getHeaders() };
-      logApiOperation('POST', endpoint, requestBody);
-      const response = await fetch(`${config.apiUrl}${endpoint}`, { method: 'POST', credentials: 'include', mode: 'cors', headers, body: JSON.stringify(requestBody) });
-      logApiOperation('POST', endpoint, requestBody, response);
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`HTTP error! Status: ${response.status}, Response:`, errorText);
-        throw new Error(`Password reset request failed with status: ${response.status}`);
-      }
-      config.session.saveSession(response.headers);
-      return await response.json();
-    } catch (error) {
-      logApiOperation('POST', endpoint, requestBody, null, error);
-      console.error('Error during forgotPassword:', error);
       throw error;
     }
   }

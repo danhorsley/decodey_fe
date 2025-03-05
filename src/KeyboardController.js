@@ -27,10 +27,6 @@ const useKeyboardInput = ({
   // Handle all keyboard events
   useEffect(() => {
     if (!enabled) return;
-    
-    // Check if any modal is open by looking for the overlay
-    const isModalOpen = document.querySelector('.about-overlay') !== null;
-    if (isModalOpen) return;
 
     const handleKeyPress = (event) => {
       const key = event.key.toUpperCase();
