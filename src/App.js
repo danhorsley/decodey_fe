@@ -685,17 +685,20 @@ function Game() {
 
 // Main App with Router
 function App() {
-  const [isAboutOpen, setIsAboutOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  // We'll use the context for all state management to avoid duplications
+  const { 
+    settings, 
+    isAboutOpen, 
+    closeAbout, 
+    showSettings, 
+    showGame
+  } = useAppContext();
+  
   const [isLoginOpen, setIsLoginOpen] = useState(false);
-
-  // Get settings from context for the App component
-  const { settings } = useAppContext();
   
   return (
     <div>
-      <About isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
-      <Settings isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+      {/* These components are conditionally rendered in Game component */}
       <Login isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
 
       {/* Login Button */}

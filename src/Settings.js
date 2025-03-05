@@ -6,11 +6,11 @@ import "./Styles/Settings.css";
 function Settings({ isOpen, onClose }) {
   const { settings: currentSettings, updateSettings } = useAppContext();
   // Local state to track changes before saving
-  const [settings, setSettings] = useState(currentSettings);
+  const [settings, setSettings] = useState({...currentSettings});
 
   useEffect(() => {
     // Update local state when props change
-    setSettings(currentSettings);
+    setSettings({...currentSettings});
   }, [currentSettings]);
 
   const handleChange = (setting, value) => {
