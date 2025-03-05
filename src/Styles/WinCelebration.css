@@ -1,4 +1,3 @@
-
 /* WinCelebration.css - Styles for the win celebration modal in mobile mode */
 
 /* Win celebration adjustments for mobile */
@@ -9,13 +8,28 @@
   right: 0;
   bottom: 0;
   z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transform: none !important;
+  /* Prevent any transforms */
+  transition: none !important;
+  /* Disable transitions that might cause movement */
 }
 
 .mobile-mode .celebration-content {
+  position: relative !important;
   padding: 15px;
-  max-width: 90%;
-  max-height: 80vh;
+  max-width: 85%;
+  max-height: 70vh;
+  width: auto;
+  transform: none !important;
+  margin: 0 auto;
   overflow-y: auto;
+  left: auto !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
 }
 
 .mobile-mode .victory-title {
@@ -44,15 +58,21 @@
   }
 
   .mobile-mode .celebration-content {
-    max-width: 60%; /* Narrower width */
-    max-height: 80vh; /* Smaller height */
+    max-width: 60%;
+    /* Narrower width */
+    max-height: 80vh;
+    /* Smaller height */
     padding: 12px;
-    position: absolute; /* Use absolute positioning */
+    position: absolute;
+    /* Use absolute positioning */
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%); /* Center perfectly */
-    margin: 0; /* Remove margins */
-    overflow-y: auto; /* Allow scrolling if content is too tall */
+    transform: translate(-50%, -50%);
+    /* Center perfectly */
+    margin: 0;
+    /* Remove margins */
+    overflow-y: auto;
+    /* Allow scrolling if content is too tall */
   }
 
   /* Make content more compact */
@@ -63,7 +83,8 @@
   }
 
   .mobile-mode .quote-container {
-    max-height: 70px; /* Smaller quote container */
+    max-height: 70px;
+    /* Smaller quote container */
     padding: 8px;
     margin-top: 8px;
     overflow-y: auto;
