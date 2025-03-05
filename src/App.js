@@ -1,4 +1,5 @@
 import React, { useReducer, useEffect, useCallback, useMemo } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import "./Styles/App.css";
 import "./Styles/Mobile.css";
 import Settings from "./Settings";
@@ -8,6 +9,7 @@ import useKeyboardInput from "./KeyboardController";
 import { formatAlternatingLines, preventWordBreaks } from "./utils";
 // import SaveButton from "./SaveButton"; // Unused in original; kept for completeness
 import WinCelebration from "./WinCelebration";
+import WinCelebrationTest from "./WinCelebrationTest";
 import About from "./About";
 import MobileLayout from "./MobileLayout";
 import config from "./config";
@@ -119,7 +121,8 @@ const reducer = (state, action) => {
   }
 };
 
-function App() {
+// Main Game component
+function Game() {
   // Context and settings
   const {
     settings,
@@ -653,6 +656,19 @@ function App() {
       {renderControls()}
       {renderGameOverCelebration()}
     </div>
+  );
+}
+
+// Main App with Router
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Game />} />
+        <Route path="/wctest" element={<WinCelebrationTest />} />
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+    </Router>
   );
 }
 
