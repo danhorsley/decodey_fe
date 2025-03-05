@@ -28,16 +28,18 @@ function Login({ isOpen, onClose }) {
         onClose();
         // You might want to update the app context with user info here
       } else if (mode === "signup") {
-        // This would be a real signup API call in production
-        console.log("Sign up with:", { username, password, email });
-        setError(""); // Clear any previous errors
-        setTimeout(() => {
+        try {
+          const response = await apiService.signup(username, email, password);
+          console.log("Signup successful:", response);
+          setError("");
           setMode("login");
-          setIsLoading(false);
           setUsername("");
           setPassword("");
           setEmail("");
-        }, 1000);
+        } catch (err) {
+          console.error("Signup error:", err);
+          setError(err.message || "Sign up failed. Please try again.");
+        }
       } else if (mode === "forgot") {
         // This would be a real password reset API call in production
         console.log("Reset password for:", email);
