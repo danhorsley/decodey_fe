@@ -106,8 +106,8 @@
   .mobile-mode .letter-cell {
     width: 42px;
 
-/* Samsung Galaxy S8+, S9+ and similar devices in landscape mode */
-@media (min-height: 340px) and (max-height: 380px) and (min-width: 730px) and (max-width: 780px) and (orientation: landscape) {
+/* Samsung Galaxy S9+ in landscape mode */
+@media (min-height: 360px) and (max-height: 380px) and (min-width: 730px) and (max-width: 780px) and (orientation: landscape) {
   .mobile-mode .encrypted-grid,
   .mobile-mode .guess-grid {
     grid-template-columns: repeat(5, 35px);
@@ -138,6 +138,41 @@
   .mobile-mode .controls p {
     padding: 3px 6px;
     font-size: 0.8rem;
+  }
+}
+
+/* Samsung Galaxy S8+ in landscape mode - even smaller cells */
+@media (min-height: 340px) and (max-height: 359px) and (min-width: 730px) and (max-width: 780px) and (orientation: landscape) {
+  .mobile-mode .encrypted-grid,
+  .mobile-mode .guess-grid {
+    grid-template-columns: repeat(5, 31px);
+    gap: 3px;
+  }
+
+  .mobile-mode .letter-cell {
+    width: 31px;
+    height: 31px;
+    font-size: 1em;
+  }
+
+  /* Adjust text container to be smaller */
+  .mobile-mode .text-container {
+    max-height: 16vh;
+  }
+
+  /* Make controls more compact */
+  .mobile-mode .controls-container-fixed {
+    padding-bottom: 1px;
+  }
+
+  .mobile-mode .controls {
+    padding: 2px 8px;
+  }
+
+  .mobile-mode .controls button,
+  .mobile-mode .controls p {
+    padding: 2px 5px;
+    font-size: 0.75rem;
   }
 }
 
