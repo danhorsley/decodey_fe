@@ -188,3 +188,22 @@ body.dark-theme .coming-soon {
   background-color: #444;
   color: #adb5bd;
 }
+
+.settings-description {
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+  opacity: 0.8;
+  padding-left: 1.5rem;
+}
+
+.warning-text {
+  color: #ff9800;
+  border-left: 2px solid #ff9800;
+  padding-left: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.dark-theme .warning-text {
+  color: #ffb74d;
+  border-left: 2px solid #ffb74d;
+}

@@ -201,7 +201,9 @@ function App() {
   // Memoized event handlers
   const startGame = useCallback(() => {
     if (DEBUG) console.log("Starting new game...");
-    fetch(`${config.apiUrl}/start`, {
+    // Use longstart endpoint if longText setting is enabled
+    const endpoint = settings.longText ? '/longstart' : '/start';
+    fetch(`${config.apiUrl}${endpoint}`, {
       credentials: "include",
       mode: "cors",
       headers: {
