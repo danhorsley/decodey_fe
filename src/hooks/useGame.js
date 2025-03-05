@@ -1,5 +1,4 @@
-
-import { useReducer, useCallback, useEffect } from 'react';
+import { useReducer, useCallback, useEffect, useState } from 'react';
 import apiService from '../services/apiService';
 import { useAppContext } from '../context/AppContext';
 import useSound from './useSound';
@@ -39,7 +38,8 @@ const useGame = () => {
   const { settings, maxMistakes } = useAppContext();
   const { playSound } = useSound();
   const [state, dispatch] = useReducer(reducer, initialState);
-  
+  const [isStartingGame, setIsStartingGame] = useState(false); // Added state for request lock
+
   const {
     encrypted,
     display,
@@ -58,6 +58,12 @@ const useGame = () => {
 
   // Start a new game
   const startGame = useCallback(() => {
+    if (isStartingGame) {
+      console.log("Game start already in progress, skipping request");
+      return;
+    }
+
+    setIsStartingGame(true);
     console.log("Starting new game...");
     apiService
       .startGame(settings.useLongQuotes)
@@ -67,12 +73,12 @@ const useGame = () => {
 
         let encryptedText = data.encrypted_paragraph;
         let displayText = data.display;
-        
+
         if (settings.hardcoreMode) {
           encryptedText = encryptedText.replace(/[^A-Z]/g, "");
           displayText = displayText.replace(/[^A-Z█]/g, "");
         }
-        
+
         const calculatedFrequency = {};
         for (const char of encryptedText) {
           if (/[A-Z]/.test(char))
@@ -98,14 +104,16 @@ const useGame = () => {
             startTime: Date.now(),
           },
         });
+        setIsStartingGame(false); // Release the lock after successful game start
       })
       .catch((err) => {
         console.error("Error starting game:", err);
         alert(
           "Failed to start game. Check your connection or console for details."
         );
+        setIsStartingGame(false); // Release the lock even on error
       });
-  }, [settings.hardcoreMode, settings.useLongQuotes, playSound]);
+  }, [settings.hardcoreMode, settings.useLongQuotes]);
 
   // Handle letter selection
   const handleEncryptedClick = useCallback(
@@ -159,7 +167,7 @@ const useGame = () => {
             mistakes: data.mistakes,
             selectedEncrypted: null,
           };
-          
+
           if (data.correctly_guessed) {
             payload.correctlyGuessed = data.correctly_guessed;
             if (
@@ -219,10 +227,10 @@ const useGame = () => {
         let displayText = data.display;
         if (settings.hardcoreMode)
           displayText = displayText.replace(/[^A-Z█]/g, "");
-          
+
         const newCorrectlyGuessed = data.correctly_guessed || correctlyGuessed;
         const newMappings = { ...guessedMappings };
-        
+
         newCorrectlyGuessed
           .filter((letter) => !correctlyGuessed.includes(letter))
           .forEach((encryptedLetter) => {
@@ -261,7 +269,7 @@ const useGame = () => {
   // Check for game completion
   useEffect(() => {
     const encryptedLetters = [...new Set(encrypted.match(/[A-Z]/g) || [])];
-    
+
     if (
       encrypted &&
       encryptedLetters.length > 0 &&

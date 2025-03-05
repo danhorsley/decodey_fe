@@ -1,5 +1,5 @@
 
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import "./styles/App.css";
 import "./styles/Mobile.css";
 import Settings from "./Settings";
@@ -81,10 +81,16 @@ function App() {
     playSound,
   });
 
-  // Start game on mount
+  // Start game on mount, but only once
   useEffect(() => {
-    startGame();
-  }, [startGame]);
+    // Use a ref to track if game has been started
+    const gameStarted = React.useRef(false);
+    
+    if (!gameStarted.current) {
+      gameStarted.current = true;
+      startGame();
+    }
+  }, []);
 
   // Apply theme based on settings
   useEffect(() => {
