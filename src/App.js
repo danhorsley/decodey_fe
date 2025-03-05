@@ -2,7 +2,7 @@ import React, { useReducer, useEffect, useCallback, useMemo, useState } from "re
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import "./Styles/App.css";
 import "./Styles/Mobile.css";
-// import Settings from "./Settings"; // Removed unused import
+import Settings from "./Settings"; // Re-add the import
 import { useAppContext } from "./AppContext";
 import useSound from "./SoundManager";
 import useKeyboardInput from "./KeyboardController";
@@ -133,6 +133,7 @@ function Game() {
     maxMistakes,
     isAboutOpen,
     openAbout,
+    closeAbout,
     // isMobile,
     isLandscape,
     useMobileMode,
