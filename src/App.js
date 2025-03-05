@@ -1,5 +1,16 @@
-import React, { useReducer, useEffect, useCallback, useMemo, useState } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import React, {
+  useReducer,
+  useEffect,
+  useCallback,
+  useMemo,
+  useState,
+} from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import "./Styles/App.css";
 import "./Styles/Mobile.css";
 import Settings from "./Settings"; // Re-add the import
@@ -13,7 +24,7 @@ import WinCelebrationTest from "./WinCelebrationTest";
 import About from "./About";
 import MobileLayout from "./MobileLayout";
 import config from "./config";
-// import apiService from "./apiService";
+import apiService from "./apiService";
 
 // Debug flag
 const DEBUG = true;
@@ -204,20 +215,9 @@ function Game() {
   // Memoized event handlers
   const startGame = useCallback(() => {
     if (DEBUG) console.log("Starting new game...");
-    // Use longstart endpoint if longText setting is enabled
-    const endpoint = settings.longText ? "/longstart" : "/start";
-    fetch(`${config.apiUrl}${endpoint}`, {
-      credentials: "include",
-      mode: "cors",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-        return res.json();
-      })
+
+    apiService
+      .startGame(settings.longText)
       .then((data) => {
         if (DEBUG) console.log("Game data received:", data);
         if (data.game_id) localStorage.setItem("uncrypt-game-id", data.game_id);
@@ -278,26 +278,9 @@ function Game() {
   const submitGuess = useCallback(
     (guessedLetter) => {
       const gameId = localStorage.getItem("uncrypt-game-id");
-      const requestBody = {
-        encrypted_letter: selectedEncrypted,
-        guessed_letter: guessedLetter.toUpperCase(),
-      };
-      if (gameId) requestBody.game_id = gameId;
 
-      fetch(`${config.apiUrl}/guess`, {
-        method: "POST",
-        credentials: "include",
-        mode: "cors",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(requestBody),
-      })
-        .then((res) => {
-          if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-          return res.json();
-        })
+      apiService
+        .submitGuess(gameId, selectedEncrypted, guessedLetter)
         .then((data) => {
           if (data.error && data.error.includes("Session expired")) {
             if (data.game_id)
@@ -365,23 +348,8 @@ function Game() {
   );
 
   const handleHint = useCallback(() => {
-    const gameId = localStorage.getItem("uncrypt-game-id");
-    const requestBody = gameId ? { game_id: gameId } : {};
-
-    fetch(`${config.apiUrl}/hint`, {
-      method: "POST",
-      credentials: "include",
-      mode: "cors",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify(requestBody),
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-        return res.json();
-      })
+    apiService
+      .getHint()
       .then((data) => {
         if (data.error && data.error.includes("Session expired")) {
           if (data.game_id)
