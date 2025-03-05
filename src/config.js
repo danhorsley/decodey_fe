@@ -13,11 +13,15 @@ const config = {
       getHeaders: () => {
         // Get session ID from localStorage if it exists
         const sessionId = localStorage.getItem('uncrypt-session-id');
+        const gameId = localStorage.getItem('uncrypt-game-id');
         
         // Return headers object with session ID if available
         return {
           ...(sessionId ? { 'X-Session-ID': sessionId } : {}),
-          'Origin': window.location.origin // Ensure consistent origin
+          ...(gameId ? { 'X-Game-ID': gameId } : {}),
+          'Origin': 'https://uncryptbe.replit.app', // Match backend origin
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
         };
       },
       
@@ -34,7 +38,18 @@ const config = {
     
     // Deployment health check - simple function that will return true for root path
     healthCheck: async () => {
-      return true;
+      try {
+        const response = await fetch(`${config.apiUrl}/health`, {
+          method: 'GET',
+          headers: config.session.getHeaders(),
+          credentials: 'include',
+          mode: 'cors'
+        });
+        return response.ok;
+      } catch (error) {
+        console.error('Health check failed:', error);
+        return false;
+      }
     }
   };
   

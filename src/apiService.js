@@ -24,17 +24,26 @@ const apiService = {
   startGame: async (useLongQuotes = false) => {
     try {
       const endpoint = useLongQuotes ? '/longstart' : '/start';
+      
+      // Debug log
+      if (config.DEBUG) console.log(`Making request to: ${config.apiUrl}${endpoint}`);
+      
+      const headers = {
+        ...config.session.getHeaders()
+      };
+      
+      if (config.DEBUG) console.log('Request headers:', headers);
+      
       const response = await fetch(`${config.apiUrl}${endpoint}`, {
+        method: 'GET',
         credentials: 'include',
         mode: 'cors',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          ...config.session.getHeaders()
-        }
+        headers: headers
       });
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`HTTP error! Status: ${response.status}, Response:`, errorText);
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
 
