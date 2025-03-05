@@ -5,48 +5,39 @@ module.exports = function(app) {
   const apiProxy = createProxyMiddleware({
     target: 'https://uncryptbe.replit.app',
     changeOrigin: true,
-    // Fix for "Invalid Host Header" error and CORS issues
+    // Fix for cross-origin issues
     headers: {
       'host': 'uncryptbe.replit.app',
-      'origin': 'https://uncryptbe.replit.app', // Match the target domain
+      'origin': 'https://uncryptbe.replit.app',
     },
-    disableHostCheck: true,
-    // Log request/response for debugging
-    onProxyReq: (proxyReq, req, res) => {
-      console.log(`[Proxy] Request: ${req.method} ${req.path}`);
-      
-      // Log request headers for debugging
-      console.log('[Proxy] Request headers:', req.headers);
-      
-      // Get the game ID from localStorage via a custom header
-      const gameId = localStorage.getItem('uncrypt-game-id');
-      if (gameId) {
-        proxyReq.setHeader('X-Game-Id', gameId);
-        console.log('[Proxy] Added game ID to headers:', gameId);
-      }
-    },
+    // Disable automatic refreshing by controlling cache headers
     onProxyRes: (proxyRes, req, res) => {
+      // Remove headers that might cause refreshing
+      proxyRes.headers['set-cookie'] = proxyRes.headers['set-cookie']?.map(
+        cookie => cookie.replace('SameSite=Lax', 'SameSite=None; Secure')
+      );
+      
+      // Add cache control headers to prevent automatic refreshing
+      proxyRes.headers['Cache-Control'] = 'no-store, max-age=0';
+      
       console.log(`[Proxy] Response: ${proxyRes.statusCode} ${req.method} ${req.path}`);
-      
-      // Log response headers for debugging
-      console.log('[Proxy] Response headers:', proxyRes.headers);
-      
-      // Check for Set-Cookie header and log it
-      if (proxyRes.headers['set-cookie']) {
-        console.log('[Proxy] Set-Cookie header:', proxyRes.headers['set-cookie']);
-      }
     },
-    // Make sure cookies are passed through
-    cookieDomainRewrite: 'localhost',
-    withCredentials: true,
+    // Make sure cookies are properly handled
+    cookieDomainRewrite: '',
+    secure: false,
+    autoRewrite: true,
+    protocolRewrite: 'https',
+    selfHandleResponse: false,
     // Ensure all HTTP methods are allowed, not just POST
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
   });
 
   // Apply to all API endpoints
   app.use('/start', apiProxy);
+  app.use('/longstart', apiProxy);
   app.use('/guess', apiProxy);
   app.use('/hint', apiProxy);
+  app.use('/health', apiProxy);
   app.use('/get_attribution', apiProxy);
   app.use('/save_quote', apiProxy);
 };
