@@ -781,6 +781,7 @@ button:hover:not(:disabled) {
   margin-bottom: 15px;
   color: white;
   font-weight: normal;
+  /* font-style: italic; */
 }
 
 .quote-attribution {

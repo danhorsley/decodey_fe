@@ -104,7 +104,8 @@ const WinCelebration = ({
 
   // Use attribution data passed as a prop or set a default
   useEffect(() => {
-    if (animationStage >= 3) { // Assuming animationStage 3 is a suitable point
+    if (animationStage >= 3) {
+      // Assuming animationStage 3 is a suitable point
       if (attribution) {
         console.log("Attribution data received:", attribution);
         setAttributionData(attribution);
@@ -231,10 +232,10 @@ const WinCelebration = ({
             <p className="decrypted-quote">
               {getDecryptedText()}
               {attributionData && attributionData.major_attribution && (
-                <span className="quote-attribution"> — {attributionData.major_attribution}</span>
+                <> — {attributionData.major_attribution}</>
               )}
               {attributionData && attributionData.minor_attribution && (
-                <span className="quote-attribution">, {attributionData.minor_attribution}</span>
+                <> , {attributionData.minor_attribution}</>
               )}
             </p>
           </div>
