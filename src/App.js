@@ -167,15 +167,15 @@ function Game() {
     isLandscape,
     useMobileMode,
   } = useAppContext();
-  
+
   // State for login modal
   const [isLoginOpen, setIsLoginOpen] = useState(false);
-  
+
   // Login handlers
   const openLogin = () => {
     setIsLoginOpen(true);
   };
-  
+
   const closeLogin = () => {
     setIsLoginOpen(false);
   };
@@ -685,14 +685,35 @@ function Game() {
 
 // Main App with Router
 function App() {
+  const [isAboutOpen, setIsAboutOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Game />} />
-        <Route path="/wctest" element={<WinCelebrationTest />} />
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
-    </Router>
+    <div>
+      <About isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
+      <Settings isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+      <Login isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
+
+      {/* Login Button */}
+      <button 
+        className={`login-icon ${settings.theme === "dark" ? "dark-theme" : ""}`}
+        onClick={() => setIsLoginOpen(true)}
+        aria-label="Login"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      </button>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Game />} />
+          <Route path="/wctest" element={<WinCelebrationTest />} />
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </Router>
+    </div>
   );
 }
 
