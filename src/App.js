@@ -271,13 +271,6 @@ function App() {
     [correctlyGuessed, playSound],
   );
 
-  const handleGuessClick = useCallback(
-    (guessedLetter) => {
-      if (selectedEncrypted) submitGuess(guessedLetter);
-    },
-    [selectedEncrypted, submitGuess],
-  );
-
   const submitGuess = useCallback(
     (guessedLetter) => {
       const gameId = localStorage.getItem("uncrypt-game-id");
@@ -358,6 +351,13 @@ function App() {
       playSound,
       mistakes,
     ],
+  );
+
+  const handleGuessClick = useCallback(
+    (guessedLetter) => {
+      if (selectedEncrypted) submitGuess(guessedLetter);
+    },
+    [selectedEncrypted, submitGuess],
   );
 
   const handleHint = useCallback(() => {
