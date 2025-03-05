@@ -14,3 +14,9 @@ deploymentTarget = "cloudrun"
 [[ports]]
 localPort = 3000
 externalPort = 80
+
+[env]
+FAST_REFRESH = "false"
+CHOKIDAR_USEPOLLING = "false"
+REACT_APP_DISABLE_WEBSOCKET = "true"
+NODE_ENV = "production"

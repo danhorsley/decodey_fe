@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -24,7 +24,32 @@
       work correctly both with client-side routing and a non-root public URL.
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
-    <title>Uncrypt - Cipher Puzzle Game</title>
+    <title>uncrypt - cipher puzzle game</title>
+    <script>
+      // Intercept and safely handle postMessage errors
+      (function () {
+        const originalPostMessage = window.postMessage;
+        window.postMessage = function (message, targetOrigin, transfer) {
+          // If targetOrigin is localhost, log it and return instead of throwing an error
+          if (targetOrigin && targetOrigin.includes("localhost")) {
+            console.log("Prevented postMessage to localhost:", message);
+            return;
+          }
+          return originalPostMessage.call(
+            this,
+            message,
+            targetOrigin,
+            transfer,
+          );
+        };
+      })();
+    </script>
+    <script>
+      // Disable React DevTools in production
+      if (typeof window.__REACT_DEVTOOLS_GLOBAL_HOOK__ === "object") {
+        __REACT_DEVTOOLS_GLOBAL_HOOK__.inject = function () {};
+      }
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
