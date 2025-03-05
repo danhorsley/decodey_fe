@@ -30,6 +30,7 @@
   top: auto !important;
   right: auto !important;
   bottom: auto !important;
+  box-sizing: border-box; /* Ensure padding is included in width calculation */
 }
 
 .mobile-mode .victory-title {
@@ -185,6 +186,24 @@
 .mobile-mode .quote-container {
   -ms-overflow-style: none;
   scrollbar-width: none;
+  padding-right: 10px; /* Add explicit right padding */
+  box-sizing: border-box; /* Ensure padding is included in width calculation */
+  margin-right: auto;
+  margin-left: auto;
+  text-align: center;
+  max-width: 95%; /* Slightly reduced width to ensure it doesn't overflow */
+}
+
+/* Additional fixes for iPad and other tablets */
+@media only screen and (min-device-width: 768px) and (max-device-width: 1024px) {
+  .mobile-mode .celebration-content {
+    max-width: 80%;
+    padding: 20px;
+  }
+  
+  .mobile-mode .quote-container {
+    max-width: 90%;
+  }
 }
 
 .quote-attribution {
