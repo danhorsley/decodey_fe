@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
-import useDeviceDetection from "./hooks/useDeviceDetection";
+import useDeviceDetection from "../hooks/useDeviceDetection";
 
 // Create context
 const AppContext = createContext();

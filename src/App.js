@@ -1,7 +1,7 @@
 
 import React, { useCallback, useEffect } from "react";
-import "./App.css";
-import "./Mobile.css";
+import "./styles/App.css";
+import "./styles/Mobile.css";
 import Settings from "./Settings";
 import { useAppContext } from "./context/AppContext";
 import useSound from "./hooks/useSound";

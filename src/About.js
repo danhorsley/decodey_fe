@@ -1,6 +1,6 @@
 
 import React from "react";
-import "./About.css";
+import "./styles/About.css";
 import Settings from "./Settings";
 import { useAppContext } from "./context/AppContext";
 

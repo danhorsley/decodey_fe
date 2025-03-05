@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import MatrixRain from './MatrixRain';
 import SaveButton from './SaveButton';
 import config from './config';
-import './WinCelebration.css';
+import './styles/WinCelebration.css';
 
 // Enhanced win celebration component with Matrix effect
 const WinCelebration = ({ 
