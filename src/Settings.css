@@ -137,6 +137,28 @@ body.dark-theme .color-preview.default {
   background-color: inherit;
 }
 
+.settings-description {
+  font-size: 0.75rem;
+  color: #6c757d;
+  background-color: #e9ecef;
+  padding: 5px 10px;
+  border-radius: 10px;
+  margin-left: 10px;
+  font-style: italic;
+}
+
+.warning-text {
+  border-left: 3px solid #ffc107;
+  background-color: rgba(255, 193, 7, 0.1);
+  color: #856404;
+}
+
+body.dark-theme .warning-text {
+  background-color: rgba(255, 193, 7, 0.15);
+  color: #e0cb76;
+  border-left: 3px solid #e0cb76;
+}
+
 .coming-soon {
   font-size: 0.75rem;
   color: #6c757d;

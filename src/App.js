@@ -201,18 +201,8 @@ function App() {
   // Memoized event handlers
   const startGame = useCallback(() => {
     if (DEBUG) console.log("Starting new game...");
-    fetch(`${config.apiUrl}/start`, {
-      credentials: "include",
-      mode: "cors",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-        return res.json();
-      })
+    apiService.startGame(settings.useLongQuotes)
+      .then((data) => {
       .then((data) => {
         if (DEBUG) console.log("Game data received:", data);
         if (data.game_id) localStorage.setItem("uncrypt-game-id", data.game_id);

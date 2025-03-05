@@ -177,6 +177,27 @@ function Settings({ currentSettings, onSave, onCancel }) {
         </div>
       </div>
 
+      {/* Long Quotes Setting */}
+      <div className="settings-section">
+        <h2>Quote Length</h2>
+        <div className="settings-options">
+          <label className="settings-option">
+            <input
+              type="checkbox"
+              checked={settings.useLongQuotes}
+              onChange={() =>
+                handleChange("useLongQuotes", !settings.useLongQuotes)
+              }
+            />
+            <span className="option-label">Include Long Quotes</span>
+          </label>
+          <p className="settings-description warning-text">
+            <strong>Warning:</strong> When enabled, quotes longer than 80 characters will be included.
+            This may not be suitable for smaller screens or mobile devices.
+          </p>
+        </div>
+      </div>
+
       {/* Action Buttons */}
       <div className="settings-actions">
         <button className="settings-button cancel" onClick={onCancel}>

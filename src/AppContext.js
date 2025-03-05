@@ -14,6 +14,7 @@ const defaultSettings = {
   gridSorting: "default",
   hardcoreMode: false,
   mobileMode: "auto",
+  useLongQuotes: false, // Added: use long quotes or not
   // placeholderStyle: "matching" // Default placeholder style
 };
 
