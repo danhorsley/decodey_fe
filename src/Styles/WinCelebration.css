@@ -209,6 +209,36 @@
   max-width: 95%; /* Slightly reduced width to ensure it doesn't overflow */
 }
 
+/* Specific fixes for Samsung 8+/9+ */
+@media (width >= 360px) and (width <= 400px) and (height >= 740px) and (height <= 780px) {
+  .mobile-mode .quote-attribution {
+    font-size: 0.7em;
+    line-height: 1.1;
+  }
+  
+  .mobile-mode .decrypted-quote {
+    font-size: 0.85em;
+  }
+}
+
+/* Specific fixes for iPhone SE */
+@media (width: 375px) and (height: 667px), (width: 390px) and (height: 844px) {
+  .mobile-mode .quote-attribution {
+    font-size: 0.7em;
+    line-height: 1.1;
+    margin-top: 2px;
+  }
+  
+  .mobile-mode .decrypted-quote {
+    font-size: 0.85em;
+    margin-bottom: 2px;
+  }
+  
+  .mobile-mode .quote-container {
+    padding-bottom: 4px;
+  }
+}
+
 /* Additional fixes for iPad and other tablets */
 @media only screen and (min-device-width: 768px) and (max-device-width: 1024px) {
   .mobile-mode .celebration-content {
@@ -228,6 +258,20 @@
   color: inherit;
   width: 100%;
   display: inline-block;
+}
+
+/* General fix for small devices */
+@media (max-width: 420px) {
+  .mobile-mode .quote-attribution {
+    font-size: 0.75em;
+    line-height: 1.2;
+    margin-top: 2px;
+  }
+  
+  .mobile-mode .decrypted-quote {
+    font-size: 0.9em;
+    margin-bottom: 2px;
+  }
 }
 /* Samsung device specific fixes */
 @supports (-webkit-overflow-scrolling: touch) {
