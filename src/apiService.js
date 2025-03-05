@@ -7,6 +7,10 @@ const logApiOperation = (method, endpoint, requestData = null, response = null, 
     console.group(`🌐 API ${method} - ${endpoint} (${timestamp})`);
     console.log(`URL: ${config.apiUrl}${endpoint}`);
     
+    // Log origin info for debugging cross-origin issues
+    console.log('Current Origin:', window.location.origin);
+    console.log('API Target Origin:', new URL(config.apiUrl).origin);
+    
     if (requestData) {
       console.log('Request Data:', requestData);
     }
@@ -25,6 +29,13 @@ const logApiOperation = (method, endpoint, requestData = null, response = null, 
     
     if (error) {
       console.error('Error:', error);
+      if (error.message && error.message.includes('postMessage') || error.name === 'SecurityError') {
+        console.error('Cross-Origin Error Details:', {
+          message: error.message,
+          name: error.name,
+          stack: error.stack
+        });
+      }
     }
     
     console.groupEnd();
