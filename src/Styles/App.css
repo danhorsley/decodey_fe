@@ -118,25 +118,10 @@
 
 .game-header {
   display: flex;
-  flex-direction: column;
   justify-content: center;
-  margin-bottom: 10px;
-  padding: 8px 15px;
-  background-color: #3c3c3c;
-  color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  width: 95%;
-  max-width: 800px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.header-top {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
-  width: 100%;
+  position: relative;
+  margin-bottom: 10px;
 }
 
 .settings-icon,
@@ -196,6 +181,7 @@
   margin: 0 auto 10px;
   border: 1px solid #ced4da;
   border-radius: 8px;
+  overflow: hidden;
   width: 95%;
   max-width: 800px;
   background-color: #f8f9fa;
@@ -203,16 +189,14 @@
   display: flex;
   flex-direction: column;
   padding: 10px 5px;
-  font-size: 1.26rem; /* Reduced by 10% from 1.4rem */
-  overflow: visible; /* Allow content to expand container */
-  max-height: none; /* Remove max-height limitation */
+  font-size: 1.4rem; /* Base font size increase */
 }
 
 .encrypted,
 .display {
   padding: 15px 20px;
   margin: 0;
-  font-size: 1.08em; /* Reduced by 10% from 1.2em */
+  font-size: 1.2em;
   font-family: monospace;
   letter-spacing: 0;
   line-height: 1.7;
@@ -1020,7 +1004,9 @@ html.dark-theme {
   background-color: #482633;
   color: #f8d7da;
   border-color: #dc3545;
-}.dark-theme.placeholder-contrasting .display {
+}
+
+.dark-theme.placeholder-contrasting .display {
   color: #f8f9fa;
 }
 
@@ -1042,10 +1028,6 @@ html.dark-theme {
     font-size: 0.45em;
     bottom: 1px;
     right: 2px;
-  }
-  .encrypted,
-  .display {
-    font-size: 1.02em; /* Reduced by 15% from 1.2em */
   }
 }
 
@@ -1087,14 +1069,4 @@ body:not(.dark-theme) .celebration-content .quote-container {
 body:not(.dark-theme) .celebration-content .quote-attribution,
 body:not(.dark-theme) .celebration-content .decrypted-quote {
   color: #333;
-}
-.settings-icon,
-.about-icon {
-  margin-bottom: 10px; /* Added margin for line break */
-}
-
-.grids {
-  flex-direction: column; /* Stack grids vertically */
-  align-items: center;
-  margin-top: 20px;
 }

@@ -477,19 +477,17 @@ function Game() {
   // Render logic
   const renderGameHeader = () => (
     <div className="game-header">
-      <div className="header-top">
-        <button className="about-icon" onClick={openAbout} aria-label="About">
-          {ABOUT_ICON_SVG}
-        </button>
-        <h1 className="retro-title">uncrypt</h1>
-        <button
-          className="settings-icon"
-          onClick={showSettings}
-          aria-label="Settings"
-        >
-          {SETTINGS_ICON_SVG}
-        </button>
-      </div>
+      <button className="about-icon" onClick={openAbout} aria-label="About">
+        {ABOUT_ICON_SVG}
+      </button>
+      <h1 className="retro-title">uncrypt</h1>
+      <button
+        className="settings-icon"
+        onClick={showSettings}
+        aria-label="Settings"
+      >
+        {SETTINGS_ICON_SVG}
+      </button>
     </div>
   );
 
