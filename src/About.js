@@ -15,9 +15,10 @@ function About({ isOpen, onClose }) {
         <button className="about-close" onClick={onClose}>
           &times;
         </button>
-        <h2>uncrypt: Crack the Code!</h2>
+        <h2>uncrypt: What's the famous quote?!?</h2>
         <p>
-          Break the encryption by figuring out which letter stands for which!
+          Crack the code by figuring out which letter stands for which in the
+          well known quote.
         </p>
         <div className="about-details">
           <p>
