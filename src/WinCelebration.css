@@ -1,0 +1,163 @@
+
+/* WinCelebration.css - Styles for the win celebration modal in mobile mode */
+
+/* Win celebration adjustments for mobile */
+.mobile-mode .win-celebration {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+}
+
+.mobile-mode .celebration-content {
+  padding: 15px;
+  max-width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.mobile-mode .victory-title {
+  font-size: 1.5rem;
+}
+
+.mobile-mode .quote-container {
+  max-height: 120px;
+  padding: 12px;
+}
+
+.mobile-mode .stats-container {
+  margin: 15px 0 !important;
+  gap: 12px !important;
+}
+
+/* Adjust win celebration for mobile landscape mode */
+@media (orientation: landscape) {
+  .mobile-mode .win-celebration {
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+  }
+
+  .mobile-mode .celebration-content {
+    max-width: 60%; /* Narrower width */
+    max-height: 80vh; /* Smaller height */
+    padding: 12px;
+    position: absolute; /* Use absolute positioning */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* Center perfectly */
+    margin: 0; /* Remove margins */
+    overflow-y: auto; /* Allow scrolling if content is too tall */
+  }
+
+  /* Make content more compact */
+  .mobile-mode .victory-title {
+    font-size: 1.3rem;
+    margin-bottom: 8px;
+    text-align: center;
+  }
+
+  .mobile-mode .quote-container {
+    max-height: 70px; /* Smaller quote container */
+    padding: 8px;
+    margin-top: 8px;
+    overflow-y: auto;
+    text-align: center;
+    width: 100%;
+  }
+
+  .mobile-mode .stats-container {
+    margin: 8px 0 !important;
+    gap: 8px !important;
+    justify-content: center !important;
+    display: flex !important;
+    width: 100% !important;
+  }
+
+  .mobile-mode .stat-value {
+    font-size: 1.1rem;
+  }
+
+  .mobile-mode .stat-item.score .stat-value {
+    font-size: 1.3rem;
+  }
+
+  /* Make play again button smaller */
+  .mobile-mode .play-again-button {
+    padding: 6px 14px;
+    font-size: 0.9rem;
+    margin: 8px auto;
+    display: block;
+  }
+
+  /* For very low-height screens */
+  @media (max-height: 450px) {
+    .mobile-mode .celebration-content {
+      max-width: 85%;
+      max-height: 90vh;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+    }
+
+    .mobile-mode .victory-message {
+      width: 100%;
+      margin-bottom: 4px;
+    }
+
+    .mobile-mode .victory-title {
+      font-size: 1.1rem;
+      margin-bottom: 4px;
+    }
+
+    .mobile-mode .quote-container {
+      width: 48%;
+      max-height: 60px;
+      margin: 0;
+      padding: 6px;
+    }
+
+    .mobile-mode .stats-container {
+      width: 48%;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    .mobile-mode .stat-item {
+      min-width: unset;
+      padding: 0 5px;
+    }
+
+    .mobile-mode .celebration-actions {
+      width: 100%;
+      margin-top: 6px;
+    }
+
+    /* Even smaller text for extreme cases */
+    .mobile-mode .decrypted-quote {
+      font-size: 0.9em;
+      margin: 4px 0;
+    }
+
+    .mobile-mode .quote-attribution {
+      font-size: 0.8em;
+    }
+  }
+}
+
+/* Hide scrollbars on mobile */
+.mobile-mode .quote-container::-webkit-scrollbar {
+  display: none;
+}
+
+.mobile-mode .quote-container {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

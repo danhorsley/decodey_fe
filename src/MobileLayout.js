@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useAppContext } from "./AppContext";
 import "./Mobile.css";
+import "./MobileSmall.css";
+import "./DarkTheme.css";
+import "./WinCelebration.css";
 
 /**
  * A wrapper component for the mobile layout

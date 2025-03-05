@@ -1,13 +1,12 @@
 /* 
-  Mobile.css - Streamlined styles for mobile devices
+  mobile-core.css - Core styles for mobile devices (excluding dark theme and media queries)
 
   TABLE OF CONTENTS:
   1. CORE LAYOUT - Containers and structure
   2. TEXT CONTAINER - Encrypted and display text
   3. GRID LAYOUTS - Letter grid component styling
   4. CONTROLS - Game controls styling
-  5. THEME OVERRIDES - Dark mode variations
-  6. RESPONSIVE ADJUSTMENTS - Device-specific styling
+  5. ORIENTATION WARNING - Landscape orientation prompt
 */
 
 /* ===== 1. CORE LAYOUT ===== */
@@ -201,7 +200,84 @@
   white-space: nowrap;
 }
 
-/* ===== 5. THEME OVERRIDES ===== */
+/* ===== 5. ORIENTATION WARNING ===== */
+/* Orientation warning overlay */
+.mobile-orientation-warning {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.9);
+  z-index: 2000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.orientation-message {
+  background-color: #222;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 90%;
+  color: white;
+}
+
+.orientation-message h3 {
+  margin-top: 0;
+  color: #4cc9f0;
+}
+
+.orientation-dismiss {
+  margin-top: 15px;
+  padding: 8px 16px;
+  background-color: #4cc9f0;
+  color: black;
+  border: none;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* Hide scrollbars on mobile */
+.mobile-mode .text-container::-webkit-scrollbar {
+  display: none;
+}
+
+.mobile-mode .text-container {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/*MOBILE LETTER SPACING*/
+/* Add spacing between letters in char grid for mobile */
+.mobile-mode .char-grid .grid-cell {
+  width: 1.2ch; /* Increase from 1ch to add more space */
+  min-width: 1.2ch;
+  max-width: 1.2ch;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0 1px; /* Add small horizontal padding */
+}
+
+/* Ensure block characters have breathing room */
+.mobile-mode .display-line .grid-cell:contains('█') {
+  margin: 0 1px;
+}
+
+/* Since :contains isn't widely supported, let's use an alternative approach */
+.mobile-mode .char-grid.display-line {
+  letter-spacing: 1px; /* Add letter spacing across the whole line */
+}
+
+.mobile-mode .char-grid.encrypted-line {
+  letter-spacing: 1px; /* Match spacing in encrypted line */
+}
+
+
+/* mobile-dark-theme.css */
 /* Dark Theme */
 .mobile-mode.dark-theme {
   color: #f8f9fa;
@@ -251,7 +327,15 @@
   color: rgb(0, 225, 152);
 }
 
-/* ===== 6. RESPONSIVE ADJUSTMENTS ===== */
+.mobile-mode.dark-theme .encrypted-grid .letter-cell {
+  border-color: #4cc9f04D; /* Match in dark theme too */
+}
+.mobile-mode.dark-theme .guess-grid .letter-cell {
+  border-color: rgb(0, 225, 152,0.3); /* Match in dark theme too */
+}
+
+
+/* mobile-responsive.css */
 /* Tablets and larger screens */
 @media (min-width: 768px) {
   .mobile-mode .encrypted-grid-container,
@@ -322,6 +406,16 @@
 
   .mobile-mode .controls {
     flex-wrap: wrap;
+  }
+  .mobile-mode .char-grid .grid-cell {
+    width: 1.1ch; /* Slightly smaller on tiny screens */
+    min-width: 1.1ch;
+    max-width: 1.1ch;
+  }
+
+  .mobile-mode .char-grid.display-line,
+  .mobile-mode .char-grid.encrypted-line {
+    letter-spacing: 0.5px; /* Reduce letter spacing on tiny screens */
   }
 }
 
@@ -480,95 +574,6 @@
   }
 }
 
-/* Orientation warning overlay */
-.mobile-orientation-warning {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.9);
-  z-index: 2000;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-}
-
-.orientation-message {
-  background-color: #222;
-  padding: 20px;
-  border-radius: 10px;
-  max-width: 90%;
-  color: white;
-}
-
-.orientation-message h3 {
-  margin-top: 0;
-  color: #4cc9f0;
-}
-
-.orientation-dismiss {
-  margin-top: 15px;
-  padding: 8px 16px;
-  background-color: #4cc9f0;
-  color: black;
-  border: none;
-  border-radius: 5px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-/* Win celebration adjustments for mobile */
-.mobile-mode .win-celebration {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 1000;
-}
-
-.mobile-mode .celebration-content {
-  padding: 15px;
-  max-width: 90%;
-  max-height: 80vh;
-  overflow-y: auto;
-}
-
-.mobile-mode .victory-title {
-  font-size: 1.5rem;
-}
-
-.mobile-mode .quote-container {
-  max-height: 120px;
-  padding: 12px;
-}
-
-.mobile-mode .stats-container {
-  margin: 15px 0 !important;
-  gap: 12px !important;
-}
-
-/* Hide scrollbars on mobile */
-.mobile-mode .text-container::-webkit-scrollbar,
-.mobile-mode .quote-container::-webkit-scrollbar {
-  display: none;
-}
-
-.mobile-mode .text-container,
-.mobile-mode .quote-container {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.mobile-mode.dark-theme .encrypted-grid .letter-cell {
-  border-color: #4cc9f04D; /* Match in dark theme too */
-}
-.mobile-mode.dark-theme .guess-grid .letter-cell {
-  border-color: rgb(0, 225, 152,0.3); /* Match in dark theme too */
-}
-
 /* Portrait mode - stack grids vertically */
 @media (orientation: portrait) {
   /* Change the gameplay container to vertical */
@@ -617,22 +622,22 @@
   /* Position controls at the bottom */
   .mobile-mode .controls-container-fixed {
     margin-top: 10px; /* Small space after grids */
-      margin-bottom: auto; /* Push content up instead of down */
-      padding-top: 0;
-      order: 3; /* Ensure it comes after grids */
-    }
+    margin-bottom: auto; /* Push content up instead of down */
+    padding-top: 0;
+    order: 3; /* Ensure it comes after grids */
+  }
 
-    /* Add some style to make controls stand out */
-    .mobile-mode .controls {
-      padding: 8px 15px;
-      border-radius: 20px;
-      background-color: rgba(255, 255, 255, 0.1);
-    }
+  /* Add some style to make controls stand out */
+  .mobile-mode .controls {
+    padding: 8px 15px;
+    border-radius: 20px;
+    background-color: rgba(255, 255, 255, 0.1);
+  }
 
-    /* Dark theme adjustment */
-    .mobile-mode.dark-theme .controls {
-      background-color: rgba(0, 0, 0, 0.2);
-    }
+  /* Dark theme adjustment */
+  .mobile-mode.dark-theme .controls {
+    background-color: rgba(0, 0, 0, 0.2);
+  }
 
 
   /* Responsive adjustments for smaller portrait screens */
@@ -665,42 +670,45 @@
     }
   }
 }
-/*MOBILE LETTER SPACING*/
-/* Add spacing between letters in char grid for mobile */
-.mobile-mode .char-grid .grid-cell {
-  width: 1.2ch; /* Increase from 1ch to add more space */
-  min-width: 1.2ch;
-  max-width: 1.2ch;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 0 1px; /* Add small horizontal padding */
+
+/* Win celebration adjustments for mobile */
+.mobile-mode .win-celebration {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
 }
 
-/* Ensure block characters have breathing room */
-.mobile-mode .display-line .grid-cell:contains('█') {
-  margin: 0 1px;
+.mobile-mode .celebration-content {
+  padding: 15px;
+  max-width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
 }
 
-/* Since :contains isn't widely supported, let's use an alternative approach */
-.mobile-mode .char-grid.display-line {
-  letter-spacing: 1px; /* Add letter spacing across the whole line */
+.mobile-mode .victory-title {
+  font-size: 1.5rem;
 }
 
-.mobile-mode .char-grid.encrypted-line {
-  letter-spacing: 1px; /* Match spacing in encrypted line */
+.mobile-mode .quote-container {
+  max-height: 120px;
+  padding: 12px;
 }
 
-/* For very small screens, adjust accordingly */
-@media (max-width: 360px) {
-  .mobile-mode .char-grid .grid-cell {
-    width: 1.1ch; /* Slightly smaller on tiny screens */
-    min-width: 1.1ch;
-    max-width: 1.1ch;
-  }
+.mobile-mode .stats-container {
+  margin: 15px 0 !important;
+  gap: 12px !important;
+}
 
-  .mobile-mode .char-grid.display-line,
-  .mobile-mode .char-grid.encrypted-line {
-    letter-spacing: 0.5px; /* Reduce letter spacing on tiny screens */
-  }
+.mobile-mode .text-container::-webkit-scrollbar,
+.mobile-mode .quote-container::-webkit-scrollbar {
+  display: none;
+}
+
+.mobile-mode .text-container,
+.mobile-mode .quote-container {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
