@@ -490,12 +490,10 @@ function Game() {
     [updateSettings, showGame],
   );
 
-  const [isAboutOpen, setIsAboutOpen] = useState(isAboutOpen); //Added state for about modal
-
   // Render logic
   const renderGameHeader = () => (
     <div className="game-header">
-      <button className="about-icon" onClick={() => setIsAboutOpen(true)} aria-label="About">
+      <button className="about-icon" onClick={openAbout} aria-label="About">
         {ABOUT_ICON_SVG}
       </button>
       <h1 className="retro-title">uncrypt</h1>
@@ -634,7 +632,7 @@ function Game() {
   if (useMobileMode) {
     return (
       <div className="App-container">
-        {isAboutOpen && <About isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />}
+        {isAboutOpen && <About isOpen={isAboutOpen} onClose={closeAbout} />}
         <MobileLayout isLandscape={isLandscape}>
           {renderGameHeader()}
           {renderTextContainer()}
@@ -650,7 +648,7 @@ function Game() {
     <div
       className={`App-container ${settings.theme === "dark" ? "dark-theme" : ""}`}
     >
-      {isAboutOpen && <About isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />}
+      {isAboutOpen && <About isOpen={isAboutOpen} onClose={closeAbout} />}
       {renderGameHeader()}
       {renderTextContainer()}
       {renderGrids()}
