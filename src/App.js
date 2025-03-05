@@ -130,7 +130,6 @@ function App() {
     maxMistakes,
     isAboutOpen,
     openAbout,
-    closeAbout,
     // isMobile,
     isLandscape,
     useMobileMode,
@@ -257,7 +256,7 @@ function App() {
           "Failed to start game. Check your connection or console for details.",
         );
       });
-  }, [settings.hardcoreMode]);
+  }, [settings.hardcoreMode, settings.longText]);
 
   const handleEncryptedClick = useCallback(
     (letter) => {
@@ -276,7 +275,7 @@ function App() {
     (guessedLetter) => {
       if (selectedEncrypted) submitGuess(guessedLetter);
     },
-    [selectedEncrypted],
+    [selectedEncrypted, submitGuess],
   );
 
   const submitGuess = useCallback(
