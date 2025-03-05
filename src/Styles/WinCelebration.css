@@ -182,3 +182,12 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+.quote-attribution {
+  font-style: italic;
+  margin-top: 4px;
+  text-align: right;
+  color: inherit;
+  width: 100%;
+  display: inline-block;
+}
