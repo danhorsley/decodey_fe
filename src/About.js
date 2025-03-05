@@ -1,7 +1,8 @@
+
 import React from "react";
 import "./About.css";
 import Settings from "./Settings";
-import { useAppContext } from "./AppContext";
+import { useAppContext } from "./context/AppContext";
 
 function About({ isOpen, onClose }) {
   const { settings } = useAppContext();

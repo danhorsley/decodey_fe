@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from "react";
-import { useAppContext } from "./AppContext";
+import { useAppContext } from "./context/AppContext";
 import "./Mobile.css";
 import "./MobileSmall.css";
 import "./DarkTheme.css";

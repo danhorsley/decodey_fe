@@ -1,10 +1,11 @@
+
 import React, { useCallback, useEffect } from "react";
 import "./App.css";
 import "./Mobile.css";
 import Settings from "./Settings";
-import { useAppContext } from "./AppContext";
-import useSound from "./SoundManager";
-import useKeyboardInput from "./KeyboardController";
+import { useAppContext } from "./context/AppContext";
+import useSound from "./hooks/useSound";
+import useKeyboardInput from "./hooks/useKeyboardInput";
 import useGame from "./hooks/useGame";
 import WinCelebration from "./WinCelebration";
 import About from "./About";
