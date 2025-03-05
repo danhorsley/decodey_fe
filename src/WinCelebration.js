@@ -228,15 +228,15 @@ const WinCelebration = ({
 
           {/* Display the original quote and attribution */}
           <div className="quote-container">
-            <p className="decrypted-quote">{getDecryptedText()}</p>
-            <div className="quote-attribution">
+            <p className="decrypted-quote">
+              {getDecryptedText()}
               {attributionData && attributionData.major_attribution && (
-                <span>— {attributionData.major_attribution}</span>
+                <span className="quote-attribution"> — {attributionData.major_attribution}</span>
               )}
               {attributionData && attributionData.minor_attribution && (
-                <span>, {attributionData.minor_attribution}</span>
+                <span className="quote-attribution">, {attributionData.minor_attribution}</span>
               )}
-            </div>
+            </p>
           </div>
         </div>
 
