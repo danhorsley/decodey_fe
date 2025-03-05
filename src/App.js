@@ -1,17 +1,17 @@
 import React, { useReducer, useEffect, useCallback, useMemo } from "react";
-import "./App.css";
-import "./Mobile.css";
+import "./Styles/App.css";
+import "./Styles/Mobile.css";
 import Settings from "./Settings";
 import { useAppContext } from "./AppContext";
 import useSound from "./SoundManager";
 import useKeyboardInput from "./KeyboardController";
 import { formatAlternatingLines, preventWordBreaks } from "./utils";
-import SaveButton from "./SaveButton"; // Unused in original; kept for completeness
+// import SaveButton from "./SaveButton"; // Unused in original; kept for completeness
 import WinCelebration from "./WinCelebration";
 import About from "./About";
 import MobileLayout from "./MobileLayout";
 import config from "./config";
-import apiService from "./apiService";
+// import apiService from "./apiService";
 
 // Debug flag
 const DEBUG = true;
@@ -131,7 +131,7 @@ function App() {
     isAboutOpen,
     openAbout,
     closeAbout,
-    isMobile,
+    // isMobile,
     isLandscape,
     useMobileMode,
   } = useAppContext();
@@ -202,7 +202,7 @@ function App() {
   const startGame = useCallback(() => {
     if (DEBUG) console.log("Starting new game...");
     // Use longstart endpoint if longText setting is enabled
-    const endpoint = settings.longText ? '/longstart' : '/start';
+    const endpoint = settings.longText ? "/longstart" : "/start";
     fetch(`${config.apiUrl}${endpoint}`, {
       credentials: "include",
       mode: "cors",

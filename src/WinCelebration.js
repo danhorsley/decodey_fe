@@ -1,24 +1,24 @@
-import React, { useState, useEffect, useRef } from 'react';
-import MatrixRain from './MatrixRain';
-import SaveButton from './SaveButton';
-import config from './config';
-import './WinCelebration.css';
+import React, { useState, useEffect, useRef } from "react";
+import MatrixRain from "./MatrixRain";
+import SaveButton from "./SaveButton";
+import config from "./config";
+import "./Styles/WinCelebration.css";
 
 // Enhanced win celebration component with Matrix effect
-const WinCelebration = ({ 
-  startGame, 
-  playSound, 
-  mistakes, 
-  maxMistakes, 
+const WinCelebration = ({
+  startGame,
+  playSound,
+  mistakes,
+  maxMistakes,
   startTime,
   completionTime,
   theme,
   textColor,
-  encrypted = '',
-  display = '',
+  encrypted = "",
+  display = "",
   correctlyGuessed = [],
   guessedMappings = {},
-  hasWon // Added hasWon prop
+  hasWon, // Added hasWon prop
 }) => {
   // Animation state
   const [animationStage, setAnimationStage] = useState(0);
@@ -29,13 +29,17 @@ const WinCelebration = ({
 
   // Attribution state
   const [attribution, setAttribution] = useState({
-    major: '',
-    minor: ''
+    major: "",
+    minor: "",
   });
 
   // Get matrix color based on textColor
-  const matrixColor = textColor === 'scifi-blue' ? '#4cc9f0' : 
-                      textColor === 'retro-green' ? '#00ff41' : '#00ff41';
+  const matrixColor =
+    textColor === "scifi-blue"
+      ? "#4cc9f0"
+      : textColor === "retro-green"
+        ? "#00ff41"
+        : "#00ff41";
 
   // Refs for animation
   const statsRef = useRef(null);
@@ -43,33 +47,39 @@ const WinCelebration = ({
   const containerRef = useRef(null);
 
   // Calculate stats
-  const gameTimeSeconds = startTime && completionTime 
-    ? Math.floor((completionTime - startTime) / 1000) 
-    : 0;
+  const gameTimeSeconds =
+    startTime && completionTime
+      ? Math.floor((completionTime - startTime) / 1000)
+      : 0;
   const minutes = Math.floor(gameTimeSeconds / 60);
   const seconds = gameTimeSeconds % 60;
-  const timeString = `${minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
+  const timeString = `${minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
 
   // Calculate score based on mistakes and time
   const maxScore = 1000;
   const mistakePenalty = 50;
   const timePenalty = 2; // points per second
-  const score = Math.max(0, maxScore - (mistakes * mistakePenalty) - (gameTimeSeconds * timePenalty));
+  const score = Math.max(
+    0,
+    maxScore - mistakes * mistakePenalty - gameTimeSeconds * timePenalty,
+  );
 
   // Performance rating based on score
-  let rating = '';
-  if (score >= 900) rating = 'Perfect';
-  else if (score >= 800) rating = 'Ace of Spies';
-  else if (score >= 700) rating = 'Bletchley Park';
-  else if (score >= 500) rating = 'Cabinet Noir';
-  else rating = 'Cryptanalyst';
+  let rating = "";
+  if (score >= 900) rating = "Perfect";
+  else if (score >= 800) rating = "Ace of Spies";
+  else if (score >= 700) rating = "Bletchley Park";
+  else if (score >= 500) rating = "Cabinet Noir";
+  else rating = "Cryptanalyst";
 
   // Get the decrypted text in proper case
   const getDecryptedText = () => {
     // If display is available, use it as a base but convert to proper case
     if (display) {
       // Convert to lowercase first then capitalize where needed
-      return display.toLowerCase().replace(/([.!?]\s*\w|^\w)/g, match => match.toUpperCase());
+      return display
+        .toLowerCase()
+        .replace(/([.!?]\s*\w|^\w)/g, (match) => match.toUpperCase());
     }
 
     // Fallback: Try to reconstruct from encrypted and mappings
@@ -82,7 +92,9 @@ const WinCelebration = ({
         return match; // Return the encrypted letter if mapping not found
       });
       // Convert to lowercase first then capitalize where needed
-      return decrypted.toLowerCase().replace(/([.!?]\s*\w|^\w)/g, match => match.toUpperCase());
+      return decrypted
+        .toLowerCase()
+        .replace(/([.!?]\s*\w|^\w)/g, (match) => match.toUpperCase());
     } catch (error) {
       console.error("Error generating decrypted text:", error);
       return encrypted || "Error displaying text";
@@ -94,21 +106,21 @@ const WinCelebration = ({
     const fetchAttribution = async () => {
       try {
         // Get the game_id from localStorage
-        const gameId = localStorage.getItem('uncrypt-game-id');
+        const gameId = localStorage.getItem("uncrypt-game-id");
 
         // Add game_id as a query parameter if available
-        const url = gameId 
+        const url = gameId
           ? `${config.apiUrl}/get_attribution?game_id=${encodeURIComponent(gameId)}`
           : `${config.apiUrl}/get_attribution`;
 
         console.log("Fetching attribution from URL:", url);
 
         const response = await fetch(url, {
-          credentials: 'include',
-          mode: 'cors',
+          credentials: "include",
+          mode: "cors",
           headers: {
-            'Accept': 'application/json'
-          }
+            Accept: "application/json",
+          },
         });
 
         if (!response.ok) {
@@ -121,7 +133,7 @@ const WinCelebration = ({
 
         setAttribution({
           major: data.major_attribution || "",
-          minor: data.minor_attribution || ""
+          minor: data.minor_attribution || "",
         });
       } catch (error) {
         console.error("Error fetching attribution:", error);
@@ -139,14 +151,14 @@ const WinCelebration = ({
     const timeline = [
       () => {
         // Play win sound and start matrix rain immediately
-        playSound('win');
+        playSound("win");
         setShowFireworks(true); // Show fireworks immediately
         console.log("Stage 0: Playing win sound and showing fireworks");
       },
       () => {
         // Show message with animation immediately
         if (messageRef.current) {
-          messageRef.current.classList.add('animate-scale-in');
+          messageRef.current.classList.add("animate-scale-in");
           console.log("Stage 1: Message animation added");
         }
       },
@@ -156,7 +168,7 @@ const WinCelebration = ({
         console.log("Stage 2: Setting show stats to true");
 
         if (statsRef.current) {
-          statsRef.current.classList.add('animate-slide-in');
+          statsRef.current.classList.add("animate-slide-in");
           console.log("Stats animation class added");
         } else {
           console.log("Stats ref is null");
@@ -168,15 +180,18 @@ const WinCelebration = ({
         setTimeout(() => {
           setIsMatrixActive(false);
         }, 1000);
-      }
+      },
     ];
 
     // Execute animation stages with delays
     if (animationStage < timeline.length) {
       timeline[animationStage]();
-      const nextStage = setTimeout(() => {
-        setAnimationStage(animationStage + 1);
-      }, animationStage === 0 ? 100 : 300); // Reduced delays for quicker appearance
+      const nextStage = setTimeout(
+        () => {
+          setAnimationStage(animationStage + 1);
+        },
+        animationStage === 0 ? 100 : 300,
+      ); // Reduced delays for quicker appearance
 
       return () => clearTimeout(nextStage);
     }
@@ -205,18 +220,16 @@ const WinCelebration = ({
   }, []);
 
   return (
-    <div 
-      ref={containerRef} 
-      className={`win-celebration ${theme === 'dark' ? 'dark-theme' : 'light-theme'} text-${textColor} ${hasWon ? '' : 'game-over-container'}`}
-      style={{ zIndex: 1200 }} /* Ensure this is higher than any other content */
+    <div
+      ref={containerRef}
+      className={`win-celebration ${theme === "dark" ? "dark-theme" : "light-theme"} text-${textColor} ${hasWon ? "" : "game-over-container"}`}
+      style={{
+        zIndex: 1200,
+      }} /* Ensure this is higher than any other content */
     >
       {/* Matrix Rain effect */}
       {showMatrixRain && (
-        <MatrixRain 
-          active={isMatrixActive}
-          color={matrixColor}
-          density={70}
-        />
+        <MatrixRain active={isMatrixActive} color={matrixColor} density={70} />
       )}
 
       {/* Fireworks effect */}
@@ -229,7 +242,10 @@ const WinCelebration = ({
       )}
 
       {/* Main celebration content */}
-      <div className={`celebration-content ${hasWon ? '' : 'game-over-message'}`} style={{ zIndex: 1500 }}>
+      <div
+        className={`celebration-content ${hasWon ? "" : "game-over-message"}`}
+        style={{ zIndex: 1500 }}
+      >
         {/* Victory message */}
         <div ref={messageRef} className="victory-message">
           <h2 className="victory-title">Solved! Rating: </h2>
@@ -250,18 +266,18 @@ const WinCelebration = ({
         </div>
 
         {/* Stats display - now with inline style fallback */}
-        <div 
-          ref={statsRef} 
-          className={`stats-container ${showStats ? 'animate-slide-in' : ''}`}
-          style={{ 
-            opacity: showStats ? 1 : 0, 
-            transition: 'opacity 0.8s ease-out',
-            display: 'flex',
-            flexWrap: 'wrap',
-            justifyContent: 'center',
-            gap: '20px',
-            margin: '25px 0',
-            color: theme === 'dark' ? 'white' : '#333'
+        <div
+          ref={statsRef}
+          className={`stats-container ${showStats ? "animate-slide-in" : ""}`}
+          style={{
+            opacity: showStats ? 1 : 0,
+            transition: "opacity 0.8s ease-out",
+            display: "flex",
+            flexWrap: "wrap",
+            justifyContent: "center",
+            gap: "20px",
+            margin: "25px 0",
+            color: theme === "dark" ? "white" : "#333",
           }}
         >
           <div className="stat-item">
@@ -270,7 +286,9 @@ const WinCelebration = ({
           </div>
           <div className="stat-item">
             <span className="stat-label">Mistakes</span>
-            <span className="stat-value">{mistakes} / {maxMistakes}</span>
+            <span className="stat-value">
+              {mistakes} / {maxMistakes}
+            </span>
           </div>
           <div className="stat-item score">
             <span className="stat-label">Score</span>
@@ -281,10 +299,10 @@ const WinCelebration = ({
         {/* Action buttons */}
         <div className="celebration-actions">
           {/* <SaveButton hasWon={true} playSound={playSound} /> */}
-          <button 
+          <button
             className="play-again-button button"
             onClick={startGame}
-            style={{ color: textColor === 'retro-green' ? '#003b00' : 'white' }}
+            style={{ color: textColor === "retro-green" ? "#003b00" : "white" }}
           >
             Play Again
           </button>

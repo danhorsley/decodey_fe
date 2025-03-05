@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import "./Settings.css";
+import "./Styles/Settings.css";
 
 function Settings({ currentSettings, onSave, onCancel }) {
   // Local state to track changes before saving
@@ -176,7 +176,7 @@ function Settings({ currentSettings, onSave, onCancel }) {
           </p>
         </div>
       </div>
-      
+
       {/* Long Quotes Setting */}
       <div className="settings-section">
         <h2>Quote Length</h2>
@@ -190,8 +190,9 @@ function Settings({ currentSettings, onSave, onCancel }) {
             <span className="option-label">Use Longer Quotes</span>
           </label>
           <p className="settings-description warning-text">
-            <strong>Warning:</strong> Longer quotes may not display well on smaller screens
-            or in mobile view. Best used on desktop or larger tablet displays.
+            <strong>Warning:</strong> Longer quotes may not display well on
+            smaller screens or in mobile view. Best used on desktop or larger
+            tablet displays.
           </p>
         </div>
       </div>
