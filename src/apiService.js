@@ -326,8 +326,8 @@ const apiService = {
   },
   async signup(username, email, password) {
     const endpoint = '/signup';
+    const requestBody = { username, email, password };
     try {
-      const requestBody = { username, email, password };
       const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json', ...config.session.getHeaders() };
       logApiOperation('POST', endpoint, requestBody);
       const response = await fetch(`${config.apiUrl}${endpoint}`, { method: 'POST', credentials: 'include', mode: 'cors', headers, body: JSON.stringify(requestBody) });

@@ -691,7 +691,8 @@ function App() {
     isAboutOpen, 
     closeAbout, 
     showSettings, 
-    showGame
+    showGame,
+    updateSettings
   } = useAppContext();
 
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -707,27 +708,8 @@ function App() {
     <div>
       {/* These components are conditionally rendered in Game component */}
       <Login isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
-      <Settings isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} onSave={handleSaveSettings} /> {/* Added Settings component */}
+      <Settings isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} /> {/* Removed onSave prop that was causing issues */}
 
-      {/* Login Button */}
-      <button 
-        className={`login-icon ${settings?.theme === "dark" ? "dark-theme" : ""}`}
-        onClick={() => setIsLoginOpen(true)}
-        aria-label="Login"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-          <circle cx="12" cy="7" r="4"></circle>
-        </svg>
-      </button>
-      {/* Settings Button */}
-      <button
-        className="settings-icon"
-        onClick={() => setIsSettingsOpen(true)}
-        aria-label="Settings"
-      >
-        {SETTINGS_ICON_SVG}
-      </button>
       <Router>
         <Routes>
           <Route path="/" element={<Game />} />
