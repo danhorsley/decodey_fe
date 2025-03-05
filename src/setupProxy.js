@@ -11,15 +11,22 @@ module.exports = function (app) {
   });
 
   // Create a single proxy middleware for all API endpoints
+  // Get backend URL from environment variable or fallback to default
+  const backendUrl = process.env.REACT_APP_BACKEND_URL || "https://uncryptbe.replit.app";
+  console.log(`[Proxy] Using backend URL: ${backendUrl}`);
+  
+  // Extract hostname from URL for headers
+  const backendHostname = new URL(backendUrl).hostname;
+  
   const apiProxy = createProxyMiddleware({
-    target: "https://uncryptbe.replit.app",
+    target: backendUrl,
     changeOrigin: true,
     // Disable WebSocket upgrades
     ws: false,
     // Fix for "Invalid Host Header" error and CORS issues
     headers: {
-      host: "uncryptbe.replit.app",
-      origin: "https://uncryptbe.replit.app", // Match the target domain
+      host: backendHostname,
+      origin: backendUrl, // Match the target domain
     },
     secure: true,
     // Log request/response for debugging

@@ -1,9 +1,9 @@
 // Configuration for the app
 const config = {
-  apiUrl: process.env.REACT_APP_API_URL || 'https://uncryptbe.replit.app',
+  apiUrl: process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL || 'https://uncryptbe.replit.app',
   // Log API URL for debugging
   init: (() => { 
-    console.log('🌐 API URL configured as:', process.env.REACT_APP_API_URL || 'https://uncryptbe.replit.app');
+    console.log('🌐 API URL configured as:', process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL || 'https://uncryptbe.replit.app');
     return true; 
   })(),
 
