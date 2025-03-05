@@ -19,6 +19,7 @@ const WinCelebration = ({
   correctlyGuessed = [],
   guessedMappings = {},
   hasWon, // Added hasWon prop
+  attribution, // Added attribution prop
 }) => {
   // Animation state
   const [animationStage, setAnimationStage] = useState(0);
@@ -27,8 +28,8 @@ const WinCelebration = ({
   const [showFireworks, setShowFireworks] = useState(false);
   const [isMatrixActive, setIsMatrixActive] = useState(true);
 
-  // Attribution state
-  const [attribution, setAttribution] = useState({
+  // Attribution state - now using prop
+  const [attributionData, setAttributionData] = useState({
     major: "",
     minor: "",
   });
@@ -101,47 +102,21 @@ const WinCelebration = ({
     }
   };
 
-  // Fetch attribution data when component mounts
+  // Use attribution data passed as a prop or set a default
   useEffect(() => {
-    const fetchAttribution = async () => {
-      try {
-        // Get the game_id from localStorage
-        const gameId = localStorage.getItem("uncrypt-game-id");
-
-        // Add game_id as a query parameter if available
-        const url = gameId
-          ? `${config.apiUrl}/get_attribution?game_id=${encodeURIComponent(gameId)}`
-          : `${config.apiUrl}/get_attribution`;
-
-        console.log("Fetching attribution from URL:", url);
-
-        const response = await fetch(url, {
-          credentials: "include",
-          mode: "cors",
-          headers: {
-            Accept: "application/json",
-          },
+    if (animationStage >= 3) { // Assuming animationStage 3 is a suitable point
+      if (attribution) {
+        console.log("Attribution data received:", attribution);
+        setAttributionData(attribution);
+      } else {
+        // Set default values if no attribution provided
+        setAttributionData({
+          major_attribution: "Unknown",
+          minor_attribution: "",
         });
-
-        if (!response.ok) {
-          console.error(`HTTP error! Status: ${response.status}`);
-          return;
-        }
-
-        const data = await response.json();
-        console.log("Attribution data received:", data);
-
-        setAttribution({
-          major: data.major_attribution || "",
-          minor: data.minor_attribution || "",
-        });
-      } catch (error) {
-        console.error("Error fetching attribution:", error);
       }
-    };
-
-    fetchAttribution();
-  }, []);
+    }
+  }, [animationStage, attribution]);
 
   // Staged animation sequence
   useEffect(() => {
@@ -255,11 +230,11 @@ const WinCelebration = ({
           <div className="quote-container">
             <p className="decrypted-quote">{getDecryptedText()}</p>
             <div className="quote-attribution">
-              {attribution && attribution.major && (
-                <span>— {attribution.major}</span>
+              {attributionData && attributionData.major_attribution && (
+                <span>— {attributionData.major_attribution}</span>
               )}
-              {attribution && attribution.minor && (
-                <span>, {attribution.minor}</span>
+              {attributionData && attributionData.minor_attribution && (
+                <span>, {attributionData.minor_attribution}</span>
               )}
             </div>
           </div>

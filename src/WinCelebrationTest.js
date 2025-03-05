@@ -21,6 +21,11 @@ function WinCelebrationTest() {
     guessedMappings: {
       'A': 'T', 'B': 'O', 'C': 'R', 'D': 'I', 'E': 'S'
     },
+    // Fake attribution data instead of requesting from backend
+    attribution: {
+      major_attribution: "Traditional English",
+      minor_attribution: "Proverb"
+    },
     hasWon: true
   };
 
@@ -37,48 +42,46 @@ function WinCelebrationTest() {
 
   return (
     <div className={`win-test-container ${settings.theme === "dark" ? "dark-theme" : ""} ${previewMode}`}>
-      <div className="win-test-controls">
-        <h1>WinCelebration Test Page</h1>
+      {/* Small toggle control positioned at top center */}
+      <div className="win-test-toggle-controls">
+        <button 
+          className="test-button"
+          onClick={() => setShowCelebration(!showCelebration)}
+        >
+          {showCelebration ? "Hide" : "Show"} Celebration
+        </button>
         
-        <div className="control-panel">
-          <button 
-            className="test-button"
-            onClick={() => setShowCelebration(!showCelebration)}
-          >
-            {showCelebration ? "Hide Celebration" : "Show Celebration"}
-          </button>
-          
-          <button 
-            className="test-button"
-            onClick={toggleTheme}
-          >
-            Toggle Theme: {settings.theme === "dark" ? "Dark" : "Light"}
-          </button>
-          
-          <div className="mode-toggle">
-            <label>
-              <input 
-                type="radio" 
-                name="mode" 
-                checked={previewMode === "desktop"}
-                onChange={() => setPreviewMode("desktop")} 
-              />
-              Desktop View
-            </label>
-            <label>
-              <input 
-                type="radio" 
-                name="mode" 
-                checked={previewMode === "mobile"}
-                onChange={() => setPreviewMode("mobile")} 
-              />
-              Mobile View
-            </label>
-          </div>
-          
-          <a href="/" className="back-link">Back to Game</a>
+        <div className="mode-toggle">
+          <label>
+            <input 
+              type="radio" 
+              name="mode" 
+              checked={previewMode === "desktop"}
+              onChange={() => setPreviewMode("desktop")} 
+            />
+            Desktop
+          </label>
+          <label>
+            <input 
+              type="radio" 
+              name="mode" 
+              checked={previewMode === "mobile"}
+              onChange={() => setPreviewMode("mobile")} 
+            />
+            Mobile
+          </label>
         </div>
+        
+        <button 
+          className="test-button theme-toggle"
+          onClick={toggleTheme}
+        >
+          Theme: {settings.theme === "dark" ? "Dark" : "Light"}
+        </button>
       </div>
+      
+      {/* Tiny link to go back to game */}
+      <a href="/" className="back-link">Back to Game</a>
       
       {showCelebration && (
         <div className={previewMode === "mobile" ? "mobile-mode" : ""}>
@@ -96,6 +99,7 @@ function WinCelebrationTest() {
             correctlyGuessed={testData.correctlyGuessed}
             guessedMappings={testData.guessedMappings}
             hasWon={testData.hasWon}
+            attribution={testData.attribution} // Pass the fake attribution
           />
         </div>
       )}
