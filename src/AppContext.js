@@ -9,7 +9,7 @@ const defaultSettings = {
   // frequencyDisplay: "numeric",
   theme: "dark",
   difficulty: "easy",
-  // textColor: "scifi-blue", // This will be auto-set based on theme
+  longText: false,
   speedMode: true, // Always on - cannot be changed
   gridSorting: "default",
   hardcoreMode: false,
