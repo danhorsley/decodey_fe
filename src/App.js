@@ -697,6 +697,12 @@ function App() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false); // Added state for settings modal
 
+  // Function to handle settings save
+  const handleSaveSettings = (newSettings) => {
+    updateSettings(newSettings);
+    setIsSettingsOpen(false);
+  };
+
   return (
     <div>
       {/* These components are conditionally rendered in Game component */}
