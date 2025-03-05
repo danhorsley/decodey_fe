@@ -110,14 +110,14 @@
 @media (min-height: 360px) and (max-height: 380px) and (min-width: 730px) and (max-width: 780px) and (orientation: landscape) {
   .mobile-mode .encrypted-grid,
   .mobile-mode .guess-grid {
-    grid-template-columns: repeat(5, 35px);
+    grid-template-columns: repeat(5, 20px);
     gap: 4px;
   }
 
   .mobile-mode .letter-cell {
-    width: 35px;
-    height: 35px;
-    font-size: 1.05em;
+    width: 20px;
+    height: 20px;
+    font-size: 0.8em;
   }
 
   /* Adjust text container to be smaller */
@@ -145,14 +145,14 @@
 @media (min-height: 340px) and (max-height: 359px) and (min-width: 730px) and (max-width: 780px) and (orientation: landscape) {
   .mobile-mode .encrypted-grid,
   .mobile-mode .guess-grid {
-    grid-template-columns: repeat(5, 31px);
+    grid-template-columns: repeat(5, 20px);
     gap: 3px;
   }
 
   .mobile-mode .letter-cell {
-    width: 31px;
-    height: 31px;
-    font-size: 1em;
+    width: 20px;
+    height: 20px;
+    font-size: 0.80em;
   }
 
   /* Adjust text container to be smaller */
