@@ -15,29 +15,31 @@ function About({ isOpen, onClose }) {
         <button className="about-close" onClick={onClose}>
           &times;
         </button>
-        <h2>uncrypt</h2>
-        <p>Crack the code by figuring out which letter stands for which!</p>
+        <h2>uncrypt: Crack the Code!</h2>
+        <p>
+          Break the encryption by figuring out which letter stands for which!
+        </p>
         <div className="about-details">
           <p>
             <strong>How to play:</strong>
           </p>
           <ol>
             <li>
-              Select a letter from the encrypted text{" "}
+              Select a letter from the{" "}
               <span className="left-grid-reference"> left grid</span>
             </li>
             <li>
-              Guess what original letter it represents{" "}
+              Guess the original letter it represents in the{" "}
               <span className="right-grid-reference"> right grid</span>
             </li>
             <li>
-              Use letter frequency numbers in the{" "}
-              <span className="left-grid-reference">left grid</span> to help
-              analyze the pattern
+              Use the letter frequency numbers in the{" "}
+              <span className="left-grid-reference"> left grid</span> to make
+              smarter guesses
             </li>
             <li>Solve before running out of mistakes!</li>
           </ol>
-          <p>Need help? Use the hint button (costs one mistake).</p>
+          <p>Stuck? Hit the hint button (but it'll cost you one mistake).</p>
         </div>
       </div>
     </div>
