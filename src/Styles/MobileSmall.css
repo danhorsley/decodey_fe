@@ -189,14 +189,14 @@
   @media (max-width: 360px) {
     .mobile-mode .encrypted-grid,
     .mobile-mode .guess-grid {
-      grid-template-columns: repeat(5, 36px);
+      grid-template-columns: repeat(5, 34px);
       gap: 5px;
     }
 
     .mobile-mode .letter-cell {
-      width: 36px;
-      height: 36px;
-      font-size: 1.1em;
+      width: 34px;
+      height: 34px;
+      font-size: 1.05em;
     }
   }
 }
