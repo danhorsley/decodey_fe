@@ -21,12 +21,9 @@ const apiService = {
   },
 
   // Other API methods can be added here
-  startGame: async (useLongQuotes = false) => {
+  startGame: async () => {
     try {
-      // Use longstart endpoint if useLongQuotes is true
-      const endpoint = useLongQuotes ? '/longstart' : '/start';
-      
-      const response = await fetch(`${config.apiUrl}${endpoint}`, {
+      const response = await fetch(`${config.apiUrl}/start`, {
         credentials: 'include',
         mode: 'cors',
         headers: {

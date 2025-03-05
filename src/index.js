@@ -1,9 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './styles/index.css';
+import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import { AppProvider } from './context/AppContext';
+import { AppProvider } from './AppContext';
 
 
 // Add data-theme attribute to HTML element for Samsung Browser

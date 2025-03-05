@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import "./styles/Settings.css";
+import "./Settings.css";
 
 function Settings({ currentSettings, onSave, onCancel }) {
   // Local state to track changes before saving
@@ -173,27 +173,6 @@ function Settings({ currentSettings, onSave, onCancel }) {
             Mobile mode provides a thumb-friendly interface with grids
             positioned at the sides of the screen. Best experienced in landscape
             orientation.
-          </p>
-        </div>
-      </div>
-
-      {/* Long Quotes Setting */}
-      <div className="settings-section">
-        <h2>Quote Length</h2>
-        <div className="settings-options">
-          <label className="settings-option">
-            <input
-              type="checkbox"
-              checked={settings.useLongQuotes}
-              onChange={() =>
-                handleChange("useLongQuotes", !settings.useLongQuotes)
-              }
-            />
-            <span className="option-label">Include Long Quotes</span>
-          </label>
-          <p className="settings-description warning-text">
-            <strong>Warning:</strong> When enabled, quotes longer than 80 characters will be included.
-            This may not be suitable for smaller screens or mobile devices.
           </p>
         </div>
       </div>

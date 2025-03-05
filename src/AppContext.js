@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
-import useDeviceDetection from "../hooks/useDeviceDetection";
+import useDeviceDetection from "./useDeviceDetection";
 
 // Create context
 const AppContext = createContext();
@@ -9,12 +9,11 @@ const defaultSettings = {
   // frequencyDisplay: "numeric",
   theme: "dark",
   difficulty: "easy",
-  useLongQuotes: false,
+  // textColor: "scifi-blue", // This will be auto-set based on theme
   speedMode: true, // Always on - cannot be changed
   gridSorting: "default",
   hardcoreMode: false,
   mobileMode: "auto",
-  useLongQuotes: false, // Added: use long quotes or not
   // placeholderStyle: "matching" // Default placeholder style
 };
 
