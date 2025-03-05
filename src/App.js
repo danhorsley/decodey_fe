@@ -698,25 +698,30 @@ function App() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false); // Added state for settings modal
 
-  // Function to handle settings save
-  const handleSaveSettings = (newSettings) => {
-    updateSettings(newSettings);
-    setIsSettingsOpen(false);
-  };
-
   return (
-    <div>
-      {/* These components are conditionally rendered in Game component */}
+    <div className="app-wrapper">
+      {/* These components are conditionally rendered */}
       <Login isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
-      <Settings isOpen={isSettingsOpen} onClose={() => {
-        setIsSettingsOpen(false);
-        showGame();
-      }} />
+      <Settings 
+        isOpen={isSettingsOpen} 
+        onClose={() => {
+          setIsSettingsOpen(false);
+          showGame();
+        }} 
+      />
 
-      {/* Settings Button */}
+      {/* Settings Button in fixed position */}
       <button
         className="settings-icon"
-        onClick={() => setIsSettingsOpen(true)}
+        style={{
+          position: 'fixed', 
+          top: '20px', 
+          right: '20px',
+          zIndex: 1000
+        }}
+        onClick={() => {
+          setIsSettingsOpen(true);
+        }}
         aria-label="Settings"
       >
         {SETTINGS_ICON_SVG}

@@ -38,7 +38,7 @@ function Settings({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   return (
-    <div className="about-overlay">
+    <div className="about-overlay" style={{ overflowY: 'auto', maxHeight: '100vh' }}>
       <div className={`settings-container ${settings?.theme === "dark" ? "dark-theme" : ""}`}>
         <button className="about-close" onClick={onClose}>
           &times;
