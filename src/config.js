@@ -6,6 +6,36 @@ const config = {
     console.log('🌐 API URL configured as:', process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL || 'https://uncryptbe.replit.app');
     return true; 
   })(),
+  
+  // User session management
+  session: {
+    getHeaders: () => {
+      const userId = localStorage.getItem('uncrypt-user-id');
+      const token = localStorage.getItem('uncrypt-token');
+      
+      const headers = {};
+      if (userId) headers['X-User-ID'] = userId;
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      
+      return headers;
+    },
+    
+    saveSession: (headers) => {
+      if (headers.get('x-user-id')) {
+        localStorage.setItem('uncrypt-user-id', headers.get('x-user-id'));
+      }
+      
+      if (headers.get('authorization')) {
+        const token = headers.get('authorization').replace('Bearer ', '');
+        localStorage.setItem('uncrypt-token', token);
+      }
+    },
+    
+    clearSession: () => {
+      localStorage.removeItem('uncrypt-user-id');
+      localStorage.removeItem('uncrypt-token');
+    }
+  },
 
   // Debug flag to control logging
   DEBUG: true,

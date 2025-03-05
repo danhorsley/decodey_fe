@@ -43,6 +43,52 @@ const logApiOperation = (method, endpoint, requestData = null, response = null, 
 };
 
 const apiService = {
+  // Login functionality
+  login: async (username, password) => {
+    const endpoint = '/login';
+    
+    try {
+      const requestBody = {
+        username,
+        password
+      };
+      
+      const headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        ...config.session.getHeaders()
+      };
+      
+      logApiOperation('POST', endpoint, { username });
+      
+      const response = await fetch(`${config.apiUrl}${endpoint}`, {
+        method: 'POST',
+        credentials: 'include',
+        mode: 'cors',
+        headers: headers,
+        body: JSON.stringify(requestBody)
+      });
+      
+      logApiOperation('POST', endpoint, { username }, response);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`HTTP error! Status: ${response.status}, Response:`, errorText);
+        throw new Error(`Login failed with status: ${response.status}`);
+      }
+      
+      // Save session if applicable
+      config.session.saveSession(response.headers);
+      
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      logApiOperation('POST', endpoint, { username }, null, error);
+      console.error('Error during login:', error);
+      throw error;
+    }
+  },
+  
   // Function to check API health status
   checkHealth: async () => {
     const endpoint = '/health';
