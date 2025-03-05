@@ -708,7 +708,19 @@ function App() {
     <div>
       {/* These components are conditionally rendered in Game component */}
       <Login isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
-      <Settings isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} /> {/* Removed onSave prop that was causing issues */}
+      <Settings isOpen={isSettingsOpen} onClose={() => {
+        setIsSettingsOpen(false);
+        showGame();
+      }} />
+
+      {/* Settings Button */}
+      <button
+        className="settings-icon"
+        onClick={() => setIsSettingsOpen(true)}
+        aria-label="Settings"
+      >
+        {SETTINGS_ICON_SVG}
+      </button>
 
       <Router>
         <Routes>
