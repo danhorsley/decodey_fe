@@ -163,12 +163,16 @@
 
     /* Even smaller text for extreme cases */
     .mobile-mode .decrypted-quote {
-      font-size: 0.9em;
+      font-size: 0.85em;
       margin: 4px 0;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
     }
 
     .mobile-mode .quote-attribution {
-      font-size: 0.8em;
+      font-size: 0.75em;
+      margin-top: 2px;
+      -webkit-font-smoothing: antialiased;
     }
   }
 }
@@ -190,4 +194,26 @@
   color: inherit;
   width: 100%;
   display: inline-block;
+}
+/* Samsung device specific fixes */
+@supports (-webkit-overflow-scrolling: touch) {
+  .mobile-mode .quote-container {
+    transform: translateZ(0); /* Force hardware acceleration */
+  }
+  
+  .mobile-mode .decrypted-quote,
+  .mobile-mode .quote-attribution {
+    letter-spacing: 0.01em; /* Slightly increase letter spacing for readability */
+  }
+}
+
+/* Ensure the attribution stays close to the quote text */
+.quote-attribution {
+  font-style: italic;
+  margin-top: 2px;
+  text-align: right;
+  color: inherit;
+  width: 100%;
+  display: inline-block;
+  line-height: 1.2;
 }
