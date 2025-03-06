@@ -361,3 +361,31 @@ export const preventWordBreaks = (text) => {
   // to prevent unwanted spaces in the middle of words
   return text;
 };
+
+// Add to utils.js or a new scoring.js file
+export const calculateScore = (maxMistakes, mistakes, timeSeconds) => {
+  // Base score
+  const baseScore = 1000;
+
+  // Penalties
+  const mistakePenalty = 50; // Points per mistake
+  const timePenalty = 2; // Points per second
+
+  // Calculate score with a minimum of 0
+  return Math.max(
+    0,
+    baseScore - mistakes * mistakePenalty - timeSeconds * timePenalty,
+  );
+};
+
+export const getDifficultyFromMaxMistakes = (maxMistakes) => {
+  switch (maxMistakes) {
+    case 3:
+      return "hard";
+    case 8:
+      return "easy";
+    case 5:
+    default:
+      return "normal";
+  }
+};

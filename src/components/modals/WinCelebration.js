@@ -1,10 +1,24 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import MatrixRain from "../../components/effects/MatrixRain";
 // import SaveButton from "./SaveButton";
 import config from "../../config";
 import "../../Styles/WinCelebration.css";
+import getDifficultyFromMaxMistakes from "../../utils/utils";
+import calculateScore from "../../utils/utils";
+import apiService from "../../services/apiService";
+import { useAppContext } from "../context/AppContext";
 
 // Enhanced win celebration component with Matrix effect
+const { isAuthenticated, openLogin } = useAppContext();
+const [scoreStatus, setScoreStatus] = useState({
+  attempted: false,
+  recorded: false,
+  error: null,
+});
+const handleRetryScoreSubmit = useCallback(() => {
+  setScoreStatus({ attempted: false, recorded: false, error: null });
+}, []);
+
 const WinCelebration = ({
   startGame,
   playSound,
@@ -194,7 +208,51 @@ const WinCelebration = ({
 
     return () => clearTimeout(cleanupTimer);
   }, []);
+  // post scores to backend
+  useEffect(() => {
+    const recordGameScore = async () => {
+      // Only proceed if user has won and hasn't attempted to record score yet
+      if (hasWon && !scoreStatus.attempted && isAuthenticated) {
+        setScoreStatus((prev) => ({ ...prev, attempted: true }));
 
+        try {
+          // Calculate score based on mistakes and time
+          const gameTimeSeconds = (completionTime - startTime) / 1000;
+          const score = calculateScore(maxMistakes, mistakes, gameTimeSeconds);
+
+          const gameData = {
+            score,
+            mistakes,
+            timeTaken: Math.round(gameTimeSeconds),
+            difficulty: getDifficultyFromMaxMistakes(maxMistakes),
+          };
+
+          const result = await apiService.recordScore(gameData);
+
+          if (result.success) {
+            setScoreStatus((prev) => ({ ...prev, recorded: true }));
+            console.log("Score recorded successfully:", result);
+          }
+        } catch (error) {
+          console.error("Failed to record score:", error);
+          setScoreStatus((prev) => ({
+            ...prev,
+            error: "Failed to record score. Please try again.",
+          }));
+        }
+      }
+    };
+
+    recordGameScore();
+  }, [
+    hasWon,
+    scoreStatus.attempted,
+    isAuthenticated,
+    mistakes,
+    maxMistakes,
+    startTime,
+    completionTime,
+  ]);
   return (
     <div
       ref={containerRef}
@@ -282,6 +340,35 @@ const WinCelebration = ({
           >
             Play Again
           </button>
+          {/* Score recording status */}
+          {hasWon && (
+            <div className="score-section">
+              {isAuthenticated ? (
+                scoreStatus.recorded ? (
+                  <p className="score-success">Your score has been recorded!</p>
+                ) : scoreStatus.error ? (
+                  <>
+                    <p className="score-error">{scoreStatus.error}</p>
+                    <button
+                      onClick={handleRetryScoreSubmit}
+                      className="retry-button"
+                    >
+                      Try Again
+                    </button>
+                  </>
+                ) : (
+                  <p className="score-recording">Recording your score...</p>
+                )
+              ) : (
+                <div className="login-prompt">
+                  <p>Login to save your score to the leaderboard!</p>
+                  <button onClick={openLogin} className="login-button">
+                    Login or Create Account
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -406,6 +406,59 @@ const apiService = {
       throw error;
     }
   },
+  // Add to src/services/apiService.js
+  recordScore: async (gameData) => {
+    const endpoint = "/record_score";
+
+    try {
+      const gameId = localStorage.getItem("uncrypt-game-id");
+
+      const requestBody = {
+        game_id: gameId,
+        score: gameData.score,
+        mistakes: gameData.mistakes,
+        time_taken: gameData.timeTaken, // in seconds
+        difficulty: gameData.difficulty,
+      };
+
+      const headers = {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        ...config.session.getHeaders(),
+      };
+
+      logApiOperation("POST", endpoint, { requestBody });
+
+      const response = await fetch(`${config.apiUrl}${endpoint}`, {
+        method: "POST",
+        credentials: "include",
+        mode: "cors",
+        headers: headers,
+        body: JSON.stringify(requestBody),
+      });
+
+      logApiOperation("POST", endpoint, requestBody, response);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(
+          `HTTP error! Status: ${response.status}, Response:`,
+          errorText,
+        );
+        throw new Error(`Failed to record score: ${response.status}`);
+      }
+
+      // Save session if applicable
+      config.session.saveSession(response.headers);
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      logApiOperation("POST", endpoint, gameData, null, error);
+      console.error("Error recording score:", error);
+      throw error;
+    }
+  },
 };
 
 export default apiService;
