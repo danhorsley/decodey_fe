@@ -3,7 +3,7 @@ import ReactDOM from "react-dom/client";
 import "./Styles/index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
-import { AppProvider } from "./AppContext";
+import { AppProvider } from "./context/AppContext";
 
 // Add data-theme attribute to HTML element for Samsung Browser
 const applyHtmlDataTheme = () => {

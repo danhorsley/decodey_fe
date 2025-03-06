@@ -1,9 +1,8 @@
-
 import React, { useState } from "react";
 import "./Styles/About.css";
 import "./Styles/Login.css";
-import { useAppContext } from "./AppContext";
-import apiService from "./apiService";
+import { useAppContext } from "./context/AppContext";
+import apiService from "./services/apiService";
 
 function Login({ isOpen, onClose }) {
   const { settings } = useAppContext();
@@ -18,7 +17,7 @@ function Login({ isOpen, onClose }) {
     e.preventDefault();
     setIsLoading(true);
     setError("");
-    
+
     try {
       const response = await apiService.login(username, password);
       console.log("Login successful:", response);
@@ -63,11 +62,7 @@ function Login({ isOpen, onClose }) {
               required
             />
           </div>
-          <button 
-            type="submit" 
-            className="login-button" 
-            disabled={isLoading}
-          >
+          <button type="submit" className="login-button" disabled={isLoading}>
             {isLoading ? "Logging in..." : "Login"}
           </button>
         </form>

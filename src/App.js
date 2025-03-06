@@ -13,19 +13,19 @@ import {
 } from "react-router-dom";
 import "./Styles/App.css";
 import "./Styles/Mobile.css";
-import Settings from "./Settings"; // Re-add the import
-import { useAppContext } from "./AppContext";
-import useSound from "./SoundManager";
-import useKeyboardInput from "./KeyboardController";
-import { formatAlternatingLines, preventWordBreaks } from "./utils";
+import Settings from "./components/modals/Settings"; // Re-add the import
+import { useAppContext } from "./context/AppContext";
+import useSound from "./services/SoundManager";
+import useKeyboardInput from "./hooks/KeyboardController";
+import { formatAlternatingLines, preventWordBreaks } from "./utils/utils";
 // import SaveButton from "./SaveButton"; // Unused in original; kept for completeness
-import WinCelebration from "./WinCelebration";
-import WinCelebrationTest from "./WinCelebrationTest";
-import About from "./About";
-import Login from "./Login";
-import MobileLayout from "./MobileLayout";
+import WinCelebration from "./components/modals/WinCelebration";
+import WinCelebrationTest from "./pages/WinCelebrationTest";
+import About from "./components/modals/About";
+import Login from "./pages/Login";
+import MobileLayout from "./components/layout/MobileLayout";
 import config from "./config";
-import apiService from "./apiService";
+import apiService from "./services/apiService";
 
 // Debug flag
 const DEBUG = true;
@@ -70,7 +70,7 @@ const LOGIN_ICON_SVG = (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
-    width="24" 
+    width="24"
     height="24"
     fill="none"
     stroke="currentColor"
@@ -167,15 +167,15 @@ function Game() {
     isLandscape,
     useMobileMode,
   } = useAppContext();
-  
+
   // State for login modal
   const [isLoginOpen, setIsLoginOpen] = useState(false);
-  
+
   // Login handlers
   const openLogin = () => {
     setIsLoginOpen(true);
   };
-  
+
   const closeLogin = () => {
     setIsLoginOpen(false);
   };
@@ -579,11 +579,7 @@ function Game() {
           Hint (Costs 1 Mistake)
         </button>
       </div>
-      <button
-        className="login-icon"
-        onClick={openLogin}
-        aria-label="Login"
-      >
+      <button className="login-icon" onClick={openLogin} aria-label="Login">
         {LOGIN_ICON_SVG}
       </button>
     </div>

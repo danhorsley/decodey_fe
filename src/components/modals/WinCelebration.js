@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import MatrixRain from "./MatrixRain";
+import MatrixRain from "./components/effects/MatrixRain";
 // import SaveButton from "./SaveButton";
 import config from "./config";
 import "./Styles/WinCelebration.css";
