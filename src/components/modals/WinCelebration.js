@@ -3,22 +3,11 @@ import MatrixRain from "../../components/effects/MatrixRain";
 // import SaveButton from "./SaveButton";
 import config from "../../config";
 import "../../Styles/WinCelebration.css";
-import getDifficultyFromMaxMistakes from "../../utils/utils";
-import calculateScore from "../../utils/utils";
+import { getDifficultyFromMaxMistakes, calculateScore } from "../../utils/utils";
 import apiService from "../../services/apiService";
-import { useAppContext } from "../context/AppContext";
+import { useAppContext } from "../../context/AppContext";
 
 // Enhanced win celebration component with Matrix effect
-const { isAuthenticated, openLogin } = useAppContext();
-const [scoreStatus, setScoreStatus] = useState({
-  attempted: false,
-  recorded: false,
-  error: null,
-});
-const handleRetryScoreSubmit = useCallback(() => {
-  setScoreStatus({ attempted: false, recorded: false, error: null });
-}, []);
-
 const WinCelebration = ({
   startGame,
   playSound,
@@ -35,6 +24,17 @@ const WinCelebration = ({
   hasWon, // Added hasWon prop
   attribution, // Added attribution prop
 }) => {
+  const { isAuthenticated, openLogin } = useAppContext();
+  const [scoreStatus, setScoreStatus] = useState({
+    attempted: false,
+    recorded: false,
+    error: null,
+  });
+
+  const handleRetryScoreSubmit = useCallback(() => {
+    setScoreStatus({ attempted: false, recorded: false, error: null });
+  }, []);
+
   // Animation state
   const [animationStage, setAnimationStage] = useState(0);
   const [showStats, setShowStats] = useState(false);
