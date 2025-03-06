@@ -66,7 +66,17 @@ export const AppProvider = ({ children }) => {
   const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isSignupOpen, setIsSignupOpen] = useState(false);
-
+  // Add this effect to log any changes to authState
+  useEffect(() => {
+    console.log(
+      "%c Auth State Changed:",
+      "background: #4cc9f0; color: white; padding: 2px 6px; border-radius: 2px;",
+      {
+        authState,
+        timestamp: new Date().toLocaleTimeString(),
+      },
+    );
+  }, [authState]);
   // ==== DEVICE DETECTION ====
   const { isMobile, isLandscape, screenWidth, screenHeight, detectMobile } =
     useDeviceDetection();
