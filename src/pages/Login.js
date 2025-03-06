@@ -7,6 +7,7 @@ import config from "../config";
 
 function Login({ isOpen, onClose }) {
   const { settings, openSignup } = useAppContext();
+  const { isLoginOpen, isSignupOpen } = useAppContext();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -23,9 +24,20 @@ function Login({ isOpen, onClose }) {
 
   // Handle account creation
   const handleCreateAccount = () => {
+    // Prevent default behavior (critical!)
+    // e.preventDefault();
     // Open the signup form
-    console.log("Create account button clicked");
+    // Log before state changes
+    console.log("Create account button clicked, current modal states:", {
+      isLoginOpen: isLoginOpen,
+      isSignupOpen: isSignupOpen,
+    });
     openSignup();
+    console.log("After openSignup, new states should be:", {
+      isLoginOpen: false,
+      isSignupOpen: true,
+    });
+    return false;
   };
 
   const handleSubmit = async (e) => {
