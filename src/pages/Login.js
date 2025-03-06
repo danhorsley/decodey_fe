@@ -44,6 +44,21 @@ function Login({ isOpen, onClose }) {
     try {
       const response = await apiService.login(username, password);
       console.log("Login successful:", response);
+      const { updateAuthState } = useAppContext();
+      if (updateAuthState) {
+        updateAuthState({
+          isAuthenticated: true,
+          user: {
+            username: username,
+            // Add other user data from API response if available
+            ...response?.user
+          },
+          authLoading: false,
+          authError: null
+        });
+      } else {
+        console.error("updateAuthState is not available in context");
+      }
       onClose();
       // You might want to update the app context with user info here
     } catch (err) {
