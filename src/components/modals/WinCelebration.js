@@ -3,7 +3,10 @@ import MatrixRain from "../../components/effects/MatrixRain";
 // import SaveButton from "./SaveButton";
 import config from "../../config";
 import "../../Styles/WinCelebration.css";
-import { getDifficultyFromMaxMistakes, calculateScore } from "../../utils/utils";
+import {
+  getDifficultyFromMaxMistakes,
+  calculateScore,
+} from "../../utils/utils";
 import apiService from "../../services/apiService";
 import { useAppContext } from "../../context/AppContext";
 
