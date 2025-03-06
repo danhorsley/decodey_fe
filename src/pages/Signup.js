@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import "../Styles/About.css";
 import "../Styles/Login.css";
 import { useAppContext } from "../context/AppContext";
@@ -21,7 +21,7 @@ function Signup({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
 
     // Validate passwords match
@@ -60,10 +60,21 @@ function Signup({ isOpen, onClose }) {
     } finally {
       setIsLoading(false);
     }
+  }, [password, confirmPassword, email, username, openLogin, onClose]);
+
+
+  const debounce = (func, delay) => {
+    let timeoutId;
+    return (...args) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        func.apply(null, args);
+      }, delay);
+    };
   };
-  // Add debounced check function
+
   const checkUsername = useCallback(
-    _.debounce(async (value) => {
+    debounce(async (value) => {
       if (value.length < 3) {
         setUsernameStatus({
           checking: false,
@@ -102,7 +113,6 @@ function Signup({ isOpen, onClose }) {
     [],
   );
 
-  // Add this effect
   useEffect(() => {
     if (username.length >= 3) {
       checkUsername(username);
