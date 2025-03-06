@@ -61,20 +61,6 @@ export const AppProvider = ({ children }) => {
   // ==== AUTH STATE ====
   const [authState, setAuthState] = useState(defaultUserState);
 
-  // Function to update auth state
-  const updateAuthState = useCallback((updates) => {
-    setAuthState((prevAuthState) => ({ ...prevAuthState, ...updates }));
-  }, []);
-
-  // Add logging for auth state changes
-  useEffect(() => {
-    console.log("🔐 Auth state changed:", {
-      isAuthenticated: authState.isAuthenticated,
-      user: authState.user,
-      authLoading: authState.authLoading,
-    });
-  }, [authState]);
-
   // ==== UI STATE ====
   const [currentView, setCurrentView] = useState("game"); // 'game', 'settings', 'login', etc.
   const [isAboutOpen, setIsAboutOpen] = useState(false);
@@ -95,7 +81,7 @@ export const AppProvider = ({ children }) => {
       const token = localStorage.getItem("uncrypt-token");
 
       if (!token) {
-        updateAuthState({
+        setAuthState({
           ...defaultUserState,
           authLoading: false,
         });
@@ -113,7 +99,7 @@ export const AppProvider = ({ children }) => {
 
         if (response.ok) {
           const userData = await response.json();
-          updateAuthState({
+          setAuthState({
             user: userData,
             isAuthenticated: true,
             authLoading: false,
@@ -122,14 +108,14 @@ export const AppProvider = ({ children }) => {
         } else {
           // Invalid token, clear it
           localStorage.removeItem("uncrypt-token");
-          updateAuthState({
+          setAuthState({
             ...defaultUserState,
             authLoading: false,
           });
         }
       } catch (error) {
         console.error("Auth initialization error:", error);
-        updateAuthState({
+        setAuthState({
           ...defaultUserState,
           authLoading: false,
           authError: "Failed to validate authentication state",
@@ -138,11 +124,11 @@ export const AppProvider = ({ children }) => {
     };
 
     initAuth();
-  }, [updateAuthState]);
+  }, []);
 
   // Login method
   const login = useCallback(async (credentials) => {
-    updateAuthState({ authLoading: true, authError: null });
+    setAuthState((prev) => ({ ...prev, authLoading: true, authError: null }));
 
     try {
       const response = await fetch(`${config.apiUrl}/login`, {
@@ -163,7 +149,7 @@ export const AppProvider = ({ children }) => {
       localStorage.setItem("uncrypt-token", data.token);
 
       // Update auth state
-      updateAuthState({
+      setAuthState({
         user: data.user,
         isAuthenticated: true,
         authLoading: false,
@@ -174,21 +160,22 @@ export const AppProvider = ({ children }) => {
     } catch (error) {
       console.error("Login error:", error);
 
-      updateAuthState({
+      setAuthState((prev) => ({
+        ...prev,
         authLoading: false,
         authError: error.message || "Login failed",
-      });
+      }));
 
       return {
         success: false,
         error: error.message || "Login failed",
       };
     }
-  }, [updateAuthState]);
+  }, []);
 
   // Register method
   const register = useCallback(async (userData) => {
-    updateAuthState((prev) => ({ ...prev, authLoading: true, authError: null }));
+    setAuthState((prev) => ({ ...prev, authLoading: true, authError: null }));
 
     try {
       const response = await fetch(`${config.apiUrl}/register`, {
@@ -210,7 +197,7 @@ export const AppProvider = ({ children }) => {
         localStorage.setItem("uncrypt-token", data.token);
 
         // Update auth state
-        updateAuthState({
+        setAuthState({
           user: data.user,
           isAuthenticated: true,
           authLoading: false,
@@ -218,7 +205,7 @@ export const AppProvider = ({ children }) => {
         });
       } else {
         // If registration doesn't auto-login
-        updateAuthState((prev) => ({
+        setAuthState((prev) => ({
           ...prev,
           authLoading: false,
           authError: null,
@@ -229,7 +216,7 @@ export const AppProvider = ({ children }) => {
     } catch (error) {
       console.error("Registration error:", error);
 
-      updateAuthState((prev) => ({
+      setAuthState((prev) => ({
         ...prev,
         authLoading: false,
         authError: error.message || "Registration failed",
@@ -240,13 +227,13 @@ export const AppProvider = ({ children }) => {
         error: error.message || "Registration failed",
       };
     }
-  }, [updateAuthState]);
+  }, []);
 
   // Logout method
   const logout = useCallback(() => {
     // Clear token and state
     localStorage.removeItem("uncrypt-token");
-    updateAuthState({
+    setAuthState({
       user: null,
       isAuthenticated: false,
       authLoading: false,
@@ -255,7 +242,7 @@ export const AppProvider = ({ children }) => {
 
     // Optionally, redirect to login page
     setCurrentView("login");
-  }, [updateAuthState]);
+  }, []);
 
   // ==== SETTINGS METHODS ====
   // Update settings

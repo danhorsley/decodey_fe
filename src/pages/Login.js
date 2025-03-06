@@ -6,8 +6,6 @@ import apiService from "../services/apiService";
 import config from "../config";
 
 function Login({ isOpen, onClose }) {
-  console.log("Login render - isOpen:", isOpen, "isLoginOpen from context:", useAppContext().isLoginOpen);
-
   const { settings, openSignup } = useAppContext();
   const { isLoginOpen, isSignupOpen } = useAppContext();
   const [username, setUsername] = useState("");
@@ -15,12 +13,8 @@ function Login({ isOpen, onClose }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Moved conditional returns after all hooks are called
-  // This is critical - React hooks must be called unconditionally
-  if (!isOpen || !isLoginOpen) {
-    console.log("Login component early return - not rendering");
-    return null;
-  }
+  if (!isOpen) return null;
+  if (!isLoginOpen) return null;
 
   // Handle forgotten password
   const handleForgotPassword = () => {
@@ -44,21 +38,6 @@ function Login({ isOpen, onClose }) {
     try {
       const response = await apiService.login(username, password);
       console.log("Login successful:", response);
-      const { updateAuthState } = useAppContext();
-      if (updateAuthState) {
-        updateAuthState({
-          isAuthenticated: true,
-          user: {
-            username: username,
-            // Add other user data from API response if available
-            ...response?.user
-          },
-          authLoading: false,
-          authError: null
-        });
-      } else {
-        console.error("updateAuthState is not available in context");
-      }
       onClose();
       // You might want to update the app context with user info here
     } catch (err) {
@@ -119,26 +98,6 @@ function Login({ isOpen, onClose }) {
             >
               Create Account
             </button>
-            {config.DEBUG && (
-              <button
-                type="button"
-                className="text-button"
-                onClick={() => {
-                  console.log("Debug button clicked");
-                  const { updateAuthState } = useAppContext();
-                  if (updateAuthState) {
-                    updateAuthState({
-                      authLoading: !isLoading,
-                      user: { username: "debug-user" }
-                    });
-                  } else {
-                    console.error("updateAuthState is not available in context");
-                  }
-                }}
-              >
-                Debug Auth
-              </button>
-            )}
           </div>
         </form>
       </div>
