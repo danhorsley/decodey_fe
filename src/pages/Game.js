@@ -455,7 +455,7 @@ function Game() {
   }, [loadSounds]);
 
   useKeyboardInput({
-    enabled: isGameActive,
+    enabled: isGameActive && !(isLoginOpen || isSignupOpen), // Disable when modals are open
     speedMode: settings.speedMode,
     encryptedLetters,
     originalLetters,
@@ -659,6 +659,7 @@ function Game() {
     >
       {isAboutOpen && <About isOpen={isAboutOpen} onClose={closeAbout} />}
       {isLoginOpen && <Login isOpen={isLoginOpen} onClose={closeLogin} />}
+      {isSignupOpen && <Signup isOpen={isSignupOpen} onClose={closeSignup} />}
       {renderGameHeader()}
       {renderTextContainer()}
       {renderGrids()}

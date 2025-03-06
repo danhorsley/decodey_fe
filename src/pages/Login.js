@@ -14,6 +14,7 @@ function Login({ isOpen, onClose }) {
   const [error, setError] = useState("");
 
   if (!isOpen) return null;
+  if (!isLoginOpen) return null;
 
   // Handle forgotten password
   const handleForgotPassword = () => {
@@ -24,20 +25,9 @@ function Login({ isOpen, onClose }) {
 
   // Handle account creation
   const handleCreateAccount = () => {
-    // Prevent default behavior (critical!)
-    // e.preventDefault();
-    // Open the signup form
-    // Log before state changes
-    console.log("Create account button clicked, current modal states:", {
-      isLoginOpen: isLoginOpen,
-      isSignupOpen: isSignupOpen,
-    });
+    // Call openSignup directly without onClose
     openSignup();
-    console.log("After openSignup, new states should be:", {
-      isLoginOpen: false,
-      isSignupOpen: true,
-    });
-    return false;
+    // Don't call onClose here, let the context handle it
   };
 
   const handleSubmit = async (e) => {

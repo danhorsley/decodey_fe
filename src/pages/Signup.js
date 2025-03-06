@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import "../Styles/About.css";
 import "../Styles/Login.css";
 import { useAppContext } from "../context/AppContext";
@@ -12,6 +12,12 @@ function Signup({ isOpen, onClose }) {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [username, setUsername] = useState("");
+  const [usernameStatus, setUsernameStatus] = useState({
+    checking: false,
+    available: null,
+    message: "",
+  });
 
   if (!isOpen) return null;
 
@@ -34,7 +40,7 @@ function Signup({ isOpen, onClose }) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, username, password }),
       });
 
       const data = await response.json();
@@ -55,6 +61,59 @@ function Signup({ isOpen, onClose }) {
       setIsLoading(false);
     }
   };
+  // Add debounced check function
+  const checkUsername = useCallback(
+    _.debounce(async (value) => {
+      if (value.length < 3) {
+        setUsernameStatus({
+          checking: false,
+          available: false,
+          message: "Username must be at least 3 characters",
+        });
+        return;
+      }
+
+      setUsernameStatus((prev) => ({ ...prev, checking: true }));
+
+      try {
+        const response = await fetch(`${config.apiUrl}/check-username`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: value }),
+        });
+
+        const data = await response.json();
+
+        setUsernameStatus({
+          checking: false,
+          available: data.available,
+          message: data.available
+            ? "Username available!"
+            : "Username already taken",
+        });
+      } catch (error) {
+        setUsernameStatus({
+          checking: false,
+          available: null,
+          message: "Error checking username",
+        });
+      }
+    }, 500),
+    [],
+  );
+
+  // Add this effect
+  useEffect(() => {
+    if (username.length >= 3) {
+      checkUsername(username);
+    } else {
+      setUsernameStatus({
+        checking: false,
+        available: null,
+        message: "",
+      });
+    }
+  }, [username, checkUsername]);
 
   return (
     <div className="about-overlay">
@@ -76,6 +135,34 @@ function Signup({ isOpen, onClose }) {
               onChange={(e) => setEmail(e.target.value)}
               required
             />
+          </div>
+          <div className="login-field">
+            <label htmlFor="username">Username (for leaderboards)</label>
+            <input
+              type="text"
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+              className={
+                usernameStatus.available === true
+                  ? "valid-input"
+                  : usernameStatus.available === false
+                    ? "invalid-input"
+                    : ""
+              }
+            />
+            {usernameStatus.message && (
+              <span
+                className={
+                  usernameStatus.available ? "valid-message" : "error-message"
+                }
+              >
+                {usernameStatus.checking
+                  ? "Checking..."
+                  : usernameStatus.message}
+              </span>
+            )}
           </div>
           <div className="login-field">
             <label htmlFor="password">Password</label>
