@@ -16,6 +16,7 @@ import apiService from "../services/apiService";
 import Settings from "../components/modals/Settings";
 import About from "../components/modals/About";
 import Login from "../pages/Login";
+import Signup from "../pages/Signup";
 // import GameHeader from "./GameHeader";
 // import TextContainer from "./TextContainer";
 // import GameControls from "./GameControls";
@@ -164,16 +165,8 @@ function Game() {
   } = useAppContext();
 
   // State for login modal
-  const [isLoginOpen, setIsLoginOpen] = useState(false);
-
-  // Login handlers
-  const openLogin = () => {
-    setIsLoginOpen(true);
-  };
-
-  const closeLogin = () => {
-    setIsLoginOpen(false);
-  };
+  const { isLoginOpen, setIsLoginOpen, closeLogin } = useAppContext();
+  const { isSignupOpen, closeSignup } = useAppContext();
 
   // State management with reducer
   const [state, dispatch] = useReducer(reducer, initialState);
@@ -648,6 +641,7 @@ function Game() {
       <div className="App-container">
         {isAboutOpen && <About isOpen={isAboutOpen} onClose={closeAbout} />}
         {isLoginOpen && <Login isOpen={isLoginOpen} onClose={closeLogin} />}
+        {isSignupOpen && <Signup isOpen={isSignupOpen} onClose={closeSignup} />}
         <MobileLayout isLandscape={isLandscape}>
           {renderGameHeader()}
           {renderTextContainer()}

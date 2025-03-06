@@ -3,15 +3,30 @@ import "../Styles/About.css";
 import "../Styles/Login.css";
 import { useAppContext } from "../context/AppContext";
 import apiService from "../services/apiService";
+import config from "../config";
 
 function Login({ isOpen, onClose }) {
-  const { settings } = useAppContext();
+  const { settings, openSignup } = useAppContext();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
   if (!isOpen) return null;
+
+  // Handle forgotten password
+  const handleForgotPassword = () => {
+    // For now, just show an alert
+    alert("Password reset functionality will be available soon!");
+    // You could also set up a modal or redirect to a password reset page
+  };
+
+  // Handle account creation
+  const handleCreateAccount = () => {
+    // Open the signup form
+    console.log("Create account button clicked");
+    openSignup();
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -65,6 +80,23 @@ function Login({ isOpen, onClose }) {
           <button type="submit" className="login-button" disabled={isLoading}>
             {isLoading ? "Logging in..." : "Login"}
           </button>
+
+          <div className="login-actions">
+            <button
+              type="button"
+              className="text-button forgot-password"
+              onClick={handleForgotPassword}
+            >
+              Forgot Password?
+            </button>
+            <button
+              type="button"
+              className="text-button create-account"
+              onClick={handleCreateAccount}
+            >
+              Create Account
+            </button>
+          </div>
         </form>
       </div>
     </div>

@@ -1,10 +1,9 @@
 import React from "react";
 import { FaUserCircle } from "react-icons/fa";
 import { useAppContext } from "../../context/AppContext";
-import { openLogin, closeLogin } from "../../pages/Game";
-
-function AccountButton({ onClick }) {
-  const { settings } = useAppContext();
+// Login handlers
+function AccountButton() {
+  const { settings, openLogin } = useAppContext();
 
   return (
     <button

@@ -64,6 +64,8 @@ export const AppProvider = ({ children }) => {
   // ==== UI STATE ====
   const [currentView, setCurrentView] = useState("game"); // 'game', 'settings', 'login', etc.
   const [isAboutOpen, setIsAboutOpen] = useState(false);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isSignupOpen, setIsSignupOpen] = useState(false);
 
   // ==== DEVICE DETECTION ====
   const { isMobile, isLandscape, screenWidth, screenHeight, detectMobile } =
@@ -344,6 +346,28 @@ export const AppProvider = ({ children }) => {
     setIsAboutOpen(false);
   }, []);
 
+  const openLogin = useCallback(() => {
+    setIsLoginOpen(true);
+  }, []);
+
+  const closeLogin = useCallback(() => {
+    setIsLoginOpen(false);
+  }, []);
+
+  const openSignup = useCallback(() => {
+    setIsLoginOpen(false); // Close login when opening signup
+    setIsSignupOpen(true);
+    // Log for debugging
+    console.log("Opening signup modal", {
+      isLoginOpen: false,
+      isSignupOpen: true,
+    });
+  }, []);
+
+  const closeSignup = useCallback(() => {
+    setIsSignupOpen(false);
+  }, []);
+
   // ==== CONTEXT VALUE ====
   // Organize context value into logical sections
   const contextValue = {
@@ -367,6 +391,12 @@ export const AppProvider = ({ children }) => {
     isAboutOpen,
     openAbout,
     closeAbout,
+    isLoginOpen,
+    openLogin,
+    closeLogin,
+    isSignupOpen,
+    openSignup,
+    closeSignup,
 
     // Device/Mobile state
     isMobile,

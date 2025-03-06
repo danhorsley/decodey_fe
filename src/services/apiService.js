@@ -101,6 +101,55 @@ const apiService = {
     }
   },
 
+  // Signup functionality
+  signup: async (email, password) => {
+    const endpoint = "/signup";
+
+    try {
+      const requestBody = {
+        email,
+        password,
+      };
+
+      const headers = {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        ...config.session.getHeaders(),
+      };
+
+      logApiOperation("POST", endpoint, { email: email });
+
+      const response = await fetch(`${config.apiUrl}${endpoint}`, {
+        method: "POST",
+        credentials: "include",
+        mode: "cors",
+        headers: headers,
+        body: JSON.stringify(requestBody),
+      });
+
+      logApiOperation("POST", endpoint, { email: email }, response);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(
+          `HTTP error! Status: ${response.status}, Response:`,
+          errorText,
+        );
+        throw new Error(`Signup failed with status: ${response.status}`);
+      }
+
+      // Save session if applicable
+      config.session.saveSession(response.headers);
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      logApiOperation("POST", endpoint, { email: email }, null, error);
+      console.error("Error during signup:", error);
+      throw error;
+    }
+  },
+
   // Function to check API health status
   checkHealth: async () => {
     const endpoint = "/health";
