@@ -27,11 +27,17 @@ const WinCelebration = ({
   hasWon, // Added hasWon prop
   attribution, // Added attribution prop
 }) => {
-  const { isAuthenticated, openLogin } = useAppContext();
+  const { isAuthenticated, openLogin, user, authLoading } = useAppContext();
   const [scoreStatus, setScoreStatus] = useState({
     attempted: false,
     recorded: false,
     error: null,
+  });
+
+  console.log("⭐ WinCelebration component initialized with auth state:", {
+    isAuthenticated,
+    user,
+    hasWon
   });
 
   const handleRetryScoreSubmit = useCallback(() => {
@@ -214,9 +220,15 @@ const WinCelebration = ({
   // post scores to backend
   useEffect(() => {
     console.log("Win celebration effect triggered - isAuthenticated:", isAuthenticated, "hasWon:", hasWon, "scoreStatus:", scoreStatus);
-    
+
     const recordGameScore = async () => {
-      console.log("recordGameScore function called - checking conditions");
+      console.log("⭐ recordGameScore function called - checking conditions");
+      console.log("⭐ Auth state:", {
+        isAuth: isAuthenticated,
+        user: useAppContext().user,
+        authLoading: useAppContext().authLoading
+      });
+
       // Only proceed if user has won and hasn't attempted to record score yet
       if (hasWon && !scoreStatus.attempted && isAuthenticated) {
         console.log("Conditions met for score recording - setting attempted to true");
@@ -236,26 +248,30 @@ const WinCelebration = ({
           };
           console.log("Preparing to send game data:", gameData);
 
-          console.log("👉 Attempting to record score with data:", gameData);
+          console.log("⭐ Attempting to record score with data:", gameData);
+          console.log("⭐ User authentication state when recording:", { 
+            isAuthenticated, 
+            user: useAppContext().user 
+          });
           const result = await apiService.recordScore(gameData);
-          console.log("👉 Score recording API call completed, result:", result);
-          
+          console.log("⭐ Score recording API call completed, result:", result);
+
           if (result.success) {
-            console.log("👉 Score recording SUCCESS - updating state");
+            console.log("⭐ Score recording SUCCESS - updating state");
             setScoreStatus((prev) => ({ ...prev, recorded: true }));
-            console.log("👉 Score recorded successfully:", result);
+            console.log("⭐ Score recorded successfully:", result);
           } else {
-            console.log("👉 Score recording FAILED - throwing error");
+            console.log("⭐ Score recording FAILED - throwing error");
             throw new Error(result.message || "Failed to record score");
           }
 
           } catch (error) {
-          console.error("👉 Failed to record score:", error);
+          console.error("⭐ Failed to record score:", error);
           setScoreStatus((prev) => ({
             ...prev,
             error: "Failed to record score. Please try again.",
           }));
-          console.log("👉 Updated scoreStatus with error");
+          console.log("⭐ Updated scoreStatus with error");
         }
       }
     };
