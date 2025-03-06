@@ -9,6 +9,7 @@ import "./Styles/App.css";
 import "./Styles/Mobile.css";
 import Game from "./pages/Game";
 import WinCelebrationTest from "./pages/WinCelebrationTest";
+import AccountButtonWrapper from "./components/AccountButtonWrapper";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route path="/wctest" element={<WinCelebrationTest />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
+      <AccountButtonWrapper />
     </Router>
   );
 }

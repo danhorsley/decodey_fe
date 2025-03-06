@@ -125,7 +125,8 @@
 }
 
 .settings-icon,
-.about-icon {
+.about-icon,
+.account-icon {
   position: absolute;
   background: none;
   border: none;
@@ -165,15 +166,23 @@
 }
 
 .settings-icon:hover,
-.about-icon:hover {
+.about-icon:hover,
+.account-icon:hover {
   background-color: #f0f0f0;
   color: #007bff;
 }
 
 .settings-icon svg,
-.about-icon svg {
+.about-icon svg,
+.account-icon svg {
   width: 24px;
   height: 24px;
+}
+
+.account-icon {
+  right: 10px;
+  bottom: 10px;
+  position: fixed;
 }
 
 /* ===== 3. TEXT DISPLAY ===== */
