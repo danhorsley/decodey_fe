@@ -409,11 +409,9 @@ const apiService = {
   // Add to src/services/apiService.js
   recordScore: async (gameData) => {
     const endpoint = "/record_score";
-    console.log("▶️ recordScore function called with data:", gameData);
 
     try {
       const gameId = localStorage.getItem("uncrypt-game-id");
-      console.log("▶️ Got game ID from localStorage:", gameId);
 
       const requestBody = {
         game_id: gameId,
@@ -422,18 +420,15 @@ const apiService = {
         time_taken: gameData.timeTaken, // in seconds
         difficulty: gameData.difficulty,
       };
-      console.log("▶️ Created request body:", requestBody);
 
       const headers = {
         "Content-Type": "application/json",
         Accept: "application/json",
         ...config.session.getHeaders(),
       };
-      console.log("▶️ Headers for recordScore:", headers);
 
       logApiOperation("POST", endpoint, { requestBody });
 
-      console.log("▶️ About to send fetch request to:", `${config.apiUrl}${endpoint}`);
       const response = await fetch(`${config.apiUrl}${endpoint}`, {
         method: "POST",
         credentials: "include",
@@ -441,7 +436,6 @@ const apiService = {
         headers: headers,
         body: JSON.stringify(requestBody),
       });
-      console.log("▶️ Received response from record_score:", response.status, response.ok);
 
       logApiOperation("POST", endpoint, requestBody, response);
 
@@ -451,16 +445,13 @@ const apiService = {
           `HTTP error! Status: ${response.status}, Response:`,
           errorText,
         );
-        console.log("▶️ Score recording failed:", response.status);
         throw new Error(`Failed to record score: ${response.status}`);
       }
 
       // Save session if applicable
       config.session.saveSession(response.headers);
-      console.log("▶️ Session saved after score recording");
 
       const data = await response.json();
-      console.log("▶️ Score recording successful, response data:", data);
       return data;
     } catch (error) {
       logApiOperation("POST", endpoint, gameData, null, error);

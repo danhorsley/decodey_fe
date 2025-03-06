@@ -3,10 +3,7 @@ import MatrixRain from "../../components/effects/MatrixRain";
 // import SaveButton from "./SaveButton";
 import config from "../../config";
 import "../../Styles/WinCelebration.css";
-import {
-  getDifficultyFromMaxMistakes,
-  calculateScore,
-} from "../../utils/utils";
+import { getDifficultyFromMaxMistakes, calculateScore } from "../../utils/utils";
 import apiService from "../../services/apiService";
 import { useAppContext } from "../../context/AppContext";
 
@@ -213,20 +210,15 @@ const WinCelebration = ({
   }, []);
   // post scores to backend
   useEffect(() => {
-    console.log("Win celebration effect triggered - isAuthenticated:", isAuthenticated, "hasWon:", hasWon, "scoreStatus:", scoreStatus);
-    
     const recordGameScore = async () => {
-      console.log("recordGameScore function called - checking conditions");
       // Only proceed if user has won and hasn't attempted to record score yet
       if (hasWon && !scoreStatus.attempted && isAuthenticated) {
-        console.log("Conditions met for score recording - setting attempted to true");
         setScoreStatus((prev) => ({ ...prev, attempted: true }));
 
         try {
           // Calculate score based on mistakes and time
           const gameTimeSeconds = (completionTime - startTime) / 1000;
           const score = calculateScore(maxMistakes, mistakes, gameTimeSeconds);
-          console.log("Score calculated:", score, "for time:", gameTimeSeconds);
 
           const gameData = {
             score,
@@ -234,33 +226,23 @@ const WinCelebration = ({
             timeTaken: Math.round(gameTimeSeconds),
             difficulty: getDifficultyFromMaxMistakes(maxMistakes),
           };
-          console.log("Preparing to send game data:", gameData);
 
-          console.log("👉 Attempting to record score with data:", gameData);
           const result = await apiService.recordScore(gameData);
-          console.log("👉 Score recording API call completed, result:", result);
-          
-          if (result.success) {
-            console.log("👉 Score recording SUCCESS - updating state");
-            setScoreStatus((prev) => ({ ...prev, recorded: true }));
-            console.log("👉 Score recorded successfully:", result);
-          } else {
-            console.log("👉 Score recording FAILED - throwing error");
-            throw new Error(result.message || "Failed to record score");
-          }
 
-          } catch (error) {
-          console.error("👉 Failed to record score:", error);
+          if (result.success) {
+            setScoreStatus((prev) => ({ ...prev, recorded: true }));
+            console.log("Score recorded successfully:", result);
+          }
+        } catch (error) {
+          console.error("Failed to record score:", error);
           setScoreStatus((prev) => ({
             ...prev,
             error: "Failed to record score. Please try again.",
           }));
-          console.log("👉 Updated scoreStatus with error");
         }
       }
     };
 
-    // Actually call the function when this effect runs
     recordGameScore();
   }, [
     hasWon,
@@ -270,8 +252,6 @@ const WinCelebration = ({
     maxMistakes,
     startTime,
     completionTime,
-    calculateScore,
-    getDifficultyFromMaxMistakes,
   ]);
   return (
     <div
