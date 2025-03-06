@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import "./Styles/About.css";
-import "./Styles/Login.css";
-import { useAppContext } from "./context/AppContext";
-import apiService from "./services/apiService";
+import "../Styles/About.css";
+import "../Styles/Login.css";
+import { useAppContext } from "../context/AppContext";
+import apiService from "../services/apiService";
 
 function Login({ isOpen, onClose }) {
   const { settings } = useAppContext();

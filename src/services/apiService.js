@@ -1,4 +1,4 @@
-import config from "./config";
+import config from "../config";
 
 // Debug logging function
 const logApiOperation = (

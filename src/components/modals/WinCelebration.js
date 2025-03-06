@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
-import MatrixRain from "./components/effects/MatrixRain";
+import MatrixRain from "../../components/effects/MatrixRain";
 // import SaveButton from "./SaveButton";
-import config from "./config";
-import "./Styles/WinCelebration.css";
+import config from "../../config";
+import "../../Styles/WinCelebration.css";
 
 // Enhanced win celebration component with Matrix effect
 const WinCelebration = ({

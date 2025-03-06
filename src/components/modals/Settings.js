@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import "./Styles/Settings.css";
+import "../../Styles/Settings.css";
 
 function Settings({ currentSettings, onSave, onCancel }) {
   // Local state to track changes before saving

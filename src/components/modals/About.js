@@ -1,6 +1,6 @@
 import React from "react";
-import "./Styles/About.css";
-import { useAppContext } from "./context/AppContext";
+import "../../Styles/About.css";
+import { useAppContext } from "../../context/AppContext";
 
 function About({ isOpen, onClose }) {
   const { settings } = useAppContext();

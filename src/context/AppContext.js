@@ -6,7 +6,7 @@ import React, {
   useCallback,
 } from "react";
 import useDeviceDetection from "../hooks/useDeviceDetection";
-import config from "./config";
+import config from "../config";
 
 // Create context
 const AppContext = createContext();

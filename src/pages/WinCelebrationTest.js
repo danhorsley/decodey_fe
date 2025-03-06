@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { useAppContext } from "./context/AppContext";
-import WinCelebration from "./components/modals/WinCelebration";
-import "./Styles/WinCelebrationTest.css";
+import { useAppContext } from "../context/AppContext";
+import WinCelebration from "../components/modals/WinCelebration";
+import "../Styles/WinCelebrationTest.css";
 
 function WinCelebrationTest() {
   const { settings, updateSettings } = useAppContext();
