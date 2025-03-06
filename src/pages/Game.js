@@ -574,9 +574,9 @@ function Game() {
           Hint (Costs 1 Mistake)
         </button>
       </div>
-      <button className="login-icon" onClick={openLogin} aria-label="Login">
+      {/* <button className="login-icon" onClick={openLogin} aria-label="Login">
         {LOGIN_ICON_SVG}
-      </button>
+      </button> */}
     </div>
   );
 
