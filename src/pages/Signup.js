@@ -6,6 +6,8 @@ import apiService from "../services/apiService";
 import config from "../config";
 
 function Signup({ isOpen, onClose }) {
+  console.log("Signup render - isOpen:", isOpen);
+  
   const { settings, openLogin } = useAppContext();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,7 +21,11 @@ function Signup({ isOpen, onClose }) {
     message: "",
   });
 
-  if (!isOpen) return null;
+  // Moved conditional return after all hooks are called
+  if (!isOpen) {
+    console.log("Signup component early return - not rendering");
+    return null;
+  }
 
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();

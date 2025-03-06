@@ -60,6 +60,15 @@ export const AppProvider = ({ children }) => {
 
   // ==== AUTH STATE ====
   const [authState, setAuthState] = useState(defaultUserState);
+  
+  // Add logging for auth state changes
+  useEffect(() => {
+    console.log("🔐 Auth state changed:", {
+      isAuthenticated: authState.isAuthenticated,
+      user: authState.user,
+      authLoading: authState.authLoading
+    });
+  }, [authState]);
 
   // ==== UI STATE ====
   const [currentView, setCurrentView] = useState("game"); // 'game', 'settings', 'login', etc.
