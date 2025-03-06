@@ -173,10 +173,14 @@
 }
 
 .settings-icon svg,
-.about-icon svg,
-.account-icon svg {
+.about-icon svg {
   width: 24px;
   height: 24px;
+}
+
+.account-icon svg {
+  width: 32px;
+  height: 32px;
 }
 
 .account-icon {
