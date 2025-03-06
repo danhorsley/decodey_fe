@@ -7,7 +7,7 @@ import config from "../config";
 
 function Login({ isOpen, onClose }) {
   console.log("Login render - isOpen:", isOpen, "isLoginOpen from context:", useAppContext().isLoginOpen);
-  
+
   const { settings, openSignup } = useAppContext();
   const { isLoginOpen, isSignupOpen } = useAppContext();
   const [username, setUsername] = useState("");
@@ -104,6 +104,26 @@ function Login({ isOpen, onClose }) {
             >
               Create Account
             </button>
+            {config.DEBUG && (
+              <button
+                type="button"
+                className="text-button"
+                onClick={() => {
+                  console.log("Debug button clicked");
+                  const { updateAuthState } = useAppContext();
+                  if (updateAuthState) {
+                    updateAuthState({
+                      authLoading: !isLoading,
+                      user: { username: "debug-user" }
+                    });
+                  } else {
+                    console.error("updateAuthState is not available in context");
+                  }
+                }}
+              >
+                Debug Auth
+              </button>
+            )}
           </div>
         </form>
       </div>
