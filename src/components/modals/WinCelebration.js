@@ -230,13 +230,17 @@ const WinCelebration = ({
             difficulty: getDifficultyFromMaxMistakes(maxMistakes),
           };
 
+          console.log("Attempting to record score with data:", gameData);
           const result = await apiService.recordScore(gameData);
-
+          
           if (result.success) {
             setScoreStatus((prev) => ({ ...prev, recorded: true }));
             console.log("Score recorded successfully:", result);
+          } else {
+            throw new Error(result.message || "Failed to record score");
           }
-        } catch (error) {
+
+          } catch (error) {
           console.error("Failed to record score:", error);
           setScoreStatus((prev) => ({
             ...prev,
@@ -246,6 +250,7 @@ const WinCelebration = ({
       }
     };
 
+    // Actually call the function when this effect runs
     recordGameScore();
   }, [
     hasWon,
@@ -255,6 +260,8 @@ const WinCelebration = ({
     maxMistakes,
     startTime,
     completionTime,
+    calculateScore,
+    getDifficultyFromMaxMistakes,
   ]);
   return (
     <div
