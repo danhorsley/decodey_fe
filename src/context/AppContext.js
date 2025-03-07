@@ -62,6 +62,9 @@ export const AppProvider = ({ children }) => {
 
   // ==== AUTH STATE ====
   const [authState, setAuthState] = useState(defaultUserState);
+  const closeLogin = useCallback(() => {
+    setIsLoginOpen(false);
+  }, []);
 
   // ==== UI STATE ====
   const [currentView, setCurrentView] = useState("game"); // 'game', 'settings', 'login', etc.
@@ -171,50 +174,96 @@ export const AppProvider = ({ children }) => {
 
   // Login method
   // In AppContext.js
-  const login = useCallback(async (credentials) => {
-    console.log(
-      "app context login check",
-      credentials.username,
-      credentials.password,
-    );
-    setAuthState((prev) => ({ ...prev, authLoading: true, authError: null }));
+  const login = useCallback(
+    async (credentials) => {
+      console.log("appcntx check : ", credentials);
+      setAuthState((prev) => ({ ...prev, authLoading: true, authError: null }));
 
-    try {
-      // Use apiService instead of direct fetch
-      const data = await apiService.loginapi(
-        credentials,
-        // credentials.username,
-        // credentials.password,
-      );
+      try {
+        // Use apiService instead of direct fetch
+        const data = await apiService.loginapi(
+          credentials,
+          // credentials.username,
+          // credentials.password,
+        );
 
-      // Save token if it exists in the response
-      if (data.token) {
-        localStorage.setItem("uncrypt-token", data.token);
+        // If we received a token, save it (this should already happen in apiService)
+        if (data.token) {
+          localStorage.setItem("uncrypt-token", data.token);
+          localStorage.setItem("uncrypt-user-id", data.user_id);
+
+          // Close login modal after successful login
+          closeLogin();
+        }
+
+        // Update auth state
+        setAuthState({
+          user: data.user || {
+            username: credentials.username,
+            id: data.user_id,
+          },
+          isAuthenticated: true,
+          authLoading: false,
+          authError: null,
+        });
+
+        // Log successful authentication
+        console.log("Authentication state updated:", {
+          username: credentials.username,
+          authenticated: true,
+          token: data.token ? "[REDACTED]" : "None",
+        });
+
+        return { success: true };
+      } catch (error) {
+        console.error("Login error:", error);
+
+        setAuthState((prev) => ({
+          ...prev,
+          authLoading: false,
+          authError: error.message || "Login failed",
+        }));
+
+        return {
+          success: false,
+          error: error.message || "Login failed",
+        };
+      }
+    },
+    [closeLogin],
+  );
+
+  // Also update the useEffect that initializes auth state from local storage:
+  useEffect(() => {
+    const initAuth = async () => {
+      const token = localStorage.getItem("uncrypt-token");
+      const userId = localStorage.getItem("uncrypt-user-id");
+      const username = localStorage.getItem("uncrypt-username");
+
+      if (!token || !userId) {
+        setAuthState({
+          ...defaultUserState,
+          authLoading: false,
+        });
+        return;
       }
 
-      // Update auth state
+      // If we have credentials stored, set authenticated state directly
       setAuthState({
-        user: data.user || { username: credentials.username },
+        user: { id: userId, username: username || "User" },
         isAuthenticated: true,
         authLoading: false,
         authError: null,
       });
-      console.log("auth state triggered");
-      return { success: true };
-    } catch (error) {
-      console.error("Login error:", error);
 
-      setAuthState((prev) => ({
-        ...prev,
-        authLoading: false,
-        authError: error.message || "Login failed",
-      }));
+      console.log("Auth initialized from localStorage:", {
+        userId,
+        username,
+        isAuthenticated: true,
+      });
+    };
 
-      return {
-        success: false,
-        error: error.message || "Login failed",
-      };
-    }
+    initAuth();
   }, []);
 
   // Register method
@@ -409,10 +458,6 @@ export const AppProvider = ({ children }) => {
 
   const openLogin = useCallback(() => {
     setIsLoginOpen(true);
-  }, []);
-
-  const closeLogin = useCallback(() => {
-    setIsLoginOpen(false);
   }, []);
 
   const openSignup = useCallback(() => {

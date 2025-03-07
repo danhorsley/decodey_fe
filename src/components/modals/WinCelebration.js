@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import MatrixRain from "../../components/effects/MatrixRain";
-// import SaveButton from "./SaveButton";
 import config from "../../config";
 import "../../Styles/WinCelebration.css";
 import {
@@ -32,14 +31,33 @@ const WinCelebration = ({
     attempted: false,
     recorded: false,
     error: null,
+    authRequired: false,
   });
 
   const handleRetryScoreSubmit = useCallback(() => {
-    setScoreStatus({ attempted: false, recorded: false, error: null });
+    setScoreStatus({
+      attempted: false,
+      recorded: false,
+      error: null,
+      authRequired: false,
+    });
   }, []);
 
+  // Handle login and then retry score recording
+  const handleLoginAndRecordScore = useCallback(() => {
+    // Open the login modal
+    openLogin();
+
+    // Reset score status so it will be attempted again after login
+    setScoreStatus({
+      attempted: false,
+      recorded: false,
+      error: null,
+      authRequired: false,
+    });
+  }, [openLogin]);
+
   // Animation state
-  const hasAttemptedRef = useRef(false);
   const [animationStage, setAnimationStage] = useState(0);
   const [showStats, setShowStats] = useState(false);
   const [showMatrixRain, setShowMatrixRain] = useState(true);
@@ -212,49 +230,40 @@ const WinCelebration = ({
 
     return () => clearTimeout(cleanupTimer);
   }, []);
-  // post scores to backend
+
+  // Record score to backend
   useEffect(() => {
     const recordGameScore = async () => {
-      console.log("recordGameScore triggered");
-      // Skip if already attempted or not won
-      if (hasAttemptedRef.current) {
-        return;
-      }
-
-      // Mark as attempted immediately to prevent duplicate calls
-      hasAttemptedRef.current = true;
-
-      // Calculate score
-      const gameTimeSeconds = (completionTime - startTime) / 1000;
-      const score = calculateScore(maxMistakes, mistakes, gameTimeSeconds);
-
-      // Create gameData object
-      const gameData = {
-        score,
-        mistakes,
-        timeTaken: Math.round(gameTimeSeconds),
-        difficulty: getDifficultyFromMaxMistakes(maxMistakes),
-        gameType: "regular",
-        challengeDate: null,
-        gameId: localStorage.getItem("uncrypt-game-id"),
-        timestamp: Date.now(),
-      };
-
-      // If user is authenticated, submit score directly
-      if (isAuthenticated) {
+      // Only proceed if user has won and hasn't attempted to record score yet
+      if (hasWon && !scoreStatus.attempted) {
         setScoreStatus((prev) => ({ ...prev, attempted: true }));
 
         try {
+          // Calculate score based on mistakes and time
+          const gameTimeSeconds = (completionTime - startTime) / 1000;
+          const score = calculateScore(maxMistakes, mistakes, gameTimeSeconds);
+
+          const gameData = {
+            score,
+            mistakes,
+            timeTaken: Math.round(gameTimeSeconds),
+            difficulty: getDifficultyFromMaxMistakes(maxMistakes),
+          };
+
           const result = await apiService.recordScore(gameData);
 
           if (result.success) {
             setScoreStatus((prev) => ({ ...prev, recorded: true }));
-            console.log(
-              result.duplicate
-                ? `Score was already recorded for this game`
-                : `Score recorded successfully:`,
-              result,
-            );
+            console.log("Score recorded successfully:", result);
+          } else if (result.authRequired) {
+            // Score couldn't be recorded because user is not authenticated
+            setScoreStatus((prev) => ({
+              ...prev,
+              error: "Login required to record your score",
+              authRequired: true,
+            }));
+          } else {
+            throw new Error(result.error || "Failed to record score");
           }
         } catch (error) {
           console.error("Failed to record score:", error);
@@ -262,38 +271,22 @@ const WinCelebration = ({
             ...prev,
             error: "Failed to record score. Please try again.",
           }));
-          // Allow retry
-          hasAttemptedRef.current = false;
         }
-      } else {
-        // If not authenticated, save the pending score to localStorage
-        const pendingScores = JSON.parse(
-          localStorage.getItem("uncrypt-pending-scores") || "[]",
-        );
-        pendingScores.push(gameData);
-        localStorage.setItem(
-          "uncrypt-pending-scores",
-          JSON.stringify(pendingScores),
-        );
-
-        console.log("Score saved locally, waiting for login");
-        setScoreStatus({
-          attempted: true,
-          recorded: false,
-          error: null,
-          pendingLogin: true,
-        });
       }
     };
 
-    recordGameScore();
+    // Only attempt to record score if this is a win celebration
+    if (hasWon) {
+      recordGameScore();
+    }
   }, [
     hasWon,
+    scoreStatus.attempted,
     isAuthenticated,
+    mistakes,
+    maxMistakes,
     startTime,
     completionTime,
-    maxMistakes,
-    mistakes,
   ]);
 
   return (
@@ -383,39 +376,44 @@ const WinCelebration = ({
           >
             Play Again
           </button>
-          {/* Score recording status */}
-          {
-            <div className="score-section">
-              {isAuthenticated ? (
-                scoreStatus.recorded ? (
-                  <p className="score-success">Your score has been recorded!</p>
-                ) : scoreStatus.error ? (
-                  <>
-                    <p className="score-error">{scoreStatus.error}</p>
-                    <button
-                      onClick={handleRetryScoreSubmit}
-                      className="retry-button"
-                    >
-                      Try Again
-                    </button>
-                  </>
-                ) : (
-                  <p className="score-recording">Recording your score...</p>
-                )
-              ) : (
-                <div className="login-prompt">
-                  <p>
-                    {scoreStatus.pendingLogin
-                      ? "Your score has been saved! Log in to add it to the leaderboard."
-                      : "Log in to save your score to the leaderboard!"}
-                  </p>
-                  <button onClick={openLogin} className="login-button">
-                    Login or Create Account
+
+          {/* Score recording status - now without redundant hasWon check */}
+          <div className="score-section">
+            {isAuthenticated ? (
+              scoreStatus.recorded ? (
+                <p className="score-success">Your score has been recorded!</p>
+              ) : scoreStatus.error ? (
+                <>
+                  <p className="score-error">{scoreStatus.error}</p>
+                  <button
+                    onClick={handleRetryScoreSubmit}
+                    className="retry-button"
+                  >
+                    Try Again
                   </button>
-                </div>
-              )}
-            </div>
-          }
+                </>
+              ) : (
+                <p className="score-recording">Recording your score...</p>
+              )
+            ) : scoreStatus.authRequired ? (
+              <div className="login-prompt">
+                <p>Login to save your score to the leaderboard!</p>
+                <button
+                  onClick={handleLoginAndRecordScore}
+                  className="login-button"
+                >
+                  Login or Create Account
+                </button>
+              </div>
+            ) : (
+              <div className="login-prompt">
+                <p>Login to save your score to the leaderboard!</p>
+                <button onClick={openLogin} className="login-button">
+                  Login or Create Account
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

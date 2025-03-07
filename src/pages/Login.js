@@ -37,7 +37,7 @@ function Login({ isOpen, onClose }) {
     setError("");
     const credentials = { username: username, password: password };
     try {
-      console.log("handleSubmitchecker", username, password);
+      console.log("Login.js handleSubmitchecker", username, password);
       const result = await login(credentials);
       if (result.success) {
         console.log("Login successful");

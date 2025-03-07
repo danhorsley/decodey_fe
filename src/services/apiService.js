@@ -398,25 +398,30 @@ const apiService = {
       throw error;
     }
   },
-  // Add to src/services/apiService.js
   recordScore: async (gameData) => {
     const endpoint = "/record_score";
 
     try {
-      const gameId = gameData.gameId || localStorage.getItem("uncrypt-game-id");
-      if (!gameId) {
-        console.error("No game_id found");
-        return { success: false, error: "No game ID found" };
+      const gameId = localStorage.getItem("uncrypt-game-id");
+      const token = localStorage.getItem("uncrypt-token");
+      const userId = localStorage.getItem("uncrypt-user-id");
+
+      // If no authentication is available, return early with proper error
+      if (!token && !userId) {
+        console.warn("Cannot record score: No authentication token available");
+        return {
+          success: false,
+          error: "Authentication required",
+          authRequired: true,
+        };
       }
 
       const requestBody = {
         game_id: gameId,
         score: gameData.score,
         mistakes: gameData.mistakes,
-        time_taken: gameData.timeTaken,
+        time_taken: gameData.timeTaken, // in seconds
         difficulty: gameData.difficulty,
-        game_type: "regular", //update later
-        challenge_date: null, //update later
       };
 
       const headers = {
@@ -424,6 +429,20 @@ const apiService = {
         Accept: "application/json",
         ...config.session.getHeaders(),
       };
+
+      // Add debugging info
+      console.log("Attempting to record score with auth:", {
+        hasToken: !!token,
+        hasUserId: !!userId,
+        headers: {
+          ...headers,
+          Authorization: headers.Authorization
+            ? "Bearer [REDACTED]"
+            : undefined,
+        },
+      });
+
+      logApiOperation("POST", endpoint, { requestBody });
 
       const response = await fetch(`${config.apiUrl}${endpoint}`, {
         method: "POST",
@@ -433,21 +452,21 @@ const apiService = {
         body: JSON.stringify(requestBody),
       });
 
-      if (response.status === 401) {
-        // Authentication error
-        return {
-          success: false,
-          error: "Authentication required",
-          authRequired: true,
-        };
-      }
+      logApiOperation("POST", endpoint, requestBody, response);
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error(
-          `HTTP error! Status: ${response.status}, Response:`,
-          errorText,
-        );
+        const errorData = await response.json().catch(() => ({}));
+        console.error(`Error recording score: ${response.status}`, errorData);
+
+        // Check if the error is due to authentication
+        if (response.status === 401 || errorData.code === "auth_required") {
+          return {
+            success: false,
+            error: "Authentication required",
+            authRequired: true,
+          };
+        }
+
         throw new Error(`Failed to record score: ${response.status}`);
       }
 
@@ -455,16 +474,12 @@ const apiService = {
       config.session.saveSession(response.headers);
 
       const data = await response.json();
-
-      return { ...data, success: true };
+      return data;
     } catch (error) {
-      console.error("Error in recordScore API call:", error);
-      return {
-        success: false,
-        error: error.message || "Unknown error",
-      };
+      logApiOperation("POST", endpoint, gameData, null, error);
+      console.error("Error recording score:", error);
+      throw error;
     }
   },
 };
-
 export default apiService;
