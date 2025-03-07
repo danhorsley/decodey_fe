@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import useDeviceDetection from "../hooks/useDeviceDetection";
 import config from "../config";
+import apiService from "../services/apiService";
 
 // Create context
 const AppContext = createContext();
@@ -137,35 +138,30 @@ export const AppProvider = ({ children }) => {
   }, []);
 
   // Login method
+  // In AppContext.js
   const login = useCallback(async (credentials) => {
+    console.log(credentials.username, credentials.password);
     setAuthState((prev) => ({ ...prev, authLoading: true, authError: null }));
 
     try {
-      const response = await fetch(`${config.apiUrl}/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(credentials),
-      });
+      // Use apiService instead of direct fetch
+      const data = await apiService.login(
+        credentials.username,
+        credentials.password,
+      );
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Login failed");
+      // Save token if it exists in the response
+      if (data.token) {
+        localStorage.setItem("uncrypt-token", data.token);
       }
-
-      // Save token to localStorage
-      localStorage.setItem("uncrypt-token", data.token);
 
       // Update auth state
       setAuthState({
-        user: data.user,
+        user: data.user || { username: credentials.username },
         isAuthenticated: true,
         authLoading: false,
         authError: null,
       });
-      console.log("isAuth status : ", isAuthenticated);
 
       return { success: true };
     } catch (error) {

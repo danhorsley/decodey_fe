@@ -53,7 +53,7 @@ const logApiOperation = (
 
 const apiService = {
   // Login functionality
-  login: async (username, password) => {
+  loginapi: async (username, password) => {
     const endpoint = "/login";
 
     try {
