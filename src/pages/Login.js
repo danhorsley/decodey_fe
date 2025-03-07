@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import "../Styles/About.css";
 import "../Styles/Login.css";
 import { useAppContext } from "../context/AppContext";
-// import apiService from "../services/apiService";
+import apiService from "../services/apiService";
 import config from "../config";
 
 function Login({ isOpen, onClose }) {
@@ -30,15 +30,40 @@ function Login({ isOpen, onClose }) {
     // Don't call onClose here, let the context handle it
   };
 
+  // In Login.js
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
-
+    const credentials = { username: username, password: password };
     try {
-      const result = await login({ username, password });
+      console.log("handleSubmitchecker", username, password);
+      const result = await login(credentials);
       if (result.success) {
         console.log("Login successful");
+
+        // Check for pending scores to submit
+        const pendingScores = JSON.parse(
+          localStorage.getItem("uncrypt-pending-scores") || "[]",
+        );
+
+        if (pendingScores.length > 0) {
+          console.log(`Found ${pendingScores.length} pending scores to submit`);
+
+          // Submit each pending score
+          for (const scoreData of pendingScores) {
+            try {
+              await apiService.recordScore(scoreData);
+              console.log("Pending score submitted successfully");
+            } catch (err) {
+              console.error("Error submitting pending score:", err);
+            }
+          }
+
+          // Clear pending scores after submitting
+          localStorage.removeItem("uncrypt-pending-scores");
+        }
+
         onClose();
       } else {
         setError(

@@ -79,6 +79,37 @@ export const AppProvider = ({ children }) => {
       },
     );
   }, [authState]);
+  // submit pending scores to be on login
+  useEffect(() => {
+    // Whenever auth state changes to authenticated
+    if (authState.isAuthenticated) {
+      const submitPendingScores = async () => {
+        const pendingScores = JSON.parse(
+          localStorage.getItem("uncrypt-pending-scores") || "[]",
+        );
+
+        if (pendingScores.length > 0) {
+          console.log(
+            `Found ${pendingScores.length} pending scores to submit after auth change`,
+          );
+
+          for (const scoreData of pendingScores) {
+            try {
+              await apiService.recordScore(scoreData);
+              console.log("Pending score submitted successfully");
+            } catch (err) {
+              console.error("Error submitting pending score:", err);
+            }
+          }
+
+          // Clear pending scores after submitting
+          localStorage.removeItem("uncrypt-pending-scores");
+        }
+      };
+
+      submitPendingScores();
+    }
+  }, [authState.isAuthenticated]);
   // ==== DEVICE DETECTION ====
   const { isMobile, isLandscape, screenWidth, screenHeight, detectMobile } =
     useDeviceDetection();
@@ -141,7 +172,11 @@ export const AppProvider = ({ children }) => {
   // Login method
   // In AppContext.js
   const login = useCallback(async (credentials) => {
-    console.log(credentials.username, credentials.password);
+    console.log(
+      "app context login check",
+      credentials.username,
+      credentials.password,
+    );
     setAuthState((prev) => ({ ...prev, authLoading: true, authError: null }));
 
     try {

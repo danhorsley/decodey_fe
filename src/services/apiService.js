@@ -403,9 +403,9 @@ const apiService = {
     const endpoint = "/record_score";
 
     try {
-      const gameId = localStorage.getItem("uncrypt-game-id");
+      const gameId = gameData.gameId || localStorage.getItem("uncrypt-game-id");
       if (!gameId) {
-        console.error("No game_id found in localStorage");
+        console.error("No game_id found");
         return { success: false, error: "No game ID found" };
       }
 
@@ -415,8 +415,8 @@ const apiService = {
         mistakes: gameData.mistakes,
         time_taken: gameData.timeTaken,
         difficulty: gameData.difficulty,
-        game_type: gameData.gameType || "regular",
-        challenge_date: gameData.challengeDate || null,
+        game_type: "regular", //update later
+        challenge_date: null, //update later
       };
 
       const headers = {
@@ -424,8 +424,6 @@ const apiService = {
         Accept: "application/json",
         ...config.session.getHeaders(),
       };
-
-      logApiOperation("POST", endpoint, { requestBody });
 
       const response = await fetch(`${config.apiUrl}${endpoint}`, {
         method: "POST",
@@ -435,7 +433,14 @@ const apiService = {
         body: JSON.stringify(requestBody),
       });
 
-      logApiOperation("POST", endpoint, requestBody, response);
+      if (response.status === 401) {
+        // Authentication error
+        return {
+          success: false,
+          error: "Authentication required",
+          authRequired: true,
+        };
+      }
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -451,17 +456,13 @@ const apiService = {
 
       const data = await response.json();
 
-      if (data.duplicate) {
-        console.log(
-          `Score was already recorded for this ${requestBody.game_type} game`,
-        );
-      }
-
       return { ...data, success: true };
     } catch (error) {
-      logApiOperation("POST", endpoint, gameData, null, error);
-      console.error("Error recording score:", error);
-      throw error;
+      console.error("Error in recordScore API call:", error);
+      return {
+        success: false,
+        error: error.message || "Unknown error",
+      };
     }
   },
 };

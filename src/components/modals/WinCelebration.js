@@ -215,49 +215,74 @@ const WinCelebration = ({
   // post scores to backend
   useEffect(() => {
     const recordGameScore = async () => {
-      // Skip if already attempted, not won, or not authenticated
-      if (!isAuthenticated || hasAttemptedRef.current) {
+      console.log("recordGameScore triggered");
+      // Skip if already attempted or not won
+      if (hasAttemptedRef.current) {
         return;
       }
 
       // Mark as attempted immediately to prevent duplicate calls
       hasAttemptedRef.current = true;
-      setScoreStatus((prev) => ({ ...prev, attempted: true }));
 
-      try {
-        // Calculate score based on mistakes and time
-        const gameTimeSeconds = (completionTime - startTime) / 1000;
-        const score = calculateScore(maxMistakes, mistakes, gameTimeSeconds);
+      // Calculate score
+      const gameTimeSeconds = (completionTime - startTime) / 1000;
+      const score = calculateScore(maxMistakes, mistakes, gameTimeSeconds);
 
-        // Create gameData object here
-        const gameData = {
-          score,
-          mistakes,
-          timeTaken: Math.round(gameTimeSeconds),
-          difficulty: getDifficultyFromMaxMistakes(maxMistakes),
-          gameType: "regular", //update late to change
-          challengeDate: null, //update later to change
-        };
+      // Create gameData object
+      const gameData = {
+        score,
+        mistakes,
+        timeTaken: Math.round(gameTimeSeconds),
+        difficulty: getDifficultyFromMaxMistakes(maxMistakes),
+        gameType: "regular",
+        challengeDate: null,
+        gameId: localStorage.getItem("uncrypt-game-id"),
+        timestamp: Date.now(),
+      };
 
-        const result = await apiService.recordScore(gameData);
+      // If user is authenticated, submit score directly
+      if (isAuthenticated) {
+        setScoreStatus((prev) => ({ ...prev, attempted: true }));
 
-        if (result.success) {
-          setScoreStatus((prev) => ({ ...prev, recorded: true }));
-          console.log(
-            result.duplicate
-              ? `Score was already recorded for this ${gameData.gameType} game`
-              : `${gameData.gameType.charAt(0).toUpperCase() + gameData.gameType.slice(1)} score recorded successfully:`,
-            result,
-          );
+        try {
+          const result = await apiService.recordScore(gameData);
+
+          if (result.success) {
+            setScoreStatus((prev) => ({ ...prev, recorded: true }));
+            console.log(
+              result.duplicate
+                ? `Score was already recorded for this game`
+                : `Score recorded successfully:`,
+              result,
+            );
+          }
+        } catch (error) {
+          console.error("Failed to record score:", error);
+          setScoreStatus((prev) => ({
+            ...prev,
+            error: "Failed to record score. Please try again.",
+          }));
+          // Allow retry
+          hasAttemptedRef.current = false;
         }
-      } catch (error) {
-        console.error("Failed to record score:", error);
-        setScoreStatus((prev) => ({
-          ...prev,
-          error: "Failed to record score. Please try again.",
-        }));
-        // Allow retry
-        hasAttemptedRef.current = false;
+      } else {
+        // If not authenticated, save the pending score to localStorage
+        const pendingScores = JSON.parse(
+          localStorage.getItem("uncrypt-pending-scores") || "[]",
+        );
+        pendingScores.push(gameData);
+        localStorage.setItem(
+          "uncrypt-pending-scores",
+          JSON.stringify(pendingScores),
+        );
+
+        console.log("Score saved locally, waiting for login");
+        setScoreStatus({
+          attempted: true,
+          recorded: false,
+          error: null,
+          pendingLogin: true,
+        });
       }
     };
 
@@ -269,7 +294,6 @@ const WinCelebration = ({
     completionTime,
     maxMistakes,
     mistakes,
-    // gameType,
   ]);
 
   return (
@@ -380,7 +404,11 @@ const WinCelebration = ({
                 )
               ) : (
                 <div className="login-prompt">
-                  <p>Login to save your score to the leaderboard!</p>
+                  <p>
+                    {scoreStatus.pendingLogin
+                      ? "Your score has been saved! Log in to add it to the leaderboard."
+                      : "Log in to save your score to the leaderboard!"}
+                  </p>
                   <button onClick={openLogin} className="login-button">
                     Login or Create Account
                   </button>
