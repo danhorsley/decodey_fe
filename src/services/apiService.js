@@ -54,48 +54,45 @@ const logApiOperation = (
 const apiService = {
   // Login functionality
   // In apiService.js
-  loginapi: async (credentials) => {
-    console.log("loginapi triggered");
-    const endpoint = "/login";
-
+  
+  loginapi = async (credentials) => {
+    console.log("credentials : ",credentials)
     try {
-      // Correctly structure the request body with username and password as properties
-      const requestBody = {
-        username: credentials.username,
-        password: credentials.password,
-      };
-
-      console.log("Request body being sent:", requestBody);
-
-      const headers = {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        ...config.session.getHeaders(),
-      };
-
-      logApiOperation("POST", endpoint, { requestBody });
-
-      const response = await fetch(`${config.apiUrl}${endpoint}`, {
-        method: "POST",
-        credentials: "include",
-        mode: "cors",
-        headers: headers,
-        body: JSON.stringify(requestBody), // This should properly stringify the object
+      const response = await fetch(`${config.apiUrl}/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(credentials),
       });
 
-      // Rest of function remains the same
-
-      // Save session if applicable
-      config.session.saveSession(response.headers);
-
       const data = await response.json();
-      return data;
+
+      if (response.ok) {
+        // Store token and user info in localStorage
+        if (data.token) {
+          localStorage.setItem('auth_token', data.token);
+        }
+        localStorage.setItem('user_id', data.user_id);
+        localStorage.setItem('username', data.username);
+        console.log("token : ",data.token)
+        return {
+          success: true,
+          user: {
+            id: data.user_id,
+            username: data.username,
+          },
+          token: data.token,
+        };
+      } else {
+        throw new Error(data.error || 'Login failed');
+      }
     } catch (error) {
-      logApiOperation("POST", endpoint, { credentials }, null, error);
-      console.error("Error during login:", error);
+      console.error('Login error:', error);
       throw error;
     }
   },
+
 
   // Signup functionality
   signup: async (email, password) => {
@@ -403,58 +400,53 @@ const apiService = {
     }
   },
   // Add to src/services/apiService.js
-  recordScore: async (gameData) => {
-    const endpoint = "/record_score";
+recordScore = async (gameData) => {
+  const endpoint = "/record_score";
 
-    try {
-      const gameId = localStorage.getItem("uncrypt-game-id");
+  try {
+    const gameId = localStorage.getItem("uncrypt-game-id");
+    const token = localStorage.getItem("auth_token");
+    const userId = localStorage.getItem("user_id");
 
-      const requestBody = {
-        game_id: gameId,
-        score: gameData.score,
-        mistakes: gameData.mistakes,
-        time_taken: gameData.timeTaken, // in seconds
-        difficulty: gameData.difficulty,
-      };
+    const requestBody = {
+      game_id: gameId,
+      score: gameData.score,
+      mistakes: gameData.mistakes,
+      time_taken: gameData.timeTaken,
+      difficulty: gameData.difficulty,
+      user_id: userId,  // Include user_id as fallback
+    };
 
-      const headers = {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        ...config.session.getHeaders(),
-      };
+    console.log("Request body for score recording:", requestBody);
 
-      logApiOperation("POST", endpoint, { requestBody });
+    const headers = {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+    };
 
-      const response = await fetch(`${config.apiUrl}${endpoint}`, {
-        method: "POST",
-        credentials: "include",
-        mode: "cors",
-        headers: headers,
-        body: JSON.stringify(requestBody),
-      });
-
-      logApiOperation("POST", endpoint, requestBody, response);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(
-          `HTTP error! Status: ${response.status}, Response:`,
-          errorText,
-        );
-        throw new Error(`Failed to record score: ${response.status}`);
-      }
-
-      // Save session if applicable
-      config.session.saveSession(response.headers);
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      logApiOperation("POST", endpoint, gameData, null, error);
-      console.error("Error recording score:", error);
-      throw error;
+    // Add token to Authorization header if available
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
     }
-  },
+
+    const response = await fetch(`${config.apiUrl}${endpoint}`, {
+      method: "POST",
+      credentials: "include", // Still include cookies for backward compatibility
+      headers: headers,
+      body: JSON.stringify(requestBody),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to record score");
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error recording score:", error);
+    throw error;
+  }
 };
 
 export default apiService;

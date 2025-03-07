@@ -3,7 +3,10 @@ import MatrixRain from "../../components/effects/MatrixRain";
 // import SaveButton from "./SaveButton";
 import config from "../../config";
 import "../../Styles/WinCelebration.css";
-import { getDifficultyFromMaxMistakes, calculateScore } from "../../utils/utils";
+import {
+  getDifficultyFromMaxMistakes,
+  calculateScore,
+} from "../../utils/utils";
 import apiService from "../../services/apiService";
 import { useAppContext } from "../../context/AppContext";
 
@@ -212,7 +215,7 @@ const WinCelebration = ({
   useEffect(() => {
     const recordGameScore = async () => {
       // Only proceed if user has won and hasn't attempted to record score yet
-      if (hasWon && !scoreStatus.attempted && isAuthenticated) {
+      if (!scoreStatus.attempted && isAuthenticated) {
         setScoreStatus((prev) => ({ ...prev, attempted: true }));
 
         try {
@@ -245,7 +248,7 @@ const WinCelebration = ({
 
     recordGameScore();
   }, [
-    hasWon,
+    // hasWon,
     scoreStatus.attempted,
     isAuthenticated,
     mistakes,
@@ -341,7 +344,7 @@ const WinCelebration = ({
             Play Again
           </button>
           {/* Score recording status */}
-          {hasWon && (
+          {
             <div className="score-section">
               {isAuthenticated ? (
                 scoreStatus.recorded ? (
@@ -368,7 +371,7 @@ const WinCelebration = ({
                 </div>
               )}
             </div>
-          )}
+          }
         </div>
       </div>
     </div>

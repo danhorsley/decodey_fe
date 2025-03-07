@@ -29,6 +29,7 @@ const defaultUserState = {
   user: null,
   isAuthenticated: false,
   authLoading: true,
+  token: localStorage.getItem("auth_token") || null, // Add this line
   authError: null,
 };
 
@@ -238,19 +239,17 @@ export const AppProvider = ({ children }) => {
   }, []);
 
   // Logout method
-  const logout = useCallback(() => {
-    // Clear token and state
-    localStorage.removeItem("uncrypt-token");
-    setAuthState({
-      user: null,
-      isAuthenticated: false,
-      authLoading: false,
-      authError: null,
-    });
+  const logout = () => {
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("user_id");
+    localStorage.removeItem("username");
 
-    // Optionally, redirect to login page
-    setCurrentView("login");
-  }, []);
+    // Call backend logout endpoint if needed
+    fetch(`${config.apiUrl}/logout`, {
+      method: "POST",
+      credentials: "include",
+    }).catch((err) => console.error("Logout error:", err));
+  };
 
   // ==== SETTINGS METHODS ====
   // Update settings
@@ -269,6 +268,25 @@ export const AppProvider = ({ children }) => {
     localStorage.setItem("uncrypt-settings", JSON.stringify(settings));
   }, [settings]);
 
+  // On component mount, check for existing token
+  useEffect(() => {
+    const token = localStorage.getItem("auth_token");
+    const userId = localStorage.getItem("user_id");
+    const username = localStorage.getItem("username");
+
+    if (token && userId) {
+      // If token exists, set authenticated state
+      setAuthState({
+        user: { id: userId, username: username },
+        isAuthenticated: true,
+        token: token,
+        loading: false,
+      });
+    } else {
+      // No token found, mark as not authenticated
+      setAuthState((prev) => ({ ...prev, loading: false }));
+    }
+  }, []);
   // ==== MOBILE MODE EFFECTS ====
   // Determine if we should use mobile mode based on settings and device
   useEffect(() => {
