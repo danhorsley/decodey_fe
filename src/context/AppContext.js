@@ -165,6 +165,7 @@ export const AppProvider = ({ children }) => {
         authLoading: false,
         authError: null,
       });
+      console.log("isAuth status : ", isAuthenticated);
 
       return { success: true };
     } catch (error) {
