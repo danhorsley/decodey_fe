@@ -55,7 +55,7 @@ const apiService = {
   // Login functionality
   // In apiService.js
   
-  loginapi = async (credentials) => {
+  loginapi: async (credentials) => {
     console.log("credentials : ",credentials)
     try {
       const response = await fetch(`${config.apiUrl}/login`, {
