@@ -13,7 +13,7 @@ function Login({ isOpen, onClose }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  if (!isOpen) return null;
+  // if (!isOpen) return null;
   if (!isLoginOpen) return null;
 
   // Handle forgotten password

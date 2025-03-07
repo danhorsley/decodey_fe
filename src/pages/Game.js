@@ -417,98 +417,78 @@ function Game() {
 
   // Handle getting a hint
   const handleHint = useCallback(() => {
-    // Safety check - if maxed out on mistakes, don't proceed
-    if (mistakes >= maxMistakes - 1 || !isGameActive) {
-      console.warn("Cannot get hint: Too many mistakes or game not active");
-      return;
-    }
-
-    // Get the current game ID
-    const gameId = localStorage.getItem("uncrypt-game-id");
-
-    if (DEBUG) {
-      console.log(`Requesting hint for game: ${gameId || "None"}`);
-    }
-
-    // Show some visual feedback that something is happening
-    // You could add a small loading state here if you want
+    console.log("Hint button clicked, preparing to make API call");
 
     apiService
       .getHint()
       .then((data) => {
-        // Safety check for data
-        if (!data) {
-          console.error("Received empty response from getHint");
-          return;
-        }
+        console.log("Hint API response received:", data);
 
-        // Check for session expired error
         if (data.error && data.error.includes("Session expired")) {
-          console.warn("Session expired, starting new game");
-
-          // Store the new game ID if returned
-          if (data.game_id) {
+          console.log("Session expired, starting new game");
+          if (data.game_id)
             localStorage.setItem("uncrypt-game-id", data.game_id);
-          }
-
-          // Restart the game
           startGame();
           return;
         }
 
-        // Process display text for hardcore mode if needed
         let displayText = data.display;
-        if (settings.hardcoreMode && displayText) {
+        console.log("Display text before processing:", displayText);
+
+        if (settings.hardcoreMode) {
           displayText = displayText.replace(/[^A-Z█]/g, "");
+          console.log(
+            "Display text after hardcore mode processing:",
+            displayText,
+          );
         }
 
-        // Get the new correctly guessed letters with safety check
-        const newCorrectlyGuessed = Array.isArray(data.correctly_guessed)
-          ? data.correctly_guessed
-          : correctlyGuessed;
+        const newCorrectlyGuessed = data.correctly_guessed || correctlyGuessed;
+        console.log("New correctly guessed letters:", newCorrectlyGuessed);
 
-        // Update the mappings based on new correctly guessed letters
         const newMappings = { ...guessedMappings };
+        console.log("Previous mappings:", guessedMappings);
 
-        // For each newly guessed letter, find its corresponding original letter
-        if (Array.isArray(newCorrectlyGuessed)) {
-          newCorrectlyGuessed
-            .filter((letter) => !correctlyGuessed.includes(letter))
-            .forEach((encryptedLetter) => {
-              // Safety check for encrypted
-              if (!encrypted) return;
+        // Track which new letters were added
+        const newlyAddedLetters = [];
 
-              for (let i = 0; i < encrypted.length; i++) {
-                if (
-                  encrypted[i] === encryptedLetter &&
-                  data.display[i] !== "█"
-                ) {
-                  newMappings[encryptedLetter] = data.display[i];
-                  break;
-                }
+        newCorrectlyGuessed
+          .filter((letter) => !correctlyGuessed.includes(letter))
+          .forEach((encryptedLetter) => {
+            newlyAddedLetters.push(encryptedLetter);
+            for (let i = 0; i < encrypted.length; i++) {
+              if (encrypted[i] === encryptedLetter && data.display[i] !== "?") {
+                newMappings[encryptedLetter] = data.display[i];
+                break;
               }
-            });
-        }
+            }
+          });
 
-        // Update the game state with safety checks
+        console.log("Newly added letters:", newlyAddedLetters);
+        console.log("Updated mappings:", newMappings);
+
+        // Create the payload before dispatching
+        const payload = {
+          display: displayText,
+          mistakes: data.mistakes,
+          correctlyGuessed: newCorrectlyGuessed,
+          guessedMappings: newMappings,
+        };
+        console.log("Dispatching hint payload:", payload);
+
         dispatch({
           type: "SET_HINT",
-          payload: {
-            display: displayText || display, // Fall back to current if none returned
-            mistakes:
-              typeof data.mistakes === "number" ? data.mistakes : mistakes + 1, // Increment if not returned
-            correctlyGuessed: newCorrectlyGuessed,
-            guessedMappings: newMappings,
-          },
+          payload,
         });
 
-        // Play hint sound
+        console.log("Hint state updated, playing sound");
         playSound("hint");
       })
       .catch((err) => {
-        console.error("Error getting hint:", err);
-        // Don't alert - just log to console and continue
-        // This prevents the game from breaking on network errors
+        console.error("Error getting hint - full details:", err);
+        console.error("Error message:", err.message);
+        console.error("Error stack:", err.stack);
+        alert("Failed to get hint. Check your connection.");
       });
   }, [
     correctlyGuessed,
@@ -517,10 +497,6 @@ function Game() {
     startGame,
     encrypted,
     playSound,
-    mistakes,
-    maxMistakes,
-    isGameActive,
-    display, // Added for fallback
   ]);
 
   // Keyboard handlers
@@ -746,7 +722,7 @@ function Game() {
     return (
       <div className="App-container">
         {isAboutOpen && <About isOpen={isAboutOpen} onClose={closeAbout} />}
-        {isLoginOpen && <Login isOpen={isLoginOpen} onClose={closeLogin} />}
+        {isLoginOpen && <Login onClose={closeLogin} />}
         {isSignupOpen && <Signup isOpen={isSignupOpen} onClose={closeSignup} />}
         <MobileLayout isLandscape={isLandscape}>
           {renderGameHeader()}
@@ -764,7 +740,7 @@ function Game() {
       className={`App-container ${settings.theme === "dark" ? "dark-theme" : ""}`}
     >
       {isAboutOpen && <About isOpen={isAboutOpen} onClose={closeAbout} />}
-      {isLoginOpen && <Login isOpen={isLoginOpen} onClose={closeLogin} />}
+      {isLoginOpen && <Login onClose={closeLogin} />}
       {isSignupOpen && <Signup isOpen={isSignupOpen} onClose={closeSignup} />}
       {renderGameHeader()}
       {renderTextContainer()}

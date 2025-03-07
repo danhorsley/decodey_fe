@@ -325,73 +325,51 @@ const apiService = {
   // More robust getHint function
   getHint: async () => {
     const endpoint = "/hint";
+    const gameId = localStorage.getItem("uncrypt-game-id");
 
     try {
-      // Get the current game ID
-      const gameId = localStorage.getItem("uncrypt-game-id");
+      const headers = {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      };
 
-      // Prepare request body with game ID if available
-      const requestBody = {};
+      // Add game ID in header if available
       if (gameId) {
-        requestBody.game_id = gameId;
+        headers["X-Game-Id"] = gameId;
       }
 
-      if (config.DEBUG) {
-        console.log(`Requesting hint for game: ${gameId || "None"}`);
-      }
+      console.log("Making hint request with headers:", headers);
 
-      // Make the API request
       const response = await fetch(`${config.apiUrl}${endpoint}`, {
         method: "POST",
         credentials: "include",
         mode: "cors",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(requestBody),
+        headers: headers,
+        body: JSON.stringify({
+          game_id: gameId, // Include game_id in the body too, for redundancy
+        }),
       });
 
-      // Check if the response is OK
+      console.log("Hint response status:", response.status);
+
       if (!response.ok) {
         const errorText = await response.text();
-        console.error(`Hint API error: ${response.status}`, errorText);
-
-        // Return error details
-        return {
-          error: `API error: ${response.status}`,
-          display: "",
-          mistakes: 0,
-          correctly_guessed: [],
-        };
+        console.error(
+          `HTTP error in hint! Status: ${response.status}, Response:`,
+          errorText,
+        );
+        throw new Error(`HTTP error! Status: ${response.status}`);
       }
 
-      // Parse the response
+      // Save session if applicable
+      config.session.saveSession(response.headers);
+
       const data = await response.json();
-
-      if (config.DEBUG) {
-        console.log("Hint response:", data);
-      }
-
-      // Ensure we have the expected data structure
-      if (!data.display) {
-        console.warn("Unexpected hint response format:", data);
-        data.display = data.display || "";
-        data.mistakes = data.mistakes || 0;
-        data.correctly_guessed = data.correctly_guessed || [];
-      }
-
+      console.log("Hint response data:", data);
       return data;
     } catch (error) {
       console.error("Error getting hint:", error);
-
-      // Return a safe default response
-      return {
-        error: error.message || "Failed to get hint",
-        display: "",
-        mistakes: 0,
-        correctly_guessed: [],
-      };
+      throw error;
     }
   },
   getAttribution: async () => {

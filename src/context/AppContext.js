@@ -448,6 +448,7 @@ export const AppProvider = ({ children }) => {
   }, []);
 
   const openLogin = useCallback(() => {
+    console.log("openLogin called, setting isLoginOpen to true");
     setIsLoginOpen(true);
   }, []);
 
@@ -476,7 +477,6 @@ export const AppProvider = ({ children }) => {
     // Auth
     ...authState, // Spread auth state (user, isAuthenticated, authLoading, authError)
     login,
-    // register,
     logout,
 
     // View state
