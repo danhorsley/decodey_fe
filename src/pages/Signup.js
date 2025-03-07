@@ -19,8 +19,6 @@ function Signup({ isOpen, onClose }) {
     message: "",
   });
 
-  if (!isOpen) return null;
-
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
 
@@ -125,6 +123,8 @@ function Signup({ isOpen, onClose }) {
     }
   }, [username, checkUsername]);
 
+  if (!isOpen) return null;
+  
   return (
     <div className="about-overlay">
       <div
