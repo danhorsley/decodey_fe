@@ -54,14 +54,14 @@ const logApiOperation = (
 const apiService = {
   // Login functionality
   // In apiService.js
-  
+
   loginapi: async (credentials) => {
-    console.log("credentials : ",credentials)
+    console.log("credentials : ", credentials);
     try {
       const response = await fetch(`${config.apiUrl}/login`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(credentials),
       });
@@ -71,11 +71,11 @@ const apiService = {
       if (response.ok) {
         // Store token and user info in localStorage
         if (data.token) {
-          localStorage.setItem('auth_token', data.token);
+          localStorage.setItem("auth_token", data.token);
         }
-        localStorage.setItem('user_id', data.user_id);
-        localStorage.setItem('username', data.username);
-        console.log("token : ",data.token)
+        localStorage.setItem("user_id", data.user_id);
+        localStorage.setItem("username", data.username);
+        console.log("token : ", data.token);
         return {
           success: true,
           user: {
@@ -85,14 +85,13 @@ const apiService = {
           token: data.token,
         };
       } else {
-        throw new Error(data.error || 'Login failed');
+        throw new Error(data.error || "Login failed");
       }
     } catch (error) {
-      console.error('Login error:', error);
+      console.error("Login error:", error);
       throw error;
     }
   },
-
 
   // Signup functionality
   signup: async (email, password) => {
@@ -400,53 +399,54 @@ const apiService = {
     }
   },
   // Add to src/services/apiService.js
-recordScore = async (gameData) => {
-  const endpoint = "/record_score";
+  recordScore: async (gameData) => {
+    const endpoint = "/record_score";
 
-  try {
-    const gameId = localStorage.getItem("uncrypt-game-id");
-    const token = localStorage.getItem("auth_token");
-    const userId = localStorage.getItem("user_id");
+    try {
+      const gameId = localStorage.getItem("uncrypt-game-id");
+      const token = localStorage.getItem("auth_token");
+      const userId = localStorage.getItem("user_id");
 
-    const requestBody = {
-      game_id: gameId,
-      score: gameData.score,
-      mistakes: gameData.mistakes,
-      time_taken: gameData.timeTaken,
-      difficulty: gameData.difficulty,
-      user_id: userId,  // Include user_id as fallback
-    };
+      const requestBody = {
+        game_id: gameId,
+        score: gameData.score,
+        mistakes: gameData.mistakes,
+        time_taken: gameData.timeTaken,
+        difficulty: gameData.difficulty,
+        user_id: userId, // Include user_id as fallback
+      };
 
-    console.log("Request body for score recording:", requestBody);
+      console.log("Request body for score recording:", requestBody);
 
-    const headers = {
-      "Content-Type": "application/json",
-      "Accept": "application/json",
-    };
+      const headers = {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      };
 
-    // Add token to Authorization header if available
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
+      // Add token to Authorization header if available
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(`${config.apiUrl}${endpoint}`, {
+        method: "POST",
+        credentials: "include", // Still include cookies for backward compatibility
+        headers: headers,
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to record score");
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error recording score:", error);
+      throw error;
     }
-
-    const response = await fetch(`${config.apiUrl}${endpoint}`, {
-      method: "POST",
-      credentials: "include", // Still include cookies for backward compatibility
-      headers: headers,
-      body: JSON.stringify(requestBody),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || "Failed to record score");
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error("Error recording score:", error);
-    throw error;
-  }
+  },
 };
 
 export default apiService;

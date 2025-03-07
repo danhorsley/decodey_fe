@@ -430,6 +430,7 @@ export const AppProvider = ({ children }) => {
     screenWidth,
     screenHeight,
     useMobileMode,
+    // token,
   };
 
   return (
