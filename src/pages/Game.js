@@ -294,7 +294,15 @@ function Game() {
   // Submit a guess for letter mapping
   const submitGuess = useCallback(
     (guessedLetter) => {
-      // Get the current game ID from localStorage
+      // Safety check - if no letter is selected, don't proceed
+      if (!selectedEncrypted || !guessedLetter) {
+        console.warn(
+          "Cannot submit guess: No encrypted letter selected or no guess provided",
+        );
+        return;
+      }
+
+      // Get the current game ID
       const gameId = localStorage.getItem("uncrypt-game-id");
 
       if (DEBUG) {
@@ -304,9 +312,18 @@ function Game() {
         console.log(`Current game ID: ${gameId || "None"}`);
       }
 
+      // Show some visual feedback that something is happening
+      // You could add a small loading state here if you want
+
       apiService
         .submitGuess(gameId, selectedEncrypted, guessedLetter)
         .then((data) => {
+          // Safety check for data
+          if (!data) {
+            console.error("Received empty response from submitGuess");
+            return;
+          }
+
           // Check for session expired error
           if (data.error && data.error.includes("Session expired")) {
             console.warn("Session expired, starting new game");
@@ -327,15 +344,16 @@ function Game() {
             displayText = displayText.replace(/[^A-Z█]/g, "");
           }
 
-          // Prepare state update payload
+          // Prepare state update payload with safe fallbacks
           const payload = {
-            display: displayText,
-            mistakes: data.mistakes,
+            display: displayText || display, // Fall back to current display if none returned
+            mistakes:
+              typeof data.mistakes === "number" ? data.mistakes : mistakes, // Keep current if not returned
             selectedEncrypted: null, // Reset selected letter
           };
 
-          // Handle correctly guessed letters
-          if (data.correctly_guessed) {
+          // Handle correctly guessed letters with safety check
+          if (Array.isArray(data.correctly_guessed)) {
             payload.correctlyGuessed = data.correctly_guessed;
 
             // Check if this guess was correct (not previously guessed)
@@ -373,7 +391,8 @@ function Game() {
         })
         .catch((err) => {
           console.error("Error submitting guess:", err);
-          alert("Failed to submit guess. Check your connection.");
+          // Don't alert - just log to console and continue
+          // This prevents the game from breaking on network errors
         });
     },
     [
@@ -384,6 +403,7 @@ function Game() {
       startGame,
       playSound,
       mistakes,
+      display, // Added for fallback
     ],
   );
 
@@ -397,16 +417,31 @@ function Game() {
 
   // Handle getting a hint
   const handleHint = useCallback(() => {
-    // Get the current game ID from localStorage
+    // Safety check - if maxed out on mistakes, don't proceed
+    if (mistakes >= maxMistakes - 1 || !isGameActive) {
+      console.warn("Cannot get hint: Too many mistakes or game not active");
+      return;
+    }
+
+    // Get the current game ID
     const gameId = localStorage.getItem("uncrypt-game-id");
 
     if (DEBUG) {
       console.log(`Requesting hint for game: ${gameId || "None"}`);
     }
 
+    // Show some visual feedback that something is happening
+    // You could add a small loading state here if you want
+
     apiService
       .getHint()
       .then((data) => {
+        // Safety check for data
+        if (!data) {
+          console.error("Received empty response from getHint");
+          return;
+        }
+
         // Check for session expired error
         if (data.error && data.error.includes("Session expired")) {
           console.warn("Session expired, starting new game");
@@ -427,30 +462,41 @@ function Game() {
           displayText = displayText.replace(/[^A-Z█]/g, "");
         }
 
-        // Get the new correctly guessed letters
-        const newCorrectlyGuessed = data.correctly_guessed || correctlyGuessed;
+        // Get the new correctly guessed letters with safety check
+        const newCorrectlyGuessed = Array.isArray(data.correctly_guessed)
+          ? data.correctly_guessed
+          : correctlyGuessed;
 
         // Update the mappings based on new correctly guessed letters
         const newMappings = { ...guessedMappings };
 
         // For each newly guessed letter, find its corresponding original letter
-        newCorrectlyGuessed
-          .filter((letter) => !correctlyGuessed.includes(letter))
-          .forEach((encryptedLetter) => {
-            for (let i = 0; i < encrypted.length; i++) {
-              if (encrypted[i] === encryptedLetter && data.display[i] !== "█") {
-                newMappings[encryptedLetter] = data.display[i];
-                break;
-              }
-            }
-          });
+        if (Array.isArray(newCorrectlyGuessed)) {
+          newCorrectlyGuessed
+            .filter((letter) => !correctlyGuessed.includes(letter))
+            .forEach((encryptedLetter) => {
+              // Safety check for encrypted
+              if (!encrypted) return;
 
-        // Update the game state
+              for (let i = 0; i < encrypted.length; i++) {
+                if (
+                  encrypted[i] === encryptedLetter &&
+                  data.display[i] !== "█"
+                ) {
+                  newMappings[encryptedLetter] = data.display[i];
+                  break;
+                }
+              }
+            });
+        }
+
+        // Update the game state with safety checks
         dispatch({
           type: "SET_HINT",
           payload: {
-            display: displayText,
-            mistakes: data.mistakes,
+            display: displayText || display, // Fall back to current if none returned
+            mistakes:
+              typeof data.mistakes === "number" ? data.mistakes : mistakes + 1, // Increment if not returned
             correctlyGuessed: newCorrectlyGuessed,
             guessedMappings: newMappings,
           },
@@ -461,7 +507,8 @@ function Game() {
       })
       .catch((err) => {
         console.error("Error getting hint:", err);
-        alert("Failed to get hint. Check your connection.");
+        // Don't alert - just log to console and continue
+        // This prevents the game from breaking on network errors
       });
   }, [
     correctlyGuessed,
@@ -470,6 +517,10 @@ function Game() {
     startGame,
     encrypted,
     playSound,
+    mistakes,
+    maxMistakes,
+    isGameActive,
+    display, // Added for fallback
   ]);
 
   // Keyboard handlers

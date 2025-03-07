@@ -230,86 +230,89 @@ const apiService = {
       throw error;
     }
   },
-  // Updated submitGuess and getHint functions for apiService.js
+  // Update these functions in your apiService.js
 
-  // Fix submitGuess function
+  // More robust submitGuess function
   submitGuess: async (gameId, encryptedLetter, guessedLetter) => {
     const endpoint = "/guess";
 
+    if (!encryptedLetter || !guessedLetter) {
+      console.error("Missing required parameters for guess:", {
+        encryptedLetter,
+        guessedLetter,
+      });
+      return {
+        error: "Missing parameters",
+        display: "",
+        mistakes: 0,
+        correctly_guessed: [],
+      };
+    }
+
     try {
-      // Prepare request body with needed data
+      // Prepare request body
       const requestBody = {
         encrypted_letter: encryptedLetter,
         guessed_letter: guessedLetter.toUpperCase(),
       };
 
-      // Only add game_id if provided (important!)
+      // Add game_id if available
       if (gameId) {
         requestBody.game_id = gameId;
       }
 
-      // Get headers with auth tokens and game ID
-      const headers = {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        ...config.session.getHeaders({ publicEndpoint: false }), // Standard private endpoint
-      };
-
-      // Add debug logging
+      // Log the request for debugging
       if (config.DEBUG) {
         console.log(`Submitting guess: ${encryptedLetter} → ${guessedLetter}`);
-        console.log(`Game ID: ${gameId || "None"}`);
-        console.log(`Headers:`, {
-          ...headers,
-          Authorization: headers.Authorization ? "[PRESENT]" : "[ABSENT]",
-        });
+        console.log(`Request body:`, requestBody);
       }
 
-      // Make the request with credentials
+      // Make the API request
       const response = await fetch(`${config.apiUrl}${endpoint}`, {
         method: "POST",
         credentials: "include",
         mode: "cors",
-        headers: headers,
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
         body: JSON.stringify(requestBody),
       });
 
+      // Check if the response is OK
       if (!response.ok) {
         const errorText = await response.text();
-        console.error(
-          `HTTP error in submitGuess! Status: ${response.status}, Response:`,
-          errorText,
-        );
+        console.error(`Guess API error: ${response.status}`, errorText);
 
-        // Check if it's a session expiration error
-        if (errorText.includes("Session expired") || response.status === 401) {
-          return {
-            error: "Session expired, a new game was started",
-            display: "",
-            mistakes: 0,
-            correctly_guessed: [],
-          };
-        }
-
-        throw new Error(
-          `HTTP error in submitGuess! Status: ${response.status}`,
-        );
+        // Return error details
+        return {
+          error: `API error: ${response.status}`,
+          display: "",
+          mistakes: 0,
+          correctly_guessed: [],
+        };
       }
 
-      // Save any session data from response headers
-      config.session.saveSession(response.headers);
-
-      // Process and return the response
+      // Parse the response
       const data = await response.json();
 
       if (config.DEBUG) {
-        console.log(`Guess response:`, data);
+        console.log("Guess response:", data);
+      }
+
+      // Ensure we have the expected data structure
+      if (!data.display) {
+        console.warn("Unexpected response format:", data);
+        data.display = data.display || "";
+        data.mistakes = data.mistakes || 0;
+        data.correctly_guessed = data.correctly_guessed || [];
       }
 
       return data;
     } catch (error) {
       console.error("Error submitting guess:", error);
-      // Return a structured error to handle in the UI
+
+      // Return a safe default response
       return {
         error: error.message || "Failed to submit guess",
         display: "",
@@ -319,79 +322,70 @@ const apiService = {
     }
   },
 
-  // Fix getHint function
+  // More robust getHint function
   getHint: async () => {
     const endpoint = "/hint";
 
     try {
-      // Get gameId from localStorage
+      // Get the current game ID
       const gameId = localStorage.getItem("uncrypt-game-id");
 
-      // Prepare request body
+      // Prepare request body with game ID if available
       const requestBody = {};
       if (gameId) {
         requestBody.game_id = gameId;
       }
 
-      // Get headers with auth tokens
-      const headers = {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        ...config.session.getHeaders(),
-      };
-
-      // Debug logging
       if (config.DEBUG) {
         console.log(`Requesting hint for game: ${gameId || "None"}`);
-        console.log(`Headers:`, {
-          ...headers,
-          Authorization: headers.Authorization ? "[PRESENT]" : "[ABSENT]",
-        });
       }
 
-      // Make the request
+      // Make the API request
       const response = await fetch(`${config.apiUrl}${endpoint}`, {
         method: "POST",
         credentials: "include",
         mode: "cors",
-        headers: headers,
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
         body: JSON.stringify(requestBody),
       });
 
+      // Check if the response is OK
       if (!response.ok) {
         const errorText = await response.text();
-        console.error(
-          `HTTP error in getHint! Status: ${response.status}, Response:`,
-          errorText,
-        );
+        console.error(`Hint API error: ${response.status}`, errorText);
 
-        // Check if it's a session expiration error
-        if (errorText.includes("Session expired") || response.status === 401) {
-          return {
-            error: "Session expired, a new game was started",
-            display: "",
-            mistakes: 0,
-            correctly_guessed: [],
-          };
-        }
-
-        throw new Error(`HTTP error in getHint! Status: ${response.status}`);
+        // Return error details
+        return {
+          error: `API error: ${response.status}`,
+          display: "",
+          mistakes: 0,
+          correctly_guessed: [],
+        };
       }
 
-      // Save any session data from response headers
-      config.session.saveSession(response.headers);
-
-      // Process and return the response
+      // Parse the response
       const data = await response.json();
 
       if (config.DEBUG) {
-        console.log(`Hint response:`, data);
+        console.log("Hint response:", data);
+      }
+
+      // Ensure we have the expected data structure
+      if (!data.display) {
+        console.warn("Unexpected hint response format:", data);
+        data.display = data.display || "";
+        data.mistakes = data.mistakes || 0;
+        data.correctly_guessed = data.correctly_guessed || [];
       }
 
       return data;
     } catch (error) {
       console.error("Error getting hint:", error);
-      // Return a structured error to handle in the UI
+
+      // Return a safe default response
       return {
         error: error.message || "Failed to get hint",
         display: "",
