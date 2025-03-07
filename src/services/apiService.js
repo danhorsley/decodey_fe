@@ -404,8 +404,10 @@ const apiService = {
 
     try {
       const gameId = localStorage.getItem("uncrypt-game-id");
-      const token = localStorage.getItem("auth_token");
-      const userId = localStorage.getItem("user_id");
+      if (!gameId) {
+        console.error("No game_id found in localStorage");
+        return { success: false, error: "No game ID found" };
+      }
 
       const requestBody = {
         game_id: gameId,
@@ -413,36 +415,51 @@ const apiService = {
         mistakes: gameData.mistakes,
         time_taken: gameData.timeTaken,
         difficulty: gameData.difficulty,
-        user_id: userId, // Include user_id as fallback
+        game_type: gameData.gameType || "regular",
+        challenge_date: gameData.challengeDate || null,
       };
-
-      console.log("Request body for score recording:", requestBody);
 
       const headers = {
         "Content-Type": "application/json",
         Accept: "application/json",
+        ...config.session.getHeaders(),
       };
 
-      // Add token to Authorization header if available
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
+      logApiOperation("POST", endpoint, { requestBody });
 
       const response = await fetch(`${config.apiUrl}${endpoint}`, {
         method: "POST",
-        credentials: "include", // Still include cookies for backward compatibility
+        credentials: "include",
+        mode: "cors",
         headers: headers,
         body: JSON.stringify(requestBody),
       });
 
+      logApiOperation("POST", endpoint, requestBody, response);
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to record score");
+        const errorText = await response.text();
+        console.error(
+          `HTTP error! Status: ${response.status}, Response:`,
+          errorText,
+        );
+        throw new Error(`Failed to record score: ${response.status}`);
       }
 
+      // Save session if applicable
+      config.session.saveSession(response.headers);
+
       const data = await response.json();
-      return data;
+
+      if (data.duplicate) {
+        console.log(
+          `Score was already recorded for this ${requestBody.game_type} game`,
+        );
+      }
+
+      return { ...data, success: true };
     } catch (error) {
+      logApiOperation("POST", endpoint, gameData, null, error);
       console.error("Error recording score:", error);
       throw error;
     }

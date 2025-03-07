@@ -39,6 +39,7 @@ const WinCelebration = ({
   }, []);
 
   // Animation state
+  const hasAttemptedRef = useRef(false);
   const [animationStage, setAnimationStage] = useState(0);
   const [showStats, setShowStats] = useState(false);
   const [showMatrixRain, setShowMatrixRain] = useState(true);
@@ -214,48 +215,63 @@ const WinCelebration = ({
   // post scores to backend
   useEffect(() => {
     const recordGameScore = async () => {
-      // Only proceed if user has won and hasn't attempted to record score yet
-      if (!scoreStatus.attempted && isAuthenticated) {
-        setScoreStatus((prev) => ({ ...prev, attempted: true }));
+      // Skip if already attempted, not won, or not authenticated
+      if (!isAuthenticated || hasAttemptedRef.current) {
+        return;
+      }
 
-        try {
-          // Calculate score based on mistakes and time
-          const gameTimeSeconds = (completionTime - startTime) / 1000;
-          const score = calculateScore(maxMistakes, mistakes, gameTimeSeconds);
+      // Mark as attempted immediately to prevent duplicate calls
+      hasAttemptedRef.current = true;
+      setScoreStatus((prev) => ({ ...prev, attempted: true }));
 
-          const gameData = {
-            score,
-            mistakes,
-            timeTaken: Math.round(gameTimeSeconds),
-            difficulty: getDifficultyFromMaxMistakes(maxMistakes),
-          };
+      try {
+        // Calculate score based on mistakes and time
+        const gameTimeSeconds = (completionTime - startTime) / 1000;
+        const score = calculateScore(maxMistakes, mistakes, gameTimeSeconds);
 
-          const result = await apiService.recordScore(gameData);
+        // Create gameData object here
+        const gameData = {
+          score,
+          mistakes,
+          timeTaken: Math.round(gameTimeSeconds),
+          difficulty: getDifficultyFromMaxMistakes(maxMistakes),
+          gameType: "regular", //update late to change
+          challengeDate: null, //update later to change
+        };
 
-          if (result.success) {
-            setScoreStatus((prev) => ({ ...prev, recorded: true }));
-            console.log("Score recorded successfully:", result);
-          }
-        } catch (error) {
-          console.error("Failed to record score:", error);
-          setScoreStatus((prev) => ({
-            ...prev,
-            error: "Failed to record score. Please try again.",
-          }));
+        const result = await apiService.recordScore(gameData);
+
+        if (result.success) {
+          setScoreStatus((prev) => ({ ...prev, recorded: true }));
+          console.log(
+            result.duplicate
+              ? `Score was already recorded for this ${gameData.gameType} game`
+              : `${gameData.gameType.charAt(0).toUpperCase() + gameData.gameType.slice(1)} score recorded successfully:`,
+            result,
+          );
         }
+      } catch (error) {
+        console.error("Failed to record score:", error);
+        setScoreStatus((prev) => ({
+          ...prev,
+          error: "Failed to record score. Please try again.",
+        }));
+        // Allow retry
+        hasAttemptedRef.current = false;
       }
     };
 
     recordGameScore();
   }, [
-    // hasWon,
-    scoreStatus.attempted,
+    hasWon,
     isAuthenticated,
-    mistakes,
-    maxMistakes,
     startTime,
     completionTime,
+    maxMistakes,
+    mistakes,
+    // gameType,
   ]);
+
   return (
     <div
       ref={containerRef}
