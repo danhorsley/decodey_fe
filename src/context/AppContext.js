@@ -240,7 +240,7 @@ export const AppProvider = ({ children }) => {
       const userId = localStorage.getItem("uncrypt-user-id");
       const username = localStorage.getItem("uncrypt-username");
 
-      if (!token || !userId) {
+      if (!token) {
         setAuthState({
           ...defaultUserState,
           authLoading: false,
@@ -248,80 +248,71 @@ export const AppProvider = ({ children }) => {
         return;
       }
 
-      // If we have credentials stored, set authenticated state directly
-      setAuthState({
-        user: { id: userId, username: username || "User" },
-        isAuthenticated: true,
-        authLoading: false,
-        authError: null,
-      });
+      try {
+        // Call the new validate-token endpoint
+        const response = await fetch(`${config.apiUrl}/validate-token`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          mode: "cors",
+        });
 
-      console.log("Auth initialized from localStorage:", {
-        userId,
-        username,
-        isAuthenticated: true,
-      });
+        if (response.ok) {
+          const userData = await response.json();
+
+          // Update auth state with user data from response
+          setAuthState({
+            user: {
+              id: userData.user_id,
+              username: userData.username,
+              email: userData.email,
+            },
+            isAuthenticated: true,
+            authLoading: false,
+            authError: null,
+          });
+
+          console.log("Auth validated successfully via API");
+        } else {
+          // Invalid token, clear it
+          console.log("Token validation failed, clearing stored credentials");
+          localStorage.removeItem("uncrypt-token");
+          localStorage.removeItem("uncrypt-user-id");
+          localStorage.removeItem("uncrypt-username");
+
+          setAuthState({
+            ...defaultUserState,
+            authLoading: false,
+          });
+        }
+      } catch (error) {
+        console.error("Auth validation error:", error);
+
+        // Fallback: If API validation fails, still try to use stored credentials
+        if (userId && username) {
+          console.log("Using stored credentials as fallback");
+          setAuthState({
+            user: { id: userId, username: username },
+            isAuthenticated: true,
+            authLoading: false,
+            authError:
+              "Couldn't verify credentials from server, using local data",
+          });
+        } else {
+          setAuthState({
+            ...defaultUserState,
+            authLoading: false,
+            authError: "Failed to validate authentication state",
+          });
+        }
+      }
     };
 
     initAuth();
   }, []);
-
-  // Register method
-  const register = useCallback(async (userData) => {
-    setAuthState((prev) => ({ ...prev, authLoading: true, authError: null }));
-
-    try {
-      const response = await fetch(`${config.apiUrl}/register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(userData),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Registration failed");
-      }
-
-      // Save token to localStorage if registration also logs in
-      if (data.token) {
-        localStorage.setItem("uncrypt-token", data.token);
-
-        // Update auth state
-        setAuthState({
-          user: data.user,
-          isAuthenticated: true,
-          authLoading: false,
-          authError: null,
-        });
-      } else {
-        // If registration doesn't auto-login
-        setAuthState((prev) => ({
-          ...prev,
-          authLoading: false,
-          authError: null,
-        }));
-      }
-
-      return { success: true };
-    } catch (error) {
-      console.error("Registration error:", error);
-
-      setAuthState((prev) => ({
-        ...prev,
-        authLoading: false,
-        authError: error.message || "Registration failed",
-      }));
-
-      return {
-        success: false,
-        error: error.message || "Registration failed",
-      };
-    }
-  }, []);
-
   // Logout method
   const logout = () => {
     localStorage.removeItem("auth_token");
@@ -485,7 +476,7 @@ export const AppProvider = ({ children }) => {
     // Auth
     ...authState, // Spread auth state (user, isAuthenticated, authLoading, authError)
     login,
-    register,
+    // register,
     logout,
 
     // View state

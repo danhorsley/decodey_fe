@@ -1,10 +1,14 @@
-// Configuration for the app
+// src/config.js - Complete configuration for the app
+
+// Main configuration object
 const config = {
+  // API URL - uses environment variables with fallback
   apiUrl:
     process.env.REACT_APP_BACKEND_URL ||
     process.env.REACT_APP_API_URL ||
     "https://uncryptbe.replit.app",
-  // Log API URL for debugging
+
+  // Initialize and log API URL when config is first loaded
   init: (() => {
     console.log(
       "🌐 API URL configured as:",
@@ -15,22 +19,40 @@ const config = {
     return true;
   })(),
 
-  // User session management
-  session: {
-    getHeaders: () => {
-      const userId = localStorage.getItem("uncrypt-user-id");
-      const token = localStorage.getItem("uncrypt-token");
-      const gameId = localStorage.getItem("uncrypt-game-id");
+  // Debug flag to control logging
+  DEBUG: true,
 
-      // Add authorization header if token exists
+  // Session management methods
+  session: {
+    // Function to get headers based on endpoint requirements
+    getHeaders: (options = {}) => {
+      const { publicEndpoint = false } = options;
+
+      // For public endpoints (like /start), we don't include auth tokens
+      if (publicEndpoint) {
+        return {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Origin: "https://uncryptbe.replit.app",
+        };
+      }
+
+      // For protected endpoints, include all available identification
+      const token = localStorage.getItem("uncrypt-token");
+      const userId = localStorage.getItem("uncrypt-user-id");
+      const gameId = localStorage.getItem("uncrypt-game-id");
+      const sessionId = localStorage.getItem("uncrypt-session-id");
+
+      // Build headers object with all available identifiers
       const headers = {
+        ...(sessionId ? { "X-Session-ID": sessionId } : {}),
         ...(gameId ? { "X-Game-ID": gameId } : {}),
-        Origin: "https://uncryptbe.replit.app", // Match backend origin
+        Origin: "https://uncryptbe.replit.app",
         Accept: "application/json",
         "Content-Type": "application/json",
       };
 
-      // Important: Add Authorization header for token-based authentication
+      // Add Authorization header for token-based authentication (if available)
       if (token) {
         headers["Authorization"] = `Bearer ${token}`;
       }
@@ -43,61 +65,41 @@ const config = {
       return headers;
     },
 
+    // Function to save session ID from response headers
     saveSession: (headers) => {
-      if (headers.get("x-user-id")) {
-        localStorage.setItem("uncrypt-user-id", headers.get("x-user-id"));
+      // Check if the response includes a session ID header
+      const sessionId = headers.get("X-Session-ID");
+      if (sessionId) {
+        localStorage.setItem("uncrypt-session-id", sessionId);
+        if (config.DEBUG) console.log("Saved session ID:", sessionId);
       }
 
-      if (headers.get("authorization")) {
-        const token = headers.get("authorization").replace("Bearer ", "");
-        localStorage.setItem("uncrypt-token", token);
+      // Check for and save game ID if present
+      const gameId = headers.get("X-Game-ID");
+      if (gameId) {
+        localStorage.setItem("uncrypt-game-id", gameId);
+        if (config.DEBUG) console.log("Saved game ID:", gameId);
       }
     },
 
+    // Function to clear session data (useful for logout)
     clearSession: () => {
-      localStorage.removeItem("uncrypt-user-id");
+      localStorage.removeItem("uncrypt-session-id");
       localStorage.removeItem("uncrypt-token");
+      localStorage.removeItem("uncrypt-user-id");
+      localStorage.removeItem("uncrypt-username");
+
+      // Don't clear game-id here - that's handled separately when starting a new game
+      if (config.DEBUG) console.log("Session data cleared from localStorage");
     },
   },
 
-  // Debug flag to control logging
-  DEBUG: true,
-
-  // // Session management
-  // session: {
-  //   // Function to get any custom headers needed for requests
-  //   getHeaders: () => {
-  //     // Get session ID from localStorage if it exists
-  //     const sessionId = localStorage.getItem("uncrypt-session-id");
-  //     const gameId = localStorage.getItem("uncrypt-game-id");
-
-  //     // Return headers object with session ID if available
-  //     return {
-  //       ...(sessionId ? { "X-Session-ID": sessionId } : {}),
-  //       ...(gameId ? { "X-Game-ID": gameId } : {}),
-  //       Origin: "https://uncryptbe.replit.app", // Match backend origin
-  //       Accept: "application/json",
-  //       "Content-Type": "application/json",
-  //     };
-  //   },
-
-  //   // Function to save session ID from response headers
-  //   saveSession: (headers) => {
-  //     // Check if the response includes a session ID header
-  //     const sessionId = headers.get("X-Session-ID");
-  //     if (sessionId) {
-  //       localStorage.setItem("uncrypt-session-id", sessionId);
-  //       if (config.DEBUG) console.log("Saved session ID:", sessionId);
-  //     }
-  //   },
-  // },
-
-  // Deployment health check - simple function that will return true for root path
+  // Health check function to verify API connection
   healthCheck: async () => {
     try {
       const response = await fetch(`${config.apiUrl}/health`, {
         method: "GET",
-        headers: config.session.getHeaders(),
+        headers: config.session.getHeaders({ publicEndpoint: true }), // Health check is public
         credentials: "include",
         mode: "cors",
       });

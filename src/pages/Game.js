@@ -1,4 +1,4 @@
-// src/components/Game.js
+// src/pages/Game.js
 import React, {
   useReducer,
   useEffect,
@@ -17,11 +17,6 @@ import Settings from "../components/modals/Settings";
 import About from "../components/modals/About";
 import Login from "../pages/Login";
 import Signup from "../pages/Signup";
-// import GameHeader from "./GameHeader";
-// import TextContainer from "./TextContainer";
-// import GameControls from "./GameControls";
-// import GameOver from "./GameOver";
-// import LetterCell from "./LetterCell";
 
 // Debug flag
 const DEBUG = true;
@@ -59,23 +54,6 @@ const SETTINGS_ICON_SVG = (
   >
     <circle cx="12" cy="12" r="3" />
     <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-  </svg>
-);
-
-const LOGIN_ICON_SVG = (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    width="24"
-    height="24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-    <circle cx="12" cy="7" r="4"></circle>
   </svg>
 );
 
@@ -159,13 +137,12 @@ function Game() {
     isAboutOpen,
     openAbout,
     closeAbout,
-    // isMobile,
     isLandscape,
     useMobileMode,
   } = useAppContext();
 
   // State for login modal
-  const { isLoginOpen, setIsLoginOpen, closeLogin } = useAppContext();
+  const { isLoginOpen, closeLogin } = useAppContext();
   const { isSignupOpen, closeSignup } = useAppContext();
 
   // State management with reducer
@@ -193,6 +170,7 @@ function Game() {
     () => [...new Set(encrypted.match(/[A-Z]/g) || [])],
     [encrypted],
   );
+
   const sortedEncryptedLetters = useMemo(
     () =>
       settings.gridSorting === "alphabetical"
@@ -200,10 +178,12 @@ function Game() {
         : encryptedLetters,
     [encryptedLetters, settings.gridSorting],
   );
+
   const usedGuessLetters = useMemo(
     () => Object.values(guessedMappings),
     [guessedMappings],
   );
+
   const gameOverStyle = useMemo(
     () => ({
       position: "fixed",
@@ -224,50 +204,67 @@ function Game() {
     }),
     [settings.theme],
   );
+
   const formattedText = useMemo(() => {
     const enc = useMobileMode ? preventWordBreaks(encrypted) : encrypted;
     const disp = useMobileMode ? preventWordBreaks(display) : display;
     return formatAlternatingLines(enc, disp, true);
   }, [encrypted, display, useMobileMode]);
 
-  // Memoized event handlers
+  // Start Game function - initiates a new game
   const startGame = useCallback(() => {
     if (DEBUG) console.log("Starting new game...");
+
+    // Clear any existing game state from localStorage to avoid conflicts
+    localStorage.removeItem("uncrypt-game-id");
 
     apiService
       .startGame(settings.longText)
       .then((data) => {
         if (DEBUG) console.log("Game data received:", data);
-        if (data.game_id) localStorage.setItem("uncrypt-game-id", data.game_id);
 
+        // Store the game ID in localStorage
+        if (data.game_id) {
+          localStorage.setItem("uncrypt-game-id", data.game_id);
+          if (DEBUG) console.log("Game ID stored:", data.game_id);
+        }
+
+        // Process the encrypted text
         let encryptedText = data.encrypted_paragraph;
         let displayText = data.display;
+
+        // Apply hardcore mode filtering if needed
         if (settings.hardcoreMode) {
           encryptedText = encryptedText.replace(/[^A-Z]/g, "");
           displayText = displayText.replace(/[^A-Z█]/g, "");
         }
+
+        // Calculate letter frequencies
         const calculatedFrequency = {};
         for (const char of encryptedText) {
           if (/[A-Z]/.test(char))
             calculatedFrequency[char] = (calculatedFrequency[char] || 0) + 1;
         }
+
+        // Ensure all letters have a frequency value (even if 0)
         for (let i = 0; i < 26; i++) {
           const letter = String.fromCharCode(65 + i);
           calculatedFrequency[letter] = calculatedFrequency[letter] || 0;
         }
 
+        // Update game state
         dispatch({
           type: "START_GAME",
           payload: {
             encrypted: encryptedText,
             display: displayText,
-            mistakes: data.mistakes,
+            mistakes: data.mistakes || 0,
             correctlyGuessed: [],
             selectedEncrypted: null,
             lastCorrectGuess: null,
             letterFrequency: calculatedFrequency,
             guessedMappings: {},
-            originalLetters: data.original_letters,
+            originalLetters: data.original_letters || [],
             startTime: Date.now(),
           },
         });
@@ -280,6 +277,7 @@ function Game() {
       });
   }, [settings.hardcoreMode, settings.longText]);
 
+  // Handle clicking on encrypted letters
   const handleEncryptedClick = useCallback(
     (letter) => {
       if (!correctlyGuessed.includes(letter)) {
@@ -293,41 +291,69 @@ function Game() {
     [correctlyGuessed, playSound],
   );
 
+  // Submit a guess for letter mapping
   const submitGuess = useCallback(
     (guessedLetter) => {
+      // Get the current game ID from localStorage
       const gameId = localStorage.getItem("uncrypt-game-id");
+
+      if (DEBUG) {
+        console.log(
+          `Submitting guess: ${selectedEncrypted} → ${guessedLetter}`,
+        );
+        console.log(`Current game ID: ${gameId || "None"}`);
+      }
 
       apiService
         .submitGuess(gameId, selectedEncrypted, guessedLetter)
         .then((data) => {
+          // Check for session expired error
           if (data.error && data.error.includes("Session expired")) {
-            if (data.game_id)
+            console.warn("Session expired, starting new game");
+
+            // Store the new game ID if returned
+            if (data.game_id) {
               localStorage.setItem("uncrypt-game-id", data.game_id);
+            }
+
+            // Restart the game
             startGame();
             return;
           }
 
+          // Process display text for hardcore mode if needed
           let displayText = data.display;
-          if (settings.hardcoreMode)
+          if (settings.hardcoreMode && displayText) {
             displayText = displayText.replace(/[^A-Z█]/g, "");
+          }
 
+          // Prepare state update payload
           const payload = {
             display: displayText,
             mistakes: data.mistakes,
-            selectedEncrypted: null,
+            selectedEncrypted: null, // Reset selected letter
           };
+
+          // Handle correctly guessed letters
           if (data.correctly_guessed) {
             payload.correctlyGuessed = data.correctly_guessed;
+
+            // Check if this guess was correct (not previously guessed)
             if (
               data.correctly_guessed.includes(selectedEncrypted) &&
               !correctlyGuessed.includes(selectedEncrypted)
             ) {
+              // This was a new correct guess
               payload.lastCorrectGuess = selectedEncrypted;
               payload.guessedMappings = {
                 ...guessedMappings,
                 [selectedEncrypted]: guessedLetter.toUpperCase(),
               };
+
+              // Play correct sound
               playSound("correct");
+
+              // Clear the correct guess highlight after a delay
               setTimeout(
                 () =>
                   dispatch({
@@ -337,13 +363,16 @@ function Game() {
                 500,
               );
             } else if (data.mistakes > mistakes) {
+              // This was an incorrect guess
               playSound("incorrect");
             }
           }
+
+          // Update the game state
           dispatch({ type: "SUBMIT_GUESS", payload });
         })
         .catch((err) => {
-          console.error("Error guessing:", err);
+          console.error("Error submitting guess:", err);
           alert("Failed to submit guess. Check your connection.");
         });
     },
@@ -358,6 +387,7 @@ function Game() {
     ],
   );
 
+  // Handle clicking on guess letters
   const handleGuessClick = useCallback(
     (guessedLetter) => {
       if (selectedEncrypted) submitGuess(guessedLetter);
@@ -365,33 +395,57 @@ function Game() {
     [selectedEncrypted, submitGuess],
   );
 
+  // Handle getting a hint
   const handleHint = useCallback(() => {
+    // Get the current game ID from localStorage
+    const gameId = localStorage.getItem("uncrypt-game-id");
+
+    if (DEBUG) {
+      console.log(`Requesting hint for game: ${gameId || "None"}`);
+    }
+
     apiService
       .getHint()
       .then((data) => {
+        // Check for session expired error
         if (data.error && data.error.includes("Session expired")) {
-          if (data.game_id)
+          console.warn("Session expired, starting new game");
+
+          // Store the new game ID if returned
+          if (data.game_id) {
             localStorage.setItem("uncrypt-game-id", data.game_id);
+          }
+
+          // Restart the game
           startGame();
           return;
         }
 
+        // Process display text for hardcore mode if needed
         let displayText = data.display;
-        if (settings.hardcoreMode)
+        if (settings.hardcoreMode && displayText) {
           displayText = displayText.replace(/[^A-Z█]/g, "");
+        }
+
+        // Get the new correctly guessed letters
         const newCorrectlyGuessed = data.correctly_guessed || correctlyGuessed;
+
+        // Update the mappings based on new correctly guessed letters
         const newMappings = { ...guessedMappings };
+
+        // For each newly guessed letter, find its corresponding original letter
         newCorrectlyGuessed
           .filter((letter) => !correctlyGuessed.includes(letter))
           .forEach((encryptedLetter) => {
             for (let i = 0; i < encrypted.length; i++) {
-              if (encrypted[i] === encryptedLetter && data.display[i] !== "?") {
+              if (encrypted[i] === encryptedLetter && data.display[i] !== "█") {
                 newMappings[encryptedLetter] = data.display[i];
                 break;
               }
             }
           });
 
+        // Update the game state
         dispatch({
           type: "SET_HINT",
           payload: {
@@ -401,6 +455,8 @@ function Game() {
             guessedMappings: newMappings,
           },
         });
+
+        // Play hint sound
         playSound("hint");
       })
       .catch((err) => {
@@ -438,6 +494,7 @@ function Game() {
   // Effects
   useEffect(() => startGame(), [startGame]);
   useThemeEffect(settings.theme);
+
   useEffect(() => {
     const handleFirstInteraction = () => {
       loadSounds();
@@ -567,9 +624,6 @@ function Game() {
           Hint (Costs 1 Mistake)
         </button>
       </div>
-      {/* <button className="login-icon" onClick={openLogin} aria-label="Login">
-        {LOGIN_ICON_SVG}
-      </button> */}
     </div>
   );
 
@@ -588,6 +642,7 @@ function Game() {
         display={display}
         correctlyGuessed={correctlyGuessed}
         guessedMappings={guessedMappings}
+        hasWon={true}
       />
     ) : mistakes >= maxMistakes ? (
       <div className="game-message" style={gameOverStyle}>

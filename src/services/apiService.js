@@ -166,16 +166,26 @@ const apiService = {
     }
   },
 
-  // Other API methods can be added here
+  // Fixed startGame function for apiService.js
+
   startGame: async (useLongQuotes = false) => {
     const endpoint = useLongQuotes ? "/longstart" : "/start";
 
     try {
+      // Use minimal headers for public endpoints - don't include auth token
+      // This is important because the /start endpoint doesn't require authentication
       const headers = {
-        ...config.session.getHeaders(),
+        Accept: "application/json",
+        // Only include basic content headers, not auth tokens
       };
 
-      logApiOperation("GET", endpoint, { headers });
+      if (config.DEBUG) {
+        console.log(
+          `Starting new game (${useLongQuotes ? "long" : "standard"} quotes)`,
+        );
+        console.log(`Endpoint: ${config.apiUrl}${endpoint}`);
+        console.log(`Headers:`, headers);
+      }
 
       const response = await fetch(`${config.apiUrl}${endpoint}`, {
         method: "GET",
@@ -184,7 +194,9 @@ const apiService = {
         headers: headers,
       });
 
-      logApiOperation("GET", endpoint, { headers }, response);
+      if (config.DEBUG) {
+        console.log(`Start game response status: ${response.status}`);
+      }
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -195,39 +207,65 @@ const apiService = {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
 
-      // Save session if applicable
+      // Save session info from headers if available
       config.session.saveSession(response.headers);
 
       const data = await response.json();
+
+      if (config.DEBUG) {
+        console.log("Game started successfully:", {
+          encrypted_length: data.encrypted_paragraph?.length || 0,
+          game_id: data.game_id || "None",
+        });
+      }
+
+      // Save game ID to localStorage
+      if (data.game_id) {
+        localStorage.setItem("uncrypt-game-id", data.game_id);
+      }
+
       return data;
     } catch (error) {
-      logApiOperation("GET", endpoint, null, null, error);
       console.error("Error starting game:", error);
       throw error;
     }
   },
+  // Updated submitGuess and getHint functions for apiService.js
 
+  // Fix submitGuess function
   submitGuess: async (gameId, encryptedLetter, guessedLetter) => {
     const endpoint = "/guess";
 
     try {
+      // Prepare request body with needed data
       const requestBody = {
         encrypted_letter: encryptedLetter,
         guessed_letter: guessedLetter.toUpperCase(),
       };
 
+      // Only add game_id if provided (important!)
       if (gameId) {
         requestBody.game_id = gameId;
       }
 
+      // Get headers with auth tokens and game ID
       const headers = {
         "Content-Type": "application/json",
         Accept: "application/json",
-        ...config.session.getHeaders(),
+        ...config.session.getHeaders({ publicEndpoint: false }), // Standard private endpoint
       };
 
-      logApiOperation("POST", endpoint, { requestBody, headers });
+      // Add debug logging
+      if (config.DEBUG) {
+        console.log(`Submitting guess: ${encryptedLetter} → ${guessedLetter}`);
+        console.log(`Game ID: ${gameId || "None"}`);
+        console.log(`Headers:`, {
+          ...headers,
+          Authorization: headers.Authorization ? "[PRESENT]" : "[ABSENT]",
+        });
+      }
 
+      // Make the request with credentials
       const response = await fetch(`${config.apiUrl}${endpoint}`, {
         method: "POST",
         credentials: "include",
@@ -236,74 +274,130 @@ const apiService = {
         body: JSON.stringify(requestBody),
       });
 
-      logApiOperation("POST", endpoint, { requestBody }, response);
-
       if (!response.ok) {
         const errorText = await response.text();
         console.error(
-          `HTTP error! Status: ${response.status}, Response:`,
+          `HTTP error in submitGuess! Status: ${response.status}, Response:`,
           errorText,
         );
-        throw new Error(`HTTP error! Status: ${response.status}`);
+
+        // Check if it's a session expiration error
+        if (errorText.includes("Session expired") || response.status === 401) {
+          return {
+            error: "Session expired, a new game was started",
+            display: "",
+            mistakes: 0,
+            correctly_guessed: [],
+          };
+        }
+
+        throw new Error(
+          `HTTP error in submitGuess! Status: ${response.status}`,
+        );
       }
 
-      // Save session if applicable
+      // Save any session data from response headers
       config.session.saveSession(response.headers);
 
+      // Process and return the response
       const data = await response.json();
+
+      if (config.DEBUG) {
+        console.log(`Guess response:`, data);
+      }
+
       return data;
     } catch (error) {
-      logApiOperation(
-        "POST",
-        endpoint,
-        { encryptedLetter, guessedLetter, gameId },
-        null,
-        error,
-      );
       console.error("Error submitting guess:", error);
-      throw error;
+      // Return a structured error to handle in the UI
+      return {
+        error: error.message || "Failed to submit guess",
+        display: "",
+        mistakes: 0,
+        correctly_guessed: [],
+      };
     }
   },
+
+  // Fix getHint function
   getHint: async () => {
     const endpoint = "/hint";
 
     try {
+      // Get gameId from localStorage
+      const gameId = localStorage.getItem("uncrypt-game-id");
+
+      // Prepare request body
+      const requestBody = {};
+      if (gameId) {
+        requestBody.game_id = gameId;
+      }
+
+      // Get headers with auth tokens
       const headers = {
-        Accept: "application/json",
         "Content-Type": "application/json",
+        Accept: "application/json",
         ...config.session.getHeaders(),
       };
 
-      logApiOperation("POST", endpoint, { headers });
+      // Debug logging
+      if (config.DEBUG) {
+        console.log(`Requesting hint for game: ${gameId || "None"}`);
+        console.log(`Headers:`, {
+          ...headers,
+          Authorization: headers.Authorization ? "[PRESENT]" : "[ABSENT]",
+        });
+      }
 
+      // Make the request
       const response = await fetch(`${config.apiUrl}${endpoint}`, {
         method: "POST",
         credentials: "include",
         mode: "cors",
         headers: headers,
-        body: JSON.stringify({}),
+        body: JSON.stringify(requestBody),
       });
-
-      logApiOperation("POST", endpoint, {}, response);
 
       if (!response.ok) {
         const errorText = await response.text();
         console.error(
-          `HTTP error! Status: ${response.status}, Response:`,
+          `HTTP error in getHint! Status: ${response.status}, Response:`,
           errorText,
         );
-        throw new Error(`HTTP error! Status: ${response.status}`);
+
+        // Check if it's a session expiration error
+        if (errorText.includes("Session expired") || response.status === 401) {
+          return {
+            error: "Session expired, a new game was started",
+            display: "",
+            mistakes: 0,
+            correctly_guessed: [],
+          };
+        }
+
+        throw new Error(`HTTP error in getHint! Status: ${response.status}`);
       }
 
-      // Save session if applicable
+      // Save any session data from response headers
       config.session.saveSession(response.headers);
 
+      // Process and return the response
       const data = await response.json();
+
+      if (config.DEBUG) {
+        console.log(`Hint response:`, data);
+      }
+
       return data;
     } catch (error) {
-      logApiOperation("POST", endpoint, {}, null, error);
       console.error("Error getting hint:", error);
-      throw error;
+      // Return a structured error to handle in the UI
+      return {
+        error: error.message || "Failed to get hint",
+        display: "",
+        mistakes: 0,
+        correctly_guessed: [],
+      };
     }
   },
   getAttribution: async () => {
