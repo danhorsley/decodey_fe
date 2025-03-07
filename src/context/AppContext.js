@@ -145,9 +145,10 @@ export const AppProvider = ({ children }) => {
 
     try {
       // Use apiService instead of direct fetch
-      const data = await apiService.login(
-        credentials.username,
-        credentials.password,
+      const data = await apiService.loginapi(
+        credentials,
+        // credentials.username,
+        // credentials.password,
       );
 
       // Save token if it exists in the response
@@ -162,7 +163,7 @@ export const AppProvider = ({ children }) => {
         authLoading: false,
         authError: null,
       });
-
+      console.log("auth state triggered");
       return { success: true };
     } catch (error) {
       console.error("Login error:", error);

@@ -2,11 +2,11 @@ import React, { useState } from "react";
 import "../Styles/About.css";
 import "../Styles/Login.css";
 import { useAppContext } from "../context/AppContext";
-import apiService from "../services/apiService";
+// import apiService from "../services/apiService";
 import config from "../config";
 
 function Login({ isOpen, onClose }) {
-  const { settings, openSignup } = useAppContext();
+  const { settings, openSignup, login } = useAppContext();
   const { isLoginOpen, isSignupOpen } = useAppContext();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -36,7 +36,7 @@ function Login({ isOpen, onClose }) {
     setError("");
 
     try {
-      const result = await apiService.loginapi({ username, password });
+      const result = await login({ username, password });
       if (result.success) {
         console.log("Login successful");
         onClose();

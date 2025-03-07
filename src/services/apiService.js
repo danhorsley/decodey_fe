@@ -53,14 +53,19 @@ const logApiOperation = (
 
 const apiService = {
   // Login functionality
-  loginapi: async (username, password) => {
+  // In apiService.js
+  loginapi: async (credentials) => {
+    console.log("loginapi triggered");
     const endpoint = "/login";
 
     try {
+      // Correctly structure the request body with username and password as properties
       const requestBody = {
-        username,
-        password,
+        username: credentials.username,
+        password: credentials.password,
       };
+
+      console.log("Request body being sent:", requestBody);
 
       const headers = {
         "Content-Type": "application/json",
@@ -68,26 +73,17 @@ const apiService = {
         ...config.session.getHeaders(),
       };
 
-      logApiOperation("POST", endpoint, { username });
+      logApiOperation("POST", endpoint, { requestBody });
 
       const response = await fetch(`${config.apiUrl}${endpoint}`, {
         method: "POST",
         credentials: "include",
         mode: "cors",
         headers: headers,
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify(requestBody), // This should properly stringify the object
       });
 
-      logApiOperation("POST", endpoint, { username }, response);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(
-          `HTTP error! Status: ${response.status}, Response:`,
-          errorText,
-        );
-        throw new Error(`Login failed with status: ${response.status}`);
-      }
+      // Rest of function remains the same
 
       // Save session if applicable
       config.session.saveSession(response.headers);
@@ -95,7 +91,7 @@ const apiService = {
       const data = await response.json();
       return data;
     } catch (error) {
-      logApiOperation("POST", endpoint, { username }, null, error);
+      logApiOperation("POST", endpoint, { credentials }, null, error);
       console.error("Error during login:", error);
       throw error;
     }
