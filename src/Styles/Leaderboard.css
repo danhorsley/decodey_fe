@@ -1,10 +1,10 @@
 .leaderboard-container {
-  max-width: 1000px;
-  margin: 30px auto;
-  padding: 25px;
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 20px;
   background-color: white;
   border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   font-family: 'Courier New', Courier, monospace;
 }
 
@@ -103,6 +103,7 @@
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  border-collapse: collapse;
 }
 
 .leaderboard-header-row {
@@ -196,12 +197,12 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 15px;
   margin-top: 20px;
+  gap: 15px;
 }
 
-.pagination button {
-  padding: 8px 15px;
+.pagination-button {
+  padding: 8px 16px;
   background-color: #007bff;
   color: white;
   border: none;
@@ -355,4 +356,41 @@
     bottom: 15px;
     left: 15px;
   }
+}
+
+/* Add these styles to your src/Styles/Leaderboard.css file */
+
+/* Back to Game button on the leaderboard screen */
+.back-to-game-button {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  /* Change from 'left: 20px' to 'right: 20px' */
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.back-to-game-button:hover {
+  background-color: #0069d9;
+  transform: translateY(-1px);
+}
+
+body.dark-theme .back-to-game-button {
+  background-color: #4cc9f0;
+}
+
+body.dark-theme .back-to-game-button:hover {
+  background-color: #3db8df;
+}
+
+/* Make sure leaderboard container has positioning context for absolute positioning */
+.leaderboard-container {
+  position: relative;
 }

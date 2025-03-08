@@ -465,8 +465,8 @@ const apiService = {
     }
   },
 
-  getLeaderboard: async (page = 1, limit = 10) => {
-    const endpoint = `/leaderboard?page=${page}&limit=${limit}`;
+  getLeaderboard: async (period = "all-time", page = 1, per_page = 20) => {
+    const endpoint = `/leaderboard?period=${period}&page=${page}&per_page=${per_page}`;
 
     try {
       const headers = {
@@ -483,7 +483,7 @@ const apiService = {
         headers: headers,
       });
 
-      logApiOperation("GET", endpoint, { page, limit }, response);
+      logApiOperation("GET", endpoint, { period, page }, response);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -500,7 +500,7 @@ const apiService = {
       const data = await response.json();
       return data;
     } catch (error) {
-      logApiOperation("GET", endpoint, { page, limit }, null, error);
+      logApiOperation("GET", endpoint, { period, page }, null, error);
       console.error("Error fetching leaderboard:", error);
       throw error;
     }

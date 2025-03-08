@@ -147,6 +147,7 @@ function Game() {
   const { isLoginOpen, closeLogin } = useAppContext();
   const { isSignupOpen, closeSignup } = useAppContext();
   const [attributionData, setAttributionData] = useState(null);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
 
   // State management with reducer
   const [state, dispatch] = useReducer(reducer, initialState);
@@ -744,7 +745,26 @@ function Game() {
       </div>
     );
   }
+  <div
+    className={`App-container ${settings.theme === "dark" ? "dark-theme" : ""}`}
+  >
+    {/* ... existing content ... */}
 
+    {/* Leaderboard button */}
+    <button
+      className="leaderboard-button"
+      onClick={() => setShowLeaderboard(true)}
+    >
+      Leaderboard
+    </button>
+
+    {/* Render Leaderboard component when showLeaderboard is true */}
+    {showLeaderboard && (
+      <div className="modal-overlay">
+        <Leaderboard onClose={() => setShowLeaderboard(false)} />
+      </div>
+    )}
+  </div>;
   if (useMobileMode) {
     return (
       <div className="App-container">

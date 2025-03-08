@@ -1,144 +1,156 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+// src/components/Leaderboard.js
+import React, { useState, useEffect } from "react";
 import { useAppContext } from "../context/AppContext";
+import apiService from "../services/apiService";
 import "../Styles/Leaderboard.css";
 
-function Leaderboard() {
-  const navigate = useNavigate();
-  const { 
-    leaderboardData, 
-    fetchLeaderboard, 
-    settings,
-    isAuthenticated,
-    user 
-  } = useAppContext();
+const Leaderboard = ({ onClose }) => {
+  const { isAuthenticated } = useAppContext();
+  const [activeTab, setActiveTab] = useState("all-time");
+  const [leaderboardData, setLeaderboardData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
 
-  const [activeTab, setActiveTab] = useState("all"); // "all", "daily", "weekly", "monthly"
-
-  // Fetch leaderboard data on component mount
   useEffect(() => {
-    fetchLeaderboard(1, 20);
-  }, [fetchLeaderboard]);
+    fetchLeaderboardData();
+  }, [activeTab, page]);
 
-  // Handle page navigation
-  const handlePageChange = (page) => {
-    fetchLeaderboard(page, 20);
+  const fetchLeaderboardData = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await apiService.getLeaderboard(activeTab, page);
+      setLeaderboardData(response);
+    } catch (err) {
+      console.error("Error fetching leaderboard:", err);
+      setError("Failed to load leaderboard data. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  // Handle going back to the game
-  const handleBackToGame = () => {
-    navigate("/");
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setPage(1); // Reset to first page when changing tabs
   };
 
-  // Filter entries by time period (if needed)
-  const filteredEntries = leaderboardData.entries;
-
-  return (
-    <div className={`leaderboard-container ${settings.theme === "dark" ? "dark-theme" : ""}`}>
-      <div className="leaderboard-header">
-        <h1>Leaderboard</h1>
-        <button className="back-button" onClick={handleBackToGame}>
-          Back to Game
-        </button>
-      </div>
-
-      <div className="tabs">
-        <button 
-          className={`tab ${activeTab === "all" ? "active" : ""}`}
-          onClick={() => setActiveTab("all")}
+  const renderTabs = () => (
+    <div className="leaderboard-tabs">
+      <button
+        className={`tab-button ${activeTab === "all-time" ? "active" : ""}`}
+        onClick={() => handleTabChange("all-time")}
+      >
+        All Time
+      </button>
+      <button
+        className={`tab-button ${activeTab === "weekly" ? "active" : ""}`}
+        onClick={() => handleTabChange("weekly")}
+      >
+        Weekly
+      </button>
+      {isAuthenticated && (
+        <button
+          className={`tab-button ${activeTab === "personal" ? "active" : ""}`}
+          onClick={() => handleTabChange("personal")}
         >
-          All Time
+          Personal
         </button>
-        <button 
-          className={`tab ${activeTab === "monthly" ? "active" : ""}`}
-          onClick={() => setActiveTab("monthly")}
-        >
-          Monthly
-        </button>
-        <button 
-          className={`tab ${activeTab === "weekly" ? "active" : ""}`}
-          onClick={() => setActiveTab("weekly")}
-        >
-          Weekly
-        </button>
-        <button 
-          className={`tab ${activeTab === "daily" ? "active" : ""}`}
-          onClick={() => setActiveTab("daily")}
-        >
-          Daily
-        </button>
-      </div>
-
-      {leaderboardData.loading ? (
-        <div className="loading">Loading leaderboard data...</div>
-      ) : leaderboardData.error ? (
-        <div className="error-message">{leaderboardData.error}</div>
-      ) : (
-        <>
-          <div className="leaderboard-table">
-            <div className="leaderboard-header-row">
-              <div className="rank-column">Rank</div>
-              <div className="player-column">Player</div>
-              <div className="score-column">Score</div>
-              <div className="mistakes-column">Mistakes</div>
-              <div className="difficulty-column">Difficulty</div>
-              <div className="time-column">Time</div>
-            </div>
-
-            {filteredEntries.length === 0 ? (
-              <div className="no-data">No scores available.</div>
-            ) : (
-              filteredEntries.map((entry, index) => (
-                <div 
-                  key={entry.id || index} 
-                  className={`leaderboard-row ${user && entry.user_id === user.user_id ? "highlight-own" : ""}`}
-                >
-                  <div className="rank-column">
-                    {leaderboardData.currentPage === 1 
-                      ? index + 1 
-                      : (leaderboardData.currentPage - 1) * 20 + index + 1}
-                  </div>
-                  <div className="player-column">{entry.username}</div>
-                  <div className="score-column">{entry.score}</div>
-                  <div className="mistakes-column">{entry.mistakes}</div>
-                  <div className="difficulty-column">{entry.difficulty}</div>
-                  <div className="time-column">
-                    {Math.floor(entry.time_taken / 60)}:{String(entry.time_taken % 60).padStart(2, '0')}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-
-          {/* Pagination */}
-          {leaderboardData.totalPages > 1 && (
-            <div className="pagination">
-              <button 
-                onClick={() => handlePageChange(leaderboardData.currentPage - 1)}
-                disabled={leaderboardData.currentPage === 1}
-              >
-                Previous
-              </button>
-              <span>Page {leaderboardData.currentPage} of {leaderboardData.totalPages}</span>
-              <button 
-                onClick={() => handlePageChange(leaderboardData.currentPage + 1)}
-                disabled={leaderboardData.currentPage === leaderboardData.totalPages}
-              >
-                Next
-              </button>
-            </div>
-          )}
-        </>
-      )}
-
-      {!isAuthenticated && (
-        <div className="login-prompt">
-          <p>Login to see your ranking and have your scores counted!</p>
-          <button className="login-button" onClick={() => navigate("/")}>Sign In</button>
-        </div>
       )}
     </div>
   );
-}
+
+  const renderLeaderboardTable = () => {
+    if (!leaderboardData || !leaderboardData.entries) return null;
+
+    return (
+      <div className="leaderboard-table-container">
+        <table className="leaderboard-table">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Player</th>
+              <th>Score</th>
+              <th>Games</th>
+              <th>Avg/Game</th>
+            </tr>
+          </thead>
+          <tbody>
+            {leaderboardData.entries.map((entry) => (
+              <tr
+                key={entry.user_id}
+                className={entry.is_current_user ? "current-user-row" : ""}
+              >
+                <td>#{entry.rank}</td>
+                <td>{entry.username}</td>
+                <td>{entry.score.toLocaleString()}</td>
+                <td>{entry.games_played}</td>
+                <td>{entry.avg_score.toLocaleString()}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        {leaderboardData.user_rank && leaderboardData.user_rank > 20 && (
+          <div className="current-user-position">
+            <p>Your position: #{leaderboardData.user_rank}</p>
+          </div>
+        )}
+
+        {renderPagination()}
+      </div>
+    );
+  };
+
+  const renderPagination = () => {
+    if (!leaderboardData) return null;
+
+    const { page, total_pages } = leaderboardData;
+
+    return (
+      <div className="pagination">
+        <button
+          onClick={() => setPage(page - 1)}
+          disabled={page <= 1}
+          className="pagination-button"
+        >
+          Previous
+        </button>
+        <span className="page-info">
+          Page {page} of {total_pages}
+        </span>
+        <button
+          onClick={() => setPage(page + 1)}
+          disabled={page >= total_pages}
+          className="pagination-button"
+        >
+          Next
+        </button>
+      </div>
+    );
+  };
+
+  return (
+    <div className="leaderboard-container">
+      <h2 className="leaderboard-title">Leaderboard</h2>
+
+      {/* Back to Game button */}
+      <button className="back-to-game-button" onClick={onClose}>
+        Back to Game
+      </button>
+
+      {renderTabs()}
+
+      {isLoading ? (
+        <div className="loading-spinner">Loading...</div>
+      ) : error ? (
+        <div className="error-message">{error}</div>
+      ) : (
+        renderLeaderboardTable()
+      )}
+    </div>
+  );
+};
 
 export default Leaderboard;
