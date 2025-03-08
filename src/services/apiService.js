@@ -464,29 +464,18 @@ const apiService = {
       throw error;
     }
   },
+  // In apiService.js - modify the recordScore function to handle the response better
   recordScore: async (gameData) => {
     const endpoint = "/record_score";
 
     try {
       const gameId = localStorage.getItem("uncrypt-game-id");
-      const token = localStorage.getItem("uncrypt-token");
-      const userId = localStorage.getItem("uncrypt-user-id");
-
-      // If no authentication is available, return early with proper error
-      if (!token && !userId) {
-        console.warn("Cannot record score: No authentication token available");
-        return {
-          success: false,
-          error: "Authentication required",
-          authRequired: true,
-        };
-      }
 
       const requestBody = {
         game_id: gameId,
         score: gameData.score,
         mistakes: gameData.mistakes,
-        time_taken: gameData.timeTaken, // in seconds
+        time_taken: gameData.timeTaken,
         difficulty: gameData.difficulty,
       };
 
@@ -496,19 +485,7 @@ const apiService = {
         ...config.session.getHeaders(),
       };
 
-      // Add debugging info
-      console.log("Attempting to record score with auth:", {
-        hasToken: !!token,
-        hasUserId: !!userId,
-        headers: {
-          ...headers,
-          Authorization: headers.Authorization
-            ? "Bearer [REDACTED]"
-            : undefined,
-        },
-      });
-
-      logApiOperation("POST", endpoint, { requestBody });
+      console.log("Sending score record request:", requestBody);
 
       const response = await fetch(`${config.apiUrl}${endpoint}`, {
         method: "POST",
@@ -518,31 +495,31 @@ const apiService = {
         body: JSON.stringify(requestBody),
       });
 
-      logApiOperation("POST", endpoint, requestBody, response);
+      console.log("Score API response status:", response.status);
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error(`Error recording score: ${response.status}`, errorData);
-
-        // Check if the error is due to authentication
-        if (response.status === 401 || errorData.code === "auth_required") {
-          return {
-            success: false,
-            error: "Authentication required",
-            authRequired: true,
-          };
+      // For any successful response (200, 201, etc.)
+      if (response.ok) {
+        try {
+          const data = await response.json();
+          console.log("Score recording success:", data);
+          return { ...data, success: true };
+        } catch (e) {
+          // If response can't be parsed as JSON, still return success
+          console.log(
+            "Response couldn't be parsed as JSON but status was success",
+          );
+          return { success: true, message: "Score recorded" };
         }
-
-        throw new Error(`Failed to record score: ${response.status}`);
       }
 
-      // Save session if applicable
-      config.session.saveSession(response.headers);
-
-      const data = await response.json();
-      return data;
+      // Handle error responses
+      const errorText = await response.text();
+      console.error(
+        `HTTP error! Status: ${response.status}, Response:`,
+        errorText,
+      );
+      throw new Error(`Failed to record score: ${response.status}`);
     } catch (error) {
-      logApiOperation("POST", endpoint, gameData, null, error);
       console.error("Error recording score:", error);
       throw error;
     }

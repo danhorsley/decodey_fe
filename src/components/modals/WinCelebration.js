@@ -232,10 +232,11 @@ const WinCelebration = ({
   }, []);
 
   // Record score to backend
+
   useEffect(() => {
     const recordGameScore = async () => {
       // Only proceed if user has won and hasn't attempted to record score yet
-      if (hasWon && !scoreStatus.attempted) {
+      if (hasWon && !scoreStatus.attempted && isAuthenticated) {
         setScoreStatus((prev) => ({ ...prev, attempted: true }));
 
         try {
@@ -250,20 +251,21 @@ const WinCelebration = ({
             difficulty: getDifficultyFromMaxMistakes(maxMistakes),
           };
 
-          const result = await apiService.recordScore(gameData);
+          console.log("Recording score with data:", gameData);
 
-          if (result.success) {
-            setScoreStatus((prev) => ({ ...prev, recorded: true }));
-            console.log("Score recorded successfully:", result);
-          } else if (result.authRequired) {
-            // Score couldn't be recorded because user is not authenticated
+          const result = await apiService.recordScore(gameData);
+          console.log("Score recording response:", result);
+
+          // Check for success based on both 200 and 201 status codes
+          if (result.success || result.score_id || result.message) {
             setScoreStatus((prev) => ({
               ...prev,
-              error: "Login required to record your score",
-              authRequired: true,
+              recorded: true,
+              message: result.message || "Score recorded successfully!",
             }));
+            console.log("Score recorded successfully:", result);
           } else {
-            throw new Error(result.error || "Failed to record score");
+            throw new Error("Unexpected response format");
           }
         } catch (error) {
           console.error("Failed to record score:", error);
@@ -275,10 +277,7 @@ const WinCelebration = ({
       }
     };
 
-    // Only attempt to record score if this is a win celebration
-    if (hasWon) {
-      recordGameScore();
-    }
+    recordGameScore();
   }, [
     hasWon,
     scoreStatus.attempted,
