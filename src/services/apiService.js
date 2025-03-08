@@ -464,6 +464,47 @@ const apiService = {
       throw error;
     }
   },
+
+  getLeaderboard: async (page = 1, limit = 10) => {
+    const endpoint = `/leaderboard?page=${page}&limit=${limit}`;
+
+    try {
+      const headers = {
+        Accept: "application/json",
+        ...config.session.getHeaders(),
+      };
+
+      logApiOperation("GET", endpoint, { headers });
+
+      const response = await fetch(`${config.apiUrl}${endpoint}`, {
+        method: "GET",
+        credentials: "include",
+        mode: "cors",
+        headers: headers,
+      });
+
+      logApiOperation("GET", endpoint, { page, limit }, response);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(
+          `HTTP error! Status: ${response.status}, Response:`,
+          errorText,
+        );
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      // Save session if applicable
+      config.session.saveSession(response.headers);
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      logApiOperation("GET", endpoint, { page, limit }, null, error);
+      console.error("Error fetching leaderboard:", error);
+      throw error;
+    }
+  },
   // In apiService.js - modify the recordScore function to handle the response better
   recordScore: async (gameData) => {
     const endpoint = "/record_score";

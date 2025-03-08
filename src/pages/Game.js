@@ -6,6 +6,7 @@ import React, {
   useMemo,
   useState,
 } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAppContext } from "../context/AppContext";
 import useSound from "../services/SoundManager";
 import useKeyboardInput from "../hooks/KeyboardController";
@@ -140,7 +141,7 @@ function Game() {
     isLandscape,
     useMobileMode,
   } = useAppContext();
-
+  const navigate = useNavigate();
   // State for login modal
   const { isLoginOpen, closeLogin } = useAppContext();
   const { isSignupOpen, closeSignup } = useAppContext();
@@ -665,6 +666,14 @@ function Game() {
           className="hint-button"
         >
           Hint (Costs 1 Mistake)
+        </button>
+
+        {/* Add this leaderboard button */}
+        <button
+          onClick={() => navigate("/leaderboard")}
+          className="leaderboard-button"
+        >
+          Leaderboard
         </button>
       </div>
     </div>

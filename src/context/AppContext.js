@@ -325,6 +325,42 @@ export const AppProvider = ({ children }) => {
       credentials: "include",
     }).catch((err) => console.error("Logout error:", err));
   };
+  const [leaderboardData, setLeaderboardData] = useState({
+    entries: [],
+    loading: false,
+    error: null,
+    currentPage: 1,
+    totalPages: 1,
+  });
+
+  // Add this function to handle fetching leaderboard data
+  const fetchLeaderboard = useCallback(async (page = 1, limit = 10) => {
+    setLeaderboardData((prev) => ({ ...prev, loading: true, error: null }));
+
+    try {
+      const data = await apiService.getLeaderboard(page, limit);
+
+      setLeaderboardData({
+        entries: data.scores || [],
+        loading: false,
+        error: null,
+        currentPage: page,
+        totalPages: data.totalPages || 1,
+      });
+
+      return data;
+    } catch (error) {
+      console.error("Error fetching leaderboard:", error);
+
+      setLeaderboardData((prev) => ({
+        ...prev,
+        loading: false,
+        error: "Failed to load leaderboard data",
+      }));
+
+      return null;
+    }
+  }, []);
 
   // ==== SETTINGS METHODS ====
   // Update settings

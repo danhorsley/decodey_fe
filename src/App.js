@@ -8,6 +8,7 @@ import {
 import "./Styles/App.css";
 import "./Styles/Mobile.css";
 import Game from "./pages/Game";
+import Leaderboard from "./pages/Leaderboard";
 import WinCelebrationTest from "./pages/WinCelebrationTest";
 import AccountButtonWrapper from "./components/AccountButtonWrapper";
 
@@ -16,6 +17,8 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Game />} />
+        <Route path="/leaderboard" element={<Leaderboard />} />{" "}
+        {/* Add this route */}
         <Route path="/wctest" element={<WinCelebrationTest />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
