@@ -537,6 +537,8 @@ export const AppProvider = ({ children }) => {
     screenWidth,
     screenHeight,
     useMobileMode,
+    leaderboardData,
+    fetchLeaderboard,
     // token,
   };
 

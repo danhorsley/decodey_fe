@@ -18,6 +18,7 @@ import Settings from "../components/modals/Settings";
 import About from "../components/modals/About";
 import Login from "../pages/Login";
 import Signup from "../pages/Signup";
+import { FaTrophy } from "react-icons/fa";
 
 // Debug flag
 const DEBUG = true;
@@ -667,18 +668,18 @@ function Game() {
         >
           Hint (Costs 1 Mistake)
         </button>
-
-        {/* Add this leaderboard button */}
-        <button
-          onClick={() => navigate("/leaderboard")}
-          className="leaderboard-button"
-        >
-          Leaderboard
-        </button>
       </div>
     </div>
   );
-
+  const renderLeaderboardButton = () => (
+    <button
+      className="leaderboard-button-fixed"
+      onClick={() => navigate("/leaderboard")}
+      aria-label="Leaderboard"
+    >
+      <FaTrophy size={16} /> Leaderboard
+    </button>
+  );
   const renderGameOverCelebration = () =>
     completionTime ? (
       <WinCelebration
@@ -773,6 +774,7 @@ function Game() {
       {renderGrids()}
       {renderControls()}
       {renderGameOverCelebration()}
+      {renderLeaderboardButton()}
     </div>
   );
 }
