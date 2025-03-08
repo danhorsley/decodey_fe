@@ -144,6 +144,7 @@ function Game() {
   // State for login modal
   const { isLoginOpen, closeLogin } = useAppContext();
   const { isSignupOpen, closeSignup } = useAppContext();
+  const [attributionData, setAttributionData] = useState(null);
 
   // State management with reducer
   const [state, dispatch] = useReducer(reducer, initialState);
@@ -567,6 +568,21 @@ function Game() {
     playSound,
   ]);
 
+  useEffect(() => {
+    if (completionTime && !attributionData) {
+      // Game is won, fetch attribution data
+      apiService
+        .getAttribution()
+        .then((data) => {
+          console.log("Attribution data fetched:", data);
+          setAttributionData(data);
+        })
+        .catch((error) => {
+          console.error("Error fetching attribution:", error);
+        });
+    }
+  }, [completionTime, attributionData]);
+
   // Settings handler
   const handleSaveSettings = useCallback(
     (newSettings) => {
@@ -669,6 +685,7 @@ function Game() {
         display={display}
         correctlyGuessed={correctlyGuessed}
         guessedMappings={guessedMappings}
+        attribution={attributionData}
         hasWon={true}
       />
     ) : mistakes >= maxMistakes ? (
