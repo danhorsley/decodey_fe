@@ -13,7 +13,7 @@ const Leaderboard = ({ onClose }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
-  
+
   // Function to handle going back to the game
   const handleBackToGame = () => {
     if (typeof onClose === 'function') {
@@ -144,6 +144,49 @@ const Leaderboard = ({ onClose }) => {
     );
   };
 
+  const renderPersonalLeaderboard = () => {
+    if (!leaderboardData || !leaderboardData.personal_entries) {
+      if (!isAuthenticated) {
+        return (
+          <div className="login-prompt">
+            <p>You need to login to see your personal scores.</p>
+            <button className="login-button" onClick={openLogin}>
+              Login
+            </button>
+          </div>
+        );
+      }
+      return null;
+    }
+
+    return (
+      <div className="leaderboard-table-container">
+        <div className="leaderboard-table" style={{ gridTemplateColumns: "20% 20% 15% 20% 25%" }}>
+          <div className="leaderboard-header-row">
+            <div className="leaderboard-header-cell">Date</div>
+            <div className="leaderboard-header-cell">Score</div>
+            <div className="leaderboard-header-cell">Mistakes</div>
+            <div className="leaderboard-header-cell">Difficulty</div>
+            <div className="leaderboard-header-cell">Time</div>
+          </div>
+
+          {leaderboardData.personal_entries.map((entry, index) => (
+            <div key={index} className="leaderboard-row">
+              <div className="leaderboard-cell">{new Date(entry.timestamp).toLocaleDateString()}</div>
+              <div className="leaderboard-cell score-column">{entry.score.toLocaleString()}</div>
+              <div className="leaderboard-cell">{entry.mistakes}</div>
+              <div className="leaderboard-cell">
+                {entry.difficulty.charAt(0).toUpperCase() + entry.difficulty.slice(1)}
+              </div>
+              <div className="leaderboard-cell">{Math.floor(entry.time_seconds / 60)}m {entry.time_seconds % 60}s</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+
   return (
     <div className="leaderboard-container">
       <h2 className="leaderboard-title">Leaderboard</h2>
@@ -159,6 +202,8 @@ const Leaderboard = ({ onClose }) => {
         <div className="loading-spinner">Loading...</div>
       ) : error ? (
         <div className="error-message">{error}</div>
+      ) : activeTab === 'personal' ? (
+        renderPersonalLeaderboard()
       ) : (
         renderLeaderboardTable()
       )}
