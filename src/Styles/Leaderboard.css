@@ -6,6 +6,7 @@
   border-radius: 10px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   font-family: 'Courier New', Courier, monospace;
+  position: relative;
 }
 
 .dark-theme.leaderboard-container {
@@ -163,7 +164,7 @@
   .leaderboard-table {
     grid-template-columns: 15% 30% 20% auto;
   }
-  
+
   .difficulty-column, .time-column {
     display: none;
   }
@@ -173,7 +174,7 @@
   .leaderboard-table {
     grid-template-columns: 20% 50% 30%;
   }
-  
+
   .mistakes-column {
     display: none;
   }
@@ -404,4 +405,18 @@ body.dark-theme .back-to-game-button:hover {
 /* Make sure leaderboard container has positioning context for absolute positioning */
 .leaderboard-container {
   position: relative;
+}
+
+/* Add styles for the new grid */
+.personal-leaderboard-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr); /* Adjust as needed */
+  gap: 10px; /* Adjust as needed */
+  width: 100%;
+}
+
+.personal-leaderboard-grid > div {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: left;
 }
