@@ -1,16 +1,29 @@
 // src/components/Leaderboard.js
 import React, { useState, useEffect } from "react";
 import { useAppContext } from "../context/AppContext";
+import { useNavigate } from "react-router-dom";
 import apiService from "../services/apiService";
 import "../Styles/Leaderboard.css";
 
 const Leaderboard = ({ onClose }) => {
+  const navigate = useNavigate();
   const { isAuthenticated } = useAppContext();
   const [activeTab, setActiveTab] = useState("all-time");
   const [leaderboardData, setLeaderboardData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
+  
+  // Function to handle going back to the game
+  const handleBackToGame = () => {
+    if (typeof onClose === 'function') {
+      // If used as a modal with onClose prop
+      onClose();
+    } else {
+      // If used as a route, navigate to home
+      navigate('/');
+    }
+  };
 
   useEffect(() => {
     fetchLeaderboardData();
@@ -136,7 +149,7 @@ const Leaderboard = ({ onClose }) => {
       <h2 className="leaderboard-title">Leaderboard</h2>
 
       {/* Back to Game button */}
-      <button className="back-to-game-button" onClick={onClose}>
+      <button className="back-to-game-button" onClick={handleBackToGame}>
         Back to Game
       </button>
 
