@@ -716,3 +716,131 @@
       padding: 10px;
     }
   }
+
+  /* Add these styles to your Leaderboard.css file */
+
+  /* Streak controls container */
+  .streak-controls {
+    margin: 15px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+
+  /* Streak type and period selectors */
+  .streak-type-selector,
+  .streak-period-selector {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 10px;
+  }
+
+  /* Streak selector buttons */
+  .streak-type-button,
+  .streak-period-button {
+    padding: 8px 16px;
+    background: #f0f0f0;
+    color: #333;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: "Courier New", Courier, monospace;
+    transition: all 0.2s ease;
+  }
+
+  .streak-type-button:hover,
+  .streak-period-button:hover {
+    background: #e0e0e0;
+  }
+
+  .streak-type-button.active,
+  .streak-period-button.active {
+    background: rgb(0, 66, 170);
+    color: white;
+  }
+
+  /* Dark theme */
+  .dark-theme .streak-type-button,
+  .dark-theme .streak-period-button {
+    background: #444;
+    color: #f0f0f0;
+  }
+
+  .dark-theme .streak-type-button:hover,
+  .dark-theme .streak-period-button:hover {
+    background: #555;
+  }
+
+  .dark-theme .streak-type-button.active,
+  .dark-theme .streak-period-button.active {
+    background: #4cc9f0;
+    color: #222;
+  }
+
+  /* Streak heading */
+  .streak-heading {
+    text-align: center;
+    margin: 10px 0 20px;
+    font-size: 1.2rem;
+    color: #333;
+  }
+
+  .dark-theme .streak-heading {
+    color: #4cc9f0;
+  }
+
+  /* For 3 or 4 column grid in streak table */
+  .streak-table {
+    grid-template-columns: 1fr 2fr 1fr;
+  }
+
+  .streak-table.with-date {
+    grid-template-columns: 1fr 2fr 1fr 1fr;
+  }
+
+  /* Badge for impressive streaks */
+  .streak-badge {
+    display: inline-block;
+    margin-left: 10px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    background-color: #ffc107;
+    color: #333;
+  }
+
+  .streak-badge.gold {
+    background-color: #ffc107;
+  }
+
+  .streak-badge.silver {
+    background-color: #b0b8bf;
+  }
+
+  .streak-badge.bronze {
+    background-color: #cd7f32;
+    color: white;
+  }
+
+  .dark-theme .streak-badge {
+    opacity: 0.9;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 600px) {
+
+    .streak-type-selector,
+    .streak-period-selector {
+      flex-direction: column;
+      gap: 5px;
+      align-items: center;
+    }
+
+    .streak-type-button,
+    .streak-period-button {
+      width: 80%;
+      max-width: 200px;
+    }
+  }

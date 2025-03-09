@@ -607,5 +607,64 @@ const apiService = {
       throw error;
     }
   },
+  getStreakLeaderboard: async (
+    streakType = "win",
+    period = "current",
+    page = 1,
+    per_page = 20,
+  ) => {
+    const endpoint = `/streak_leaderboard?type=${streakType}&period=${period}&page=${page}&per_page=${per_page}`;
+
+    try {
+      // Use same auth headers setup as in getLeaderboard
+      const token = localStorage.getItem("uncrypt-token");
+      const headers = {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      };
+
+      // Add Authorization header for token-based authentication (if available)
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      logApiOperation("GET", endpoint, { headers });
+
+      const response = await fetch(`${config.apiUrl}${endpoint}`, {
+        method: "GET",
+        credentials: "include",
+        mode: "cors",
+        headers: headers,
+      });
+
+      logApiOperation("GET", endpoint, {}, response);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(
+          `HTTP error! Status: ${response.status}, Response:`,
+          errorText,
+        );
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      // Save session if applicable
+      if (config.session && config.session.saveSession) {
+        config.session.saveSession(response.headers);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      logApiOperation("GET", endpoint, {}, null, error);
+      console.error("Error fetching streak leaderboard:", error);
+
+      // Return structured error object
+      return {
+        error: "Failed to load streak leaderboard",
+        message: error.message || "Unknown error occurred",
+      };
+    }
+  },
 };
 export default apiService;

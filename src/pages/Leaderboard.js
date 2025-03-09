@@ -21,6 +21,13 @@ const Leaderboard = ({ onClose }) => {
   const [personalError, setPersonalError] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  // New state for streak leaderboard
+  const [streakData, setStreakData] = useState(null);
+  const [streakType, setStreakType] = useState("win"); // 'win' or 'noloss'
+  const [streakPeriod, setStreakPeriod] = useState("current"); // 'current' or 'best'
+  const [isStreakLoading, setIsStreakLoading] = useState(false);
+  const [streakError, setStreakError] = useState(null);
+
   const handleBackToGame = () => {
     onClose ? onClose() : navigate("/");
   };
@@ -28,10 +35,12 @@ const Leaderboard = ({ onClose }) => {
   // Fetch leaderboard data
   useEffect(() => {
     // Only fetch leaderboard data for all-time and weekly tabs
-    if (activeTab !== "personal") {
+    if (activeTab === "all-time" || activeTab === "weekly") {
       fetchLeaderboardData();
+    } else if (activeTab === "streaks") {
+      fetchStreakData();
     }
-  }, [activeTab, page]);
+  }, [activeTab, page, streakType, streakPeriod]);
 
   const fetchLeaderboardData = async () => {
     setIsLoading(true);
@@ -44,6 +53,25 @@ const Leaderboard = ({ onClose }) => {
       setError("Failed to load leaderboard data.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Fetch streak leaderboard data
+  const fetchStreakData = async () => {
+    setIsStreakLoading(true);
+    setStreakError(null);
+    try {
+      const response = await apiService.getStreakLeaderboard(
+        streakType,
+        streakPeriod,
+        page,
+      );
+      setStreakData(response);
+    } catch (err) {
+      console.error("Error fetching streak leaderboard:", err);
+      setStreakError("Failed to load streak leaderboard data.");
+    } finally {
+      setIsStreakLoading(false);
     }
   };
 
@@ -60,12 +88,29 @@ const Leaderboard = ({ onClose }) => {
     setPersonalError(null);
 
     try {
-      // Assuming apiService has a method to fetch user stats
+      // Get user stats from the API
       const response = await apiService.getUserStats();
-      setPersonalStats(response);
+
+      // Check for error responses
+      if (response.error) {
+        if (response.authenticated === false) {
+          // Auth error - let the user know they need to log in
+          setPersonalError("Please log in to view your stats.");
+        } else {
+          // Other error
+          setPersonalError(
+            response.message || "Failed to load your personal stats.",
+          );
+        }
+        setPersonalStats(null);
+      } else {
+        // Success - set the stats
+        setPersonalStats(response);
+      }
     } catch (err) {
       console.error("Error fetching personal stats:", err);
-      setPersonalError("Failed to load your personal stats.");
+      setPersonalError("Failed to load your personal stats. Please try again.");
+      setPersonalStats(null);
     } finally {
       setIsPersonalLoading(false);
       if (showRefreshAnimation) {
@@ -330,9 +375,112 @@ const Leaderboard = ({ onClose }) => {
     return renderPersonalStats();
   };
 
+  // Render the streak leaderboard
+  const renderStreakLeaderboard = () => {
+    if (!streakData || !streakData.entries) return null;
+
+    const streakTypeName = streakType === "win" ? "Win" : "No-Loss";
+    const streakPeriodName = streakPeriod === "current" ? "Current" : "Best";
+
+    return (
+      <div className="table-container">
+        {renderStreakControls()}
+
+        <h3 className="streak-heading">
+          {streakPeriodName} {streakTypeName} Streaks
+        </h3>
+
+        <div className="table-grid">
+          <div className="table-header">Rank</div>
+          <div className="table-header">Player</div>
+          <div className="table-header">Streak</div>
+          {streakPeriod === "current" && (
+            <div className="table-header">Last Active</div>
+          )}
+
+          {streakData.entries.map((entry) => (
+            <React.Fragment key={entry.user_id}>
+              <div
+                className={`table-cell ${entry.is_current_user ? "highlight" : ""}`}
+              >
+                #{entry.rank}
+              </div>
+              <div
+                className={`table-cell ${entry.is_current_user ? "highlight" : ""}`}
+              >
+                {entry.username}
+              </div>
+              <div
+                className={`table-cell ${entry.is_current_user ? "highlight" : ""}`}
+              >
+                {entry.streak_length}
+              </div>
+              {streakPeriod === "current" && (
+                <div
+                  className={`table-cell ${entry.is_current_user ? "highlight" : ""}`}
+                >
+                  {entry.last_active
+                    ? new Date(entry.last_active).toLocaleDateString()
+                    : "N/A"}
+                </div>
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+
+        {streakData.user_rank && (
+          <div className="user-position">
+            Your position: #{streakData.user_rank}
+          </div>
+        )}
+
+        {renderPagination()}
+      </div>
+    );
+  };
+
+  // Render streak type and period controls
+  const renderStreakControls = () => (
+    <div className="streak-controls">
+      <div className="streak-type-selector">
+        <button
+          className={`streak-type-button ${streakType === "win" ? "active" : ""}`}
+          onClick={() => setStreakType("win")}
+        >
+          Win Streaks
+        </button>
+        <button
+          className={`streak-type-button ${streakType === "noloss" ? "active" : ""}`}
+          onClick={() => setStreakType("noloss")}
+        >
+          No-Loss Streaks
+        </button>
+      </div>
+
+      <div className="streak-period-selector">
+        <button
+          className={`streak-period-button ${streakPeriod === "current" ? "active" : ""}`}
+          onClick={() => setStreakPeriod("current")}
+        >
+          Current
+        </button>
+        <button
+          className={`streak-period-button ${streakPeriod === "best" ? "active" : ""}`}
+          onClick={() => setStreakPeriod("best")}
+        >
+          Best
+        </button>
+      </div>
+    </div>
+  );
+
   const renderPagination = () => {
-    if (!leaderboardData) return null;
-    const { page, total_pages } = leaderboardData;
+    if (!leaderboardData && !streakData) return null;
+
+    const data = activeTab === "streaks" ? streakData : leaderboardData;
+    if (!data) return null;
+
+    const { page, total_pages } = data;
 
     return (
       <div className="pagination">
@@ -364,7 +512,8 @@ const Leaderboard = ({ onClose }) => {
         Back
       </button>
       {renderTabs()}
-      {activeTab !== "personal" ? (
+
+      {activeTab === "all-time" || activeTab === "weekly" ? (
         isLoading ? (
           <div className="loading">Loading...</div>
         ) : error ? (
@@ -372,9 +521,17 @@ const Leaderboard = ({ onClose }) => {
         ) : (
           renderLeaderboardTable()
         )
-      ) : (
+      ) : activeTab === "personal" ? (
         renderPersonalLeaderboard()
-      )}
+      ) : activeTab === "streaks" ? (
+        isStreakLoading ? (
+          <div className="loading">Loading streak data...</div>
+        ) : streakError ? (
+          <div className="error">{streakError}</div>
+        ) : (
+          renderStreakLeaderboard()
+        )
+      ) : null}
     </div>
   );
 };
