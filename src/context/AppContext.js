@@ -71,6 +71,7 @@ export const AppProvider = ({ children }) => {
   const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isSignupOpen, setIsSignupOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   // Add this effect to log any changes to authState
   useEffect(() => {
     console.log(
@@ -530,7 +531,9 @@ export const AppProvider = ({ children }) => {
     isSignupOpen,
     openSignup,
     closeSignup,
-
+    isSettingsOpen,
+    openSettings: useCallback(() => setIsSettingsOpen(true), []),
+    closeSettings: useCallback(() => setIsSettingsOpen(false), []),
     // Device/Mobile state
     isMobile,
     isLandscape,

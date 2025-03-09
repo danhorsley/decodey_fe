@@ -757,20 +757,10 @@ function Game() {
     >
       {/* Leaderboard */}
     </button>
-
-    {/* Render Leaderboard component when showLeaderboard is true */}
-    {showLeaderboard && (
-      <div className="modal-overlay">
-        <Leaderboard onClose={() => setShowLeaderboard(false)} />
-      </div>
-    )}
   </div>;
   if (useMobileMode) {
     return (
       <div className="App-container">
-        {isAboutOpen && <About isOpen={isAboutOpen} onClose={closeAbout} />}
-        {isLoginOpen && <Login onClose={closeLogin} />}
-        {isSignupOpen && <Signup isOpen={isSignupOpen} onClose={closeSignup} />}
         <MobileLayout isLandscape={isLandscape}>
           {renderGameHeader()}
           {renderTextContainer()}
@@ -786,9 +776,6 @@ function Game() {
     <div
       className={`App-container ${settings.theme === "dark" ? "dark-theme" : ""}`}
     >
-      {isAboutOpen && <About isOpen={isAboutOpen} onClose={closeAbout} />}
-      {isLoginOpen && <Login onClose={closeLogin} />}
-      {isSignupOpen && <Signup isOpen={isSignupOpen} onClose={closeSignup} />}
       {renderGameHeader()}
       {renderTextContainer()}
       {renderGrids()}

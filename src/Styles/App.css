@@ -1141,3 +1141,70 @@ body:not(.dark-theme) .celebration-content .decrypted-quote {
 .dark-theme .modal-overlay {
   background-color: rgba(0, 0, 0, 0.8);
 }
+
+/* Global fixed UI elements */
+.global-controls {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.fixed-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s, background-color 0.2s;
+  color: #212529;
+}
+
+.fixed-button:hover {
+  transform: scale(1.1);
+  background-color: rgba(255, 255, 255, 1);
+}
+
+.dark-theme .fixed-button {
+  background-color: rgba(30, 30, 40, 0.9);
+  color: #4cc9f0;
+}
+
+.dark-theme .fixed-button:hover {
+  background-color: rgba(30, 30, 40, 1);
+  color: rgb(0, 225, 152);
+}
+
+/* Position the about button in top left */
+.about-icon.fixed-button {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  bottom: auto;
+  right: auto;
+}
+
+/* Position the settings button in top right */
+.settings-icon.fixed-button {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  bottom: auto;
+  left: auto;
+}
+
+/* Make sure the modals appear on top of everything */
+.login-container,
+.about-container,
+.settings-container {
+  z-index: 5000;
+}
