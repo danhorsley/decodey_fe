@@ -138,6 +138,7 @@
   justify-content: center;
   color: #212529;
   transition: all 0.2s ease;
+  box-shadow: none;
 }
 
 .settings-icon,
@@ -169,7 +170,8 @@
 .about-icon:hover,
 .account-icon:hover {
   background-color: #f0f0f0;
-  color: #007bff;
+  /* color: #007bff; */
+  color: white;
 }
 
 .settings-icon svg,
@@ -178,15 +180,27 @@
   height: 24px;
 }
 
+.settings-icon svg:hover,
+.about-icon svg:hover {
+  color: white;
+}
+
+.dark-theme .settings-icon svg:hover,
+.dark-theme .about-icon svg:hover {
+  color: rgb(0, 225, 152);
+}
+
+
 .account-icon svg {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
 }
 
 .account-icon {
   right: 10px;
-  bottom: 10px;
-  position: fixed;
+  bottom: 30px;
+  /* position: fixed; */
+  transform: translateY(+50%);
 }
 
 /* ===== 3. TEXT DISPLAY ===== */

@@ -333,38 +333,43 @@
   }
 
   .leaderboard-button-fixed {
-    position: fixed;
+    position: absolute;
+    display: flex;
     /* Fixes the button at a specific position */
-    bottom: 20px;
+    bottom: 30px;
+    padding: 8px;
     /* Distance from the bottom */
-    left: 20px;
-    /* Distance from the left */
-    padding: 10px 18px;
+    left: 10px;
     /* Padding for the button */
     cursor: pointer;
     /* Change cursor to pointer on hover */
-    background-color: #007bff;
+    background-color: black;
     /* Light mode background color */
-    color: white;
+    color: #E5B80B;
     /* Text color */
-    border: none;
+    border: 1px solid #D4A017;
     /* No border */
-    border-radius: 6px;
+    border-radius: 57%;
     /* Rounded corners */
-    font-weight: 600;
+    /* font-weight: 600; */
     /* Bold text */
     transition: all 0.2s ease;
     /* Transition for hover effect */
+    box-shadow: 0 2px 8px rgba(230, 185, 30, 0.5);
+    transform: translateY(+50%);
+
   }
 
   .leaderboard-button-fixed:hover {
-    background-color: #0056b3;
-    /* Darker shade on hover for light mode */
+    background: linear-gradient(to bottom, #FFDF4F, #FDBC40);
+    box-shadow: 0 3px 10px rgba(230, 185, 30, 0.65);
+    color: black;
   }
 
   .dark-theme .leaderboard-button-fixed {
-    color: #333;
-    background-color: #4cc9f0;
+    /* color: #333; */
+    color: #E5B80B;
+    background-color: black;
     /* Dark mode background color */
   }
 

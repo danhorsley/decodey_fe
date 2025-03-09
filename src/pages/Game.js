@@ -678,7 +678,7 @@ function Game() {
       onClick={() => navigate("/leaderboard")}
       aria-label="Leaderboard"
     >
-      <FaTrophy size={16} /> Leaderboard
+      <FaTrophy size={16} />
     </button>
   );
   const renderGameOverCelebration = () =>
@@ -755,7 +755,7 @@ function Game() {
       className="leaderboard-button"
       onClick={() => setShowLeaderboard(true)}
     >
-      Leaderboard
+      {/* Leaderboard */}
     </button>
 
     {/* Render Leaderboard component when showLeaderboard is true */}
