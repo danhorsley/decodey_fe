@@ -19,6 +19,7 @@ import About from "../components/modals/About";
 import Login from "../pages/Login";
 import Signup from "../pages/Signup";
 import { FaTrophy } from "react-icons/fa";
+import HeaderControls from "../components/HeaderControls";
 
 // Debug flag
 const DEBUG = true;
@@ -596,21 +597,7 @@ function Game() {
   );
 
   // Render logic
-  const renderGameHeader = () => (
-    <div className="game-header">
-      <button className="about-icon" onClick={openAbout} aria-label="About">
-        {ABOUT_ICON_SVG}
-      </button>
-      <h1 className="retro-title">uncrypt</h1>
-      <button
-        className="settings-icon"
-        onClick={showSettings}
-        aria-label="Settings"
-      >
-        {SETTINGS_ICON_SVG}
-      </button>
-    </div>
-  );
+  const renderGameHeader = () => <HeaderControls title="uncrypt" />;
 
   const renderTextContainer = () => (
     <div

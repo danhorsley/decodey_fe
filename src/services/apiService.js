@@ -465,7 +465,7 @@ const apiService = {
     }
   },
 
-  getLeaderboard: async (period = "all-time", page = 1, per_page = 20) => {
+  getLeaderboard: async (period = "all-time", page = 1, per_page = 10) => {
     const endpoint = `/leaderboard?period=${period}&page=${page}&per_page=${per_page}`;
 
     try {
@@ -498,6 +498,24 @@ const apiService = {
       config.session.saveSession(response.headers);
 
       const data = await response.json();
+
+      // Transform the response to the new expected format if it's in the old format
+      // This maintains backwards compatibility while we update the backend
+      if (data.entries && !data.topEntries) {
+        const transformedData = {
+          topEntries: data.entries,
+          currentUserEntry:
+            data.entries.find((entry) => entry.is_current_user) || null,
+          pagination: {
+            current_page: data.page || page,
+            total_pages: data.total_pages || 1,
+            total_entries: data.total_users || data.entries.length,
+          },
+        };
+
+        return transformedData;
+      }
+
       return data;
     } catch (error) {
       logApiOperation("GET", endpoint, { period, page }, null, error);
@@ -505,113 +523,12 @@ const apiService = {
       throw error;
     }
   },
-  // In apiService.js - modify the recordScore function to handle the response better
-  recordScore: async (gameData) => {
-    const endpoint = "/record_score";
 
-    try {
-      const gameId = localStorage.getItem("uncrypt-game-id");
-
-      const requestBody = {
-        game_id: gameId,
-        score: gameData.score,
-        mistakes: gameData.mistakes,
-        time_taken: gameData.timeTaken,
-        difficulty: gameData.difficulty,
-      };
-
-      const headers = {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        ...config.session.getHeaders(),
-      };
-
-      console.log("Sending score record request:", requestBody);
-
-      const response = await fetch(`${config.apiUrl}${endpoint}`, {
-        method: "POST",
-        credentials: "include",
-        mode: "cors",
-        headers: headers,
-        body: JSON.stringify(requestBody),
-      });
-
-      console.log("Score API response status:", response.status);
-
-      // For any successful response (200, 201, etc.)
-      if (response.ok) {
-        try {
-          const data = await response.json();
-          console.log("Score recording success:", data);
-          return { ...data, success: true };
-        } catch (e) {
-          // If response can't be parsed as JSON, still return success
-          console.log(
-            "Response couldn't be parsed as JSON but status was success",
-          );
-          return { success: true, message: "Score recorded" };
-        }
-      }
-
-      // Handle error responses
-      const errorText = await response.text();
-      console.error(
-        `HTTP error! Status: ${response.status}, Response:`,
-        errorText,
-      );
-      throw new Error(`Failed to record score: ${response.status}`);
-    } catch (error) {
-      console.error("Error recording score:", error);
-      throw error;
-    }
-  },
-  // Add this method to your existing apiService.js file
-
-  getUserStats: async () => {
-    const endpoint = "/user_stats";
-
-    try {
-      const headers = {
-        Accept: "application/json",
-        ...config.session.getHeaders(),
-      };
-
-      logApiOperation("GET", endpoint, { headers });
-
-      const response = await fetch(`${config.apiUrl}${endpoint}`, {
-        method: "GET",
-        credentials: "include",
-        mode: "cors",
-        headers: headers,
-      });
-
-      logApiOperation("GET", endpoint, {}, response);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(
-          `HTTP error! Status: ${response.status}, Response:`,
-          errorText,
-        );
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-
-      // Save session if applicable
-      config.session.saveSession(response.headers);
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      logApiOperation("GET", endpoint, {}, null, error);
-      console.error("Error fetching user stats:", error);
-      throw error;
-    }
-  },
   getStreakLeaderboard: async (
     streakType = "win",
     period = "current",
     page = 1,
-    per_page = 20,
+    per_page = 10,
   ) => {
     const endpoint = `/streak_leaderboard?type=${streakType}&period=${period}&page=${page}&per_page=${per_page}`;
 
@@ -654,6 +571,23 @@ const apiService = {
       }
 
       const data = await response.json();
+
+      // Transform the response to the new expected format if it's in the old format
+      if (data.entries && !data.topEntries) {
+        const transformedData = {
+          entries: data.entries, // Keep original entries array name for streaks
+          currentUserEntry:
+            data.entries.find((entry) => entry.is_current_user) || null,
+          pagination: {
+            current_page: data.page || page,
+            total_pages: data.total_pages || 1,
+            total_entries: data.total_users || data.entries.length,
+          },
+        };
+
+        return transformedData;
+      }
+
       return data;
     } catch (error) {
       logApiOperation("GET", endpoint, {}, null, error);
@@ -664,6 +598,48 @@ const apiService = {
         error: "Failed to load streak leaderboard",
         message: error.message || "Unknown error occurred",
       };
+    }
+  },
+  // Add this method to your existing apiService.js file
+
+  getUserStats: async () => {
+    const endpoint = "/user_stats";
+
+    try {
+      const headers = {
+        Accept: "application/json",
+        ...config.session.getHeaders(),
+      };
+
+      logApiOperation("GET", endpoint, { headers });
+
+      const response = await fetch(`${config.apiUrl}${endpoint}`, {
+        method: "GET",
+        credentials: "include",
+        mode: "cors",
+        headers: headers,
+      });
+
+      logApiOperation("GET", endpoint, {}, response);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(
+          `HTTP error! Status: ${response.status}, Response:`,
+          errorText,
+        );
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      // Save session if applicable
+      config.session.saveSession(response.headers);
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      logApiOperation("GET", endpoint, {}, null, error);
+      console.error("Error fetching user stats:", error);
+      throw error;
     }
   },
 };

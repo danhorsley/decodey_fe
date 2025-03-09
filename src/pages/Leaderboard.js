@@ -4,11 +4,12 @@ import { useAppContext } from "../context/AppContext";
 import { useNavigate } from "react-router-dom";
 import apiService from "../services/apiService";
 import "../Styles/Leaderboard.css";
-import { FiRefreshCw } from "react-icons/fi";
+import { FiRefreshCw, FiArrowLeft } from "react-icons/fi"; // Added FiArrowLeft
+import HeaderControls from "../components/HeaderControls";
 
 const Leaderboard = ({ onClose }) => {
   const navigate = useNavigate();
-  const { isAuthenticated, openLogin } = useAppContext();
+  const { isAuthenticated, openLogin, settings } = useAppContext();
   const [activeTab, setActiveTab] = useState("all-time");
   const [leaderboardData, setLeaderboardData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -120,6 +121,7 @@ const Leaderboard = ({ onClose }) => {
     },
     [isAuthenticated],
   );
+
   // Fetch leaderboard data
   useEffect(() => {
     // Only fetch leaderboard data for all-time and weekly tabs
@@ -136,6 +138,7 @@ const Leaderboard = ({ onClose }) => {
     fetchLeaderboardData,
     fetchStreakData,
   ]);
+
   // Handle tab switching - fetch personal stats when that tab is clicked
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -153,33 +156,48 @@ const Leaderboard = ({ onClose }) => {
   };
 
   const renderTabs = () => (
-    <div className="tabs">
+    <div className="tabs-container">
+      {/* Back button on the left side */}
       <button
-        className={`tab ${activeTab === "all-time" ? "active" : ""}`}
-        onClick={() => handleTabChange("all-time")}
+        className="round-button back-button"
+        onClick={handleBackToGame}
+        aria-label="Back to Game"
       >
-        All Time
+        <FiArrowLeft />
       </button>
-      <button
-        className={`tab ${activeTab === "weekly" ? "active" : ""}`}
-        onClick={() => handleTabChange("weekly")}
-      >
-        Weekly
-      </button>
-      <button
-        className={`tab ${activeTab === "streaks" ? "active" : ""}`}
-        onClick={() => handleTabChange("streaks")}
-      >
-        Streaks
-      </button>
-      {isAuthenticated && (
+
+      {/* Tabs in the center */}
+      <div className="tabs">
         <button
-          className={`tab ${activeTab === "personal" ? "active" : ""}`}
-          onClick={() => handleTabChange("personal")}
+          className={`tab ${activeTab === "all-time" ? "active" : ""}`}
+          onClick={() => handleTabChange("all-time")}
         >
-          Personal
+          All Time
         </button>
-      )}
+        <button
+          className={`tab ${activeTab === "weekly" ? "active" : ""}`}
+          onClick={() => handleTabChange("weekly")}
+        >
+          Weekly
+        </button>
+        <button
+          className={`tab ${activeTab === "streaks" ? "active" : ""}`}
+          onClick={() => handleTabChange("streaks")}
+        >
+          Streaks
+        </button>
+        {isAuthenticated && (
+          <button
+            className={`tab ${activeTab === "personal" ? "active" : ""}`}
+            onClick={() => handleTabChange("personal")}
+          >
+            Personal
+          </button>
+        )}
+      </div>
+
+      {/* Account button placeholder on the right side */}
+      <div className="account-spacer"></div>
     </div>
   );
 
@@ -508,7 +526,7 @@ const Leaderboard = ({ onClose }) => {
     const data = activeTab === "streaks" ? streakData : leaderboardData;
     if (!data) return null;
 
-    const { page, total_pages } = data;
+    const { page: currentPage, total_pages } = data;
 
     // If there's only one page, don't show pagination
     if (total_pages <= 1) return null;
@@ -516,18 +534,18 @@ const Leaderboard = ({ onClose }) => {
     return (
       <div className="pagination">
         <button
-          onClick={() => setPage(page - 1)}
-          disabled={page <= 1}
+          onClick={() => setPage(currentPage - 1)}
+          disabled={currentPage <= 1}
           className="pagination-button"
         >
           ←
         </button>
         <span>
-          {page} / {total_pages}
+          {currentPage} / {total_pages}
         </span>
         <button
-          onClick={() => setPage(page + 1)}
-          disabled={page >= total_pages}
+          onClick={() => setPage(currentPage + 1)}
+          disabled={currentPage >= total_pages}
           className="pagination-button"
         >
           →
@@ -537,11 +555,15 @@ const Leaderboard = ({ onClose }) => {
   };
 
   return (
-    <div className="leaderboard">
+    <div
+      className={`leaderboard ${settings?.theme === "dark" ? "dark-theme" : ""}`}
+    >
+      {/* Add HeaderControls at the top */}
+      <HeaderControls hideTitle={true} />
+
       <h2>Leaderboard</h2>
-      <button className="back-button" onClick={handleBackToGame}>
-        Back
-      </button>
+
+      {/* New tabs container with Back button on the left and Account button on right */}
       {renderTabs()}
 
       {activeTab === "all-time" || activeTab === "weekly" ? (
