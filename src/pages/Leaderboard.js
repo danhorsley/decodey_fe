@@ -166,6 +166,12 @@ const Leaderboard = ({ onClose }) => {
       >
         Weekly
       </button>
+      <button
+        className={`tab ${activeTab === "streaks" ? "active" : ""}`}
+        onClick={() => handleTabChange("streaks")}
+      >
+        Streaks
+      </button>
       {isAuthenticated && (
         <button
           className={`tab ${activeTab === "personal" ? "active" : ""}`}
@@ -391,12 +397,18 @@ const Leaderboard = ({ onClose }) => {
     return renderPersonalStats();
   };
 
-  // Render the streak leaderboard
+  // Updated renderStreakLeaderboard function
   const renderStreakLeaderboard = () => {
     if (!streakData || !streakData.entries) return null;
 
     const streakTypeName = streakType === "win" ? "Win" : "No-Loss";
     const streakPeriodName = streakPeriod === "current" ? "Current" : "Best";
+
+    // Determine CSS class based on whether we're showing a date column
+    const tableClass =
+      streakPeriod === "current"
+        ? "table-grid streak-table with-date"
+        : "table-grid streak-table";
 
     return (
       <div className="table-container">
@@ -406,7 +418,7 @@ const Leaderboard = ({ onClose }) => {
           {streakPeriodName} {streakTypeName} Streaks
         </h3>
 
-        <div className="table-grid streak-table">
+        <div className={tableClass}>
           <div className="table-header">Rank</div>
           <div className="table-header">Player</div>
           <div className="table-header">Streak</div>

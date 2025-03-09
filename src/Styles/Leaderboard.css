@@ -793,7 +793,10 @@
 
   /* For 3 or 4 column grid in streak table */
   .streak-table {
+    display: grid;
     grid-template-columns: 1fr 2fr 1fr;
+    width: 100%;
+    border-bottom: 1px solid #eee;
   }
 
   .streak-table.with-date {
@@ -842,5 +845,20 @@
     .streak-period-button {
       width: 80%;
       max-width: 200px;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .streak-table {
+      grid-template-columns: 1fr 2fr 1fr;
+    }
+
+    .streak-table.with-date {
+      grid-template-columns: 1fr 1.5fr 1fr 1fr;
+    }
+
+    .streak-table .table-cell {
+      font-size: 0.9em;
+      padding: 8px 5px;
     }
   }
