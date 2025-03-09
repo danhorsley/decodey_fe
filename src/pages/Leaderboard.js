@@ -1,5 +1,5 @@
 // src/pages/Leaderboard.js
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useAppContext } from "../context/AppContext";
 import { useNavigate } from "react-router-dom";
 import apiService from "../services/apiService";
@@ -32,17 +32,8 @@ const Leaderboard = ({ onClose }) => {
     onClose ? onClose() : navigate("/");
   };
 
-  // Fetch leaderboard data
-  useEffect(() => {
-    // Only fetch leaderboard data for all-time and weekly tabs
-    if (activeTab === "all-time" || activeTab === "weekly") {
-      fetchLeaderboardData();
-    } else if (activeTab === "streaks") {
-      fetchStreakData();
-    }
-  }, [activeTab, page, streakType, streakPeriod]);
-
-  const fetchLeaderboardData = async () => {
+  // Fetch leaderboard data using useCallback
+  const fetchLeaderboardData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
@@ -54,10 +45,14 @@ const Leaderboard = ({ onClose }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [activeTab, page]);
 
-  // Fetch streak leaderboard data
-  const fetchStreakData = async () => {
+  const fetchStreakData = useCallback(async () => {
+    console.log("Fetching streak data with:", {
+      streakType,
+      streakPeriod,
+      page,
+    });
     setIsStreakLoading(true);
     setStreakError(null);
     try {
@@ -66,6 +61,7 @@ const Leaderboard = ({ onClose }) => {
         streakPeriod,
         page,
       );
+      console.log("Streak data received:", response);
       setStreakData(response);
     } catch (err) {
       console.error("Error fetching streak leaderboard:", err);
@@ -73,53 +69,73 @@ const Leaderboard = ({ onClose }) => {
     } finally {
       setIsStreakLoading(false);
     }
-  };
+  }, [streakType, streakPeriod, page]);
 
-  // New function to fetch personal stats
-  const fetchPersonalStats = async (showRefreshAnimation = false) => {
-    if (!isAuthenticated) return;
+  // New function to fetch personal stats with useCallback
+  const fetchPersonalStats = useCallback(
+    async (showRefreshAnimation = false) => {
+      if (!isAuthenticated) return;
 
-    if (showRefreshAnimation) {
-      setIsRefreshing(true);
-    } else {
-      setIsPersonalLoading(true);
-    }
-
-    setPersonalError(null);
-
-    try {
-      // Get user stats from the API
-      const response = await apiService.getUserStats();
-
-      // Check for error responses
-      if (response.error) {
-        if (response.authenticated === false) {
-          // Auth error - let the user know they need to log in
-          setPersonalError("Please log in to view your stats.");
-        } else {
-          // Other error
-          setPersonalError(
-            response.message || "Failed to load your personal stats.",
-          );
-        }
-        setPersonalStats(null);
-      } else {
-        // Success - set the stats
-        setPersonalStats(response);
-      }
-    } catch (err) {
-      console.error("Error fetching personal stats:", err);
-      setPersonalError("Failed to load your personal stats. Please try again.");
-      setPersonalStats(null);
-    } finally {
-      setIsPersonalLoading(false);
       if (showRefreshAnimation) {
-        // Reset refresh animation after a short delay
-        setTimeout(() => setIsRefreshing(false), 600);
+        setIsRefreshing(true);
+      } else {
+        setIsPersonalLoading(true);
       }
-    }
-  };
 
+      setPersonalError(null);
+
+      try {
+        // Get user stats from the API
+        const response = await apiService.getUserStats();
+
+        // Check for error responses
+        if (response.error) {
+          if (response.authenticated === false) {
+            // Auth error - let the user know they need to log in
+            setPersonalError("Please log in to view your stats.");
+          } else {
+            // Other error
+            setPersonalError(
+              response.message || "Failed to load your personal stats.",
+            );
+          }
+          setPersonalStats(null);
+        } else {
+          // Success - set the stats
+          setPersonalStats(response);
+        }
+      } catch (err) {
+        console.error("Error fetching personal stats:", err);
+        setPersonalError(
+          "Failed to load your personal stats. Please try again.",
+        );
+        setPersonalStats(null);
+      } finally {
+        setIsPersonalLoading(false);
+        if (showRefreshAnimation) {
+          // Reset refresh animation after a short delay
+          setTimeout(() => setIsRefreshing(false), 600);
+        }
+      }
+    },
+    [isAuthenticated],
+  );
+  // Fetch leaderboard data
+  useEffect(() => {
+    // Only fetch leaderboard data for all-time and weekly tabs
+    if (activeTab === "all-time" || activeTab === "weekly") {
+      fetchLeaderboardData();
+    } else if (activeTab === "streaks") {
+      fetchStreakData();
+    }
+  }, [
+    activeTab,
+    page,
+    streakType,
+    streakPeriod,
+    fetchLeaderboardData,
+    fetchStreakData,
+  ]);
   // Handle tab switching - fetch personal stats when that tab is clicked
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -390,7 +406,7 @@ const Leaderboard = ({ onClose }) => {
           {streakPeriodName} {streakTypeName} Streaks
         </h3>
 
-        <div className="table-grid">
+        <div className="table-grid streak-table">
           <div className="table-header">Rank</div>
           <div className="table-header">Player</div>
           <div className="table-header">Streak</div>
@@ -481,6 +497,9 @@ const Leaderboard = ({ onClose }) => {
     if (!data) return null;
 
     const { page, total_pages } = data;
+
+    // If there's only one page, don't show pagination
+    if (total_pages <= 1) return null;
 
     return (
       <div className="pagination">
