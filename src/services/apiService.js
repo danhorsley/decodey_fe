@@ -565,5 +565,47 @@ const apiService = {
       throw error;
     }
   },
+  // Add this method to your existing apiService.js file
+
+  getUserStats: async () => {
+    const endpoint = "/user_stats";
+
+    try {
+      const headers = {
+        Accept: "application/json",
+        ...config.session.getHeaders(),
+      };
+
+      logApiOperation("GET", endpoint, { headers });
+
+      const response = await fetch(`${config.apiUrl}${endpoint}`, {
+        method: "GET",
+        credentials: "include",
+        mode: "cors",
+        headers: headers,
+      });
+
+      logApiOperation("GET", endpoint, {}, response);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(
+          `HTTP error! Status: ${response.status}, Response:`,
+          errorText,
+        );
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      // Save session if applicable
+      config.session.saveSession(response.headers);
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      logApiOperation("GET", endpoint, {}, null, error);
+      console.error("Error fetching user stats:", error);
+      throw error;
+    }
+  },
 };
 export default apiService;
