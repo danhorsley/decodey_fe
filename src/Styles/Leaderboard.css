@@ -49,12 +49,13 @@
   }
 
   .dark-theme .back-button {
-    background: rgb(0, 249, 0);
+    background: #4cc9f0;
+    color: #333;
     /* Dark mode button */
   }
 
   .dark-theme .back-button:hover {
-    background: rgb(0, 200, 0);
+    background: rgb(0, 225, 152);
     /* Darker shade for hover */
   }
 
@@ -93,14 +94,16 @@
   }
 
   .dark-theme .tab:hover {
-    color: rgb(0, 249, 0);
+    color: rgb(0, 225, 152);
+    text-shadow: 0 0 8px rgb(0, 225, 152, 0.5);
     /* Dark mode hover */
   }
 
   .dark-theme .tab.active {
-    border-bottom: 2px solid rgb(0, 249, 0);
+    border-bottom: 2px solid rgb(0, 225, 152);
+    text-shadow: 0 0 8px rgb(0, 225, 152, 0.5);
     /* Dark mode active */
-    color: rgb(0, 249, 0);
+    color: rgb(0, 225, 152);
   }
 
   /* Table */
@@ -175,7 +178,8 @@
   .dark-theme .table-grid>.table-cell:nth-child(10n + 8),
   .dark-theme .table-grid>.table-cell:nth-child(10n + 9),
   .dark-theme .table-grid>.table-cell:nth-child(10n + 10) {
-    color: rgb(0, 249, 0);
+    color: rgb(0, 225, 152);
+    text-shadow: 0 0 8px rgb(0, 225, 152, 0.5);
     /* Even rows in dark mode */
   }
 
@@ -190,7 +194,8 @@
   .dark-theme .table-cell.highlight {
     background: rgba(76, 201, 240, 0.25);
     /* Dark mode highlight with #4cc9f0 at 25% opacity */
-    color: rgb(0, 249, 0);
+    color: rgb(0, 225, 152);
+    text-shadow: 0 0 8px rgb(0, 225, 152, 0.5);
     /* Override alternating color for highlight */
   }
 
@@ -224,7 +229,8 @@
   }
 
   .dark-theme .pagination-button {
-    background: rgb(0, 249, 0);
+    background: rgb(0, 225, 152);
+    text-shadow: 0 0 8px rgb(0, 225, 152, 0.5);
     /* Dark mode pagination */
   }
 
@@ -233,7 +239,8 @@
   }
 
   .dark-theme .pagination-button:hover:not(:disabled) {
-    background: rgb(0, 200, 0);
+    background: rgb(0, 225, 152);
+    text-shadow: 0 0 8px rgb(0, 225, 152, 0.5);
     /* Darker shade for hover */
   }
 
@@ -259,12 +266,14 @@
   }
 
   .dark-theme .login-button {
-    background: rgb(0, 249, 0);
+    background: rgb(0, 225, 152);
+    text-shadow: 0 0 8px rgb(0, 225, 152, 0.5);
     /* Dark mode login button */
   }
 
   .dark-theme .login-button:hover {
-    background: rgb(0, 200, 0);
+    background: rgb(0, 225, 152);
+    text-shadow: 0 0 8px rgb(0, 225, 152, 0.5);
     /* Darker shade for hover */
   }
 
