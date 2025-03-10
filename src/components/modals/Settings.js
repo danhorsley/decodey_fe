@@ -4,6 +4,9 @@ import "../../Styles/Settings.css";
 import "../../Styles/About.css";
 import { useAppContext } from "../../context/AppContext";
 
+import React, { useState, useEffect } from "react";
+import { useAppContext } from "../../context/AppContext";
+
 function Settings({ onSave, onCancel }) {
   const { settings, isSettingsOpen } = useAppContext();
 
