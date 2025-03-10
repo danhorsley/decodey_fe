@@ -205,3 +205,36 @@
 .create-account {
   text-align: right;
 }
+
+.create-account {
+  text-align: right;
+}
+
+/* Remember Me styles */
+.remember-me-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.remember-me-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  color: inherit;
+  font-size: 0.9rem;
+}
+
+.remember-me-checkbox {
+  margin-right: 8px;
+  cursor: pointer;
+}
+
+.dark-theme .remember-me-label {
+  color: #f0f0f0;
+}
+
+.dark-theme .remember-me-checkbox {
+  accent-color: #4cc9f0;
+}

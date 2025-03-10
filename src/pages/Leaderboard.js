@@ -805,13 +805,10 @@ const Leaderboard = ({ onClose }) => {
       className={`leaderboard ${settings?.theme === "dark" ? "dark-theme" : ""}`}
     >
       {/* Add HeaderControls at the top */}
-      <HeaderControls hideTitle={true} />
-      <HeaderControls hideAbout={true} hideSettings={true} />
+      <HeaderControls hideTitle={true} hideAbout={true} hideSettings={true} />
       <h2>Leaderboard</h2>
-
       {/* New tabs container with Back button on the left and Account button on right */}
       {renderTabs()}
-
       {activeTab === "all-time" || activeTab === "weekly" ? (
         isLoading ? (
           <div className="loading">Loading...</div>

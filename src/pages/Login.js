@@ -10,6 +10,11 @@ function Login({ isOpen, onClose }) {
   const { isLoginOpen, isSignupOpen } = useAppContext();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  // Initialize rememberMe from localStorage if available
+  const [rememberMe, setRememberMe] = useState(() => {
+    const savedPreference = localStorage.getItem("uncrypt-remember-me");
+    return savedPreference === "true";
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -34,9 +39,18 @@ function Login({ isOpen, onClose }) {
     e.preventDefault();
     setIsLoading(true);
     setError("");
-    const credentials = { username: username, password: password };
+    const credentials = {
+      username: username,
+      password: password,
+      rememberMe: rememberMe,
+    };
     try {
-      console.log("Login.js handleSubmitchecker", username, password);
+      console.log(
+        "Login.js handleSubmitchecker",
+        username,
+        password,
+        rememberMe,
+      );
       const result = await login(credentials);
       if (result.success) {
         console.log("Login successful");
@@ -107,6 +121,17 @@ function Login({ isOpen, onClose }) {
               onChange={(e) => setPassword(e.target.value)}
               required
             />
+          </div>
+          <div className="remember-me-container">
+            <label className="remember-me-label">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={() => setRememberMe(!rememberMe)}
+                className="remember-me-checkbox"
+              />
+              <span>Remember me</span>
+            </label>
           </div>
           <button type="submit" className="login-button" disabled={isLoading}>
             {isLoading ? "Logging in..." : "Login"}

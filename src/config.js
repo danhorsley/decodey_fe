@@ -38,8 +38,16 @@ const config = {
       }
 
       // For protected endpoints, include all available identification
-      const token = localStorage.getItem("uncrypt-token");
-      const userId = localStorage.getItem("uncrypt-user-id");
+      // Try to get token from both storage types
+      let token = localStorage.getItem("uncrypt-token");
+      let userId = localStorage.getItem("uncrypt-user-id");
+
+      // If not in localStorage, try sessionStorage
+      if (!token) {
+        token = sessionStorage.getItem("uncrypt-token");
+        userId = sessionStorage.getItem("uncrypt-user-id");
+      }
+
       const gameId = localStorage.getItem("uncrypt-game-id");
       const sessionId = localStorage.getItem("uncrypt-session-id");
 
@@ -65,32 +73,21 @@ const config = {
       return headers;
     },
 
-    // Function to save session ID from response headers
-    saveSession: (headers) => {
-      // Check if the response includes a session ID header
-      const sessionId = headers.get("X-Session-ID");
-      if (sessionId) {
-        localStorage.setItem("uncrypt-session-id", sessionId);
-        if (config.DEBUG) console.log("Saved session ID:", sessionId);
-      }
-
-      // Check for and save game ID if present
-      const gameId = headers.get("X-Game-ID");
-      if (gameId) {
-        localStorage.setItem("uncrypt-game-id", gameId);
-        if (config.DEBUG) console.log("Saved game ID:", gameId);
-      }
-    },
-
     // Function to clear session data (useful for logout)
     clearSession: () => {
-      localStorage.removeItem("uncrypt-session-id");
-      localStorage.removeItem("uncrypt-token");
-      localStorage.removeItem("uncrypt-user-id");
-      localStorage.removeItem("uncrypt-username");
+      // Clear from both localStorage and sessionStorage
+      const storageTypes = [localStorage, sessionStorage];
+
+      storageTypes.forEach((storage) => {
+        storage.removeItem("uncrypt-session-id");
+        storage.removeItem("uncrypt-token");
+        storage.removeItem("uncrypt-user-id");
+        storage.removeItem("uncrypt-username");
+      });
 
       // Don't clear game-id here - that's handled separately when starting a new game
-      if (config.DEBUG) console.log("Session data cleared from localStorage");
+      if (config.DEBUG)
+        console.log("Session data cleared from both storage types");
     },
   },
 

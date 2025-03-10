@@ -181,17 +181,27 @@ export const AppProvider = ({ children }) => {
       setAuthState((prev) => ({ ...prev, authLoading: true, authError: null }));
 
       try {
-        // Use apiService instead of direct fetch
-        const data = await apiService.loginapi(
-          credentials,
-          // credentials.username,
-          // credentials.password,
-        );
+        // Extract remember me preference
+        const { rememberMe, ...loginCredentials } = credentials;
 
-        // If we received a token, save it (this should already happen in apiService)
+        // Use apiService instead of direct fetch
+        const data = await apiService.loginapi(loginCredentials);
+
+        // If we received a token, save it
         if (data.token) {
-          localStorage.setItem("uncrypt-token", data.token);
-          localStorage.setItem("uncrypt-user-id", data.user_id);
+          // Choose storage method based on rememberMe preference
+          const storage = rememberMe ? localStorage : sessionStorage;
+
+          // Store authentication data
+          storage.setItem("uncrypt-token", data.token);
+          storage.setItem("uncrypt-user-id", data.user_id);
+          storage.setItem(
+            "uncrypt-username",
+            data.username || credentials.username,
+          );
+
+          // Always remember user preference
+          localStorage.setItem("uncrypt-remember-me", rememberMe);
 
           // Close login modal after successful login
           closeLogin();
@@ -234,91 +244,53 @@ export const AppProvider = ({ children }) => {
     [closeLogin],
   );
 
-  // Also update the useEffect that initializes auth state from local storage:
+  // On component mount, check for existing token in both storage types
   useEffect(() => {
-    const initAuth = async () => {
-      const token = localStorage.getItem("uncrypt-token");
-      const userId = localStorage.getItem("uncrypt-user-id");
-      const username = localStorage.getItem("uncrypt-username");
+    // Try to get token from localStorage first (for "remember me")
+    let token = localStorage.getItem("uncrypt-token");
+    let userId = localStorage.getItem("uncrypt-user-id");
+    let username = localStorage.getItem("uncrypt-username");
 
-      if (!token) {
-        setAuthState({
-          ...defaultUserState,
-          authLoading: false,
-        });
-        return;
-      }
+    // If not in localStorage, try sessionStorage (for session-only)
+    if (!token) {
+      token = sessionStorage.getItem("uncrypt-token");
+      userId = sessionStorage.getItem("uncrypt-user-id");
+      username = sessionStorage.getItem("uncrypt-username");
+    }
 
-      try {
-        // Call the new validate-token endpoint
-        const response = await fetch(`${config.apiUrl}/validate-token`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          mode: "cors",
-        });
-
-        if (response.ok) {
-          const userData = await response.json();
-
-          // Update auth state with user data from response
-          setAuthState({
-            user: {
-              id: userData.user_id,
-              username: userData.username,
-              email: userData.email,
-            },
-            isAuthenticated: true,
-            authLoading: false,
-            authError: null,
-          });
-
-          console.log("Auth validated successfully via API");
-        } else {
-          // Invalid token, clear it
-          console.log("Token validation failed, clearing stored credentials");
-          localStorage.removeItem("uncrypt-token");
-          localStorage.removeItem("uncrypt-user-id");
-          localStorage.removeItem("uncrypt-username");
-
-          setAuthState({
-            ...defaultUserState,
-            authLoading: false,
-          });
-        }
-      } catch (error) {
-        console.error("Auth validation error:", error);
-
-        // Fallback: If API validation fails, still try to use stored credentials
-        if (userId && username) {
-          console.log("Using stored credentials as fallback");
-          setAuthState({
-            user: { id: userId, username: username },
-            isAuthenticated: true,
-            authLoading: false,
-            authError:
-              "Couldn't verify credentials from server, using local data",
-          });
-        } else {
-          setAuthState({
-            ...defaultUserState,
-            authLoading: false,
-            authError: "Failed to validate authentication state",
-          });
-        }
-      }
-    };
-
-    initAuth();
+    if (token && userId) {
+      // If token exists, set authenticated state
+      setAuthState({
+        user: { id: userId, username: username },
+        isAuthenticated: true,
+        token: token,
+        loading: false,
+      });
+    } else {
+      // No token found, mark as not authenticated
+      setAuthState((prev) => ({ ...prev, loading: false }));
+    }
   }, []);
   // Logout method
   const logout = () => {
-    localStorage.removeItem("auth_token");
-    localStorage.removeItem("user_id");
-    localStorage.removeItem("username");
+    // Clear tokens from both storage types
+    localStorage.removeItem("uncrypt-token");
+    localStorage.removeItem("uncrypt-user-id");
+    localStorage.removeItem("uncrypt-username");
+
+    sessionStorage.removeItem("uncrypt-token");
+    sessionStorage.removeItem("uncrypt-user-id");
+    sessionStorage.removeItem("uncrypt-username");
+
+    // Don't remove the remember preference
+
+    // Update auth state
+    setAuthState({
+      user: null,
+      isAuthenticated: false,
+      authLoading: false,
+      authError: null,
+    });
 
     // Call backend logout endpoint if needed
     fetch(`${config.apiUrl}/logout`, {
