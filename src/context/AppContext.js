@@ -72,6 +72,7 @@ export const AppProvider = ({ children }) => {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isSignupOpen, setIsSignupOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
   // Add this effect to log any changes to authState
   useEffect(() => {
     console.log(
@@ -83,6 +84,7 @@ export const AppProvider = ({ children }) => {
       },
     );
   }, [authState]);
+
   // submit pending scores to be on login
   useEffect(() => {
     // Whenever auth state changes to authenticated
@@ -114,6 +116,7 @@ export const AppProvider = ({ children }) => {
       submitPendingScores();
     }
   }, [authState.isAuthenticated]);
+
   // ==== DEVICE DETECTION ====
   const { isMobile, isLandscape, screenWidth, screenHeight, detectMobile } =
     useDeviceDetection();
@@ -125,7 +128,21 @@ export const AppProvider = ({ children }) => {
   // Initialize auth state from token if exists
   useEffect(() => {
     const initAuth = async () => {
-      const token = localStorage.getItem("uncrypt-token");
+      // First check new format keys in localStorage
+      let token = localStorage.getItem("uncrypt-token");
+      let userId = localStorage.getItem("uncrypt-user-id");
+
+      // If not found, check old format keys in localStorage
+      if (!token) {
+        token = localStorage.getItem("auth_token");
+        userId = localStorage.getItem("user_id");
+      }
+
+      // If still not found, check sessionStorage
+      if (!token) {
+        token = sessionStorage.getItem("uncrypt-token");
+        userId = sessionStorage.getItem("uncrypt-user-id");
+      }
 
       if (!token) {
         setAuthState({
@@ -155,6 +172,8 @@ export const AppProvider = ({ children }) => {
         } else {
           // Invalid token, clear it
           localStorage.removeItem("uncrypt-token");
+          localStorage.removeItem("auth_token");
+          sessionStorage.removeItem("uncrypt-token");
           setAuthState({
             ...defaultUserState,
             authLoading: false,
@@ -174,7 +193,6 @@ export const AppProvider = ({ children }) => {
   }, []);
 
   // Login method
-  // In AppContext.js
   const login = useCallback(
     async (credentials) => {
       console.log("appcntx check : ", credentials);
@@ -195,12 +213,18 @@ export const AppProvider = ({ children }) => {
           // Store authentication data in new format
           storage.setItem("uncrypt-token", data.token);
           storage.setItem("uncrypt-user-id", data.user_id);
-          storage.setItem("uncrypt-username", data.username || credentials.username);
+          storage.setItem(
+            "uncrypt-username",
+            data.username || credentials.username,
+          );
 
           // IMPORTANT: For backward compatibility, also store in original format
           localStorage.setItem("auth_token", data.token);
           localStorage.setItem("user_id", data.user_id);
-          localStorage.setItem("username", data.username || credentials.username);
+          localStorage.setItem(
+            "username",
+            data.username || credentials.username,
+          );
 
           // Always remember user preference
           localStorage.setItem("uncrypt-remember-me", rememberMe);
@@ -209,87 +233,113 @@ export const AppProvider = ({ children }) => {
           closeLogin();
         }
 
-        // Replace the useEffect that initializes auth state:
-        useEffect(() => {
-          // First check new format keys in localStorage
-          let token = localStorage.getItem("uncrypt-token");
-          let userId = localStorage.getItem("uncrypt-user-id");
-          let username = localStorage.getItem("uncrypt-username");
+        // Update auth state
+        setAuthState({
+          user: data.user || {
+            username: credentials.username,
+            id: data.user_id,
+          },
+          isAuthenticated: true,
+          authLoading: false,
+          authError: null,
+        });
 
-          // If not found, check old format keys in localStorage
-          if (!token) {
-            token = localStorage.getItem("auth_token");
-            userId = localStorage.getItem("user_id");
-            username = localStorage.getItem("username");
-          }
+        // Log successful authentication
+        console.log("Authentication state updated:", {
+          username: credentials.username,
+          authenticated: true,
+          token: data.token ? "[REDACTED]" : "None",
+        });
 
-          // If still not found, check sessionStorage
-          if (!token) {
-            token = sessionStorage.getItem("uncrypt-token");
-            userId = sessionStorage.getItem("uncrypt-user-id");
-            username = sessionStorage.getItem("uncrypt-username");
-          }
-
-          if (token && userId) {
-            // If token exists, set authenticated state
-            setAuthState({
-              user: { id: userId, username: username },
-              isAuthenticated: true,
-              token: token,
-              loading: false,
-            });
-
-            // For backward compatibility, ensure tokens exist in both formats
-            localStorage.setItem("auth_token", token);
-            localStorage.setItem("user_id", userId);
-            if (username) localStorage.setItem("username", username);
-          } else {
-            // No token found, mark as not authenticated
-            setAuthState((prev) => ({ ...prev, loading: false }));
-          }
-        }, []);
-        // Update logout function to clear both storage types:
-        const logout = () => {
-          // Clear tokens from both storage types
-          localStorage.removeItem("uncrypt-token");
-          localStorage.removeItem("uncrypt-user-id");
-          localStorage.removeItem("uncrypt-username");
-          localStorage.removeItem("auth_token");
-          localStorage.removeItem("user_id");
-          localStorage.removeItem("username");
-
-          sessionStorage.removeItem("uncrypt-token");
-          sessionStorage.removeItem("uncrypt-user-id");
-          sessionStorage.removeItem("uncrypt-username");
-
-          // Don't remove the remember preference
-
-          // Update auth state
-          setAuthState({
-            user: null,
-            isAuthenticated: false,
-            authLoading: false,
-            authError: null,
-          });
-
-          // Call backend logout endpoint if needed
-          fetch(`${config.apiUrl}/logout`, {
-            method: "POST",
-            credentials: "include",
-          }).catch((err) => console.error("Logout error:", err));
-        };
-        setAuthState((prev) => ({ ...prev, authLoading: false, user: data.user }));
+        return { success: true };
       } catch (error) {
         console.error("Login error:", error);
+
         setAuthState((prev) => ({
           ...prev,
           authLoading: false,
-          authError: "Failed to log in",
+          authError: error.message || "Login failed",
         }));
+
+        return {
+          success: false,
+          error: error.message || "Login failed",
+        };
       }
     },
-    [setAuthState, closeLogin],
+    [closeLogin],
   );
+
+  // On component mount, check for existing token in both storage types
+  useEffect(() => {
+    // First check new format keys in localStorage
+    let token = localStorage.getItem("uncrypt-token");
+    let userId = localStorage.getItem("uncrypt-user-id");
+    let username = localStorage.getItem("uncrypt-username");
+
+    // If not found, check old format keys in localStorage
+    if (!token) {
+      token = localStorage.getItem("auth_token");
+      userId = localStorage.getItem("user_id");
+      username = localStorage.getItem("username");
+    }
+
+    // If still not found, check sessionStorage
+    if (!token) {
+      token = sessionStorage.getItem("uncrypt-token");
+      userId = sessionStorage.getItem("uncrypt-user-id");
+      username = sessionStorage.getItem("uncrypt-username");
+    }
+
+    if (token && userId) {
+      // If token exists, set authenticated state
+      setAuthState({
+        user: { id: userId, username: username },
+        isAuthenticated: true,
+        token: token,
+        loading: false,
+      });
+
+      // For backward compatibility, ensure tokens exist in both formats
+      localStorage.setItem("auth_token", token);
+      localStorage.setItem("user_id", userId);
+      if (username) localStorage.setItem("username", username);
+    } else {
+      // No token found, mark as not authenticated
+      setAuthState((prev) => ({ ...prev, loading: false }));
+    }
+  }, []);
+
+  // Logout method
+  const logout = () => {
+    // Clear tokens from both storage types
+    localStorage.removeItem("uncrypt-token");
+    localStorage.removeItem("uncrypt-user-id");
+    localStorage.removeItem("uncrypt-username");
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("user_id");
+    localStorage.removeItem("username");
+
+    sessionStorage.removeItem("uncrypt-token");
+    sessionStorage.removeItem("uncrypt-user-id");
+    sessionStorage.removeItem("uncrypt-username");
+
+    // Don't remove the remember preference
+
+    // Update auth state
+    setAuthState({
+      user: null,
+      isAuthenticated: false,
+      authLoading: false,
+      authError: null,
+    });
+
+    // Call backend logout endpoint if needed
+    fetch(`${config.apiUrl}/logout`, {
+      method: "POST",
+      credentials: "include",
+    }).catch((err) => console.error("Logout error:", err));
+  };
 
   const [leaderboardData, setLeaderboardData] = useState({
     entries: [],
@@ -345,25 +395,6 @@ export const AppProvider = ({ children }) => {
     localStorage.setItem("uncrypt-settings", JSON.stringify(settings));
   }, [settings]);
 
-  // On component mount, check for existing token
-  useEffect(() => {
-    const token = localStorage.getItem("auth_token");
-    const userId = localStorage.getItem("user_id");
-    const username = localStorage.getItem("username");
-
-    if (token && userId) {
-      // If token exists, set authenticated state
-      setAuthState({
-        user: { id: userId, username: username },
-        isAuthenticated: true,
-        token: token,
-        loading: false,
-      });
-    } else {
-      // No token found, mark as not authenticated
-      setAuthState((prev) => ({ ...prev, loading: false }));
-    }
-  }, []);
   // ==== MOBILE MODE EFFECTS ====
   // Determine if we should use mobile mode based on settings and device
   useEffect(() => {
