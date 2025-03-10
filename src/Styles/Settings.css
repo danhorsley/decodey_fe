@@ -16,13 +16,16 @@
 }
 
 .settings-container {
-  max-width: 600px;
-  max-height: 90vh;
-  overflow-y: auto;
+  width: 90%;
+  max-width: 500px;
+  background-color: white;
   padding: 20px;
   border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  max-height: 90vh;
+  overflow-y: auto;
+  z-index: 10000; /* High z-index to stay on top */
   position: relative;
-  z-index: 10001; /* Ensure settings is above overlay */
 }
 
 /* Dark theme settings */

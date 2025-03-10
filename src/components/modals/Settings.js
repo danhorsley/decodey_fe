@@ -34,8 +34,8 @@ function Settings({ currentSettings, onSave, onCancel }) {
   
   // Create portal to render the modal at the root level of the DOM
   return ReactDOM.createPortal(
-    <div className="about-overlay" style={{ zIndex: 10000 }}>
-      <div className={`about-container settings-container ${currentSettings.theme === "dark" ? "dark-theme" : ""} text-${currentSettings.textColor}`} style={{ position: 'relative', zIndex: 10001 }}>
+    <div className="about-overlay">
+      <div className={`about-container settings-container ${currentSettings.theme === "dark" ? "dark-theme" : ""} text-${currentSettings.textColor}`}>
         <div className="settings-content">
           <div className="settings-actions top">
             <button className="settings-button cancel" onClick={onCancel}>

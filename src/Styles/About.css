@@ -1,3 +1,4 @@
+
 /* Existing styles remain unchanged */
 .about-overlay {
   position: fixed;
@@ -9,7 +10,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 10000; /* Extremely high z-index to overcome stacking context issues */
+  z-index: 9999; /* Ensure modals always appear on top */
 }
 
 /* About overlay and container styles */
