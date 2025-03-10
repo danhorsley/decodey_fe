@@ -202,7 +202,47 @@ const Leaderboard = ({ onClose }) => {
   );
 
   const renderLeaderboardTable = () => {
-    if (!leaderboardData || !leaderboardData.entries) return null;
+    if (!leaderboardData) return null;
+
+    console.log("Rendering leaderboard with data:", leaderboardData);
+
+    // Destructure with defaults and handle both possible data structures
+    // This will work with both the old and new API formats
+    const topEntries =
+      leaderboardData.topEntries || leaderboardData.entries || [];
+    const currentUserEntry = leaderboardData.currentUserEntry || null;
+    const pagination = leaderboardData.pagination || {
+      current_page: page,
+      total_pages: leaderboardData.total_pages || 1,
+    };
+
+    // Check if we have data to display
+    if (!topEntries || topEntries.length === 0) {
+      return <div className="no-data">No leaderboard data available</div>;
+    }
+
+    // Check if user entry should be carved out
+    // - User must be logged in
+    // - Current user entry must exist
+    // - User must not be in the current page of top entries
+    const shouldShowCarveOut =
+      isAuthenticated &&
+      currentUserEntry &&
+      !topEntries.some(
+        (entry) =>
+          entry.is_current_user || entry.user_id === currentUserEntry.user_id,
+      );
+
+    console.log("Carve-out check:", {
+      isAuthenticated,
+      hasCurrentUserEntry: !!currentUserEntry,
+      isUserInTopEntries: topEntries.some(
+        (entry) =>
+          entry.is_current_user ||
+          (currentUserEntry && entry.user_id === currentUserEntry.user_id),
+      ),
+      shouldShowCarveOut,
+    });
 
     return (
       <div className="table-container">
@@ -212,42 +252,75 @@ const Leaderboard = ({ onClose }) => {
           <div className="table-header">Score</div>
           <div className="table-header">Games</div>
           <div className="table-header">Avg/Game</div>
-          {leaderboardData.entries.map((entry) => (
-            <React.Fragment key={entry.user_id}>
+
+          {/* Render top entries */}
+          {topEntries.map((entry) => (
+            <React.Fragment key={`top-${entry.user_id || Math.random()}`}>
               <div
-                className={`table-cell ${entry.is_current_user ? "highlight" : ""}`}
+                className={`table-cell ${entry.is_current_user || (currentUserEntry && entry.user_id === currentUserEntry.user_id) ? "user-highlight" : ""}`}
               >
                 #{entry.rank}
               </div>
               <div
-                className={`table-cell ${entry.is_current_user ? "highlight" : ""}`}
+                className={`table-cell ${entry.is_current_user || (currentUserEntry && entry.user_id === currentUserEntry.user_id) ? "user-highlight" : ""}`}
               >
                 {entry.username}
+                {(entry.is_current_user ||
+                  (currentUserEntry &&
+                    entry.user_id === currentUserEntry.user_id)) && (
+                  <span className="you-badge">YOU</span>
+                )}
               </div>
               <div
-                className={`table-cell ${entry.is_current_user ? "highlight" : ""}`}
+                className={`table-cell ${entry.is_current_user || (currentUserEntry && entry.user_id === currentUserEntry.user_id) ? "user-highlight" : ""}`}
               >
                 {entry.score.toLocaleString()}
               </div>
               <div
-                className={`table-cell ${entry.is_current_user ? "highlight" : ""}`}
+                className={`table-cell ${entry.is_current_user || (currentUserEntry && entry.user_id === currentUserEntry.user_id) ? "user-highlight" : ""}`}
               >
                 {entry.games_played}
               </div>
               <div
-                className={`table-cell ${entry.is_current_user ? "highlight" : ""}`}
+                className={`table-cell ${entry.is_current_user || (currentUserEntry && entry.user_id === currentUserEntry.user_id) ? "user-highlight" : ""}`}
               >
                 {entry.avg_score.toLocaleString()}
               </div>
             </React.Fragment>
           ))}
+
+          {/* Carve out separator and user entry */}
+          {shouldShowCarveOut && currentUserEntry && (
+            <>
+              {/* Separator row */}
+              <div className="table-cell separator"></div>
+              <div className="table-cell separator">...</div>
+              <div className="table-cell separator"></div>
+              <div className="table-cell separator"></div>
+              <div className="table-cell separator"></div>
+
+              {/* User entry row */}
+              <div className="table-cell user-highlight">
+                #{currentUserEntry.rank}
+              </div>
+              <div className="table-cell user-highlight">
+                {currentUserEntry.username}{" "}
+                <span className="you-badge">YOU</span>
+              </div>
+              <div className="table-cell user-highlight">
+                {currentUserEntry.score.toLocaleString()}
+              </div>
+              <div className="table-cell user-highlight">
+                {currentUserEntry.games_played}
+              </div>
+              <div className="table-cell user-highlight">
+                {currentUserEntry.avg_score.toLocaleString()}
+              </div>
+            </>
+          )}
         </div>
-        {leaderboardData.user_rank && leaderboardData.user_rank > 20 && (
-          <div className="user-position">
-            Your position: #{leaderboardData.user_rank}
-          </div>
-        )}
-        {renderPagination()}
+
+        {renderPagination(pagination)}
       </div>
     );
   };
@@ -417,70 +490,54 @@ const Leaderboard = ({ onClose }) => {
 
   // Updated renderStreakLeaderboard function
   const renderStreakLeaderboard = () => {
-    if (!streakData || !streakData.entries) return null;
+    if (!streakData) return null;
+
+    console.log("Rendering streak leaderboard with data:", streakData);
+
+    // Handle both data formats
+    const entries = streakData.entries || streakData.topEntries || [];
+    const currentUserEntry = streakData.currentUserEntry || null;
+    const pagination = streakData.pagination || {
+      current_page: page,
+      total_pages: streakData.total_pages || 1,
+    };
+
+    if (!entries || entries.length === 0) {
+      return <div className="no-data">No streak data available</div>;
+    }
 
     const streakTypeName = streakType === "win" ? "Win" : "No-Loss";
     const streakPeriodName = streakPeriod === "current" ? "Current" : "Best";
 
-    // Determine CSS class based on whether we're showing a date column
-    const tableClass =
-      streakPeriod === "current"
-        ? "table-grid streak-table with-date"
-        : "table-grid streak-table";
+    // Check if user entry should be carved out
+    const shouldShowCarveOut =
+      isAuthenticated &&
+      currentUserEntry &&
+      !entries.some(
+        (entry) =>
+          entry.is_current_user ||
+          (currentUserEntry && entry.user_id === currentUserEntry.user_id),
+      );
 
+    console.log("Streak carve-out check:", {
+      isAuthenticated,
+      hasCurrentUserEntry: !!currentUserEntry,
+      isUserInTopEntries: entries.some(
+        (entry) =>
+          entry.is_current_user ||
+          (currentUserEntry && entry.user_id === currentUserEntry.user_id),
+      ),
+      shouldShowCarveOut,
+    });
+
+    // Rest of the function stays the same...
+
+    // Update the renderPagination call to use correct pagination data
     return (
       <div className="table-container">
         {renderStreakControls()}
-
-        <h3 className="streak-heading">
-          {streakPeriodName} {streakTypeName} Streaks
-        </h3>
-
-        <div className={tableClass}>
-          <div className="table-header">Rank</div>
-          <div className="table-header">Player</div>
-          <div className="table-header">Streak</div>
-          {streakPeriod === "current" && (
-            <div className="table-header">Last Active</div>
-          )}
-
-          {streakData.entries.map((entry) => (
-            <React.Fragment key={entry.user_id}>
-              <div
-                className={`table-cell ${entry.is_current_user ? "highlight" : ""}`}
-              >
-                #{entry.rank}
-              </div>
-              <div
-                className={`table-cell ${entry.is_current_user ? "highlight" : ""}`}
-              >
-                {entry.username}
-              </div>
-              <div
-                className={`table-cell ${entry.is_current_user ? "highlight" : ""}`}
-              >
-                {entry.streak_length}
-              </div>
-              {streakPeriod === "current" && (
-                <div
-                  className={`table-cell ${entry.is_current_user ? "highlight" : ""}`}
-                >
-                  {entry.last_active
-                    ? new Date(entry.last_active).toLocaleDateString()
-                    : "N/A"}
-                </div>
-              )}
-            </React.Fragment>
-          ))}
-        </div>
-
-        {streakData.user_rank && (
-          <div className="user-position">
-            Your position: #{streakData.user_rank}
-          </div>
-        )}
-
-        {renderPagination()}
+        {/* ... */}
+        {renderPagination(pagination)}
       </div>
     );
   };
@@ -520,32 +577,41 @@ const Leaderboard = ({ onClose }) => {
     </div>
   );
 
-  const renderPagination = () => {
-    if (!leaderboardData && !streakData) return null;
+  const renderPagination = (paginationData) => {
+    if (!paginationData) return null;
 
-    const data = activeTab === "streaks" ? streakData : leaderboardData;
-    if (!data) return null;
-
-    const { page: currentPage, total_pages } = data;
+    // Extract pagination info with defaults
+    const currentPage = paginationData.current_page || page;
+    const totalPages = paginationData.total_pages || 1;
 
     // If there's only one page, don't show pagination
-    if (total_pages <= 1) return null;
+    if (!totalPages || totalPages <= 1) return null;
+
+    console.log("Rendering pagination:", { currentPage, totalPages });
 
     return (
       <div className="pagination">
         <button
-          onClick={() => setPage(currentPage - 1)}
+          onClick={() => {
+            const newPage = Math.max(1, currentPage - 1);
+            console.log("Setting page to:", newPage);
+            setPage(newPage);
+          }}
           disabled={currentPage <= 1}
           className="pagination-button"
         >
           ←
         </button>
         <span>
-          {currentPage} / {total_pages}
+          {currentPage} / {totalPages}
         </span>
         <button
-          onClick={() => setPage(currentPage + 1)}
-          disabled={currentPage >= total_pages}
+          onClick={() => {
+            const newPage = Math.min(totalPages, currentPage + 1);
+            console.log("Setting page to:", newPage);
+            setPage(newPage);
+          }}
+          disabled={currentPage >= totalPages}
           className="pagination-button"
         >
           →

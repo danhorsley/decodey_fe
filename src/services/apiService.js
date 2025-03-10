@@ -53,8 +53,6 @@ const logApiOperation = (
 
 const apiService = {
   // Login functionality
-  // In apiService.js
-
   loginapi: async (credentials) => {
     console.log("credentials : ", credentials);
     try {
@@ -166,8 +164,7 @@ const apiService = {
     }
   },
 
-  // Fixed startGame function for apiService.js
-
+  // Start Game function
   startGame: async (useLongQuotes = false) => {
     const endpoint = useLongQuotes ? "/longstart" : "/start";
 
@@ -230,9 +227,8 @@ const apiService = {
       throw error;
     }
   },
-  // Update these functions in your apiService.js
 
-  // More robust submitGuess function
+  // Submit Guess function
   submitGuess: async (gameId, encryptedLetter, guessedLetter) => {
     const endpoint = "/guess";
 
@@ -322,7 +318,7 @@ const apiService = {
     }
   },
 
-  // More robust getHint function
+  // Get Hint function
   getHint: async () => {
     const endpoint = "/hint";
     const gameId = localStorage.getItem("uncrypt-game-id");
@@ -372,6 +368,8 @@ const apiService = {
       throw error;
     }
   },
+
+  // Get Attribution function
   getAttribution: async () => {
     // Get game ID from localStorage
     const gameId = localStorage.getItem("uncrypt-game-id");
@@ -422,6 +420,8 @@ const apiService = {
       };
     }
   },
+
+  // Save Quote function
   saveQuote: async () => {
     const endpoint = "/save_quote";
 
@@ -465,6 +465,7 @@ const apiService = {
     }
   },
 
+  // Get Leaderboard function
   getLeaderboard: async (period = "all-time", page = 1, per_page = 10) => {
     const endpoint = `/leaderboard?period=${period}&page=${page}&per_page=${per_page}`;
 
@@ -497,33 +498,47 @@ const apiService = {
       // Save session if applicable
       config.session.saveSession(response.headers);
 
+      // Parse the JSON response
       const data = await response.json();
+      console.log("Raw leaderboard response:", data);
 
-      // Transform the response to the new expected format if it's in the old format
-      // This maintains backwards compatibility while we update the backend
-      if (data.entries && !data.topEntries) {
-        const transformedData = {
-          topEntries: data.entries,
-          currentUserEntry:
-            data.entries.find((entry) => entry.is_current_user) || null,
-          pagination: {
-            current_page: data.page || page,
-            total_pages: data.total_pages || 1,
-            total_entries: data.total_users || data.entries.length,
-          },
-        };
+      // Transform the response to the expected format if needed
+      // This makes our code work with both old and new API formats
+      const transformedData = {
+        // For entries, check all possible field names
+        topEntries: data.topEntries || data.entries || [],
 
-        return transformedData;
-      }
+        // For user entry, either use the dedicated field or look for the user in entries
+        currentUserEntry:
+          data.currentUserEntry ||
+          (data.entries &&
+            data.entries.find((entry) => entry.is_current_user)) ||
+          null,
 
-      return data;
+        // For pagination, create a consistent format
+        pagination: data.pagination || {
+          current_page: data.page || page,
+          total_pages: data.total_pages || 1,
+          total_entries:
+            data.total_users || (data.entries ? data.entries.length : 0),
+        },
+      };
+
+      console.log("Transformed leaderboard data:", transformedData);
+      return transformedData;
     } catch (error) {
       logApiOperation("GET", endpoint, { period, page }, null, error);
       console.error("Error fetching leaderboard:", error);
-      throw error;
+      // Return a safe default instead of throwing
+      return {
+        topEntries: [],
+        currentUserEntry: null,
+        pagination: { current_page: 1, total_pages: 1, total_entries: 0 },
+      };
     }
   },
 
+  // Get Streak Leaderboard function
   getStreakLeaderboard: async (
     streakType = "win",
     period = "current",
@@ -533,14 +548,14 @@ const apiService = {
     const endpoint = `/streak_leaderboard?type=${streakType}&period=${period}&page=${page}&per_page=${per_page}`;
 
     try {
-      // Use same auth headers setup as in getLeaderboard
+      // Get token for authorization
       const token = localStorage.getItem("uncrypt-token");
       const headers = {
         Accept: "application/json",
         "Content-Type": "application/json",
       };
 
-      // Add Authorization header for token-based authentication (if available)
+      // Add Authorization header if available
       if (token) {
         headers["Authorization"] = `Bearer ${token}`;
       }
@@ -570,38 +585,53 @@ const apiService = {
         config.session.saveSession(response.headers);
       }
 
+      // Parse JSON and log for debugging
       const data = await response.json();
+      console.log("Raw streak leaderboard response:", data);
 
-      // Transform the response to the new expected format if it's in the old format
-      if (data.entries && !data.topEntries) {
-        const transformedData = {
-          entries: data.entries, // Keep original entries array name for streaks
-          currentUserEntry:
-            data.entries.find((entry) => entry.is_current_user) || null,
-          pagination: {
-            current_page: data.page || page,
-            total_pages: data.total_pages || 1,
-            total_entries: data.total_users || data.entries.length,
-          },
-        };
+      // Transform to a consistent format
+      const transformedData = {
+        // For entries, check all possible field names
+        entries: data.entries || data.topEntries || [],
 
-        return transformedData;
-      }
+        // For user entry, either use the dedicated field or look for the user in entries
+        currentUserEntry:
+          data.currentUserEntry ||
+          (data.entries &&
+            data.entries.find((entry) => entry.is_current_user)) ||
+          null,
 
-      return data;
+        // For pagination, create a consistent format
+        pagination: data.pagination || {
+          current_page: data.page || page,
+          total_pages: data.total_pages || 1,
+          total_entries:
+            data.total_users || (data.entries ? data.entries.length : 0),
+        },
+
+        // Keep other fields
+        streak_type: data.streak_type || streakType,
+        period: data.period || period,
+      };
+
+      console.log("Transformed streak data:", transformedData);
+      return transformedData;
     } catch (error) {
       logApiOperation("GET", endpoint, {}, null, error);
       console.error("Error fetching streak leaderboard:", error);
 
-      // Return structured error object
+      // Return a safe default instead of throwing
       return {
-        error: "Failed to load streak leaderboard",
-        message: error.message || "Unknown error occurred",
+        entries: [],
+        currentUserEntry: null,
+        pagination: { current_page: 1, total_pages: 1, total_entries: 0 },
+        streak_type: streakType,
+        period: period,
       };
     }
   },
-  // Add this method to your existing apiService.js file
 
+  // Get User Stats function
   getUserStats: async () => {
     const endpoint = "/user_stats";
 
@@ -642,5 +672,114 @@ const apiService = {
       throw error;
     }
   },
+
+  // Record Score function
+  recordScore: async (scoreData) => {
+    const endpoint = "/record_score";
+    const gameId = localStorage.getItem("uncrypt-game-id");
+
+    try {
+      // Get auth token if available
+      const token = localStorage.getItem("uncrypt-token");
+      const headers = {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      };
+
+      // Add Authorization header if token exists
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      // Add game ID to headers if available
+      if (gameId) {
+        headers["X-Game-Id"] = gameId;
+      }
+
+      // Prepare request body
+      const requestBody = {
+        ...scoreData,
+        game_id: gameId || scoreData.game_id,
+      };
+
+      console.log("Recording score with data:", requestBody);
+
+      const response = await fetch(`${config.apiUrl}${endpoint}`, {
+        method: "POST",
+        credentials: "include",
+        mode: "cors",
+        headers: headers,
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        // Special handling for 401 Unauthorized
+        if (response.status === 401) {
+          console.log("Authentication required to record score");
+
+          // If not authenticated, store score locally
+          const pendingScores = JSON.parse(
+            localStorage.getItem("uncrypt-pending-scores") || "[]",
+          );
+          pendingScores.push(requestBody);
+          localStorage.setItem(
+            "uncrypt-pending-scores",
+            JSON.stringify(pendingScores),
+          );
+
+          return {
+            success: false,
+            message: "Authentication required. Score saved locally.",
+            authRequired: true,
+          };
+        }
+
+        // Handle other errors
+        const errorText = await response.text();
+        console.error(
+          `Score recording error: ${response.status}, Response:`,
+          errorText,
+        );
+        throw new Error(`Failed to record score. Status: ${response.status}`);
+      }
+
+      // Parse and return response
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error recording score:", error);
+
+      // On error, attempt to store score locally for later submission
+      try {
+        const pendingScores = JSON.parse(
+          localStorage.getItem("uncrypt-pending-scores") || "[]",
+        );
+        pendingScores.push({
+          ...scoreData,
+          game_id: gameId || scoreData.game_id,
+        });
+        localStorage.setItem(
+          "uncrypt-pending-scores",
+          JSON.stringify(pendingScores),
+        );
+
+        return {
+          success: false,
+          message:
+            "Failed to record score, but saved locally for later submission.",
+          error: error.message,
+        };
+      } catch (storageError) {
+        console.error("Failed to save score locally:", storageError);
+
+        return {
+          success: false,
+          message: "Failed to record score and could not save locally.",
+          error: error.message,
+        };
+      }
+    }
+  },
 };
+
 export default apiService;
