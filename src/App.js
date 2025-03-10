@@ -51,6 +51,7 @@ function App() {
       {isAboutOpen && <About isOpen={isAboutOpen} onClose={closeAbout} />}
       {isSettingsOpen && (
         <Settings
+          currentSettings={settings}
           onSave={(newSettings) => {
             updateSettings(newSettings);
             closeSettings();
