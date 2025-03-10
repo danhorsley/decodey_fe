@@ -806,16 +806,6 @@ const Leaderboard = ({ onClose }) => {
     >
       {/* Add HeaderControls at the top */}
       <HeaderControls hideTitle={true} />
-      {isSettingsOpen && (
-        <Settings
-          currentSettings={settings}
-          onSave={(newSettings) => {
-            updateSettings(newSettings);
-            closeSettings();
-          }}
-          onCancel={closeSettings}
-        />
-      )}
       <h2>Leaderboard</h2>
 
       {/* New tabs container with Back button on the left and Account button on right */}

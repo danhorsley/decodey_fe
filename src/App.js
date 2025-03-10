@@ -43,9 +43,6 @@ function App() {
     updateSettings,
   } = useAppContext();
 
-  // Remove the duplicate state declaration:
-  // const [isAboutOpen, setIsAboutOpen] = useState(isAboutOpen);
-
   return (
     <Router>
       {/* Global modals that should be available on all pages */}
