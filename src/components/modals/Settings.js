@@ -30,9 +30,11 @@ function Settings({ currentSettings, onSave, onCancel }) {
     }
   };
 
+  if (!currentSettings) return null;
+  
   return (
-    <div className="settings-overlay">
-      <div className="settings-container">
+    <div className="about-overlay">
+      <div className={`about-container settings-container ${currentSettings.theme === "dark" ? "dark-theme" : ""} text-${currentSettings.textColor}`}>
         <div className="settings-content">
           <div className="settings-actions top">
             <button className="settings-button cancel" onClick={onCancel}>
