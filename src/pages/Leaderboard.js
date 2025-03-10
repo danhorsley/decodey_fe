@@ -49,21 +49,10 @@ const Leaderboard = ({ onClose }) => {
     try {
       const response = await apiService.getLeaderboard(activeTab, page);
       console.log("Leaderboard API response:", response);
-      
-      // Check if response is valid before setting data
-      if (!response) {
-        throw new Error("Empty response received from server");
-      }
-      
-      // Handle possible error response formats
-      if (response.error) {
-        throw new Error(response.message || "Server returned an error");
-      }
-      
       setLeaderboardData(response);
     } catch (err) {
       console.error("Error fetching leaderboard:", err);
-      setError(`Failed to load leaderboard data: ${err.message || ""}`);
+      setError("Failed to load leaderboard data.");
     } finally {
       setIsLoading(false);
     }
@@ -91,28 +80,13 @@ const Leaderboard = ({ onClose }) => {
 
       console.log("Streak API returned:", response);
 
-      // Check if response is valid
-      if (!response) {
-        throw new Error("Empty response received from server");
+      // Force entries to be an array even if empty
+      if (!response.entries && !response.topEntries) {
+        response.entries = [];
       }
 
-      // Handle error responses
-      if (response.error) {
-        throw new Error(response.message || "Server returned an error");
-      }
-
-      // Normalize the data structure with defaults
-      const normalizedResponse = {
-        entries: response.entries || response.topEntries || [],
-        currentUserEntry: response.currentUserEntry || null,
-        pagination: response.pagination || {
-          current_page: page,
-          total_pages: response.total_pages || 1,
-        }
-      };
-
-      // Set the normalized data
-      setStreakData(normalizedResponse);
+      // Set the data even if empty - we'll handle display in the render function
+      setStreakData(response);
     } catch (err) {
       console.error("Error in fetchStreakData:", err);
       setStreakError(`Failed to load streak leaderboard data: ${err.message}`);
@@ -138,11 +112,6 @@ const Leaderboard = ({ onClose }) => {
         // Get user stats from the API
         const response = await apiService.getUserStats();
 
-        // Validate response
-        if (!response) {
-          throw new Error("No response received from server");
-        }
-
         // Check for error responses
         if (response.error) {
           if (response.authenticated === false) {
@@ -156,26 +125,13 @@ const Leaderboard = ({ onClose }) => {
           }
           setPersonalStats(null);
         } else {
-          // Success - set the stats with defaults for any missing fields
-          const normalizedStats = {
-            cumulative_score: response.cumulative_score || 0,
-            weekly_stats: response.weekly_stats || { score: 0 },
-            total_games_played: response.total_games_played || 0,
-            current_streak: response.current_streak || 0,
-            max_streak: response.max_streak || 0,
-            current_noloss_streak: response.current_noloss_streak || 0,
-            max_noloss_streak: response.max_noloss_streak || 0,
-            top_scores: response.top_scores || [],
-            last_played_date: response.last_played_date || null,
-            ...response
-          };
-          
-          setPersonalStats(normalizedStats);
+          // Success - set the stats
+          setPersonalStats(response);
         }
       } catch (err) {
         console.error("Error fetching personal stats:", err);
         setPersonalError(
-          `Failed to load your personal stats: ${err.message || "Please try again."}`
+          "Failed to load your personal stats. Please try again.",
         );
         setPersonalStats(null);
       } finally {
