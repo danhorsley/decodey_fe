@@ -6,6 +6,7 @@ import apiService from "../services/apiService";
 import "../Styles/Leaderboard.css";
 import { FiRefreshCw, FiArrowLeft } from "react-icons/fi";
 import HeaderControls from "../components/HeaderControls";
+import AccountButtonWrapper from "../components/AccountButtonWrapper";
 
 const Leaderboard = ({ onClose }) => {
   const navigate = useNavigate();
@@ -182,7 +183,7 @@ const Leaderboard = ({ onClose }) => {
         onClick={handleBackToGame}
         aria-label="Back to Game"
       >
-        <FiArrowLeft />
+        <FiArrowLeft size={20} /> {/* Increase arrow size from default */}
       </button>
 
       {/* Tabs in the center */}
@@ -216,7 +217,9 @@ const Leaderboard = ({ onClose }) => {
       </div>
 
       {/* Account button placeholder on the right side */}
-      <div className="account-spacer"></div>
+      <div className="account-icon-container">
+        <AccountButtonWrapper />
+      </div>
     </div>
   );
 
