@@ -1,8 +1,8 @@
-// Update the Settings component to use the new structure
-// In src/components/modals/Settings.js
-
+// Update the Settings component to use Portal for rendering
 import React, { useState, useEffect } from "react";
+import ReactDOM from "react-dom";
 import "../../Styles/Settings.css";
+import "../../Styles/About.css";
 
 function Settings({ currentSettings, onSave, onCancel }) {
   // Local state to track changes before saving
@@ -31,10 +31,11 @@ function Settings({ currentSettings, onSave, onCancel }) {
   };
 
   if (!currentSettings) return null;
-
-  return (
+  
+  // Create portal to render the modal at the root level of the DOM
+  return ReactDOM.createPortal(
     <div className="about-overlay">
-      <div className={`about-container settings-container ${currentSettings.theme === "dark" ? "dark-theme" : ""} text-${currentSettings.textColor}`}>
+      <div className={`about-container settings-container ${currentSettings.theme === "dark" ? "dark-theme" : ""} text-${currentSettings.textColor}`}
         <div className="settings-content">
           <div className="settings-actions top">
             <button className="settings-button cancel" onClick={onCancel}>
@@ -233,7 +234,8 @@ function Settings({ currentSettings, onSave, onCancel }) {
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.getElementById('root') // Mount directly to root element
   );
 }
 
