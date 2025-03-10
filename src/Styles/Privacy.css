@@ -1,0 +1,86 @@
+.privacy-container {
+  max-width: 800px;
+  width: 90%;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.privacy-section {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.privacy-section h3 {
+  margin-top: 15px;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.dark-theme .privacy-section h3 {
+  color: #4cc9f0;
+}
+
+.privacy-section p {
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+.privacy-section ul {
+  list-style-type: disc;
+  padding-left: 20px;
+  margin-bottom: 10px;
+}
+
+.privacy-section li {
+  margin-bottom: 5px;
+  text-align: left;
+}
+
+.privacy-email {
+  margin-left: 10px;
+  color: #007bff;
+  text-decoration: none;
+}
+
+.dark-theme .privacy-email {
+  color: #4cc9f0;
+}
+
+.privacy-email:hover {
+  text-decoration: underline;
+}
+
+.privacy-footer {
+  margin-top: 30px;
+  padding-top: 15px;
+  border-top: 1px solid #ddd;
+  text-align: center;
+}
+
+.dark-theme .privacy-footer {
+  border-top-color: #444;
+}
+
+.return-button {
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.dark-theme .return-button {
+  background-color: #4cc9f0;
+  color: #333;
+}
+
+.return-button:hover {
+  background-color: #0069d9;
+}
+
+.dark-theme .return-button:hover {
+  background-color: rgb(0, 225, 152);
+}

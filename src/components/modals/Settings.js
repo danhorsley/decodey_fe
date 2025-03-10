@@ -29,6 +29,17 @@ function Settings({ currentSettings, onSave, onCancel }) {
 
   return (
     <div className="settings-container">
+      <div className="settings-actions top">
+        <button className="settings-button cancel" onClick={onCancel}>
+          Cancel
+        </button>
+        <button
+          className="settings-button save"
+          onClick={() => onSave(settings)}
+        >
+          Save Changes
+        </button>
+      </div>
       <h1 className="settings-title">Game Settings</h1>
 
       {/* Theme Setting - Now at the top */}

@@ -133,3 +133,60 @@ body:not(.dark-theme) .about-container .right-grid-reference {
   width: 24px;
   height: 24px;
 }
+
+.dark-theme .settings-icon svg:hover,
+.dark-theme .about-icon svg:hover {
+  color: rgb(0, 225, 152);
+}
+
+/* About footer styles */
+.about-footer {
+  margin-top: 25px;
+  padding-top: 15px;
+  border-top: 1px solid #ddd;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.dark-theme .about-footer {
+  border-top-color: #444;
+}
+
+.privacy-link {
+  color: #007bff;
+  text-decoration: none;
+  padding: 5px 0;
+  display: inline-block;
+}
+
+.dark-theme .privacy-link {
+  color: #4cc9f0;
+}
+
+.privacy-link:hover {
+  text-decoration: underline;
+}
+
+.contact-info {
+  margin-top: 10px;
+}
+
+.contact-info p {
+  margin-bottom: 5px;
+  font-size: 0.9em;
+  opacity: 0.9;
+}
+
+.contact-email {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.dark-theme .contact-email {
+  color: #4cc9f0;
+}
+
+.contact-email:hover {
+  text-decoration: underline;
+}

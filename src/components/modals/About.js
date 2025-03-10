@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import "../../Styles/About.css";
 import { useAppContext } from "../../context/AppContext";
 
@@ -41,6 +42,19 @@ function About({ isOpen, onClose }) {
             <li>Solve before running out of mistakes!</li>
           </ol>
           <p>Stuck? Hit the hint button (but it'll cost you one mistake).</p>
+        </div>
+
+        <div className="about-footer">
+          <Link to="/privacy" className="privacy-link" onClick={onClose}>
+            Privacy Policy
+          </Link>
+
+          <div className="contact-info">
+            <p>Having trouble? Need help?</p>
+            <a href="mailto:support@uncryptgame.com" className="contact-email">
+              Contact Support
+            </a>
+          </div>
         </div>
       </div>
     </div>

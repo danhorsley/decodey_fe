@@ -9,6 +9,7 @@ import "./Styles/App.css";
 import "./Styles/Mobile.css";
 import Game from "./pages/Game";
 import Leaderboard from "./pages/Leaderboard";
+import Privacy from "./pages/Privacy";
 import WinCelebrationTest from "./pages/WinCelebrationTest";
 import AccountButtonWrapper from "./components/AccountButtonWrapper";
 import Login from "./pages/Login";
@@ -53,6 +54,7 @@ function App() {
         <Route path="/" element={<Game />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/wctest" element={<WinCelebrationTest />} />
+        <Route path="/privacy" element={<Privacy />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
 

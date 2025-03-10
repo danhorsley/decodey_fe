@@ -207,3 +207,21 @@ body.dark-theme .coming-soon {
   color: #ffb74d;
   border-left: 2px solid #ffb74d;
 }
+
+.settings-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 30px;
+}
+
+.settings-actions.top {
+  margin-top: 0;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #ddd;
+}
+
+.dark-theme .settings-actions.top {
+  border-bottom-color: #444;
+}
