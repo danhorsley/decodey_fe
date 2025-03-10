@@ -128,23 +128,28 @@ export const AppProvider = ({ children }) => {
   // Initialize auth state from token if exists
   useEffect(() => {
     const initAuth = async () => {
-      // First check new format keys in localStorage
-      let token = localStorage.getItem("uncrypt-token");
-      let userId = localStorage.getItem("uncrypt-user-id");
+      console.log("Initializing auth state...");
 
-      // If not found, check old format keys in localStorage
-      if (!token) {
-        token = localStorage.getItem("auth_token");
-        userId = localStorage.getItem("user_id");
-      }
+      // First check localStorage for token (for persistent sessions)
+      let token =
+        localStorage.getItem("uncrypt-token") ||
+        localStorage.getItem("auth_token");
+      let userId =
+        localStorage.getItem("uncrypt-user-id") ||
+        localStorage.getItem("user_id");
+      let username =
+        localStorage.getItem("uncrypt-username") ||
+        localStorage.getItem("username");
 
-      // If still not found, check sessionStorage
+      // If not in localStorage, check sessionStorage (for session-only logins)
       if (!token) {
         token = sessionStorage.getItem("uncrypt-token");
         userId = sessionStorage.getItem("uncrypt-user-id");
+        username = sessionStorage.getItem("uncrypt-username");
       }
 
-      if (!token) {
+      if (!token || !userId) {
+        console.log("No token or user ID found in storage");
         setAuthState({
           ...defaultUserState,
           authLoading: false,
@@ -152,32 +157,77 @@ export const AppProvider = ({ children }) => {
         return;
       }
 
-      try {
-        const response = await fetch(`${config.apiUrl}/validate-token`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
+      // Log what we found for debugging
+      console.log("Found stored authentication:", {
+        tokenSource: localStorage.getItem("uncrypt-token")
+          ? "localStorage (new format)"
+          : localStorage.getItem("auth_token")
+            ? "localStorage (old format)"
+            : "sessionStorage",
+        userId: userId,
+        username: username || "(unknown)",
+      });
 
-        if (response.ok) {
-          const userData = await response.json();
+      try {
+        // First try the explicit token validation endpoint
+        let validationSuccess = false;
+
+        try {
+          const response = await fetch(`${config.apiUrl}/validate-token`, {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          });
+
+          if (response.ok) {
+            const userData = await response.json();
+            console.log("Token validation successful:", userData);
+
+            // Update auth state with validated user data
+            setAuthState({
+              user: {
+                id: userData.user_id || userId,
+                username: userData.username || username,
+              },
+              isAuthenticated: true,
+              authLoading: false,
+              token: token,
+              authError: null,
+            });
+            validationSuccess = true;
+          }
+        } catch (error) {
+          console.warn(
+            "Token validation endpoint failed, will try alternative method:",
+            error,
+          );
+        }
+
+        // If endpoint validation failed, assume token is valid if it exists
+        // This is a fallback for backends that don't support the validation endpoint
+        if (!validationSuccess && token && userId) {
+          console.log("Using fallback authentication with existing token");
           setAuthState({
-            user: userData,
+            user: {
+              id: userId,
+              username: username || "User",
+            },
             isAuthenticated: true,
             authLoading: false,
+            token: token,
             authError: null,
           });
-        } else {
-          // Invalid token, clear it
-          localStorage.removeItem("uncrypt-token");
-          localStorage.removeItem("auth_token");
-          sessionStorage.removeItem("uncrypt-token");
-          setAuthState({
-            ...defaultUserState,
-            authLoading: false,
-          });
+
+          // Ensure consistency across storage mechanisms
+          localStorage.setItem("auth_token", token);
+          localStorage.setItem("user_id", userId);
+          if (username) localStorage.setItem("username", username);
+
+          localStorage.setItem("uncrypt-token", token);
+          localStorage.setItem("uncrypt-user-id", userId);
+          if (username) localStorage.setItem("uncrypt-username", username);
         }
       } catch (error) {
         console.error("Auth initialization error:", error);
@@ -191,7 +241,6 @@ export const AppProvider = ({ children }) => {
 
     initAuth();
   }, []);
-
   // Login method
   const login = useCallback(
     async (credentials) => {

@@ -524,9 +524,90 @@ function Game() {
   );
 
   // Effects
-  useEffect(() => startGame(), [startGame]);
-  useThemeEffect(settings.theme);
+  // This should replace the useEffect that calls startGame in Game.js
+  useEffect(() => {
+    // Check if there's an existing game in progress
+    const gameId = localStorage.getItem("uncrypt-game-id");
+    const gameInProgress =
+      Boolean(gameId) &&
+      // Check if we have any game data to prevent unnecessarily starting a new game
+      (encrypted || localStorage.getItem("uncrypt-game-data"));
 
+    if (DEBUG) {
+      console.log("Game component mounted with:", {
+        existingGameId: gameId,
+        hasEncryptedData: Boolean(encrypted),
+        gameInProgress,
+      });
+    }
+
+    // Only start a new game if there isn't one in progress
+    if (!gameInProgress) {
+      console.log("No game in progress, starting a new game...");
+      startGame();
+    } else {
+      console.log("Existing game found, not starting a new one");
+
+      // Try to restore game state if we have encrypted data but no display data
+      // This handles cases where we have a game ID but the state was partially lost
+      if (gameId && !encrypted) {
+        try {
+          // Attempt to restore from localStorage
+          const savedGameData = localStorage.getItem("uncrypt-game-data");
+          if (savedGameData) {
+            const gameData = JSON.parse(savedGameData);
+            console.log("Restoring game data from localStorage");
+
+            // Restore game state
+            dispatch({
+              type: "START_GAME",
+              payload: gameData,
+            });
+          } else {
+            // If we can't restore, start a new game
+            console.log("Could not restore game data, starting new game");
+            startGame();
+          }
+        } catch (error) {
+          console.error("Error restoring game:", error);
+          startGame();
+        }
+      }
+    }
+  }, [startGame]);
+  useThemeEffect(settings.theme);
+  // Add this useEffect to Game.js
+  useEffect(() => {
+    // Only save if we have actual game data
+    if (encrypted && display) {
+      const gameState = {
+        encrypted,
+        display,
+        mistakes,
+        correctlyGuessed,
+        letterFrequency,
+        guessedMappings,
+        originalLetters,
+        startTime,
+      };
+
+      // Save game state to localStorage
+      localStorage.setItem("uncrypt-game-data", JSON.stringify(gameState));
+
+      if (DEBUG) {
+        console.log("Saved game state to localStorage");
+      }
+    }
+  }, [
+    encrypted,
+    display,
+    mistakes,
+    correctlyGuessed,
+    letterFrequency,
+    guessedMappings,
+    originalLetters,
+    startTime,
+  ]);
   useEffect(() => {
     const handleFirstInteraction = () => {
       loadSounds();
