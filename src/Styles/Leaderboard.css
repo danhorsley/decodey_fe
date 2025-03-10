@@ -1,879 +1,47 @@
-/* src/Styles/Leaderboard.css */
-  .leaderboard {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 20px;
-    font-family: "Courier New", Courier, monospace;
-    position: relative;
-    z-index: 1;
-    background: #fff;
-    color: black;
-    /* Light mode base color */
-  }
+/* 
+  Leaderboard.css - Styles for the leaderboard component
 
-  .dark-theme .leaderboard {
-    background: #222;
-    color: #ddd;
-    /* Dark mode base text color */
-  }
+  TABLE OF CONTENTS:
+  1. CONTAINER STYLES
+  2. NAVIGATION & CONTROLS
+  3. TABLE STYLES
+  4. PAGINATION
+  5. USER HIGHLIGHT STYLES
+  6. PERSONAL STATS
+  7. STREAK LEADERBOARD
+  8. STATUS MESSAGES
+  9. RESPONSIVE STYLES
+*/
 
-  h2 {
-    font-size: 1.5rem;
-    margin: 0 0 20px;
-    text-align: center;
-    color: black;
-    /* Light mode header */
-  }
-
-  .dark-theme h2 {
-    color: #4cc9f0;
-    /* Dark mode header */
-  }
-
-.back-button {
-  position: absolute;
-  padding: 4px;
-  background-color: black;
-  margin-left: 14px !important;
-  color: #fff;
-  border: none;
-  border-radius: 50%; /* Change from 65px to 50% for a perfect circle */
-  cursor: pointer;
+/* ===== 1. CONTAINER STYLES ===== */
+.leaderboard {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
   font-family: "Courier New", Courier, monospace;
-  width: 30px; /* Add fixed width */
-  height: 30px; /* Add fixed height */
-  display: flex; /* Use flexbox for centering */
-  justify-content: center; /* Center horizontally */
-  align-items: center; /* Center vertically */
-  transition: all 0.2s ease; /* Smooth transition for hover effects */
+  position: relative;
+  background: #fff;
+  color: #333;
 }
 
-.back-button:hover {
-  background: rgb(0, 50, 130);
-  transform: scale(1.05); /* Slight scale on hover for better UX */
+.dark-theme .leaderboard {
+  background: #222;
+  color: #ddd;
 }
 
-.dark-theme .back-button:hover {
-  background: rgb(0, 225, 152);
-  box-shadow: 0 0 10px rgba(0, 225, 152, 0.3); /* Add glow effect for dark theme */
+.leaderboard h2 {
+  font-size: 1.5rem;
+  margin: 0 0 20px;
+  text-align: center;
+  color: #333;
 }
 
-
-  .dark-theme .back-button:hover {
-    background: rgb(0, 225, 152);
-    /* Darker shade for hover */
-  }
-.back-button svg {
-  margin: 0;
-  padding: 0;
+.dark-theme .leaderboard h2 {
+  color: #4cc9f0;
 }
-  /* Tabs */
-  .tabs {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-bottom: 20px;
-  }
 
-  .tab {
-    padding: 8px 16px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-family: "Courier New", Courier, monospace;
-    color: rgb(0, 66, 170);
-    /* Light mode tab */
-  }
-
-  .tab:hover {
-    color: black;
-    /* Light mode hover */
-  }
-
-  .tab.active {
-    border-bottom: 2px solid black;
-    /* Light mode active */
-    color: black;
-  }
-
-  .dark-theme .tab {
-    color: #4cc9f0;
-    /* Dark mode tab */
-  }
-
-  .dark-theme .tab:hover {
-    color: rgb(0, 225, 152);
-    text-shadow: 0 0 8px rgb(0, 225, 152, 0.5);
-    /* Dark mode hover */
-  }
-
-  .dark-theme .tab.active {
-    border-bottom: 2px solid rgb(0, 225, 152);
-    text-shadow: 0 0 8px rgb(0, 225, 152, 0.5);
-    /* Dark mode active */
-    color: rgb(0, 225, 152);
-  }
-
-  /* Table */
-  .table-container {
-    width: 100%;
-  }
-
-  .table-grid {
-    display: grid;
-    grid-template-columns: 1fr 2fr 1fr 1fr 1fr;
-    width: 100%;
-    border-bottom: 1px solid #eee;
-  }
-
-  .table-grid.personal {
-    grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr;
-  }
-
-  .table-header {
-    padding: 10px;
-    background: #f5f5f5;
-    font-weight: bold;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-    color: black;
-    /* Light mode header */
-  }
-
-  .dark-theme .table-header {
-    background: #333;
-    border-bottom: 1px solid #444;
-    color: #4cc9f0;
-    /* Dark mode header */
-  }
-
-  .table-cell {
-    padding: 10px;
-    border-bottom: 1px solid #eee;
-  }
-
-  /* Alternating colors for light mode */
-  .table-grid>.table-cell:nth-child(5n + 1),
-  .table-grid>.table-cell:nth-child(5n + 2),
-  .table-grid>.table-cell:nth-child(5n + 3),
-  .table-grid>.table-cell:nth-child(5n + 4),
-  .table-grid>.table-cell:nth-child(5n + 5) {
-    color: rgb(0, 66, 170);
-    /* Odd rows in light mode */
-  }
-
-  .table-grid>.table-cell:nth-child(10n + 6),
-  .table-grid>.table-cell:nth-child(10n + 7),
-  .table-grid>.table-cell:nth-child(10n + 8),
-  .table-grid>.table-cell:nth-child(10n + 9),
-  .table-grid>.table-cell:nth-child(10n + 10) {
-    color: black;
-    /* Even rows in light mode */
-  }
-
-  /* Alternating colors for dark mode */
-  .dark-theme .table-grid>.table-cell:nth-child(5n + 1),
-  .dark-theme .table-grid>.table-cell:nth-child(5n + 2),
-  .dark-theme .table-grid>.table-cell:nth-child(5n + 3),
-  .dark-theme .table-grid>.table-cell:nth-child(5n + 4),
-  .dark-theme .table-grid>.table-cell:nth-child(5n + 5) {
-    color: #4cc9f0;
-    /* Odd rows in dark mode */
-  }
-
-  .dark-theme .table-grid>.table-cell:nth-child(10n + 6),
-  .dark-theme .table-grid>.table-cell:nth-child(10n + 7),
-  .dark-theme .table-grid>.table-cell:nth-child(10n + 8),
-  .dark-theme .table-grid>.table-cell:nth-child(10n + 9),
-  .dark-theme .table-grid>.table-cell:nth-child(10n + 10) {
-    color: rgb(0, 225, 152);
-    text-shadow: 0 0 8px rgb(0, 225, 152, 0.5);
-    /* Even rows in dark mode */
-  }
-
-  /* Highlight styles */
-  .table-cell.highlight {
-    background: rgba(0, 66, 170, 0.1);
-    /* Light mode highlight */
-    color: black;
-    /* Override alternating color for highlight */
-  }
-
-  .dark-theme .table-cell.highlight {
-    background: rgba(76, 201, 240, 0.25);
-    /* Dark mode highlight with #4cc9f0 at 25% opacity */
-    color: rgb(0, 225, 152);
-    text-shadow: 0 0 8px rgb(0, 225, 152, 0.5);
-    /* Override alternating color for highlight */
-  }
-
-  /* Pagination */
-  .pagination {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-    margin-top: 20px;
-  }
-
-  .pagination-button {
-    padding: 8px;
-    background: rgb(0, 66, 170);
-    /* Light mode pagination */
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-
-  .pagination-button:disabled {
-    background: #ccc;
-    cursor: not-allowed;
-  }
-
-  .pagination-button:hover:not(:disabled) {
-    background: rgb(0, 50, 130);
-    /* Darker shade for hover */
-  }
-
-  .dark-theme .pagination-button {
-    background: rgb(0, 225, 152);
-    text-shadow: 0 0 8px rgb(0, 225, 152, 0.5);
-    /* Dark mode pagination */
-  }
-
-  .dark-theme .pagination-button:disabled {
-    background: #444;
-  }
-
-  .dark-theme .pagination-button:hover:not(:disabled) {
-    background: rgb(0, 225, 152);
-    text-shadow: 0 0 8px rgb(0, 225, 152, 0.5);
-    /* Darker shade for hover */
-  }
-
-  /* Login Prompt */
-  .login-prompt {
-    text-align: center;
-    padding: 20px;
-  }
-
-  .login-button {
-    padding: 8px 16px;
-    background: rgb(0, 66, 170);
-    /* Light mode login button */
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-
-  .login-button:hover {
-    background: rgb(0, 50, 130);
-    /* Darker shade for hover */
-  }
-
-  .dark-theme .login-button {
-    background: rgb(0, 225, 152);
-    text-shadow: 0 0 8px rgb(0, 225, 152, 0.5);
-    /* Dark mode login button */
-  }
-
-  .dark-theme .login-button:hover {
-    background: rgb(0, 225, 152);
-    text-shadow: 0 0 8px rgb(0, 225, 152, 0.5);
-    /* Darker shade for hover */
-  }
-
-  /* Loading & Error */
-  .loading,
-  .error {
-    text-align: center;
-    padding: 20px;
-    color: rgb(0, 66, 170);
-    /* Light mode loading/error */
-  }
-
-  .error {
-    color: rgb(170, 0, 0);
-    /* Red for errors in light mode */
-  }
-
-  .dark-theme .loading,
-  .dark-theme .error {
-    color: #4cc9f0;
-    /* Dark mode loading */
-  }
-
-  .dark-theme .error {
-    color: rgb(255, 102, 102);
-    /* Red for errors in dark mode */
-  }
-
-  /* User Position */
-  .user-position {
-    text-align: center;
-    padding: 10px;
-    color: rgb(0, 66, 170);
-    /* Light mode user position */
-  }
-
-  .dark-theme .user-position {
-    color: #4cc9f0;
-    /* Dark mode user position */
-  }
-
-  /* Responsive Design */
-  @media (max-width: 600px) {
-    .table-grid {
-      grid-template-columns: 1fr 2fr 1fr;
-    }
-
-    .table-grid.personal {
-      grid-template-columns: 1.5fr 1fr 1fr;
-    }
-
-    .table-header:nth-child(n + 4),
-    .table-cell:nth-child(5n + 4),
-    .table-cell:nth-child(5n) {
-      display: none;
-    }
-  }
-
-  .leaderboard-button-fixed {
-    position: absolute;
-    display: flex;
-    /* Fixes the button at a specific position */
-    bottom: 30px;
-    padding: 8px;
-    /* Distance from the bottom */
-    left: 10px;
-    /* Padding for the button */
-    cursor: pointer;
-    /* Change cursor to pointer on hover */
-    background-color: black;
-    /* Light mode background color */
-    color: #E5B80B;
-    /* Text color */
-    border: 1px solid #D4A017;
-    /* No border */
-    border-radius: 57%;
-    /* Rounded corners */
-    /* font-weight: 600; */
-    /* Bold text */
-    transition: all 0.2s ease;
-    /* Transition for hover effect */
-    box-shadow: 0 2px 8px rgba(230, 185, 30, 0.5);
-    transform: translateY(+50%);
-
-  }
-
-  .leaderboard-button-fixed:hover {
-    background: linear-gradient(to bottom, #FFDF4F, #FDBC40);
-    box-shadow: 0 3px 10px rgba(230, 185, 30, 0.65);
-    color: black;
-  }
-
-  .dark-theme .leaderboard-button-fixed {
-    /* color: #333; */
-    color: #E5B80B;
-    background-color: black;
-    /* Dark mode background color */
-  }
-
-  .dark-theme .leaderboard-button-fixed:hover {
-    background-color: rgb(0, 225, 152);
-    /* Darker shade on hover for dark mode */
-  }
-
-  /*PERSONAL STATS *
-/* Personal Stats Tab Styles */
-  .personal-stats-container {
-    padding: 15px;
-    max-width: 800px;
-    margin: 0 auto;
-  }
-
-  /* Login Required Message */
-  .personal-stats-login-required {
-    text-align: center;
-    padding: 30px;
-    background-color: rgba(0, 0, 0, 0.05);
-    border-radius: 8px;
-    margin: 20px 0;
-  }
-
-  .personal-stats-login-required .login-button {
-    margin-top: 15px;
-    padding: 8px 20px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: bold;
-  }
-
-  .dark-theme .personal-stats-login-required {
-    background-color: rgba(255, 255, 255, 0.05);
-  }
-
-  .dark-theme .personal-stats-login-required .login-button {
-    background-color: #4cc9f0;
-  }
-
-  /* Summary Stats Cards */
-  .stats-summary {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 15px;
-    margin-bottom: 25px;
-  }
-
-  .stat-card {
-    background-color: #f8f9fa;
-    border-radius: 8px;
-    padding: 15px;
-    text-align: center;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    transition: transform 0.2s;
-  }
-
-  .stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  }
-
-  .stat-card h3 {
-    margin: 0 0 10px 0;
-    font-size: 0.9rem;
-    color: #6c757d;
-  }
-
-  .stat-card .stat-value {
-    font-size: 1.8rem;
-    font-weight: bold;
-    color: #007bff;
-  }
-
-  .dark-theme .stat-card {
-    background-color: #333;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  }
-
-  .dark-theme .stat-card h3 {
-    color: #adb5bd;
-  }
-
-  .dark-theme .stat-card .stat-value {
-    color: #4cc9f0;
-  }
-
-  /* Streaks Section */
-  .streaks-section {
-    background-color: #f8f9fa;
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 25px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-
-  .streaks-section h3 {
-    margin-top: 0;
-    margin-bottom: 15px;
-    font-size: 1.2rem;
-    color: #212529;
-  }
-
-  .streaks-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 10px;
-  }
-
-  .streak-item {
-    display: flex;
-    justify-content: space-between;
-    padding: 8px;
-    border-bottom: 1px solid #dee2e6;
-  }
-
-  .streak-item:last-child {
-    border-bottom: none;
-  }
-
-  .streak-label {
-    font-weight: normal;
-    color: #6c757d;
-  }
-
-  .streak-value {
-    font-weight: bold;
-    color: #212529;
-  }
-
-  .dark-theme .streaks-section {
-    background-color: #333;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  }
-
-  .dark-theme .streaks-section h3 {
-    color: #f8f9fa;
-  }
-
-  .dark-theme .streak-item {
-    border-bottom-color: #495057;
-  }
-
-  .dark-theme .streak-label {
-    color: #adb5bd;
-  }
-
-  .dark-theme .streak-value {
-    color: #f8f9fa;
-  }
-
-  /* Top Performances Table */
-  .top-performances {
-    background-color: #f8f9fa;
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-
-  .top-performances h3 {
-    margin-top: 0;
-    margin-bottom: 15px;
-    font-size: 1.2rem;
-    color: #212529;
-  }
-
-  .top-scores-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9rem;
-  }
-
-  .top-scores-table th,
-  .top-scores-table td {
-    padding: 8px 12px;
-    text-align: left;
-    border-bottom: 1px solid #dee2e6;
-  }
-
-  .top-scores-table th {
-    font-weight: bold;
-    color: #495057;
-    border-bottom: 2px solid #adb5bd;
-  }
-
-  .top-scores-table tbody tr:last-child td {
-    border-bottom: none;
-  }
-
-  .top-scores-table tbody tr:hover {
-    background-color: rgba(0, 0, 0, 0.05);
-  }
-
-  .dark-theme .top-performances {
-    background-color: #333;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  }
-
-  .dark-theme .top-performances h3 {
-    color: #f8f9fa;
-  }
-
-  .dark-theme .top-scores-table th {
-    color: #f8f9fa;
-    border-bottom-color: #495057;
-  }
-
-  .dark-theme .top-scores-table td {
-    border-bottom-color: #495057;
-    color: #f8f9fa;
-  }
-
-  .dark-theme .top-scores-table tbody tr:hover {
-    background-color: rgba(255, 255, 255, 0.05);
-  }
-
-  /* Last Played */
-  .last-played {
-    text-align: right;
-    font-style: italic;
-    color: #6c757d;
-    font-size: 0.9rem;
-    margin-top: 15px;
-  }
-
-  .dark-theme .last-played {
-    color: #adb5bd;
-  }
-
-  /* Loading and Error States */
-  .loading-spinner {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 200px;
-    font-size: 1rem;
-    color: #6c757d;
-  }
-
-  .error-message {
-    background-color: #f8d7da;
-    color: #721c24;
-    padding: 15px;
-    border-radius: 8px;
-    margin: 20px 0;
-    text-align: center;
-  }
-
-  .error-message button {
-    margin-top: 10px;
-    padding: 5px 15px;
-    background-color: #dc3545;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-
-  .dark-theme .loading-spinner {
-    color: #adb5bd;
-  }
-
-  .dark-theme .error-message {
-    background-color: rgba(220, 53, 69, 0.2);
-    color: #f8d7da;
-  }
-
-  .dark-theme .error-message button {
-    background-color: #dc3545;
-  }
-
-  /* Refresh Button */
-  .refresh-button {
-    background: none;
-    border: none;
-    font-size: 1.2rem;
-    color: #6c757d;
-    cursor: pointer;
-    padding: 0 10px;
-    transition: transform 0.2s ease;
-    margin-left: auto;
-  }
-
-  .refresh-button:hover {
-    transform: rotate(180deg);
-    color: #007bff;
-  }
-
-  .refresh-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .dark-theme .refresh-button {
-    color: #adb5bd;
-  }
-
-  .dark-theme .refresh-button:hover {
-    color: #4cc9f0;
-  }
-
-  /* Responsive Adjustments */
-  @media (max-width: 768px) {
-
-    .stats-summary,
-    .streaks-grid {
-      grid-template-columns: 1fr 1fr;
-    }
-
-    .top-scores-table {
-      font-size: 0.8rem;
-    }
-
-    .top-scores-table th,
-    .top-scores-table td {
-      padding: 6px 8px;
-    }
-
-    .refresh-button {
-      font-size: 1rem;
-      padding: 0 5px;
-    }
-  }
-
-  @media (max-width: 480px) {
-    .stats-summary {
-      grid-template-columns: 1fr;
-    }
-
-    .streaks-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .top-performances {
-      overflow-x: auto;
-    }
-
-    .personal-stats-container {
-      padding: 10px;
-    }
-  }
-
-  /* Add these styles to your Leaderboard.css file */
-
-  /* Streak controls container */
-  .streak-controls {
-    margin: 15px 0;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    width: 100%;
-  }
-
-  /* Streak type and period selectors */
-  .streak-type-selector,
-  .streak-period-selector {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    margin-bottom: 10px;
-  }
-
-  /* Streak selector buttons */
-  .streak-type-button,
-  .streak-period-button {
-    padding: 8px 16px;
-    background: #f0f0f0;
-    color: #333;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-family: "Courier New", Courier, monospace;
-    transition: all 0.2s ease;
-  }
-
-  .streak-type-button:hover,
-  .streak-period-button:hover {
-    background: #e0e0e0;
-  }
-
-  .streak-type-button.active,
-  .streak-period-button.active {
-    background: rgb(0, 66, 170);
-    color: white;
-  }
-
-  /* Dark theme */
-  .dark-theme .streak-type-button,
-  .dark-theme .streak-period-button {
-    background: #444;
-    color: #f0f0f0;
-  }
-
-  .dark-theme .streak-type-button:hover,
-  .dark-theme .streak-period-button:hover {
-    background: #555;
-  }
-
-  .dark-theme .streak-type-button.active,
-  .dark-theme .streak-period-button.active {
-    background: #4cc9f0;
-    color: #222;
-  }
-
-  /* Streak heading */
-  .streak-heading {
-    text-align: center;
-    margin: 10px 0 20px;
-    font-size: 1.2rem;
-    color: #333;
-  }
-
-  .dark-theme .streak-heading {
-    color: #4cc9f0;
-  }
-
-  /* For 3 or 4 column grid in streak table */
-  .streak-table {
-    display: grid;
-    grid-template-columns: 1fr 2fr 1fr;
-    width: 100%;
-    border-bottom: 1px solid #eee;
-  }
-
-  .streak-table.with-date {
-    grid-template-columns: 1fr 2fr 1fr 1fr;
-  }
-
-  /* Badge for impressive streaks */
-  .streak-badge {
-    display: inline-block;
-    margin-left: 10px;
-    padding: 2px 6px;
-    border-radius: 10px;
-    font-size: 0.7rem;
-    background-color: #ffc107;
-    color: #333;
-  }
-
-  .streak-badge.gold {
-    background-color: #ffc107;
-  }
-
-  .streak-badge.silver {
-    background-color: #b0b8bf;
-  }
-
-  .streak-badge.bronze {
-    background-color: #cd7f32;
-    color: white;
-  }
-
-  .dark-theme .streak-badge {
-    opacity: 0.9;
-  }
-
-  /* Responsive adjustments */
-  @media (max-width: 600px) {
-
-    .streak-type-selector,
-    .streak-period-selector {
-      flex-direction: column;
-      gap: 5px;
-      align-items: center;
-    }
-
-    .streak-type-button,
-    .streak-period-button {
-      width: 80%;
-      max-width: 200px;
-    }
-  }
-
-  @media (max-width: 600px) {
-    .streak-table {
-      grid-template-columns: 1fr 2fr 1fr;
-    }
-
-    .streak-table.with-date {
-      grid-template-columns: 1fr 1.5fr 1fr 1fr;
-    }
-
-    .streak-table .table-cell {
-      font-size: 0.9em;
-      padding: 8px 5px;
-    }
-  }
-
-  /* Add these styles to your Leaderboard.css file */
-
-  /* Tabs container for the new layout */
+/* ===== 2. NAVIGATION & CONTROLS ===== */
+/* Tabs container with navigation */
 .tabs-container {
   display: flex;
   justify-content: space-between;
@@ -882,157 +50,347 @@
   width: 100%;
 }
 
-  /* Adjust the tabs to be in the center */
-  .tabs {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    flex: 1;
-  }
+.tabs {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex: 1;
+}
 
-  /* Round button styling for back button */
-/* .round-button back_button {
-  width: 28px; 
-  height: 28px; 
-  border-radius: 50%;
+.tab {
+  padding: 8px 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  color: rgb(0, 66, 170);
+}
+
+.tab:hover {
+  color: #000;
+}
+
+.tab.active {
+  border-bottom: 2px solid #000;
+  color: #000;
+}
+
+.dark-theme .tab {
+  color: #4cc9f0;
+}
+
+.dark-theme .tab:hover {
+  color: rgb(0, 225, 152);
+  text-shadow: 0 0 8px rgba(0, 225, 152, 0.5);
+}
+
+.dark-theme .tab.active {
+  border-bottom: 2px solid rgb(0, 225, 152);
+  color: rgb(0, 225, 152);
+  text-shadow: 0 0 8px rgba(0, 225, 152, 0.5);
+}
+
+/* Back button styles */
+.back-button {
+  background-color: #000;
+  color: #fff;
+  border: none;
+  border-radius: 50%; /* Keep 50% for perfect circle */
+  cursor: pointer;
+  width: 32px; /* Slightly larger for better proportions */
+  height: 32px; /* Keep equal width and height for circle */
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: black;
-  color: white;
-  border: none;
-  cursor: pointer;
+  margin-left: 14px;
   transition: all 0.2s ease;
-  padding:20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-} */
+  /* Ensure no padding interferes with the circle shape */
+  padding: 0;
+  /* Improve icon centering */
+  overflow: visible;
+}
 
-  /* Dark theme for round button */
-  .dark-theme .round-button {
-    background-color: #4cc9f0;
-    color: #222;
-  }
+.back-button:hover {
+  background: rgb(0, 50, 130);
+  transform: scale(1.05);
+}
 
-  .round-button:hover {
-    background-color: rgb(0, 50, 130);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
-  }
+/* Fix SVG icon display */
+.back-button svg {
+  margin: 0;
+  padding: 0;
+  width: 20px; /* Explicit width */
+  height: 20px; /* Explicit height */
+  display: block; /* Ensures proper display */
+  /* Fix for some browsers that might hide the icon */
+  fill: currentColor;
+  color: white;
+}
 
-  .dark-theme .round-button:hover {
-    background-color: rgb(0, 225, 152);
-  }
+/* Fix for Safari */
+.back-button:focus {
+  outline: none;
+}
 
-  /* Remove the old back button styles */
-  .back-button {
-    position: static;
-    /* Override the absolute positioning */
-    top: auto;
-    right: auto;
-    margin: 0;
-  }
+.dark-theme .back-button {
+  background-color:#333;
+}
+.dark-theme .back-button svg{
+  color:#4cc9f0;
+}
+.dark-theme .back-button:hover {
+  background: rgb(0, 225, 152);
+  box-shadow: 0 0 10px rgba(0, 225, 152, 0.3);
+}
 
-  /* Account spacer to balance the layout */
-  .account-spacer {
-    width: 40px;
-    /* Same width as the round button */
-  }
+/* Account icon container */
+.account-icon-container {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 18px;
+}
 
-  /* Update the game header to better fit in the leaderboard */
-  .leaderboard .game-header {
-    margin: 0 0 10px 0;
-    padding: 10px 0;
-  }
+.account-icon-container .account-icon {
+  position: static;
+  transform: none;
+  right: auto;
+  bottom: auto;
+}
 
-  /* Ensure the table grid displays correctly */
-  .table-grid {
-    display: grid;
-    grid-template-columns: 1fr 2fr 1fr 1fr 1fr;
-    width: 100%;
-    border-bottom: 1px solid #eee;
-  }
+/* Leaderboard button fixed position */
+.leaderboard-button-fixed {
+  position: absolute;
+  bottom: 30px;
+  left: 10px;
+  padding: 8px;
+  background-color: #000;
+  color: #E5B80B;
+  border: 1px solid #D4A017;
+  border-radius: 57%;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(230, 185, 30, 0.5);
+  transform: translateY(50%);
+  display: flex;
+}
 
-  /* Make sure pagination is clearly visible */
-  .pagination {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-    margin: 20px 0;
-    padding: 10px;
-  }
+.leaderboard-button-fixed:hover {
+  background: linear-gradient(to bottom, #FFDF4F, #FDBC40);
+  box-shadow: 0 3px 10px rgba(230, 185, 30, 0.65);
+  color: #000;
+}
 
-  .pagination-button {
-    padding: 8px 12px;
-    background: rgb(0, 66, 170);
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    min-width: 40px;
-    text-align: center;
-  }
+.dark-theme .leaderboard-button-fixed {
+  color: #E5B80B;
+  background-color: #000;
+}
 
-  .dark-theme .pagination-button {
-    background: rgb(0, 225, 152);
- color: #333;
-  }
+.dark-theme .leaderboard-button-fixed:hover {
+  background-color: rgb(0, 225, 152);
+}
 
-  .pagination-button:disabled {
-    background: #ccc;
-    cursor: not-allowed;
-  }
+/* Streak controls */
+.streak-controls {
+  margin: 15px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
 
-  .dark-theme .pagination-button:disabled {
-    background: #444;
-  }
+.streak-type-selector,
+.streak-period-selector {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 10px;
+}
 
-  /* Responsive adjustments */
-  @media (max-width: 768px) {
-    .tabs {
-      gap: 5px;
-    }
+.streak-type-button,
+.streak-period-button {
+  padding: 8px 16px;
+  background: #f0f0f0;
+  color: #333;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
 
-    .tab {
-      padding: 6px 10px;
-      font-size: 0.9rem;
-    }
+.streak-type-button:hover,
+.streak-period-button:hover {
+  background: #e0e0e0;
+}
 
-    .round-button {
-      width: 36px;
-      height: 36px;
-    }
+.streak-type-button.active,
+.streak-period-button.active {
+  background: rgb(0, 66, 170);
+  color: #fff;
+}
 
-    .account-spacer {
-      width: 36px;
-    }
-  }
+.dark-theme .streak-type-button,
+.dark-theme .streak-period-button {
+  background: #444;
+  color: #f0f0f0;
+}
 
-  @media (max-width: 480px) {
-    .tabs-container {
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 10px;
-    }
+.dark-theme .streak-type-button:hover,
+.dark-theme .streak-period-button:hover {
+  background: #555;
+}
 
-    .tabs {
-      order: 2;
-      width: 100%;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
+.dark-theme .streak-type-button.active,
+.dark-theme .streak-period-button.active {
+  background: #4cc9f0;
+  color: #222;
+}
 
-    .round-button {
-      order: 1;
-    }
+.streak-heading {
+  text-align: center;
+  margin: 10px 0 20px;
+  font-size: 1.2rem;
+  color: #333;
+}
 
-    .account-spacer {
-      display: none;
-    }
-  }
+.dark-theme .streak-heading {
+  color: #4cc9f0;
+}
 
-/* Add these styles to your Leaderboard.css file */
+/* ===== 3. TABLE STYLES ===== */
+.table-container {
+  width: 100%;
+}
 
+/* Standard table grid */
+.table-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr 1fr 1fr;
+  width: 100%;
+  border-bottom: 1px solid #eee;
+}
+
+/* Personal table grid with different column sizes */
+.table-grid.personal {
+  grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr;
+}
+
+/* Streak tables */
+.streak-table {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  width: 100%;
+  border-bottom: 1px solid #eee;
+}
+
+.streak-table.with-date {
+  grid-template-columns: 1fr 2fr 1fr 1fr;
+}
+
+/* Table headers */
+.table-header {
+  padding: 10px;
+  background: #f5f5f5;
+  font-weight: bold;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+  color: #000;
+}
+
+.dark-theme .table-header {
+  background: #333;
+  border-bottom: 1px solid #444;
+  color: #4cc9f0;
+}
+
+/* Table cells */
+.table-cell {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+/* Alternating row colors for light theme */
+.table-grid > .table-cell:nth-child(5n+1),
+.table-grid > .table-cell:nth-child(5n+2),
+.table-grid > .table-cell:nth-child(5n+3),
+.table-grid > .table-cell:nth-child(5n+4),
+.table-grid > .table-cell:nth-child(5n+5) {
+  color: rgb(0, 66, 170);
+}
+
+.table-grid > .table-cell:nth-child(10n+6),
+.table-grid > .table-cell:nth-child(10n+7),
+.table-grid > .table-cell:nth-child(10n+8),
+.table-grid > .table-cell:nth-child(10n+9),
+.table-grid > .table-cell:nth-child(10n+10) {
+  color: #000;
+}
+
+/* Alternating row colors for dark theme */
+.dark-theme .table-grid > .table-cell:nth-child(5n+1),
+.dark-theme .table-grid > .table-cell:nth-child(5n+2),
+.dark-theme .table-grid > .table-cell:nth-child(5n+3),
+.dark-theme .table-grid > .table-cell:nth-child(5n+4),
+.dark-theme .table-grid > .table-cell:nth-child(5n+5) {
+  color: #4cc9f0;
+}
+
+.dark-theme .table-grid > .table-cell:nth-child(10n+6),
+.dark-theme .table-grid > .table-cell:nth-child(10n+7),
+.dark-theme .table-grid > .table-cell:nth-child(10n+8),
+.dark-theme .table-grid > .table-cell:nth-child(10n+9),
+.dark-theme .table-grid > .table-cell:nth-child(10n+10) {
+  color: rgb(0, 225, 152);
+  text-shadow: 0 0 8px rgba(0, 225, 152, 0.5);
+}
+
+/* ===== 4. PAGINATION ===== */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin: 20px 0;
+  padding: 10px;
+}
+
+.pagination-button {
+  padding: 8px 12px;
+  background: rgb(0, 66, 170);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  min-width: 40px;
+  text-align: center;
+}
+
+.pagination-button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.pagination-button:hover:not(:disabled) {
+  background: rgb(0, 50, 130);
+}
+
+.dark-theme .pagination-button {
+  background: rgb(0, 225, 152);
+  color: #333;
+}
+
+.dark-theme .pagination-button:disabled {
+  background: #444;
+}
+
+.dark-theme .pagination-button:hover:not(:disabled) {
+  background: rgb(0, 225, 152);
+  text-shadow: 0 0 8px rgba(0, 225, 152, 0.5);
+}
+
+/* ===== 5. USER HIGHLIGHT STYLES ===== */
 /* Separator row styling */
 .table-cell.separator {
   border-top: 2px dotted #ddd;
@@ -1066,7 +424,7 @@
 /* "YOU" badge styling */
 .you-badge {
   background-color: #E5B80B;
-  color: black;
+  color: #000;
   font-size: 0.65rem;
   padding: 1px 5px;
   border-radius: 3px;
@@ -1081,7 +439,357 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Empty state styling */
+/* ===== 6. PERSONAL STATS ===== */
+/* Login Required Message */
+.personal-stats-login-required {
+  text-align: center;
+  padding: 30px;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  margin: 20px 0;
+}
+
+.personal-stats-login-required .login-button {
+  margin-top: 15px;
+  padding: 8px 20px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.dark-theme .personal-stats-login-required {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.dark-theme .personal-stats-login-required .login-button {
+  background-color: #4cc9f0;
+}
+
+/* Personal stats container */
+.personal-stats-container {
+  padding: 15px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Summary Stats Cards */
+.stats-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.stat-card {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 15px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card h3 {
+  margin: 0 0 10px 0;
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+.stat-card .stat-value {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #007bff;
+}
+
+.dark-theme .stat-card {
+  background-color: #333;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme .stat-card h3 {
+  color: #adb5bd;
+}
+
+.dark-theme .stat-card .stat-value {
+  color: #4cc9f0;
+}
+
+/* Streaks Section */
+.streaks-section {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 25px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.streaks-section h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 1.2rem;
+  color: #212529;
+}
+
+.streaks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.streak-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.streak-item:last-child {
+  border-bottom: none;
+}
+
+.streak-label {
+  font-weight: normal;
+  color: #6c757d;
+}
+
+.streak-value {
+  font-weight: bold;
+  color: #212529;
+}
+
+.dark-theme .streaks-section {
+  background-color: #333;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme .streaks-section h3 {
+  color: #f8f9fa;
+}
+
+.dark-theme .streak-item {
+  border-bottom-color: #495057;
+}
+
+.dark-theme .streak-label {
+  color: #adb5bd;
+}
+
+.dark-theme .streak-value {
+  color: #f8f9fa;
+}
+
+/* Top Performances Table */
+.top-performances {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.top-performances h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 1.2rem;
+  color: #212529;
+}
+
+.top-scores-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.top-scores-table th,
+.top-scores-table td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.top-scores-table th {
+  font-weight: bold;
+  color: #495057;
+  border-bottom: 2px solid #adb5bd;
+}
+
+.top-scores-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.top-scores-table tbody tr:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.dark-theme .top-performances {
+  background-color: #333;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme .top-performances h3 {
+  color: #f8f9fa;
+}
+
+.dark-theme .top-scores-table th {
+  color: #f8f9fa;
+  border-bottom-color: #495057;
+}
+
+.dark-theme .top-scores-table td {
+  border-bottom-color: #495057;
+  color: #f8f9fa;
+}
+
+.dark-theme .top-scores-table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Last played date */
+.last-played {
+  text-align: right;
+  font-style: italic;
+  color: #6c757d;
+  font-size: 0.9rem;
+  margin-top: 15px;
+}
+
+.dark-theme .last-played {
+  color: #adb5bd;
+}
+
+/* Refresh button */
+.refresh-button {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: #6c757d;
+  cursor: pointer;
+  padding: 0 10px;
+  transition: transform 0.2s ease;
+  margin-left: auto;
+}
+
+.refresh-button:hover {
+  transform: rotate(180deg);
+  color: #007bff;
+}
+
+.refresh-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dark-theme .refresh-button {
+  color: #adb5bd;
+}
+
+.dark-theme .refresh-button:hover {
+  color: #4cc9f0;
+}
+
+/* ===== 7. STREAK LEADERBOARD ===== */
+/* Streak badges */
+.streak-badge {
+  display: inline-block;
+  margin-left: 10px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  background-color: #ffc107;
+  color: #333;
+}
+
+.streak-badge.gold {
+  background-color: #ffc107;
+}
+
+.streak-badge.silver {
+  background-color: #b0b8bf;
+}
+
+.streak-badge.bronze {
+  background-color: #cd7f32;
+  color: #fff;
+}
+
+.dark-theme .streak-badge {
+  opacity: 0.9;
+}
+
+/* ===== 8. STATUS MESSAGES ===== */
+/* Loading and Error States */
+.loading, 
+.loading-spinner {
+  text-align: center;
+  padding: 20px;
+  color: rgb(0, 66, 170);
+}
+
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  font-size: 1rem;
+  color: #6c757d;
+}
+
+.error,
+.error-message {
+  text-align: center;
+  padding: 20px;
+  color: rgb(170, 0, 0);
+}
+
+.error-message {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 15px;
+  border-radius: 8px;
+  margin: 20px 0;
+}
+
+.error-message button {
+  margin-top: 10px;
+  padding: 5px 15px;
+  background-color: #dc3545;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.dark-theme .loading,
+.dark-theme .loading-spinner {
+  color: #4cc9f0;
+}
+
+.dark-theme .loading-spinner {
+  color: #adb5bd;
+}
+
+.dark-theme .error {
+  color: rgb(255, 102, 102);
+}
+
+.dark-theme .error-message {
+  background-color: rgba(220, 53, 69, 0.2);
+  color: #f8d7da;
+}
+
+.dark-theme .error-message button {
+  background-color: #dc3545;
+}
+
+/* Empty states */
 .no-data {
   text-align: center;
   padding: 30px;
@@ -1093,7 +801,43 @@
   color: #999;
 }
 
-/* Add extra spacing after the last row in normal entries */
+/* User position notice */
+.user-position {
+  text-align: center;
+  padding: 10px;
+  color: rgb(0, 66, 170);
+}
+
+.dark-theme .user-position {
+  color: #4cc9f0;
+}
+
+/* Login button */
+.login-button {
+  padding: 8px 16px;
+  background: rgb(0, 66, 170);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.login-button:hover {
+  background: rgb(0, 50, 130);
+}
+
+.dark-theme .login-button {
+  background: rgb(0, 225, 152);
+  text-shadow: 0 0 8px rgba(0, 225, 152, 0.5);
+}
+
+.dark-theme .login-button:hover {
+  background: rgb(0, 225, 152);
+  text-shadow: 0 0 8px rgba(0, 225, 152, 0.5);
+}
+
+/* ===== 9. RESPONSIVE STYLES ===== */
+/* Extra space after rows */
 .table-grid .table-cell:nth-last-child(6),
 .table-grid .table-cell:nth-last-child(7),
 .table-grid .table-cell:nth-last-child(8),
@@ -1102,26 +846,123 @@
   padding-bottom: 12px;
 }
 
-/* Balance spacing before separator */
 .table-cell.separator:first-child {
   padding-top: 10px;
 }
 
-/* Responsive adaptations */
+/* Medium screens */
 @media (max-width: 768px) {
+  .tabs {
+    gap: 5px;
+  }
+
+  .tab {
+    padding: 6px 10px;
+    font-size: 0.9rem;
+  }
+
+  .round-button, 
+  .account-icon-container {
+    width: 36px;
+    height: 36px;
+  }
+
   .table-cell.user-highlight {
     font-size: 0.95em;
   }
 
   .you-badge {
     font-size: 0.6rem;
-    padding: 0px 4px;
+    padding: 0 4px;
     margin-left: 5px;
+  }
+
+  .stats-summary,
+  .streaks-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .top-scores-table {
+    font-size: 0.8rem;
+  }
+
+  .top-scores-table th,
+  .top-scores-table td {
+    padding: 6px 8px;
+  }
+
+  .refresh-button {
+    font-size: 1rem;
+    padding: 0 5px;
   }
 }
 
-/* For very small screens */
+/* Small screens */
+@media (max-width: 600px) {
+  .table-grid {
+    grid-template-columns: 1fr 2fr 1fr;
+  }
+
+  .table-grid.personal {
+    grid-template-columns: 1.5fr 1fr 1fr;
+  }
+
+  .table-header:nth-child(n+4),
+  .table-cell:nth-child(5n+4),
+  .table-cell:nth-child(5n) {
+    display: none;
+  }
+
+  .streak-type-selector,
+  .streak-period-selector {
+    flex-direction: column;
+    gap: 5px;
+    align-items: center;
+  }
+
+  .streak-type-button,
+  .streak-period-button {
+    width: 80%;
+    max-width: 200px;
+  }
+
+  .streak-table {
+    grid-template-columns: 1fr 2fr 1fr;
+  }
+
+  .streak-table.with-date {
+    grid-template-columns: 1fr 1.5fr 1fr 1fr;
+  }
+
+  .streak-table .table-cell {
+    font-size: 0.9em;
+    padding: 8px 5px;
+  }
+}
+
+/* Very small screens */
 @media (max-width: 480px) {
+  .tabs-container {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .tabs {
+    order: 2;
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .round-button {
+    order: 1;
+  }
+
+  .account-spacer {
+    display: none;
+  }
+
   .table-cell.separator {
     font-size: 0.9em;
     padding: 6px 3px;
@@ -1132,42 +973,20 @@
     margin: 2px auto 0;
     width: fit-content;
   }
-}
 
-.account-icon-container {
-  width: 24px; /* Match the back button size */
-  height: 24px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding:18px
-}
-
-/* Override the fixed positioning of the account icon */
-.account-icon-container .account-icon {
-  position: static; /* Override the fixed positioning */
-  transform: none; /* Remove any transforms */
-  right: auto;
-  bottom: auto;
-}
-
-@media (max-width: 768px) {
-  .round-button, .account-icon-container {
-    width: 24px;
-    height: 24px;
+  .stats-summary {
+    grid-template-columns: 1fr;
   }
-}
 
-.leaderboard-container {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 20px;
-  background-color: white;
-  /* Light mode background */
-  color: #333;
-  /* Light mode text */
-  border-radius: 10px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  position: relative;
-  z-index: 1;
+  .streaks-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .top-performances {
+    overflow-x: auto;
+  }
+
+  .personal-stats-container {
+    padding: 10px;
+  }
 }

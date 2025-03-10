@@ -24,10 +24,12 @@
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
   max-height: 90vh;
   overflow-y: auto;
-  z-index: 10000; /* High z-index to stay on top */
+  z-index: 5001; /* High z-index to stay on top */
   position: relative;
 }
-
+settings-content {
+  z-index:5002;
+}
 /* Dark theme settings */
 body.dark-theme .settings-container {
   background-color: #333;
