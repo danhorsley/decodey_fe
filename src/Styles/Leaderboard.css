@@ -31,14 +31,12 @@
 
   .back-button {
     position: absolute;
-    top: 20px;
-    right: 20px;
-    padding: 8px 16px;
-    background: rgb(0, 66, 170);
+    padding: 4px;
+    background-color: black;
     /* Light mode button */
     color: #fff;
     border: none;
-    border-radius: 4px;
+    border-radius: 50px;
     cursor: pointer;
     font-family: "Courier New", Courier, monospace;
   }
@@ -883,20 +881,21 @@
   }
 
   /* Round button styling for back button */
-.round-button {
-  width: 36px; /* Reduced from 40px */
-  height: 36px; /* Reduced from 40px */
+/* .round-button back_button {
+  width: 28px; 
+  height: 28px; 
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: rgb(0, 66, 170);
+  background-color: black;
   color: white;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
+  padding:20px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
+} */
 
   /* Dark theme for round button */
   .dark-theme .round-button {
@@ -1126,11 +1125,12 @@
 }
 
 .account-icon-container {
-  width: 36px; /* Match the back button size */
-  height: 36px;
+  width: 24px; /* Match the back button size */
+  height: 24px;
   display: flex;
   justify-content: center;
   align-items: center;
+  padding:18px
 }
 
 /* Override the fixed positioning of the account icon */
@@ -1143,7 +1143,10 @@
 
 @media (max-width: 768px) {
   .round-button, .account-icon-container {
-    width: 32px;
-    height: 32px;
+    width: 24px;
+    height: 24px;
   }
 }
+
+
+

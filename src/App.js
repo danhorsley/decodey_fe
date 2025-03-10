@@ -4,6 +4,7 @@ import {
   Routes,
   Route,
   Navigate,
+  useLocation,
 } from "react-router-dom";
 import "./Styles/App.css";
 import "./Styles/Mobile.css";
@@ -17,6 +18,16 @@ import Signup from "./pages/Signup";
 import About from "./components/modals/About";
 import Settings from "./components/modals/Settings";
 import { useAppContext } from "./context/AppContext";
+
+// Create a wrapper component that conditionally renders the AccountButtonWrapper
+function GlobalUIElements() {
+  const location = useLocation();
+
+  // Don't render the account button on the leaderboard page
+  const isLeaderboardPage = location.pathname === "/leaderboard";
+
+  return !isLeaderboardPage ? <AccountButtonWrapper /> : null;
+}
 
 function App() {
   const {
@@ -58,8 +69,8 @@ function App() {
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
 
-      {/* Global fixed UI elements */}
-      <AccountButtonWrapper />
+      {/* Global fixed UI elements with conditional rendering */}
+      <GlobalUIElements />
     </Router>
   );
 }
