@@ -41,22 +41,28 @@ const SETTINGS_ICON_SVG = (
  * HeaderControls component - Provides about and settings buttons
  * for use across different pages
  */
-const HeaderControls = ({ title }) => {
+const HeaderControls = ({ title, hideAbout = false, hideSettings = false }) => {
   const { openAbout, showSettings } = useAppContext();
 
   return (
     <div className="game-header">
-      <button className="about-icon" onClick={openAbout} aria-label="About">
-        {ABOUT_ICON_SVG}
-      </button>
+      {!hideAbout && (
+        <button className="about-icon" onClick={openAbout} aria-label="About">
+          {ABOUT_ICON_SVG}
+        </button>
+      )}
+
       {title && <h1 className="retro-title">{title}</h1>}
-      <button
-        className="settings-icon"
-        onClick={showSettings}
-        aria-label="Settings"
-      >
-        {SETTINGS_ICON_SVG}
-      </button>
+
+      {!hideSettings && (
+        <button
+          className="settings-icon"
+          onClick={showSettings}
+          aria-label="Settings"
+        >
+          {SETTINGS_ICON_SVG}
+        </button>
+      )}
     </div>
   );
 };

@@ -806,6 +806,7 @@ const Leaderboard = ({ onClose }) => {
     >
       {/* Add HeaderControls at the top */}
       <HeaderControls hideTitle={true} />
+      <HeaderControls hideAbout={true} hideSettings={true} />
       <h2>Leaderboard</h2>
 
       {/* New tabs container with Back button on the left and Account button on right */}
