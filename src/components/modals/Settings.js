@@ -31,7 +31,7 @@ function Settings({ currentSettings, onSave, onCancel }) {
   };
 
   if (!currentSettings) return null;
-  
+
   return (
     <div className="about-overlay">
       <div className={`about-container settings-container ${currentSettings.theme === "dark" ? "dark-theme" : ""} text-${currentSettings.textColor}`}>

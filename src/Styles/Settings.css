@@ -16,15 +16,15 @@
 }
 
 .settings-container {
-  max-width: 800px;
   width: 90%;
+  max-width: 500px;
   background-color: white;
+  padding: 20px;
   border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  padding: 25px;
-  margin: auto; /* Center in the available space */
-  max-height: calc(100vh - 60px); /* Account for padding */
-  overflow-y: auto; /* Allow scrolling within the container */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  max-height: 90vh;
+  overflow-y: auto;
+  z-index: 5000; /* Same as other modals */
 }
 
 /* Dark theme settings */
