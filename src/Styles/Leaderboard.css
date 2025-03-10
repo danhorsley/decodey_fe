@@ -5,6 +5,7 @@
     padding: 20px;
     font-family: "Courier New", Courier, monospace;
     position: relative;
+    z-index: 1;
     background: #fff;
     color: black;
     /* Light mode base color */
