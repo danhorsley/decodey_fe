@@ -278,6 +278,19 @@ export const AppProvider = ({ children }) => {
             credentials: "include",
           }).catch((err) => console.error("Logout error:", err));
         };
+        setAuthState((prev) => ({ ...prev, authLoading: false, user: data.user }));
+      } catch (error) {
+        console.error("Login error:", error);
+        setAuthState((prev) => ({
+          ...prev,
+          authLoading: false,
+          authError: "Failed to log in",
+        }));
+      }
+    },
+    [setAuthState, closeLogin],
+  );
+
   const [leaderboardData, setLeaderboardData] = useState({
     entries: [],
     loading: false,
