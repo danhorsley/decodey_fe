@@ -1,16 +1,17 @@
 // src/pages/Leaderboard.js
 import React, { useState, useEffect, useCallback } from "react";
-import { useAppContext } from "../context/AppContext";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import apiService from "../services/apiService";
 import "../Styles/Leaderboard.css";
-import { FiRefreshCw, FiArrowLeft } from "react-icons/fi";
+import { useAppContext } from "../context/AppContext";
 import HeaderControls from "../components/HeaderControls";
+import Settings from "../components/modals/Settings";
+import { FiRefreshCw, FiArrowLeft } from "react-icons/fi";
 import AccountButtonWrapper from "../components/AccountButtonWrapper";
 
 const Leaderboard = ({ onClose }) => {
   const navigate = useNavigate();
-  const { isAuthenticated, openLogin, settings } = useAppContext();
+  const { settings, updateSettings, isAuthenticated, openLogin, isSettingsOpen, closeSettings } = useAppContext();
   const [activeTab, setActiveTab] = useState("all-time");
   const [leaderboardData, setLeaderboardData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -798,7 +799,16 @@ const Leaderboard = ({ onClose }) => {
     >
       {/* Add HeaderControls at the top */}
       <HeaderControls hideTitle={true} />
-
+      {isSettingsOpen && (
+        <Settings
+          currentSettings={settings}
+          onSave={(newSettings) => {
+            updateSettings(newSettings);
+            closeSettings();
+          }}
+          onCancel={closeSettings}
+        />
+      )}
       <h2>Leaderboard</h2>
 
       {/* New tabs container with Back button on the left and Account button on right */}

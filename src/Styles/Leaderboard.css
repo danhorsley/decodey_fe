@@ -1,4 +1,4 @@
-  /* src/Styles/Leaderboard.css */
+/* src/Styles/Leaderboard.css */
   .leaderboard {
     max-width: 800px;
     margin: 0 auto;
@@ -974,7 +974,7 @@
 
   .dark-theme .pagination-button {
     background: rgb(0, 225, 152);
-    color: #333;
+ color: #333;
   }
 
   .pagination-button:disabled {
@@ -1157,5 +1157,16 @@
   }
 }
 
-
-
+.leaderboard-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: white;
+  /* Light mode background */
+  color: #333;
+  /* Light mode text */
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 1;
+}
