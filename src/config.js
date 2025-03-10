@@ -116,6 +116,7 @@ const config = {
       console.error("Error saving session data from headers:", error);
       // Continue execution - this is non-critical
     }
+  }
   },
 
   // Health check function to verify API connection
