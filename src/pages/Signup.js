@@ -5,8 +5,8 @@ import { useAppContext } from "../context/AppContext";
 import apiService from "../services/apiService";
 import config from "../config";
 
-function Signup({ isOpen, onClose }) {
-  const { settings, openLogin } = useAppContext();
+function Signup({ onClose }) {
+  const { settings, openLogin, isSignupOpen } = useAppContext();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -123,7 +123,7 @@ function Signup({ isOpen, onClose }) {
     }
   }, [username, checkUsername]);
 
-  if (!isOpen) return null;
+  if (!isSignupOpen) return null;
   
   return (
     <div className="about-overlay">

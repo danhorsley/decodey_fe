@@ -47,7 +47,7 @@ function App() {
     <Router>
       {/* Global modals that should be available on all pages */}
       {isLoginOpen && <Login onClose={closeLogin} />}
-      {isSignupOpen && <Signup isOpen={isSignupOpen} onClose={closeSignup} />}
+      {isSignupOpen && <Signup onClose={closeSignup} />}
       {isAboutOpen && <About isOpen={isAboutOpen} onClose={closeAbout} />}
       {isSettingsOpen && (
         <Settings
