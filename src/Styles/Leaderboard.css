@@ -29,35 +29,43 @@
     /* Dark mode header */
   }
 
-  .back-button {
-    position: absolute;
-    padding: 5px;
-    background-color: black;
-    margin-left:14px !important;
-    /* Light mode button */
-    color: #fff;
-    border: none;
-    border-radius: 65px;
-    cursor: pointer;
-    font-family: "Courier New", Courier, monospace;
-  }
+.back-button {
+  position: absolute;
+  padding: 4px;
+  background-color: black;
+  margin-left: 14px !important;
+  color: #fff;
+  border: none;
+  border-radius: 50%; /* Change from 65px to 50% for a perfect circle */
+  cursor: pointer;
+  font-family: "Courier New", Courier, monospace;
+  width: 30px; /* Add fixed width */
+  height: 30px; /* Add fixed height */
+  display: flex; /* Use flexbox for centering */
+  justify-content: center; /* Center horizontally */
+  align-items: center; /* Center vertically */
+  transition: all 0.2s ease; /* Smooth transition for hover effects */
+}
 
-  .back-button:hover {
-    background: rgb(0, 50, 130);
-    /* Darker shade for hover */
-  }
+.back-button:hover {
+  background: rgb(0, 50, 130);
+  transform: scale(1.05); /* Slight scale on hover for better UX */
+}
 
-  .dark-theme .back-button {
-    background: #4cc9f0;
-    color: #333;
-    /* Dark mode button */
-  }
+.dark-theme .back-button:hover {
+  background: rgb(0, 225, 152);
+  box-shadow: 0 0 10px rgba(0, 225, 152, 0.3); /* Add glow effect for dark theme */
+}
+
 
   .dark-theme .back-button:hover {
     background: rgb(0, 225, 152);
     /* Darker shade for hover */
   }
-
+.back-button svg {
+  margin: 0;
+  padding: 0;
+}
   /* Tabs */
   .tabs {
     display: flex;

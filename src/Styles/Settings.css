@@ -6,7 +6,12 @@
   border-radius: 10px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   font-family: 'Courier New', Courier, monospace;
-  z-index:4000;
+  z-index:9999;
+  /* justify-content: center;
+  align-items: center;
+  position: fixed;
+  display: flex; */
+  
 }
 
 /* Dark theme settings */

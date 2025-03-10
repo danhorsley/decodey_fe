@@ -177,13 +177,13 @@ const Leaderboard = ({ onClose }) => {
 
   const renderTabs = () => (
     <div className="tabs-container">
-      {/* Back button on the left side */}
+      {/* Back button on the left side with improved styling */}
       <button
         className="back-button"
         onClick={handleBackToGame}
         aria-label="Back to Game"
       >
-        <FiArrowLeft size={20} /> {/* Increase arrow size from default */}
+        <FiArrowLeft size={18} />
       </button>
 
       {/* Tabs in the center */}
@@ -222,7 +222,6 @@ const Leaderboard = ({ onClose }) => {
       </div>
     </div>
   );
-
   // Improved leaderboard rendering to include the user carve-out
   const renderLeaderboardTable = () => {
     if (!leaderboardData) return null;
