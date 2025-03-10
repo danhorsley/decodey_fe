@@ -18,7 +18,6 @@ const Leaderboard = ({ onClose }) => {
     openLogin,
     isSettingsOpen,
     closeSettings,
-    isAboutOpen,
   } = useAppContext();
   const [activeTab, setActiveTab] = useState("all-time");
   const [leaderboardData, setLeaderboardData] = useState(null);
@@ -42,9 +41,6 @@ const Leaderboard = ({ onClose }) => {
   const handleBackToGame = () => {
     onClose ? onClose() : navigate("/");
   };
-  
-  // Hide the leaderboard if About or Settings modals are open
-  if (isAboutOpen || isSettingsOpen) return null;
 
   // Fetch leaderboard data using useCallback
   const fetchLeaderboardData = useCallback(async () => {
