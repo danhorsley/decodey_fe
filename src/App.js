@@ -49,13 +49,15 @@ function App() {
       {isLoginOpen && <Login onClose={closeLogin} />}
       {isSignupOpen && <Signup onClose={closeSignup} />}
       {isAboutOpen && <About isOpen={isAboutOpen} onClose={closeAbout} />}
-      <Settings
-        onSave={(newSettings) => {
-          updateSettings(newSettings);
-          closeSettings();
-        }}
-        onCancel={closeSettings}
-      />
+      {isSettingsOpen && (
+        <Settings
+          onSave={(newSettings) => {
+            updateSettings(newSettings);
+            closeSettings();
+          }}
+          onCancel={closeSettings}
+        />
+      )}
 
       {/* Main content routes */}
       <Routes>
