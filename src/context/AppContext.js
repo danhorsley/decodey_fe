@@ -192,13 +192,15 @@ export const AppProvider = ({ children }) => {
           // Choose storage method based on rememberMe preference
           const storage = rememberMe ? localStorage : sessionStorage;
 
-          // Store authentication data
+          // Store authentication data in new format
           storage.setItem("uncrypt-token", data.token);
           storage.setItem("uncrypt-user-id", data.user_id);
-          storage.setItem(
-            "uncrypt-username",
-            data.username || credentials.username,
-          );
+          storage.setItem("uncrypt-username", data.username || credentials.username);
+
+          // IMPORTANT: For backward compatibility, also store in original format
+          localStorage.setItem("auth_token", data.token);
+          localStorage.setItem("user_id", data.user_id);
+          localStorage.setItem("username", data.username || credentials.username);
 
           // Always remember user preference
           localStorage.setItem("uncrypt-remember-me", rememberMe);
@@ -207,97 +209,75 @@ export const AppProvider = ({ children }) => {
           closeLogin();
         }
 
-        // Update auth state
-        setAuthState({
-          user: data.user || {
-            username: credentials.username,
-            id: data.user_id,
-          },
-          isAuthenticated: true,
-          authLoading: false,
-          authError: null,
-        });
+        // Replace the useEffect that initializes auth state:
+        useEffect(() => {
+          // First check new format keys in localStorage
+          let token = localStorage.getItem("uncrypt-token");
+          let userId = localStorage.getItem("uncrypt-user-id");
+          let username = localStorage.getItem("uncrypt-username");
 
-        // Log successful authentication
-        console.log("Authentication state updated:", {
-          username: credentials.username,
-          authenticated: true,
-          token: data.token ? "[REDACTED]" : "None",
-        });
+          // If not found, check old format keys in localStorage
+          if (!token) {
+            token = localStorage.getItem("auth_token");
+            userId = localStorage.getItem("user_id");
+            username = localStorage.getItem("username");
+          }
 
-        return { success: true };
-      } catch (error) {
-        console.error("Login error:", error);
+          // If still not found, check sessionStorage
+          if (!token) {
+            token = sessionStorage.getItem("uncrypt-token");
+            userId = sessionStorage.getItem("uncrypt-user-id");
+            username = sessionStorage.getItem("uncrypt-username");
+          }
 
-        setAuthState((prev) => ({
-          ...prev,
-          authLoading: false,
-          authError: error.message || "Login failed",
-        }));
+          if (token && userId) {
+            // If token exists, set authenticated state
+            setAuthState({
+              user: { id: userId, username: username },
+              isAuthenticated: true,
+              token: token,
+              loading: false,
+            });
 
-        return {
-          success: false,
-          error: error.message || "Login failed",
+            // For backward compatibility, ensure tokens exist in both formats
+            localStorage.setItem("auth_token", token);
+            localStorage.setItem("user_id", userId);
+            if (username) localStorage.setItem("username", username);
+          } else {
+            // No token found, mark as not authenticated
+            setAuthState((prev) => ({ ...prev, loading: false }));
+          }
+        }, []);
+        // Update logout function to clear both storage types:
+        const logout = () => {
+          // Clear tokens from both storage types
+          localStorage.removeItem("uncrypt-token");
+          localStorage.removeItem("uncrypt-user-id");
+          localStorage.removeItem("uncrypt-username");
+          localStorage.removeItem("auth_token");
+          localStorage.removeItem("user_id");
+          localStorage.removeItem("username");
+
+          sessionStorage.removeItem("uncrypt-token");
+          sessionStorage.removeItem("uncrypt-user-id");
+          sessionStorage.removeItem("uncrypt-username");
+
+          // Don't remove the remember preference
+
+          // Update auth state
+          setAuthState({
+            user: null,
+            isAuthenticated: false,
+            authLoading: false,
+            authError: null,
+          });
+
+          // Call backend logout endpoint if needed
+          fetch(`${config.apiUrl}/logout`, {
+            method: "POST",
+            credentials: "include",
+          }).catch((err) => console.error("Logout error:", err));
         };
-      }
-    },
-    [closeLogin],
-  );
-
-  // On component mount, check for existing token in both storage types
-  useEffect(() => {
-    // Try to get token from localStorage first (for "remember me")
-    let token = localStorage.getItem("uncrypt-token");
-    let userId = localStorage.getItem("uncrypt-user-id");
-    let username = localStorage.getItem("uncrypt-username");
-
-    // If not in localStorage, try sessionStorage (for session-only)
-    if (!token) {
-      token = sessionStorage.getItem("uncrypt-token");
-      userId = sessionStorage.getItem("uncrypt-user-id");
-      username = sessionStorage.getItem("uncrypt-username");
-    }
-
-    if (token && userId) {
-      // If token exists, set authenticated state
-      setAuthState({
-        user: { id: userId, username: username },
-        isAuthenticated: true,
-        token: token,
-        loading: false,
-      });
-    } else {
-      // No token found, mark as not authenticated
-      setAuthState((prev) => ({ ...prev, loading: false }));
-    }
-  }, []);
-  // Logout method
-  const logout = () => {
-    // Clear tokens from both storage types
-    localStorage.removeItem("uncrypt-token");
-    localStorage.removeItem("uncrypt-user-id");
-    localStorage.removeItem("uncrypt-username");
-
-    sessionStorage.removeItem("uncrypt-token");
-    sessionStorage.removeItem("uncrypt-user-id");
-    sessionStorage.removeItem("uncrypt-username");
-
-    // Don't remove the remember preference
-
-    // Update auth state
-    setAuthState({
-      user: null,
-      isAuthenticated: false,
-      authLoading: false,
-      authError: null,
-    });
-
-    // Call backend logout endpoint if needed
-    fetch(`${config.apiUrl}/logout`, {
-      method: "POST",
-      credentials: "include",
-    }).catch((err) => console.error("Logout error:", err));
-  };
   const [leaderboardData, setLeaderboardData] = useState({
     entries: [],
     loading: false,

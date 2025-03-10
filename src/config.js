@@ -38,11 +38,17 @@ const config = {
       }
 
       // For protected endpoints, include all available identification
-      // Try to get token from both storage types
+      // First check for new format keys
       let token = localStorage.getItem("uncrypt-token");
       let userId = localStorage.getItem("uncrypt-user-id");
 
-      // If not in localStorage, try sessionStorage
+      // If not found, check old format keys
+      if (!token) {
+        token = localStorage.getItem("auth_token");
+        userId = localStorage.getItem("user_id");
+      }
+
+      // If still not found, check sessionStorage
       if (!token) {
         token = sessionStorage.getItem("uncrypt-token");
         userId = sessionStorage.getItem("uncrypt-user-id");
@@ -72,7 +78,6 @@ const config = {
 
       return headers;
     },
-
     // Function to clear session data (useful for logout)
     clearSession: () => {
       // Clear from both localStorage and sessionStorage
