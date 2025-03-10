@@ -31,12 +31,13 @@
 
   .back-button {
     position: absolute;
-    padding: 4px;
+    padding: 5px;
     background-color: black;
+    margin-left:14px !important;
     /* Light mode button */
     color: #fff;
     border: none;
-    border-radius: 50px;
+    border-radius: 65px;
     cursor: pointer;
     font-family: "Courier New", Courier, monospace;
   }

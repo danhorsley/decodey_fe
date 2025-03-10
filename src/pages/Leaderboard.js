@@ -179,7 +179,7 @@ const Leaderboard = ({ onClose }) => {
     <div className="tabs-container">
       {/* Back button on the left side */}
       <button
-        className="round-button back-button"
+        className="back-button"
         onClick={handleBackToGame}
         aria-label="Back to Game"
       >
