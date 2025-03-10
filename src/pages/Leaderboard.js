@@ -4,7 +4,7 @@ import { useAppContext } from "../context/AppContext";
 import { useNavigate } from "react-router-dom";
 import apiService from "../services/apiService";
 import "../Styles/Leaderboard.css";
-import { FiRefreshCw, FiArrowLeft } from "react-icons/fi"; // Added FiArrowLeft
+import { FiRefreshCw, FiArrowLeft } from "react-icons/fi";
 import HeaderControls from "../components/HeaderControls";
 
 const Leaderboard = ({ onClose }) => {
@@ -39,6 +39,7 @@ const Leaderboard = ({ onClose }) => {
     setError(null);
     try {
       const response = await apiService.getLeaderboard(activeTab, page);
+      console.log("Leaderboard API response:", response);
       setLeaderboardData(response);
     } catch (err) {
       console.error("Error fetching leaderboard:", err);
@@ -48,25 +49,38 @@ const Leaderboard = ({ onClose }) => {
     }
   }, [activeTab, page]);
 
+  // Enhanced fetchStreakData function with better error handling and logging
   const fetchStreakData = useCallback(async () => {
-    console.log("Fetching streak data with:", {
+    console.log("Starting fetchStreakData with:", {
       streakType,
       streakPeriod,
       page,
     });
     setIsStreakLoading(true);
     setStreakError(null);
+
     try {
+      // Clear data first to avoid rendering stale data
+      setStreakData(null);
+
       const response = await apiService.getStreakLeaderboard(
         streakType,
         streakPeriod,
         page,
       );
-      console.log("Streak data received:", response);
+
+      console.log("Streak API returned:", response);
+
+      // Force entries to be an array even if empty
+      if (!response.entries && !response.topEntries) {
+        response.entries = [];
+      }
+
+      // Set the data even if empty - we'll handle display in the render function
       setStreakData(response);
     } catch (err) {
-      console.error("Error fetching streak leaderboard:", err);
-      setStreakError("Failed to load streak leaderboard data.");
+      console.error("Error in fetchStreakData:", err);
+      setStreakError(`Failed to load streak leaderboard data: ${err.message}`);
     } finally {
       setIsStreakLoading(false);
     }
@@ -128,6 +142,11 @@ const Leaderboard = ({ onClose }) => {
     if (activeTab === "all-time" || activeTab === "weekly") {
       fetchLeaderboardData();
     } else if (activeTab === "streaks") {
+      console.log("Initiating streak data fetch with params:", {
+        streakType,
+        streakPeriod,
+        page,
+      });
       fetchStreakData();
     }
   }, [
@@ -201,6 +220,7 @@ const Leaderboard = ({ onClose }) => {
     </div>
   );
 
+  // Improved leaderboard rendering to include the user carve-out
   const renderLeaderboardTable = () => {
     if (!leaderboardData) return null;
 
@@ -230,7 +250,8 @@ const Leaderboard = ({ onClose }) => {
       currentUserEntry &&
       !topEntries.some(
         (entry) =>
-          entry.is_current_user || entry.user_id === currentUserEntry.user_id,
+          entry.is_current_user ||
+          (currentUserEntry && entry.user_id === currentUserEntry.user_id),
       );
 
     console.log("Carve-out check:", {
@@ -488,73 +509,211 @@ const Leaderboard = ({ onClose }) => {
     return renderPersonalStats();
   };
 
-  // Updated renderStreakLeaderboard function
+  // Enhanced renderStreakLeaderboard with comprehensive null checks
   const renderStreakLeaderboard = () => {
-    if (!streakData) return null;
+    console.log("renderStreakLeaderboard called with data:", streakData);
 
-    console.log("Rendering streak leaderboard with data:", streakData);
+    // Clear loading case
+    if (isStreakLoading) {
+      return <div className="loading">Loading streak data...</div>;
+    }
 
-    // Handle both data formats
+    // Clear error case
+    if (streakError) {
+      return (
+        <div className="error">
+          {streakError}
+          <button onClick={fetchStreakData} className="retry-button">
+            Try Again
+          </button>
+        </div>
+      );
+    }
+
+    // Handle missing data case
+    if (!streakData) {
+      return (
+        <div className="no-data">
+          <p>No streak data available.</p>
+          <button onClick={fetchStreakData} className="retry-button">
+            Refresh
+          </button>
+        </div>
+      );
+    }
+
+    // Safely extract data with fallbacks for everything
     const entries = streakData.entries || streakData.topEntries || [];
     const currentUserEntry = streakData.currentUserEntry || null;
     const pagination = streakData.pagination || {
       current_page: page,
       total_pages: streakData.total_pages || 1,
+      total_entries: streakData.total_entries || entries.length,
     };
 
-    if (!entries || entries.length === 0) {
-      return <div className="no-data">No streak data available</div>;
-    }
+    // Track if we have content to display
+    const hasEntries = entries && entries.length > 0;
 
+    // Create streak type and period descriptions
     const streakTypeName = streakType === "win" ? "Win" : "No-Loss";
     const streakPeriodName = streakPeriod === "current" ? "Current" : "Best";
 
-    // Check if user entry should be carved out
+    // Determine if we should show the user carve-out
     const shouldShowCarveOut =
       isAuthenticated &&
       currentUserEntry &&
+      entries.length > 0 &&
       !entries.some(
         (entry) =>
           entry.is_current_user ||
           (currentUserEntry && entry.user_id === currentUserEntry.user_id),
       );
 
-    console.log("Streak carve-out check:", {
-      isAuthenticated,
-      hasCurrentUserEntry: !!currentUserEntry,
-      isUserInTopEntries: entries.some(
-        (entry) =>
-          entry.is_current_user ||
-          (currentUserEntry && entry.user_id === currentUserEntry.user_id),
-      ),
-      shouldShowCarveOut,
-    });
+    // Determine if we need a date column
+    const showDateColumn = streakPeriod === "current";
+    const tableClass = showDateColumn
+      ? "table-grid streak-table with-date"
+      : "table-grid streak-table";
 
-    // Rest of the function stays the same...
-
-    // Update the renderPagination call to use correct pagination data
+    // Return the complete UI including streak controls and empty state handling
     return (
       <div className="table-container">
+        {/* Always show streak controls */}
         {renderStreakControls()}
-        {/* ... */}
-        {renderPagination(pagination)}
+
+        <h3 className="streak-heading">
+          {streakPeriodName} {streakTypeName} Streaks
+        </h3>
+
+        {/* Show empty state if no entries */}
+        {!hasEntries ? (
+          <div className="no-data">
+            No {streakPeriodName.toLowerCase()} {streakTypeName.toLowerCase()}{" "}
+            streaks found
+          </div>
+        ) : (
+          <div className={tableClass}>
+            {/* Table headers */}
+            <div className="table-header">Rank</div>
+            <div className="table-header">Player</div>
+            <div className="table-header">Streak</div>
+            {showDateColumn && <div className="table-header">Last Active</div>}
+
+            {/* Table entries */}
+            {entries.map((entry) => {
+              // Ensure entry has required fields with fallbacks
+              const userEntry = {
+                rank: entry.rank || "?",
+                username: entry.username || "Unknown Player",
+                streak_length: entry.streak_length || 0,
+                user_id: entry.user_id || `unknown-${Math.random()}`,
+                last_active: entry.last_active || null,
+                is_current_user: entry.is_current_user || false,
+              };
+
+              // Check if this is the current user
+              const isCurrentUser =
+                userEntry.is_current_user ||
+                (currentUserEntry &&
+                  userEntry.user_id === currentUserEntry.user_id);
+
+              return (
+                <React.Fragment
+                  key={`streak-${userEntry.user_id}-${Math.random()}`}
+                >
+                  <div
+                    className={`table-cell ${isCurrentUser ? "user-highlight" : ""}`}
+                  >
+                    #{userEntry.rank}
+                  </div>
+                  <div
+                    className={`table-cell ${isCurrentUser ? "user-highlight" : ""}`}
+                  >
+                    {userEntry.username}
+                    {isCurrentUser && <span className="you-badge">YOU</span>}
+                  </div>
+                  <div
+                    className={`table-cell ${isCurrentUser ? "user-highlight" : ""}`}
+                  >
+                    {userEntry.streak_length}
+                  </div>
+                  {showDateColumn && (
+                    <div
+                      className={`table-cell ${isCurrentUser ? "user-highlight" : ""}`}
+                    >
+                      {userEntry.last_active
+                        ? new Date(userEntry.last_active).toLocaleDateString()
+                        : "N/A"}
+                    </div>
+                  )}
+                </React.Fragment>
+              );
+            })}
+
+            {/* Carve out for user's position */}
+            {shouldShowCarveOut && currentUserEntry && (
+              <>
+                {/* Separator row */}
+                <div className="table-cell separator"></div>
+                <div className="table-cell separator">...</div>
+                <div className="table-cell separator"></div>
+                {showDateColumn && <div className="table-cell separator"></div>}
+
+                {/* User entry row */}
+                <div className="table-cell user-highlight">
+                  #{currentUserEntry.rank || "?"}
+                </div>
+                <div className="table-cell user-highlight">
+                  {currentUserEntry.username || "You"}{" "}
+                  <span className="you-badge">YOU</span>
+                </div>
+                <div className="table-cell user-highlight">
+                  {currentUserEntry.streak_length || 0}
+                </div>
+                {showDateColumn && (
+                  <div className="table-cell user-highlight">
+                    {currentUserEntry.last_active
+                      ? new Date(
+                          currentUserEntry.last_active,
+                        ).toLocaleDateString()
+                      : "N/A"}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Pagination, only shown if we have enough entries */}
+        {hasEntries &&
+          pagination &&
+          pagination.total_pages > 1 &&
+          renderPagination(pagination)}
       </div>
     );
   };
 
-  // Render streak type and period controls
+  // Enhanced renderStreakControls function with clear labeling
   const renderStreakControls = () => (
     <div className="streak-controls">
       <div className="streak-type-selector">
         <button
           className={`streak-type-button ${streakType === "win" ? "active" : ""}`}
-          onClick={() => setStreakType("win")}
+          onClick={() => {
+            console.log("Setting streak type to 'win'");
+            setStreakType("win");
+            setPage(1); // Reset page when changing type
+          }}
         >
           Win Streaks
         </button>
         <button
           className={`streak-type-button ${streakType === "noloss" ? "active" : ""}`}
-          onClick={() => setStreakType("noloss")}
+          onClick={() => {
+            console.log("Setting streak type to 'noloss'");
+            setStreakType("noloss");
+            setPage(1); // Reset page when changing type
+          }}
         >
           No-Loss Streaks
         </button>
@@ -563,13 +722,21 @@ const Leaderboard = ({ onClose }) => {
       <div className="streak-period-selector">
         <button
           className={`streak-period-button ${streakPeriod === "current" ? "active" : ""}`}
-          onClick={() => setStreakPeriod("current")}
+          onClick={() => {
+            console.log("Setting streak period to 'current'");
+            setStreakPeriod("current");
+            setPage(1); // Reset page when changing period
+          }}
         >
           Current
         </button>
         <button
           className={`streak-period-button ${streakPeriod === "best" ? "active" : ""}`}
-          onClick={() => setStreakPeriod("best")}
+          onClick={() => {
+            console.log("Setting streak period to 'best'");
+            setStreakPeriod("best");
+            setPage(1); // Reset page when changing period
+          }}
         >
           Best
         </button>
@@ -577,8 +744,11 @@ const Leaderboard = ({ onClose }) => {
     </div>
   );
 
+  // Updated pagination function to use pagination data from API
   const renderPagination = (paginationData) => {
     if (!paginationData) return null;
+
+    console.log("Rendering pagination with data:", paginationData);
 
     // Extract pagination info with defaults
     const currentPage = paginationData.current_page || page;
@@ -587,7 +757,7 @@ const Leaderboard = ({ onClose }) => {
     // If there's only one page, don't show pagination
     if (!totalPages || totalPages <= 1) return null;
 
-    console.log("Rendering pagination:", { currentPage, totalPages });
+    console.log("Pagination details:", { currentPage, totalPages });
 
     return (
       <div className="pagination">
@@ -643,13 +813,7 @@ const Leaderboard = ({ onClose }) => {
       ) : activeTab === "personal" ? (
         renderPersonalLeaderboard()
       ) : activeTab === "streaks" ? (
-        isStreakLoading ? (
-          <div className="loading">Loading streak data...</div>
-        ) : streakError ? (
-          <div className="error">{streakError}</div>
-        ) : (
-          renderStreakLeaderboard()
-        )
+        renderStreakLeaderboard()
       ) : null}
     </div>
   );
