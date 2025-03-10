@@ -94,8 +94,8 @@ const config = {
       if (config.DEBUG)
         console.log("Session data cleared from both storage types");
     },
-  },
-  saveSession: (headers) => {
+    // Function to save session data from headers
+    saveSession: (headers) => {
     if (!headers) return;
 
     try {
