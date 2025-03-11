@@ -629,8 +629,22 @@ function Game() {
   ]);
 
   useEffect(() => {
+    // Pre-load sounds as soon as component mounts to ensure they're ready
+    loadSounds();
+    
     const handleFirstInteraction = () => {
+      // Unlock audio context and ensure sounds are loaded on first interaction
+      unlockAudioContext();
       loadSounds();
+      
+      // Play a silent sound to fully initialize audio context
+      const silent = new Audio();
+      silent.play().then(() => {
+        console.log("Silent sound played successfully");
+      }).catch(err => {
+        console.warn("Failed to play silent sound:", err);
+      });
+      
       window.removeEventListener("click", handleFirstInteraction);
       window.removeEventListener("keydown", handleFirstInteraction);
     };
@@ -642,7 +656,7 @@ function Game() {
       window.removeEventListener("click", handleFirstInteraction);
       window.removeEventListener("keydown", handleFirstInteraction);
     };
-  }, [loadSounds]);
+  }, [loadSounds, unlockAudioContext]);
   useEffect(() => {
     window.testSound = (soundName = "keyclick") => {
       console.log(`Testing sound: ${soundName}`);

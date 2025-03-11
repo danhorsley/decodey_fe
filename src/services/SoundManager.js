@@ -20,29 +20,30 @@ const useSound = () => {
   // Define debounce time (prevents rapid retriggers)
   const DEBOUNCE_MS = 50;
 
-  // Define sounds configuration with direct paths without using PUBLIC_URL
-  // The paths should resolve from the deployed root
+  // Define sounds configuration with process.env.PUBLIC_URL for correct path resolution
+  // This ensures paths work correctly with lazy loading
+  const publicUrl = process.env.PUBLIC_URL || '';
   const soundConfigs = {
     correct: {
-      src: ["/sounds/correct.mp3"],
+      src: [`${publicUrl}/sounds/correct.mp3`],
       volume: 0.7,
     },
     incorrect: {
-      src: ["/sounds/incorrect.mp3"],
+      src: [`${publicUrl}/sounds/incorrect.mp3`],
       volume: 0.7,
     },
-    hint: { src: ["/sounds/hint.mp3"], volume: 0.7 },
-    win: { src: ["/sounds/win.mp3"], volume: 0.8 },
-    lose: { src: ["/sounds/lose.mp3"], volume: 0.8 },
+    hint: { src: [`${publicUrl}/sounds/hint.mp3`], volume: 0.7 },
+    win: { src: [`${publicUrl}/sounds/win.mp3`], volume: 0.8 },
+    lose: { src: [`${publicUrl}/sounds/lose.mp3`], volume: 0.8 },
     keyclick: {
-      src: ["/sounds/keyclick.mp3"],
+      src: [`${publicUrl}/sounds/keyclick.mp3`],
       volume: 0.5,
     },
   };
 
   // Log path for debugging
   console.log(
-    "Using direct paths to sounds folder, e.g.:",
+    "Using resolved paths to sounds folder, e.g.:",
     soundConfigs.correct.src[0],
   );
 
@@ -124,7 +125,7 @@ const useSound = () => {
     };
   }, [unlockAudioContext]);
 
-  // Initialize Howler sounds
+  // Initialize Howler sounds with retry mechanism
   const initializeSound = useCallback((soundType) => {
     const config = soundConfigs[soundType];
     if (!config) return null;
@@ -136,6 +137,9 @@ const useSound = () => {
 
     try {
       console.log(`Initializing sound: ${soundType}`, config.src);
+      
+      // Ensure the audio context is ready
+      unlockAudioContext();
 
       // Create Howl instance with controlled configuration
       const sound = new Howl({
@@ -174,7 +178,20 @@ const useSound = () => {
         },
         onloaderror: (id, err) => {
           console.warn(`Error loading sound ${soundType}:`, err);
-          // Count as loaded to avoid getting stuck
+          
+          // Retry loading with a delay (helps with lazy loading timing issues)
+          setTimeout(() => {
+            console.log(`Retrying to load sound: ${soundType}`);
+            // Force reload by removing from refs
+            if (soundsRef.current[soundType]) {
+              soundsRef.current[soundType].unload();
+              delete soundsRef.current[soundType];
+              // Re-initialize after cleanup
+              initializeSound(soundType);
+            }
+          }, 2000);
+          
+          // Count as loaded to avoid getting stuck in UI
           loadedSounds.current += 1;
           setLoadingProgress(
             Math.round((loadedSounds.current / totalSounds.current) * 100),
