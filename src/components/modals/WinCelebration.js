@@ -233,46 +233,78 @@ const WinCelebration = ({
 
   // Record score to backend
 
+  // Record score to backend with direct auth context
   useEffect(() => {
     const recordGameScore = async () => {
       // Only proceed if user has won and hasn't attempted to record score yet
-      if (hasWon && !scoreStatus.attempted && isAuthenticated) {
+      if (hasWon && !scoreStatus.attempted) {
+        // Check tokens and auth state from the direct source
+        const token =
+          localStorage.getItem("uncrypt-token") ||
+          sessionStorage.getItem("uncrypt-token") ||
+          localStorage.getItem("auth_token");
+
+        // Log the exact state for debugging
+        console.log("Win celebration checking auth state:", {
+          tokenExists: Boolean(token),
+          tokenValue: token ? `${token.substring(0, 5)}...` : "none",
+          isAuthenticated,
+          hasWon,
+          attempted: scoreStatus.attempted,
+        });
+
+        // Mark as attempted regardless of auth state
         setScoreStatus((prev) => ({ ...prev, attempted: true }));
 
-        try {
-          // Calculate score based on mistakes and time
-          const gameTimeSeconds = (completionTime - startTime) / 1000;
-          const score = calculateScore(maxMistakes, mistakes, gameTimeSeconds);
+        // Only try to record if authenticated
+        if (isAuthenticated) {
+          try {
+            // Calculate score based on mistakes and time
+            const gameTimeSeconds = (completionTime - startTime) / 1000;
+            const score = calculateScore(
+              maxMistakes,
+              mistakes,
+              gameTimeSeconds,
+            );
 
-          const gameData = {
-            score,
-            mistakes,
-            timeTaken: Math.round(gameTimeSeconds),
-            difficulty: getDifficultyFromMaxMistakes(maxMistakes),
-          };
+            const gameData = {
+              score,
+              mistakes,
+              timeTaken: Math.round(gameTimeSeconds),
+              difficulty: getDifficultyFromMaxMistakes(maxMistakes),
+            };
 
-          console.log("Recording score with data:", gameData);
+            console.log("Recording score with data:", gameData);
 
-          const result = await apiService.recordScore(gameData);
-          console.log("Score recording response:", result);
+            const result = await apiService.recordScore(gameData);
+            console.log("Score recording response:", result);
 
-          // Check for success based on both 200 and 201 status codes
-          if (result.success || result.score_id || result.message) {
+            // Check for success based on both 200 and 201 status codes
+            if (result.success || result.score_id || result.message) {
+              setScoreStatus((prev) => ({
+                ...prev,
+                recorded: true,
+                message: result.message || "Score recorded successfully!",
+              }));
+              console.log("Score recorded successfully:", result);
+            } else {
+              throw new Error("Unexpected response format");
+            }
+          } catch (error) {
+            console.error("Failed to record score:", error);
             setScoreStatus((prev) => ({
               ...prev,
-              recorded: true,
-              message: result.message || "Score recorded successfully!",
+              error: "Failed to record score. Please try again.",
             }));
-            console.log("Score recorded successfully:", result);
-          } else {
-            throw new Error("Unexpected response format");
           }
-        } catch (error) {
-          console.error("Failed to record score:", error);
+        } else {
+          // Not authenticated, show login prompt
           setScoreStatus((prev) => ({
             ...prev,
-            error: "Failed to record score. Please try again.",
+            authRequired: true,
+            message: "Login to save your score!",
           }));
+          console.log("User not authenticated, showing login prompt");
         }
       }
     };

@@ -109,7 +109,16 @@ function Game() {
   } = useUI();
 
   // Get auth state
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, authLoading, user } = useAuth();
+
+  // Log auth state for debugging
+  useEffect(() => {
+    console.log("Game component auth state:", {
+      isAuthenticated,
+      authLoading,
+      userId: user?.id,
+    });
+  }, [isAuthenticated, authLoading, user]);
 
   // Modal context access - safely retrieve with defensive coding
   const modalContext = useModalContext();

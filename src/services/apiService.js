@@ -54,7 +54,11 @@ const logApiOperation = (
 const apiService = {
   // Login functionality
   loginapi: async (credentials) => {
-    console.log("credentials : ", credentials);
+    console.log("Calling login API with credentials:", {
+      username: credentials.username,
+      password: credentials.password ? "[REDACTED]" : "missing",
+    });
+
     try {
       const response = await fetch(`${config.apiUrl}/login`, {
         method: "POST",
@@ -62,32 +66,49 @@ const apiService = {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(credentials),
+        credentials: "include", // Include cookies for session-based auth
       });
 
-      const data = await response.json();
+      // Always get the response text even if it's not JSON
+      const responseText = await response.text();
 
-      if (response.ok) {
-        // Store token and user info in localStorage
-        if (data.token) {
-          localStorage.setItem("auth_token", data.token);
-        }
-        localStorage.setItem("user_id", data.user_id);
-        localStorage.setItem("username", data.username);
-        console.log("token : ", data.token);
-        return {
-          success: true,
-          user: {
-            id: data.user_id,
-            username: data.username,
-          },
-          token: data.token,
-        };
-      } else {
-        throw new Error(data.error || "Login failed");
+      // Try to parse as JSON, but handle non-JSON responses
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (e) {
+        console.error("Non-JSON response from login API:", responseText);
+        throw new Error("Invalid response format from server");
       }
+
+      if (!response.ok) {
+        throw new Error(
+          data.error || `Login failed with status ${response.status}`,
+        );
+      }
+
+      console.log("Login successful, received response:", {
+        success: true,
+        userId: data.user_id,
+        username: data.username,
+        hasToken: Boolean(data.token),
+      });
+
+      // Return a consistently structured response
+      return {
+        success: true,
+        user_id: data.user_id,
+        username: data.username,
+        token: data.token,
+        user: {
+          id: data.user_id,
+          username: data.username,
+        },
+      };
     } catch (error) {
       console.error("Login error:", error);
-      throw error;
+      // Rethrow with consistent error format
+      throw new Error(error.message || "Login failed");
     }
   },
 
@@ -679,12 +700,17 @@ const apiService = {
     const gameId = localStorage.getItem("uncrypt-game-id");
 
     try {
-      // Get auth token if available
-      const token = localStorage.getItem("uncrypt-token");
+      // Use standardized header approach with config helper
       const headers = {
         "Content-Type": "application/json",
         Accept: "application/json",
       };
+
+      // Try to get token using the more reliable approach
+      const token =
+        localStorage.getItem("uncrypt-token") ||
+        sessionStorage.getItem("uncrypt-token") ||
+        localStorage.getItem("auth_token");
 
       // Add Authorization header if token exists
       if (token) {
