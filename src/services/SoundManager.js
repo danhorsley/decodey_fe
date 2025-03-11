@@ -21,7 +21,7 @@ const useSound = () => {
   const DEBOUNCE_MS = 50;
 
   // Define sounds configuration with direct paths without using PUBLIC_URL
-  // The paths should resolve from the deployed root 
+  // The paths should resolve from the deployed root
   const soundConfigs = {
     correct: {
       src: ["/sounds/correct.mp3"],
@@ -39,9 +39,12 @@ const useSound = () => {
       volume: 0.5,
     },
   };
-  
+
   // Log path for debugging
-  console.log("Using direct paths to sounds folder, e.g.:", soundConfigs.correct.src[0]);
+  console.log(
+    "Using direct paths to sounds folder, e.g.:",
+    soundConfigs.correct.src[0],
+  );
 
   // Add a function to unlock AudioContext
   const unlockAudioContext = useCallback(() => {
