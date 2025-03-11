@@ -7,7 +7,8 @@ import {
   calculateScore,
 } from "../../utils/utils";
 import apiService from "../../services/apiService";
-import { useAppContext } from "../../context/AppContext";
+import { useAuth } from "../../context/AuthContext";
+import { useModalContext } from "../modals/ModalManager";
 
 // Enhanced win celebration component with Matrix effect
 const WinCelebration = ({
@@ -26,7 +27,11 @@ const WinCelebration = ({
   hasWon, // Added hasWon prop
   attribution, // Added attribution prop
 }) => {
-  const { isAuthenticated, openLogin } = useAppContext();
+  // Get authentication state directly from the auth context
+  const { isAuthenticated } = useAuth();
+  // Get modal functions from the modal context
+  const { openLogin } = useModalContext();
+
   const [scoreStatus, setScoreStatus] = useState({
     attempted: false,
     recorded: false,
@@ -56,6 +61,103 @@ const WinCelebration = ({
       authRequired: false,
     });
   }, [openLogin]);
+
+  // Effect to detect auth state changes and retry score recording if needed
+  useEffect(() => {
+    // If user just logged in and previously needed authentication
+    if (isAuthenticated && scoreStatus.authRequired) {
+      console.log(
+        "Auth state changed to authenticated, retrying score recording",
+      );
+
+      // Reset score status to trigger re-attempt
+      setScoreStatus({
+        attempted: false,
+        recorded: false,
+        error: null,
+        authRequired: false,
+      });
+    }
+  }, [isAuthenticated, scoreStatus.authRequired]);
+
+  // Record score to backend with proper auth state handling
+  useEffect(() => {
+    const recordGameScore = async () => {
+      // Only proceed if user has won and hasn't attempted to record score yet
+      if (hasWon && !scoreStatus.attempted) {
+        // Check auth state at the moment of execution
+        const currentIsAuthenticated = isAuthenticated;
+
+        console.log("Attempting to record score, auth state:", {
+          isAuthenticated: currentIsAuthenticated,
+        });
+
+        // Mark as attempted regardless of auth state
+        setScoreStatus((prev) => ({ ...prev, attempted: true }));
+
+        // Only try to record if authenticated
+        if (currentIsAuthenticated) {
+          try {
+            // Calculate score based on mistakes and time
+            const gameTimeSeconds = (completionTime - startTime) / 1000;
+            const score = calculateScore(
+              maxMistakes,
+              mistakes,
+              gameTimeSeconds,
+            );
+
+            const gameData = {
+              score,
+              mistakes,
+              timeTaken: Math.round(gameTimeSeconds),
+              difficulty: getDifficultyFromMaxMistakes(maxMistakes),
+            };
+
+            console.log("Recording score with data:", gameData);
+
+            const result = await apiService.recordScore(gameData);
+            console.log("Score recording response:", result);
+
+            // Check for success based on both 200 and 201 status codes
+            if (result.success || result.score_id || result.message) {
+              setScoreStatus((prev) => ({
+                ...prev,
+                recorded: true,
+                message: result.message || "Score recorded successfully!",
+              }));
+              console.log("Score recorded successfully:", result);
+            } else {
+              throw new Error("Unexpected response format");
+            }
+          } catch (error) {
+            console.error("Failed to record score:", error);
+            setScoreStatus((prev) => ({
+              ...prev,
+              error: "Failed to record score. Please try again.",
+            }));
+          }
+        } else {
+          // Not authenticated, show login prompt
+          setScoreStatus((prev) => ({
+            ...prev,
+            authRequired: true,
+            message: "Login to save your score!",
+          }));
+          console.log("User not authenticated, showing login prompt");
+        }
+      }
+    };
+
+    recordGameScore();
+  }, [
+    hasWon,
+    scoreStatus.attempted,
+    isAuthenticated, // Keep this in dependencies to retrigger if auth changes
+    mistakes,
+    maxMistakes,
+    startTime,
+    completionTime,
+  ]);
 
   // Animation state
   const [animationStage, setAnimationStage] = useState(0);
@@ -231,95 +333,6 @@ const WinCelebration = ({
     return () => clearTimeout(cleanupTimer);
   }, []);
 
-  // Record score to backend
-
-  // Record score to backend with direct auth context
-  useEffect(() => {
-    const recordGameScore = async () => {
-      // Only proceed if user has won and hasn't attempted to record score yet
-      if (hasWon && !scoreStatus.attempted) {
-        // Check tokens and auth state from the direct source
-        const token =
-          localStorage.getItem("uncrypt-token") ||
-          sessionStorage.getItem("uncrypt-token") ||
-          localStorage.getItem("auth_token");
-
-        // Log the exact state for debugging
-        console.log("Win celebration checking auth state:", {
-          tokenExists: Boolean(token),
-          tokenValue: token ? `${token.substring(0, 5)}...` : "none",
-          isAuthenticated,
-          hasWon,
-          attempted: scoreStatus.attempted,
-        });
-
-        // Mark as attempted regardless of auth state
-        setScoreStatus((prev) => ({ ...prev, attempted: true }));
-
-        // Only try to record if authenticated
-        if (isAuthenticated) {
-          try {
-            // Calculate score based on mistakes and time
-            const gameTimeSeconds = (completionTime - startTime) / 1000;
-            const score = calculateScore(
-              maxMistakes,
-              mistakes,
-              gameTimeSeconds,
-            );
-
-            const gameData = {
-              score,
-              mistakes,
-              timeTaken: Math.round(gameTimeSeconds),
-              difficulty: getDifficultyFromMaxMistakes(maxMistakes),
-            };
-
-            console.log("Recording score with data:", gameData);
-
-            const result = await apiService.recordScore(gameData);
-            console.log("Score recording response:", result);
-
-            // Check for success based on both 200 and 201 status codes
-            if (result.success || result.score_id || result.message) {
-              setScoreStatus((prev) => ({
-                ...prev,
-                recorded: true,
-                message: result.message || "Score recorded successfully!",
-              }));
-              console.log("Score recorded successfully:", result);
-            } else {
-              throw new Error("Unexpected response format");
-            }
-          } catch (error) {
-            console.error("Failed to record score:", error);
-            setScoreStatus((prev) => ({
-              ...prev,
-              error: "Failed to record score. Please try again.",
-            }));
-          }
-        } else {
-          // Not authenticated, show login prompt
-          setScoreStatus((prev) => ({
-            ...prev,
-            authRequired: true,
-            message: "Login to save your score!",
-          }));
-          console.log("User not authenticated, showing login prompt");
-        }
-      }
-    };
-
-    recordGameScore();
-  }, [
-    hasWon,
-    scoreStatus.attempted,
-    isAuthenticated,
-    mistakes,
-    maxMistakes,
-    startTime,
-    completionTime,
-  ]);
-
   return (
     <div
       ref={containerRef}
@@ -408,7 +421,7 @@ const WinCelebration = ({
             Play Again
           </button>
 
-          {/* Score recording status - now without redundant hasWon check */}
+          {/* Score recording status */}
           <div className="score-section">
             {isAuthenticated ? (
               scoreStatus.recorded ? (

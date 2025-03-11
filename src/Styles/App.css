@@ -1208,3 +1208,30 @@ body:not(.dark-theme) .celebration-content .decrypted-quote {
 .settings-container {
   z-index: 5000;
 }
+
+.account-icon:hover {
+  background-color: #f0f0f0;
+  /* color: #007bff; */
+  color: white;
+}
+
+/* Authentication indicator */
+.account-icon.authenticated {
+  position: relative;
+}
+
+.auth-indicator {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 8px;
+  height: 8px;
+  background-color: #28a745;
+  border-radius: 50%;
+  border: 2px solid white;
+}
+
+.dark-theme .auth-indicator {
+  background-color: #4cc9f0;
+  border: 2px solid #333;
+}
