@@ -21,20 +21,26 @@ const useSound = () => {
   const DEBOUNCE_MS = 50;
 
   // Define sounds configuration with absolute paths
+  // Ensure PUBLIC_URL is defined or default to empty string
+  const baseUrl = process.env.PUBLIC_URL || '';
+  
+  // Debug the sound path construction
+  console.log("Sound base path:", baseUrl);
+  
   const soundConfigs = {
     correct: {
-      src: [process.env.PUBLIC_URL + "/sounds/correct.mp3"],
+      src: [`${baseUrl}/sounds/correct.mp3`],
       volume: 0.7,
     },
     incorrect: {
-      src: [process.env.PUBLIC_URL + "/sounds/incorrect.mp3"],
+      src: [`${baseUrl}/sounds/incorrect.mp3`],
       volume: 0.7,
     },
-    hint: { src: [process.env.PUBLIC_URL + "/sounds/hint.mp3"], volume: 0.7 },
-    win: { src: [process.env.PUBLIC_URL + "/sounds/win.mp3"], volume: 0.8 },
-    lose: { src: [process.env.PUBLIC_URL + "/sounds/lose.mp3"], volume: 0.8 },
+    hint: { src: [`${baseUrl}/sounds/hint.mp3`], volume: 0.7 },
+    win: { src: [`${baseUrl}/sounds/win.mp3`], volume: 0.8 },
+    lose: { src: [`${baseUrl}/sounds/lose.mp3`], volume: 0.8 },
     keyclick: {
-      src: [process.env.PUBLIC_URL + "/sounds/keyclick.mp3"],
+      src: [`${baseUrl}/sounds/keyclick.mp3`],
       volume: 0.5,
     },
   };
