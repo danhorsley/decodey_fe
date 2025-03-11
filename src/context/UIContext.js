@@ -40,53 +40,71 @@ export const UIProvider = ({ children }) => {
 
   // Navigation methods
   const showSettings = useCallback(() => {
+    console.log("showSettings called");
     setCurrentView("settings");
+    // Also open the settings modal for compatibility
+    setIsSettingsOpen(true);
   }, []);
 
   const showGame = useCallback(() => {
+    console.log("showGame called");
     setCurrentView("game");
   }, []);
 
   const showLogin = useCallback(() => {
+    console.log("showLogin called");
     setCurrentView("login");
+    // Also open the login modal for compatibility
+    setIsLoginOpen(true);
   }, []);
 
   const showRegister = useCallback(() => {
+    console.log("showRegister called");
     setCurrentView("register");
   }, []);
 
   // Modal methods
   const openAbout = useCallback(() => {
+    console.log("openAbout called");
     setIsAboutOpen(true);
   }, []);
 
   const closeAbout = useCallback(() => {
+    console.log("closeAbout called");
     setIsAboutOpen(false);
   }, []);
 
   const openLogin = useCallback(() => {
+    console.log("openLogin called");
     setIsLoginOpen(true);
   }, []);
 
   const closeLogin = useCallback(() => {
+    console.log("closeLogin called");
     setIsLoginOpen(false);
   }, []);
 
   const openSignup = useCallback(() => {
+    console.log("openSignup called");
     setIsLoginOpen(false); // Close login when opening signup
     setIsSignupOpen(true);
   }, []);
 
   const closeSignup = useCallback(() => {
+    console.log("closeSignup called");
     setIsSignupOpen(false);
   }, []);
 
   const openSettings = useCallback(() => {
+    console.log("openSettings called");
     setIsSettingsOpen(true);
   }, []);
 
   const closeSettings = useCallback(() => {
+    console.log("closeSettings called");
     setIsSettingsOpen(false);
+    // Also go back to game view
+    setCurrentView("game");
   }, []);
 
   // Update mobile mode based on settings and device detection

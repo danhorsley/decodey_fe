@@ -1,5 +1,6 @@
+// src/components/HeaderControls.js
 import React from "react";
-import { useAppContext } from "../context/AppContext";
+import { useModalContext } from "./modals/ModalManager";
 
 // Constants for SVGs to avoid repetition
 const ABOUT_ICON_SVG = (
@@ -42,12 +43,36 @@ const SETTINGS_ICON_SVG = (
  * for use across different pages
  */
 const HeaderControls = ({ title, hideAbout = false, hideSettings = false }) => {
-  const { openAbout, showSettings } = useAppContext();
+  // Get modal functions from the ModalContext
+  const { openAbout, openSettings } = useModalContext();
+
+  // Debug helper function
+  const handleAboutClick = () => {
+    console.log("About button clicked");
+    if (openAbout) {
+      openAbout();
+    } else {
+      console.warn("openAbout function not available");
+    }
+  };
+
+  const handleSettingsClick = () => {
+    console.log("Settings button clicked");
+    if (openSettings) {
+      openSettings();
+    } else {
+      console.warn("openSettings function not available");
+    }
+  };
 
   return (
     <div className="game-header">
       {!hideAbout && (
-        <button className="about-icon" onClick={openAbout} aria-label="About">
+        <button
+          className="about-icon"
+          onClick={handleAboutClick}
+          aria-label="About"
+        >
           {ABOUT_ICON_SVG}
         </button>
       )}
@@ -57,7 +82,7 @@ const HeaderControls = ({ title, hideAbout = false, hideSettings = false }) => {
       {!hideSettings && (
         <button
           className="settings-icon"
-          onClick={showSettings}
+          onClick={handleSettingsClick}
           aria-label="Settings"
         >
           {SETTINGS_ICON_SVG}

@@ -49,25 +49,27 @@ const ContextInteractions = ({ children }) => {
  * while we gradually migrate to more specific hooks
  */
 export const useAppContext = () => {
-  try {
-    const settings = useSettings();
-    const auth = useAuth();
-    const ui = useUI();
-    const gameState = useGameState();
+  // Always call hooks unconditionally, regardless of their values
+  const settings = useSettings();
+  const auth = useAuth();
+  const ui = useUI();
+  const gameState = useGameState();
 
-    // Combine all contexts into a single object that matches
-    // the structure of the original AppContext
-    return {
-      ...settings,
-      ...auth,
-      ...ui,
-      ...gameState,
-    };
-  } catch (error) {
-    console.error("Error in useAppContext:", error);
-    // Return null to trigger the default values in the compatibility layer
+  // If any contexts are undefined (which shouldn't happen
+  // if all providers are in the tree), return null
+  if (!settings || !auth || !ui || !gameState) {
+    console.warn("One or more contexts are undefined in useAppContext");
     return null;
   }
+
+  // Combine all contexts into a single object that matches
+  // the structure of the original AppContext
+  return {
+    ...settings,
+    ...auth,
+    ...ui,
+    ...gameState,
+  };
 };
 
 export { useSettings, useAuth, useUI, useGameState };

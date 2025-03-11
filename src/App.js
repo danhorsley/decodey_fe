@@ -14,11 +14,8 @@ import Leaderboard from "./pages/Leaderboard";
 import Privacy from "./pages/Privacy";
 import WinCelebrationTest from "./pages/WinCelebrationTest";
 import AccountButtonWrapper from "./components/AccountButtonWrapper";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import About from "./components/modals/About";
-import Settings from "./components/modals/Settings";
-import { useAppContext } from "./context/AppContext"; // Continue using the compatibility layer
+import { useAppContext } from "./context/AppContext";
+import ModalManager from "./components/modals/ModalManager";
 
 // Create a wrapper component that conditionally renders the AccountButtonWrapper
 function GlobalUIElements() {
@@ -28,23 +25,12 @@ function GlobalUIElements() {
   return !isLeaderboardPage ? <AccountButtonWrapper /> : null;
 }
 
-function App() {
-  // Continue to use useAppContext from the compatibility layer
-  // This will get default values if the real context isn't available
-  const {
-    isLoginOpen,
-    closeLogin,
-    isSignupOpen,
-    closeSignup,
-    isAboutOpen,
-    closeAbout,
-    isSettingsOpen,
-    closeSettings,
-    settings,
-    updateSettings,
-  } = useAppContext();
+// App content component (inside Router)
+function AppContent() {
+  // Get settings from context
+  const { settings, updateSettings } = useAppContext();
 
-  // Safeguard in case settings is undefined (though our default values should prevent this)
+  // Safeguard in case settings is undefined
   const currentSettings = settings || {
     theme: "light",
     difficulty: "easy",
@@ -52,22 +38,7 @@ function App() {
   };
 
   return (
-    <Router>
-      {/* Global modals that should be available on all pages */}
-      {isLoginOpen && <Login onClose={closeLogin} />}
-      {isSignupOpen && <Signup onClose={closeSignup} />}
-      {isAboutOpen && <About isOpen={isAboutOpen} onClose={closeAbout} />}
-      {isSettingsOpen && (
-        <Settings
-          currentSettings={currentSettings}
-          onSave={(newSettings) => {
-            updateSettings?.(newSettings);
-            closeSettings?.();
-          }}
-          onCancel={closeSettings}
-        />
-      )}
-
+    <ModalManager settings={currentSettings} updateSettings={updateSettings}>
       {/* Main content routes */}
       <Routes>
         <Route path="/" element={<Game />} />
@@ -79,6 +50,15 @@ function App() {
 
       {/* Global fixed UI elements with conditional rendering */}
       <GlobalUIElements />
+    </ModalManager>
+  );
+}
+
+// Main App component
+function App() {
+  return (
+    <Router>
+      <AppContent />
     </Router>
   );
 }

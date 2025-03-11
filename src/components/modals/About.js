@@ -1,4 +1,5 @@
-import React from "react";
+// src/components/modals/About.js
+import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import "../../Styles/About.css";
 import { useAppContext } from "../../context/AppContext";
@@ -6,7 +7,18 @@ import { useAppContext } from "../../context/AppContext";
 function About({ isOpen, onClose }) {
   const { settings } = useAppContext();
 
-  if (!isOpen) return null;
+  // Debug logging
+  useEffect(() => {
+    console.log("About component rendered with isOpen:", isOpen);
+  }, [isOpen]);
+
+  // Don't render if not open (the isOpen prop is passed directly in App.js now)
+  if (!isOpen) {
+    console.log("About component not showing because isOpen is falsy");
+    return null;
+  }
+
+  console.log("About component is showing");
 
   return (
     <div className="about-overlay">
