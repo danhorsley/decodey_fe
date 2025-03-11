@@ -1,12 +1,18 @@
+// src/pages/Signup.js
 import React, { useState, useCallback, useEffect } from "react";
 import "../Styles/About.css";
 import "../Styles/Login.css";
-import { useAppContext } from "../context/AppContext";
+import { useSettings } from "../context/SettingsContext";
+import { useModalContext } from "../components/modals/ModalManager";
 import apiService from "../services/apiService";
 import config from "../config";
 
 function Signup({ onClose }) {
-  const { settings, openLogin, isSignupOpen } = useAppContext();
+  // Get contexts directly
+  const { settings } = useSettings();
+  const { openLogin } = useModalContext();
+
+  // Local state
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -19,47 +25,49 @@ function Signup({ onClose }) {
     message: "",
   });
 
-  const handleSubmit = useCallback(async (e) => {
-    e.preventDefault();
+  const handleSubmit = useCallback(
+    async (e) => {
+      e.preventDefault();
 
-    // Validate passwords match
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-
-    setIsLoading(true);
-    setError("");
-
-    try {
-      // Make the signup request to the backend
-      const response = await fetch(`${config.apiUrl}/signup`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, username, password }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Signup failed");
+      // Validate passwords match
+      if (password !== confirmPassword) {
+        setError("Passwords do not match");
+        return;
       }
 
-      console.log("Signup successful:", data);
-      alert("Account created successfully! You can now log in.");
-      onClose();
-      // Optionally open the login form
-      openLogin();
-    } catch (err) {
-      console.error("Signup error:", err);
-      setError(err.message || "Signup failed. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [password, confirmPassword, email, username, openLogin, onClose]);
+      setIsLoading(true);
+      setError("");
 
+      try {
+        // Make the signup request to the backend
+        const response = await fetch(`${config.apiUrl}/signup`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, username, password }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "Signup failed");
+        }
+
+        console.log("Signup successful:", data);
+        alert("Account created successfully! You can now log in.");
+        onClose();
+        // Open the login form
+        openLogin();
+      } catch (err) {
+        console.error("Signup error:", err);
+        setError(err.message || "Signup failed. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [password, confirmPassword, email, username, openLogin, onClose],
+  );
 
   const debounce = (func, delay) => {
     let timeoutId;
@@ -123,8 +131,6 @@ function Signup({ onClose }) {
     }
   }, [username, checkUsername]);
 
-  if (!isSignupOpen) return null;
-  
   return (
     <div className="about-overlay">
       <div

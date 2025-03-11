@@ -7,58 +7,22 @@ import React, {
   useState,
 } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAppContext } from "../context/AppContext";
+import { useSettings } from "../context/SettingsContext"; // Direct import for settings
+import { useUI } from "../context/UIContext"; // Direct import for UI state
+import { useGameState } from "../context/GameStateContext"; // Direct import for game state
+import { useAuth } from "../context/AuthContext"; // Direct import for auth
+import { useModalContext } from "../components/modals/ModalManager"; // Import for modal state
 import useSound from "../services/SoundManager";
 import useKeyboardInput from "../hooks/KeyboardController";
 import { formatAlternatingLines, preventWordBreaks } from "../utils/utils";
 import WinCelebration from "../components/modals/WinCelebration";
 import MobileLayout from "../components/layout/MobileLayout";
 import apiService from "../services/apiService";
-import Settings from "../components/modals/Settings";
-import About from "../components/modals/About";
-import Login from "../pages/Login";
-import Signup from "../pages/Signup";
 import { FaTrophy } from "react-icons/fa";
 import HeaderControls from "../components/HeaderControls";
 
 // Debug flag
 const DEBUG = true;
-
-// Constants for SVGs to avoid repetition
-const ABOUT_ICON_SVG = (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    width="24"
-    height="24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <circle cx="12" cy="12" r="10" />
-    <line x1="12" y1="16" x2="12" y2="12" />
-    <line x1="12" y1="8" x2="12.01" y2="8" />
-  </svg>
-);
-
-const SETTINGS_ICON_SVG = (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    width="24"
-    height="24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <circle cx="12" cy="12" r="3" />
-    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-  </svg>
-);
 
 // Memoized LetterCell component
 const LetterCell = React.memo(
@@ -72,7 +36,9 @@ const LetterCell = React.memo(
     disabled,
   }) => (
     <div
-      className={`letter-cell ${isSelected ? "selected" : ""} ${isGuessed ? "guessed" : ""} ${isFlashing ? "flash" : ""}`}
+      className={`letter-cell ${isSelected ? "selected" : ""} ${
+        isGuessed ? "guessed" : ""
+      } ${isFlashing ? "flash" : ""}`}
       onClick={!disabled ? onClick : undefined}
     >
       {letter}
@@ -129,26 +95,44 @@ const reducer = (state, action) => {
 
 // Main Game component
 function Game() {
-  // Context and settings
+  // Get settings directly from context
+  const { settings, maxMistakes } = useSettings();
+
+  // Get UI state directly from context
   const {
-    settings,
-    updateSettings,
     currentView,
     showSettings,
     showGame,
-    maxMistakes,
-    isAboutOpen,
-    openAbout,
-    closeAbout,
+    isAboutOpen: uiAboutOpen, // Rename to avoid potential conflicts
     isLandscape,
     useMobileMode,
-  } = useAppContext();
+  } = useUI();
+
+  // Get auth state
+  const { isAuthenticated } = useAuth();
+
+  // Modal context access - safely retrieve with defensive coding
+  const modalContext = useModalContext();
+
+  // Extract modal states safely with fallbacks to prevent errors
+  const isLoginOpen = modalContext?.isLoginOpen || false;
+  const isSignupOpen = modalContext?.isSignupOpen || false;
+  const isSettingsOpen = modalContext?.isSettingsOpen || false;
+  const isAboutOpen = modalContext?.isAboutOpen || false;
+
+  // Log modal states for debugging
+  useEffect(() => {
+    console.log("Modal states in Game component:", {
+      isLoginOpen,
+      isSignupOpen,
+      isSettingsOpen,
+      isAboutOpen,
+      modalContextExists: !!modalContext,
+    });
+  }, [isLoginOpen, isSignupOpen, isSettingsOpen, isAboutOpen, modalContext]);
+
   const navigate = useNavigate();
-  // State for login modal
-  const { isLoginOpen, closeLogin } = useAppContext();
-  const { isSignupOpen, closeSignup } = useAppContext();
   const [attributionData, setAttributionData] = useState(null);
-  const [showLeaderboard, setShowLeaderboard] = useState(false);
 
   // State management with reducer
   const [state, dispatch] = useReducer(reducer, initialState);
@@ -218,7 +202,7 @@ function Game() {
 
   // Start Game function - initiates a new game
   const startGame = useCallback(() => {
-    if (DEBUG) console.log("Starting new game...");
+    if (DEBUG) console.log("Starting new game with settings:", settings);
 
     // Clear any existing game state from localStorage to avoid conflicts
     localStorage.removeItem("uncrypt-game-id");
@@ -524,7 +508,6 @@ function Game() {
   );
 
   // Effects
-  // This should replace the useEffect that calls startGame in Game.js
   useEffect(() => {
     // Check if there's an existing game in progress
     const gameId = localStorage.getItem("uncrypt-game-id");
@@ -538,6 +521,7 @@ function Game() {
         existingGameId: gameId,
         hasEncryptedData: Boolean(encrypted),
         gameInProgress,
+        currentSettings: settings,
       });
     }
 
@@ -574,8 +558,10 @@ function Game() {
         }
       }
     }
-  }, [startGame]);
+  }, [startGame, settings, encrypted]);
+
   useThemeEffect(settings.theme);
+
   // Add this useEffect to Game.js
   useEffect(() => {
     // Only save if we have actual game data
@@ -608,6 +594,7 @@ function Game() {
     originalLetters,
     startTime,
   ]);
+
   useEffect(() => {
     const handleFirstInteraction = () => {
       loadSounds();
@@ -624,8 +611,24 @@ function Game() {
     };
   }, [loadSounds]);
 
+  // Determine if we should enable keyboard input
+  const keyboardEnabled = useMemo(() => {
+    const anyModalOpen =
+      isLoginOpen || isSignupOpen || isSettingsOpen || isAboutOpen;
+    const result = isGameActive && !anyModalOpen;
+
+    console.log("Keyboard input enabled:", result, {
+      isGameActive,
+      anyModalOpen,
+      modals: { isLoginOpen, isSignupOpen, isSettingsOpen, isAboutOpen },
+    });
+
+    return result;
+  }, [isGameActive, isLoginOpen, isSignupOpen, isSettingsOpen, isAboutOpen]);
+
+  // Updated keyboard input hook to disable when any modal is open
   useKeyboardInput({
-    enabled: isGameActive && !(isLoginOpen || isSignupOpen), // Disable when modals are open
+    enabled: keyboardEnabled,
     speedMode: settings.speedMode,
     encryptedLetters,
     originalLetters,
@@ -667,15 +670,6 @@ function Game() {
         });
     }
   }, [completionTime, attributionData]);
-
-  // Settings handler
-  const handleSaveSettings = useCallback(
-    (newSettings) => {
-      updateSettings(newSettings);
-      showGame();
-    },
-    [updateSettings, showGame],
-  );
 
   // Render logic
   const renderGameHeader = () => <HeaderControls title="uncrypt" />;
@@ -740,6 +734,7 @@ function Game() {
       </div>
     </div>
   );
+
   const renderLeaderboardButton = () => (
     <button
       className="leaderboard-button-fixed"
@@ -749,6 +744,7 @@ function Game() {
       <FaTrophy size={16} />
     </button>
   );
+
   const renderGameOverCelebration = () =>
     completionTime ? (
       <WinCelebration
@@ -805,27 +801,11 @@ function Game() {
       <div
         className={`App-container ${settings.theme === "dark" ? "dark-theme" : ""}`}
       >
-        <Settings
-          currentSettings={settings}
-          onSave={handleSaveSettings}
-          onCancel={showGame}
-        />
+        {/* Settings handled by ModalManager now */}
       </div>
     );
   }
-  <div
-    className={`App-container ${settings.theme === "dark" ? "dark-theme" : ""}`}
-  >
-    {/* ... existing content ... */}
 
-    {/* Leaderboard button */}
-    <button
-      className="leaderboard-button"
-      onClick={() => setShowLeaderboard(true)}
-    >
-      {/* Leaderboard */}
-    </button>
-  </div>;
   if (useMobileMode) {
     return (
       <div className="App-container">
@@ -850,6 +830,49 @@ function Game() {
       {renderControls()}
       {renderGameOverCelebration()}
       {renderLeaderboardButton()}
+
+      {/* Debug display */}
+      {DEBUG && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: 10,
+            left: 10,
+            background: "rgba(0,0,0,0.7)",
+            color: "white",
+            padding: 10,
+            borderRadius: 5,
+            fontSize: 12,
+            zIndex: 9999,
+            maxWidth: 250,
+            maxHeight: 150,
+            overflow: "auto",
+          }}
+        >
+          <p>Debug Info:</p>
+          <pre style={{ fontSize: 10 }}>
+            {JSON.stringify(
+              {
+                theme: settings.theme,
+                difficulty: settings.difficulty,
+                gridSorting: settings.gridSorting,
+                hardcoreMode: settings.hardcoreMode,
+                maxMistakes,
+                modalsOpen: {
+                  isLoginOpen,
+                  isSignupOpen,
+                  isSettingsOpen,
+                  isAboutOpen,
+                  contextAvailable: !!modalContext,
+                },
+                keyboardEnabled,
+              },
+              null,
+              2,
+            )}
+          </pre>
+        </div>
+      )}
     </div>
   );
 }

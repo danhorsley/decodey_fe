@@ -1,50 +1,87 @@
-// Update the Settings component to use Portal for rendering
+// src/components/modals/Settings.js
 import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 import "../../Styles/Settings.css";
 import "../../Styles/About.css";
+import { useSettings } from "../../context/SettingsContext"; // Direct import of settings context
 
-function Settings({ currentSettings, onSave, onCancel }) {
+function Settings({ onCancel }) {
+  // Get settings directly from the context
+  const { settings: currentSettings, updateSettings } = useSettings();
+
   // Local state to track changes before saving
-  const [settings, setSettings] = useState(currentSettings);
+  const [settings, setSettings] = useState(currentSettings || {});
+
+  // Add debugging to see what's happening
+  console.log(
+    "Settings component rendered with currentSettings:",
+    currentSettings,
+  );
+  console.log("Local settings state:", settings);
 
   useEffect(() => {
-    // Update local state when props change
-    setSettings(currentSettings);
+    // Update local state when context settings change
+    console.log(
+      "Settings useEffect: currentSettings changed:",
+      currentSettings,
+    );
+    if (currentSettings) {
+      setSettings(currentSettings);
+    }
   }, [currentSettings]);
 
   const handleChange = (setting, value) => {
+    console.log(`Setting ${setting} changing to:`, value);
+
     // For theme changes, also update textColor accordingly
     if (setting === "theme") {
-      setSettings((prev) => ({
-        ...prev,
-        [setting]: value,
-        // Auto-set textColor based on theme
-        textColor: value === "dark" ? "dark" : "default",
-      }));
+      setSettings((prev) => {
+        const newSettings = {
+          ...prev,
+          [setting]: value,
+          // Auto-set textColor based on theme
+          textColor: value === "dark" ? "scifi-blue" : "default",
+        };
+        console.log("New settings after theme change:", newSettings);
+        return newSettings;
+      });
     } else {
-      setSettings((prev) => ({
-        ...prev,
-        [setting]: value,
-      }));
+      setSettings((prev) => {
+        const newSettings = {
+          ...prev,
+          [setting]: value,
+        };
+        console.log("New settings after change:", newSettings);
+        return newSettings;
+      });
     }
   };
 
-  if (!currentSettings) return null;
-  
+  const handleSave = () => {
+    console.log("Saving settings directly to context:", settings);
+    // Make a complete copy of the settings to ensure all properties are included
+    const settingsToSave = { ...settings };
+    updateSettings(settingsToSave);
+    if (onCancel) onCancel();
+  };
+
+  if (!currentSettings) {
+    console.log("No current settings available, returning null");
+    return null;
+  }
+
   // Create portal to render the modal at the root level of the DOM
   return ReactDOM.createPortal(
     <div className="about-overlay">
-      <div className={`about-container settings-container ${currentSettings.theme === "dark" ? "dark-theme" : ""} text-${currentSettings.textColor}`}>
+      <div
+        className={`about-container settings-container ${currentSettings.theme === "dark" ? "dark-theme" : ""} text-${currentSettings.textColor}`}
+      >
         <div className="settings-content">
           <div className="settings-actions top">
             <button className="settings-button cancel" onClick={onCancel}>
               Cancel
             </button>
-            <button
-              className="settings-button save"
-              onClick={() => onSave(settings)}
-            >
+            <button className="settings-button save" onClick={handleSave}>
               Save Changes
             </button>
           </div>
@@ -225,17 +262,28 @@ function Settings({ currentSettings, onSave, onCancel }) {
             <button className="settings-button cancel" onClick={onCancel}>
               Cancel
             </button>
-            <button
-              className="settings-button save"
-              onClick={() => onSave(settings)}
-            >
+            <button className="settings-button save" onClick={handleSave}>
               Save & Return to Game
             </button>
+          </div>
+
+          {/* Add debug display of current settings */}
+          <div
+            style={{
+              marginTop: "20px",
+              borderTop: "1px solid #ccc",
+              paddingTop: "10px",
+              fontSize: "10px",
+              color: "#999",
+            }}
+          >
+            <p>Debug - Current Settings:</p>
+            <pre>{JSON.stringify(settings, null, 2)}</pre>
           </div>
         </div>
       </div>
     </div>,
-    document.getElementById('root') // Mount directly to root element
+    document.getElementById("root"), // Mount directly to root element
   );
 }
 

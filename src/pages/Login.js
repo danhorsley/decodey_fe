@@ -1,13 +1,18 @@
+// src/pages/Login.js
 import React, { useState } from "react";
 import "../Styles/About.css";
 import "../Styles/Login.css";
-import { useAppContext } from "../context/AppContext";
-import apiService from "../services/apiService";
-import config from "../config";
+import { useSettings } from "../context/SettingsContext";
+import { useAuth } from "../context/AuthContext";
+import { useModalContext } from "../components/modals/ModalManager";
 
-function Login({ isOpen, onClose }) {
-  const { settings, openSignup, login } = useAppContext();
-  const { isLoginOpen, isSignupOpen } = useAppContext();
+function Login({ onClose }) {
+  // Get contexts directly
+  const { settings } = useSettings();
+  const { login } = useAuth();
+  const { openSignup } = useModalContext();
+
+  // Local state
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   // Initialize rememberMe from localStorage if available
@@ -18,8 +23,6 @@ function Login({ isOpen, onClose }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  if (!isLoginOpen) return null;
-
   // Handle forgotten password
   const handleForgotPassword = () => {
     // For now, just show an alert
@@ -29,12 +32,11 @@ function Login({ isOpen, onClose }) {
 
   // Handle account creation
   const handleCreateAccount = () => {
-    // Call openSignup directly without onClose
     openSignup();
-    // Don't call onClose here, let the context handle it
+    // Don't call onClose here to prevent closing both modals
   };
 
-  // In Login.js
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -45,38 +47,10 @@ function Login({ isOpen, onClose }) {
       rememberMe: rememberMe,
     };
     try {
-      console.log(
-        "Login.js handleSubmitchecker",
-        username,
-        password,
-        rememberMe,
-      );
+      console.log("Login.js handleSubmit", username, password, rememberMe);
       const result = await login(credentials);
       if (result.success) {
         console.log("Login successful");
-
-        // Check for pending scores to submit
-        const pendingScores = JSON.parse(
-          localStorage.getItem("uncrypt-pending-scores") || "[]",
-        );
-
-        if (pendingScores.length > 0) {
-          console.log(`Found ${pendingScores.length} pending scores to submit`);
-
-          // Submit each pending score
-          for (const scoreData of pendingScores) {
-            try {
-              await apiService.recordScore(scoreData);
-              console.log("Pending score submitted successfully");
-            } catch (err) {
-              console.error("Error submitting pending score:", err);
-            }
-          }
-
-          // Clear pending scores after submitting
-          localStorage.removeItem("uncrypt-pending-scores");
-        }
-
         onClose();
       } else {
         setError(
