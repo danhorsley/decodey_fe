@@ -57,24 +57,6 @@ const GameStateContext = createContext();
 export const GameStateProvider = ({ children }) => {
   const [state, dispatch] = useReducer(gameReducer, initialState);
 
-  // Extract key state values for easier access in components
-  const {
-    encrypted,
-    display,
-    mistakes,
-    correctlyGuessed,
-    selectedEncrypted,
-    lastCorrectGuess,
-    letterFrequency,
-    guessedMappings,
-    originalLetters,
-    startTime,
-    completionTime,
-    gameId,
-    hasGameStarted,
-    attributionData,
-  } = state;
-
   // Start game function
   const startGame = useCallback(
     async (useLongText = false, hardcoreMode = false) => {
@@ -143,7 +125,7 @@ export const GameStateProvider = ({ children }) => {
   // Handle click on encrypted letter
   const handleEncryptedSelect = useCallback(
     (letter) => {
-      if (letter === null || !correctlyGuessed.includes(letter)) {
+      if (letter === null || !state.correctlyGuessed.includes(letter)) {
         dispatch({
           type: "SUBMIT_GUESS",
           payload: { selectedEncrypted: letter },
@@ -152,7 +134,7 @@ export const GameStateProvider = ({ children }) => {
       }
       return false;
     },
-    [correctlyGuessed],
+    [state.correctlyGuessed],
   );
 
   // Submit guess for a letter mapping
@@ -193,9 +175,9 @@ export const GameStateProvider = ({ children }) => {
 
         // Create update payload
         const payload = {
-          display: displayText || display,
+          display: displayText || state.display,
           mistakes:
-            typeof data.mistakes === "number" ? data.mistakes : mistakes,
+            typeof data.mistakes === "number" ? data.mistakes : state.mistakes,
           selectedEncrypted: null,
         };
 
@@ -206,12 +188,12 @@ export const GameStateProvider = ({ children }) => {
           // Check if this guess was correct (not previously guessed)
           if (
             data.correctly_guessed.includes(encryptedLetter) &&
-            !correctlyGuessed.includes(encryptedLetter)
+            !state.correctlyGuessed.includes(encryptedLetter)
           ) {
             // This was a new correct guess
             payload.lastCorrectGuess = encryptedLetter;
             payload.guessedMappings = {
-              ...guessedMappings,
+              ...state.guessedMappings,
               [encryptedLetter]: guessedLetter.toUpperCase(),
             };
           }
@@ -229,7 +211,7 @@ export const GameStateProvider = ({ children }) => {
         return { success: false, error: error.message };
       }
     },
-    [display, mistakes, correctlyGuessed, guessedMappings, hardcoreMode],
+    [state],
   );
 
   // Get hint function
@@ -253,15 +235,19 @@ export const GameStateProvider = ({ children }) => {
         displayText = displayText.replace(/[^A-Z█]/g, "");
       }
 
-      const newCorrectlyGuessed = data.correctly_guessed || correctlyGuessed;
-      const newMappings = { ...guessedMappings };
+      const newCorrectlyGuessed =
+        data.correctly_guessed || state.correctlyGuessed;
+      const newMappings = { ...state.guessedMappings };
 
       // Update mappings for newly guessed letters
       newCorrectlyGuessed
-        .filter((letter) => !correctlyGuessed.includes(letter))
+        .filter((letter) => !state.correctlyGuessed.includes(letter))
         .forEach((encryptedLetter) => {
-          for (let i = 0; i < encrypted.length; i++) {
-            if (encrypted[i] === encryptedLetter && data.display[i] !== "?") {
+          for (let i = 0; i < state.encrypted.length; i++) {
+            if (
+              state.encrypted[i] === encryptedLetter &&
+              data.display[i] !== "?"
+            ) {
               newMappings[encryptedLetter] = data.display[i];
               break;
             }
@@ -284,11 +270,11 @@ export const GameStateProvider = ({ children }) => {
       console.error("Error getting hint:", error);
       return { success: false, error: error.message };
     }
-  }, [encrypted, correctlyGuessed, guessedMappings, hardcoreMode]);
+  }, [state]);
 
   // Clear last correct guess after a delay
   useEffect(() => {
-    if (lastCorrectGuess) {
+    if (state.lastCorrectGuess) {
       const timer = setTimeout(() => {
         dispatch({
           type: "SUBMIT_GUESS",
@@ -298,15 +284,16 @@ export const GameStateProvider = ({ children }) => {
 
       return () => clearTimeout(timer);
     }
-  }, [lastCorrectGuess]);
+  }, [state.lastCorrectGuess]);
 
   // Check for game completion
   useEffect(() => {
     if (
-      encrypted &&
-      correctlyGuessed.length > 0 &&
-      new Set(encrypted.match(/[A-Z]/g)).size <= correctlyGuessed.length &&
-      !completionTime
+      state.encrypted &&
+      state.correctlyGuessed.length > 0 &&
+      new Set(state.encrypted.match(/[A-Z]/g)).size <=
+        state.correctlyGuessed.length &&
+      !state.completionTime
     ) {
       dispatch({ type: "SET_COMPLETION", payload: Date.now() });
 
@@ -320,57 +307,50 @@ export const GameStateProvider = ({ children }) => {
           console.error("Error fetching attribution:", error);
         });
     }
-  }, [encrypted, correctlyGuessed, completionTime]);
+  }, [state.encrypted, state.correctlyGuessed, state.completionTime]);
 
   // Save game state to localStorage
   useEffect(() => {
-    if (encrypted && display) {
+    if (state.encrypted && state.display) {
       const gameState = {
-        encrypted,
-        display,
-        mistakes,
-        correctlyGuessed,
-        letterFrequency,
-        guessedMappings,
-        originalLetters,
-        startTime,
+        encrypted: state.encrypted,
+        display: state.display,
+        mistakes: state.mistakes,
+        correctlyGuessed: state.correctlyGuessed,
+        letterFrequency: state.letterFrequency,
+        guessedMappings: state.guessedMappings,
+        originalLetters: state.originalLetters,
+        startTime: state.startTime,
+        hardcoreMode: state.hardcoreMode,
       };
 
       // Save game state to localStorage
       localStorage.setItem("uncrypt-game-data", JSON.stringify(gameState));
     }
-  }, [
-    encrypted,
-    display,
-    mistakes,
-    correctlyGuessed,
-    letterFrequency,
-    guessedMappings,
-    originalLetters,
-    startTime,
-  ]);
+  }, [state]);
 
   // Determine if game is active
-  const isGameActive = Boolean(encrypted) && !completionTime && mistakes < 8; // Default to max 8 mistakes
+  const isGameActive =
+    Boolean(state.encrypted) && !state.completionTime && state.mistakes < 8; // Default to max 8 mistakes
 
   return (
     <GameStateContext.Provider
       value={{
         // Game state
-        encrypted,
-        display,
-        mistakes,
-        correctlyGuessed,
-        selectedEncrypted,
-        lastCorrectGuess,
-        letterFrequency,
-        guessedMappings,
-        originalLetters,
-        startTime,
-        completionTime,
-        gameId,
-        hasGameStarted,
-        attributionData,
+        encrypted: state.encrypted,
+        display: state.display,
+        mistakes: state.mistakes,
+        correctlyGuessed: state.correctlyGuessed,
+        selectedEncrypted: state.selectedEncrypted,
+        lastCorrectGuess: state.lastCorrectGuess,
+        letterFrequency: state.letterFrequency,
+        guessedMappings: state.guessedMappings,
+        originalLetters: state.originalLetters,
+        startTime: state.startTime,
+        completionTime: state.completionTime,
+        gameId: state.gameId,
+        hasGameStarted: state.hasGameStarted,
+        attributionData: state.attributionData,
         isGameActive,
         hardcoreMode: state.hardcoreMode,
 

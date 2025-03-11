@@ -1,3 +1,4 @@
+// src/App.js
 import React from "react";
 import {
   BrowserRouter as Router,
@@ -17,19 +18,19 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import About from "./components/modals/About";
 import Settings from "./components/modals/Settings";
-import { useAppContext } from "./context/AppContext";
+import { useAppContext } from "./context/AppContext"; // Continue using the compatibility layer
 
 // Create a wrapper component that conditionally renders the AccountButtonWrapper
 function GlobalUIElements() {
   const location = useLocation();
-
   // Don't render the account button on the leaderboard page
   const isLeaderboardPage = location.pathname === "/leaderboard";
-
   return !isLeaderboardPage ? <AccountButtonWrapper /> : null;
 }
 
 function App() {
+  // Continue to use useAppContext from the compatibility layer
+  // This will get default values if the real context isn't available
   const {
     isLoginOpen,
     closeLogin,
@@ -43,6 +44,13 @@ function App() {
     updateSettings,
   } = useAppContext();
 
+  // Safeguard in case settings is undefined (though our default values should prevent this)
+  const currentSettings = settings || {
+    theme: "light",
+    difficulty: "easy",
+    // other defaults...
+  };
+
   return (
     <Router>
       {/* Global modals that should be available on all pages */}
@@ -51,10 +59,10 @@ function App() {
       {isAboutOpen && <About isOpen={isAboutOpen} onClose={closeAbout} />}
       {isSettingsOpen && (
         <Settings
-          currentSettings={settings}
+          currentSettings={currentSettings}
           onSave={(newSettings) => {
-            updateSettings(newSettings);
-            closeSettings();
+            updateSettings?.(newSettings);
+            closeSettings?.();
           }}
           onCancel={closeSettings}
         />

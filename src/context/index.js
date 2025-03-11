@@ -9,7 +9,7 @@ import { GameStateProvider, useGameState } from "./GameStateContext";
  * Combined provider that wraps all individual context providers
  * This component also manages interactions between different contexts
  */
-const AppProviders = ({ children }) => {
+export const AppProviders = ({ children }) => {
   // We'll add a child component that can access all contexts to handle interactions
   return (
     <SettingsProvider>
@@ -30,12 +30,13 @@ const AppProviders = ({ children }) => {
 const ContextInteractions = ({ children }) => {
   const { settings } = useSettings();
   const { updateMobileMode } = useUI();
-  const { startGame } = useGameState();
 
   // Update mobile mode when settings change
   useEffect(() => {
-    updateMobileMode(settings.mobileMode);
-  }, [settings.mobileMode, updateMobileMode]);
+    if (settings && updateMobileMode) {
+      updateMobileMode(settings.mobileMode);
+    }
+  }, [settings, updateMobileMode]);
 
   // Add more cross-context interactions here as needed
 
@@ -47,27 +48,26 @@ const ContextInteractions = ({ children }) => {
  * This allows existing components to continue using useAppContext
  * while we gradually migrate to more specific hooks
  */
-const useAppContext = () => {
-  const settings = useSettings();
-  const auth = useAuth();
-  const ui = useUI();
-  const gameState = useGameState();
+export const useAppContext = () => {
+  try {
+    const settings = useSettings();
+    const auth = useAuth();
+    const ui = useUI();
+    const gameState = useGameState();
 
-  // Combine all contexts into a single object that matches
-  // the structure of the original AppContext
-  return {
-    ...settings,
-    ...auth,
-    ...ui,
-    ...gameState,
-  };
+    // Combine all contexts into a single object that matches
+    // the structure of the original AppContext
+    return {
+      ...settings,
+      ...auth,
+      ...ui,
+      ...gameState,
+    };
+  } catch (error) {
+    console.error("Error in useAppContext:", error);
+    // Return null to trigger the default values in the compatibility layer
+    return null;
+  }
 };
 
-export {
-  AppProviders,
-  useSettings,
-  useAuth,
-  useUI,
-  useGameState,
-  useAppContext,
-};
+export { useSettings, useAuth, useUI, useGameState };
