@@ -12,7 +12,8 @@ import { useUI } from "../context/UIContext"; // Direct import for UI state
 import { useGameState } from "../context/GameStateContext"; // Direct import for game state
 import { useAuth } from "../context/AuthContext"; // Direct import for auth
 import { useModalContext } from "../components/modals/ModalManager"; // Import for modal state
-import useSound from "../services/SoundManager";
+// import useSound from "../services/SoundManager";
+import useSound from "../services/WebAudioSoundManager";
 import useKeyboardInput from "../hooks/KeyboardController";
 import { formatAlternatingLines, preventWordBreaks } from "../utils/utils";
 import WinCelebration from "../components/modals/WinCelebration";

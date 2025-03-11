@@ -2,7 +2,18 @@
    ConsolidatedMain.css - Optimized core styles for Uncrypt game
    Removed duplicate styles that were moved to specialized files
 */
+/* Global Font Settings */
+html, body {
+  font-family: 'Courier New', Courier, monospace;
+}
 
+:root {
+  font-family: 'Courier New', Courier, monospace;
+}
+
+* {
+  font-family: 'Courier New', Courier, monospace;
+}
 /* ===== CONTAINER STYLES ===== */
 .App {
   text-align: center;
