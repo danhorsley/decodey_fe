@@ -161,7 +161,7 @@
 }
 
 /* Leaderboard button fixed position */
-.leaderboard-button-fixed {
+/* .leaderboard-button-fixed {
   position: absolute;
   bottom: 30px;
   left: 10px;
@@ -190,7 +190,7 @@
 .dark-theme .leaderboard-button-fixed:hover {
   background-color: rgb(0, 225, 152);
 }
-
+ */
 /* Streak controls */
 .streak-controls {
   margin: 15px 0;

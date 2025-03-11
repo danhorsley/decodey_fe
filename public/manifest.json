@@ -1,6 +1,7 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Uncrypt",
+  "name": "Uncrypt - Cipher Puzzle Game",
+  "description": "Decrypt hidden messages by solving letter substitution puzzles",
   "icons": [
     {
       "src": "favicon.ico",
@@ -16,10 +17,21 @@
       "src": "logo512.png",
       "type": "image/png",
       "sizes": "512x512"
+    },
+    {
+      "src": "maskable_icon.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
     }
   ],
-  "start_url": ".",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "background_color": "#ffffff",
+  "categories": ["games", "puzzle", "education"],
+  "orientation": "any",
+  "prefer_related_applications": false,
+  "offline_enabled": true
 }

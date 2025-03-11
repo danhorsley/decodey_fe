@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <title>Uncrypt - Offline Mode</title>
+    <style>
+      body {
+        font-family: "Courier New", Courier, monospace;
+        text-align: center;
+        margin: 0;
+        padding: 20px;
+        background-color: #f0f0f0;
+        color: #333;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+      }
+      .container {
+        max-width: 600px;
+        padding: 30px;
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        font-size: 1.8rem;
+        margin-bottom: 20px;
+      }
+      p {
+        margin-bottom: 15px;
+        line-height: 1.5;
+      }
+      .retry-button {
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-family: inherit;
+        font-size: 1rem;
+        cursor: pointer;
+        margin-top: 15px;
+      }
+      .retry-button:hover {
+        background-color: #0056b3;
+      }
+      @media (prefers-color-scheme: dark) {
+        body {
+          background-color: #333;
+          color: #f8f9fa;
+        }
+        .container {
+          background-color: #222;
+        }
+        .retry-button {
+          background-color: #4cc9f0;
+          color: #111;
+        }
+        .retry-button:hover {
+          background-color: #3db8df;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>You're offline</h1>
+      <p>It seems you're not connected to the internet right now.</p>
+      <p>
+        The Uncrypt game is designed to work offline, but you need to have
+        visited the game page at least once while online.
+      </p>
+      <p>
+        Some features like leaderboards and user accounts require an internet
+        connection.
+      </p>
+      <button class="retry-button" onclick="window.location.href='/'">
+        Try to reconnect
+      </button>
+    </div>
+    <script>
+      // Check if we're still offline
+      window.addEventListener("online", () => {
+        window.location.reload();
+      });
+    </script>
+  </body>
+</html>

@@ -1235,3 +1235,33 @@ body:not(.dark-theme) .celebration-content .decrypted-quote {
   background-color: #4cc9f0;
   border: 2px solid #333;
 }
+
+.leaderboard-button-fixed {
+  position: absolute;
+  bottom: 30px;
+  left: 10px;
+  padding: 8px;
+  background-color: #000;
+  color: #E5B80B;
+  border: 1px solid #D4A017;
+  border-radius: 57%;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(230, 185, 30, 0.5);
+  transform: translateY(50%);
+  display: flex;
+}
+
+.leaderboard-button-fixed:hover {
+  background: linear-gradient(to bottom, #FFDF4F, #FDBC40) !important;
+  box-shadow: 0 3px 10px rgba(230, 185, 30, 0.65) !important;
+  color: #000 !important;
+}
+
+.dark-theme .leaderboard-button-fixed {
+  color: #E5B80B !important;
+  background-color: #000 !important;
+}
+
+.dark-theme .leaderboard-button-fixed:hover {
+  background-color: rgb(0, 225, 152) !important;
+}

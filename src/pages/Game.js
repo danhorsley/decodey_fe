@@ -160,7 +160,7 @@ function Game() {
   } = state;
 
   // Sound and keyboard hooks
-  const { playSound, loadSounds } = useSound();
+  const { playSound, loadSounds, unlockAudioContext } = useSound();
   const isGameActive = !completionTime && mistakes < maxMistakes;
 
   // Memoized computed values
@@ -515,7 +515,31 @@ function Game() {
     },
     [selectedEncrypted, submitGuess],
   );
+  useEffect(() => {
+    // Initialize sounds on component mount
+    console.log("Game component mounted - initializing sounds");
+    loadSounds();
 
+    // Create interaction handlers to unlock audio
+    const handleInteraction = () => {
+      console.log("User interaction detected - unlocking audio");
+      unlockAudioContext();
+      loadSounds();
+    };
+
+    // Add event listeners for user interactions
+    const events = ["mousedown", "touchstart", "keydown"];
+    events.forEach((event) => {
+      document.addEventListener(event, handleInteraction, { once: true });
+    });
+
+    return () => {
+      // Clean up event listeners
+      events.forEach((event) => {
+        document.removeEventListener(event, handleInteraction);
+      });
+    };
+  }, [loadSounds, unlockAudioContext]);
   // Effects
   useEffect(() => {
     // Check if there's an existing game in progress
@@ -619,7 +643,20 @@ function Game() {
       window.removeEventListener("keydown", handleFirstInteraction);
     };
   }, [loadSounds]);
+  useEffect(() => {
+    window.testSound = (soundName = "keyclick") => {
+      console.log(`Testing sound: ${soundName}`);
+      unlockAudioContext();
+      setTimeout(() => {
+        playSound(soundName);
+        console.log(`Sound ${soundName} playback initiated`);
+      }, 100);
+    };
 
+    return () => {
+      delete window.testSound;
+    };
+  }, [playSound, unlockAudioContext]);
   // Determine if we should enable keyboard input
   const keyboardEnabled = useMemo(() => {
     const anyModalOpen =
