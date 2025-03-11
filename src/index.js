@@ -3,7 +3,7 @@ import ReactDOM from "react-dom/client";
 import "./Styles/index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
-import { AppProvider } from "./context/AppContext";
+import { AppProviders } from "./context";
 
 // Add data-theme attribute to HTML element for Samsung Browser
 const applyHtmlDataTheme = () => {
@@ -31,14 +31,14 @@ const isProduction = process.env.NODE_ENV === "production";
 // Conditionally apply StrictMode only in development
 root.render(
   isProduction ? (
-    <AppProvider>
+    <AppProviders>
       <App />
-    </AppProvider>
+    </AppProviders>
   ) : (
     <React.StrictMode>
-      <AppProvider>
+      <AppProvidesr>
         <App />
-      </AppProvider>
+      </AppProviders>
     </React.StrictMode>
   ),
 );
