@@ -1,4 +1,4 @@
-// src/App.js
+// src/App.js - Only the imports section
 import React, { useEffect, Suspense, lazy } from "react";
 import {
   BrowserRouter as Router,
@@ -7,8 +7,7 @@ import {
   Navigate,
   useLocation,
 } from "react-router-dom";
-import "./Styles/App.css";
-import "./Styles/Mobile.css";
+// CSS files are now imported at the application root level in index.js
 import scoreService from "./services/scoreService";
 import { useAuth } from "./context/AuthContext";
 import { isOnline } from "./utils/networkUtils";

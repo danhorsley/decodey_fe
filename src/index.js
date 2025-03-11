@@ -1,7 +1,19 @@
 // src/index.js
 import React from "react";
 import ReactDOM from "react-dom/client";
-import "./Styles/index.css";
+// Import consolidated CSS files instead of multiple individual ones
+import "./Styles/ConsolidatedMain.css";
+import "./Styles/ConsolidatedMobile.css";
+import "./Styles/ConsolidatedDarkTheme.css";
+// Specialized CSS files remain separate
+import "./Styles/Login.css";
+import "./Styles/About.css";
+import "./Styles/Settings.css";
+import "./Styles/Leaderboard.css";
+import "./Styles/Privacy.css";
+// Keep Modal CSS separate as it's used across components
+import "./Styles/Modal.css";
+
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { AppProviders } from "./context"; // Import the new AppProviders

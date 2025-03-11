@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAppContext } from "../../context/AppContext";
-import "../../Styles/Mobile.css";
-import "../../Styles/MobileSmall.css";
-import "../../Styles/DarkTheme.css";
-import "../../Styles/WinCelebration.css";
+// No need to import multiple CSS files - using consolidated files instead
 
 /**
  * A wrapper component for the mobile layout
