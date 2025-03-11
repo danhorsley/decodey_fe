@@ -20,30 +20,28 @@ const useSound = () => {
   // Define debounce time (prevents rapid retriggers)
   const DEBOUNCE_MS = 50;
 
-  // Define sounds configuration with absolute paths
-  // Ensure PUBLIC_URL is defined or default to empty string
-  const baseUrl = process.env.PUBLIC_URL || '';
-  
-  // Debug the sound path construction
-  console.log("Sound base path:", baseUrl);
-  
+  // Define sounds configuration with direct paths without using PUBLIC_URL
+  // The paths should resolve from the deployed root 
   const soundConfigs = {
     correct: {
-      src: [`${baseUrl}/sounds/correct.mp3`],
+      src: ["/sounds/correct.mp3"],
       volume: 0.7,
     },
     incorrect: {
-      src: [`${baseUrl}/sounds/incorrect.mp3`],
+      src: ["/sounds/incorrect.mp3"],
       volume: 0.7,
     },
-    hint: { src: [`${baseUrl}/sounds/hint.mp3`], volume: 0.7 },
-    win: { src: [`${baseUrl}/sounds/win.mp3`], volume: 0.8 },
-    lose: { src: [`${baseUrl}/sounds/lose.mp3`], volume: 0.8 },
+    hint: { src: ["/sounds/hint.mp3"], volume: 0.7 },
+    win: { src: ["/sounds/win.mp3"], volume: 0.8 },
+    lose: { src: ["/sounds/lose.mp3"], volume: 0.8 },
     keyclick: {
-      src: [`${baseUrl}/sounds/keyclick.mp3`],
+      src: ["/sounds/keyclick.mp3"],
       volume: 0.5,
     },
   };
+  
+  // Log path for debugging
+  console.log("Using direct paths to sounds folder, e.g.:", soundConfigs.correct.src[0]);
 
   // Add a function to unlock AudioContext
   const unlockAudioContext = useCallback(() => {
