@@ -3,7 +3,9 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import apiService from "../services/apiService";
 import "../Styles/Leaderboard.css";
-import { useAppContext } from "../context/AppContext";
+import { useAuth } from "../context/AuthContext"; // Direct import for auth
+import { useSettings } from "../context/SettingsContext"; // Direct import for settings
+import { useModalContext } from "../components/modals/ModalManager"; // Import for modal functions
 import HeaderControls from "../components/HeaderControls";
 import Settings from "../components/modals/Settings";
 import { FiRefreshCw, FiArrowLeft } from "react-icons/fi";
@@ -11,19 +13,36 @@ import AccountButtonWrapper from "../components/AccountButtonWrapper";
 
 const Leaderboard = ({ onClose }) => {
   const navigate = useNavigate();
-  const {
-    settings,
-    updateSettings,
-    isAuthenticated,
-    openLogin,
-    isSettingsOpen,
-    closeSettings,
-  } = useAppContext();
+
+  // Get auth state directly from AuthContext
+  const { isAuthenticated, user, authLoading: authContextLoading } = useAuth();
+
+  // Get settings directly from SettingsContext
+  const { settings } = useSettings();
+
+  // Get modal context
+  const { openLogin } = useModalContext();
+
+  // Update our local auth loading state when context updates
+  useEffect(() => {
+    console.log("Auth context update in Leaderboard:", {
+      authContextLoading,
+      isAuthenticated,
+      hasUser: !!user,
+      userId: user?.id,
+    });
+
+    if (!authContextLoading) {
+      setAuthLoading(false);
+    }
+  }, [authContextLoading, isAuthenticated, user]);
+
   const [activeTab, setActiveTab] = useState("all-time");
   const [leaderboardData, setLeaderboardData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
+  const [authLoading, setAuthLoading] = useState(true); // Track auth loading state
 
   // New state for personal stats
   const [personalStats, setPersonalStats] = useState(null);
@@ -98,7 +117,19 @@ const Leaderboard = ({ onClose }) => {
   // New function to fetch personal stats with useCallback
   const fetchPersonalStats = useCallback(
     async (showRefreshAnimation = false) => {
-      if (!isAuthenticated) return;
+      // Don't try to fetch stats if auth is still loading or user is not authenticated
+      if (authLoading || !isAuthenticated) {
+        console.log(
+          "Skipping fetchPersonalStats - auth loading or not authenticated",
+          {
+            authLoading,
+            isAuthenticated,
+          },
+        );
+        return;
+      }
+
+      console.log("Fetching personal stats for authenticated user");
 
       if (showRefreshAnimation) {
         setIsRefreshing(true);
@@ -142,7 +173,7 @@ const Leaderboard = ({ onClose }) => {
         }
       }
     },
-    [isAuthenticated],
+    [isAuthenticated, authLoading],
   );
 
   // Fetch leaderboard data
@@ -172,9 +203,21 @@ const Leaderboard = ({ onClose }) => {
     setActiveTab(tab);
     setPage(1);
 
-    // Fetch personal stats when switching to that tab if not already loaded
-    if (tab === "personal" && !personalStats && isAuthenticated) {
+    // Fetch personal stats when switching to that tab if not already loaded and auth is ready
+    if (
+      tab === "personal" &&
+      !personalStats &&
+      isAuthenticated &&
+      !authLoading
+    ) {
+      console.log("Fetching personal stats on tab change");
       fetchPersonalStats();
+    } else if (tab === "personal") {
+      console.log("Not fetching personal stats on tab change:", {
+        hasExistingStats: !!personalStats,
+        isAuthenticated,
+        authLoading,
+      });
     }
   };
 
@@ -358,7 +401,8 @@ const Leaderboard = ({ onClose }) => {
 
   // New function to render personal stats tab
   const renderPersonalStats = () => {
-    if (!isAuthenticated) {
+    // Don't show the login prompt if we're still loading auth state
+    if (!isAuthenticated && !authLoading) {
       return (
         <div className="personal-stats-login-required">
           <p>Please log in to view your personal stats.</p>
@@ -515,6 +559,13 @@ const Leaderboard = ({ onClose }) => {
   };
 
   const renderPersonalLeaderboard = () => {
+    // Handle auth loading state
+    if (authLoading) {
+      return (
+        <div className="loading-spinner">Checking authentication status...</div>
+      );
+    }
+
     // Personal tab now uses the new renderPersonalStats function
     return renderPersonalStats();
   };
