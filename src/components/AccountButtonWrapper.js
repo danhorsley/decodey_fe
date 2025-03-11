@@ -1,3 +1,4 @@
+
 // src/components/AccountButtonWrapper.js
 import React from "react";
 import { FaUserCircle } from "react-icons/fa";
@@ -27,3 +28,16 @@ function AccountButtonWrapper() {
       openLogin();
     }
   }
+
+  return (
+    <button
+      className={`account-icon ${settings?.theme === "dark" ? "dark-theme" : ""}`}
+      onClick={handleClick}
+      aria-label={isAuthenticated ? "Account" : "Login"}
+    >
+      <FaUserCircle />
+    </button>
+  );
+}
+
+export default AccountButtonWrapper;
