@@ -6,7 +6,8 @@ import {
   getDifficultyFromMaxMistakes,
   calculateScore,
 } from "../../utils/utils";
-import apiService from "../../services/apiService";
+import scoreService from "../../services/scoreService";
+import { isOnline } from "../../utils/networkUtils";
 import { useAuth } from "../../context/AuthContext";
 import { useModalContext } from "../modals/ModalManager";
 
@@ -37,16 +38,106 @@ const WinCelebration = ({
     recorded: false,
     error: null,
     authRequired: false,
+    queued: false,
+    pendingCount: 0,
+    retrying: false,
+    message: null,
   });
 
-  const handleRetryScoreSubmit = useCallback(() => {
-    setScoreStatus({
-      attempted: false,
-      recorded: false,
+  // Enhanced retry function that attempts to submit immediately
+  const handleRetryScoreSubmit = useCallback(async () => {
+    // Reset error state
+    setScoreStatus((prev) => ({
+      ...prev,
       error: null,
-      authRequired: false,
-    });
-  }, []);
+      retrying: true,
+    }));
+
+    // If we're not authenticated, show login prompt
+    if (!isAuthenticated) {
+      setScoreStatus((prev) => ({
+        ...prev,
+        authRequired: true,
+        message: "Login to save your score!",
+        retrying: false,
+      }));
+      return;
+    }
+
+    // If we're offline, alert the user
+    if (!isOnline()) {
+      setScoreStatus((prev) => ({
+        ...prev,
+        retrying: false,
+        message: "Currently offline. Score will be submitted when online.",
+      }));
+      return;
+    }
+
+    try {
+      // Try to submit pending scores if any exist
+      const pendingCount = scoreService.getPendingCount();
+
+      if (pendingCount > 0) {
+        // Try to submit pending scores
+        const result = await scoreService.submitPendingScores(isAuthenticated);
+
+        if (result.success) {
+          setScoreStatus((prev) => ({
+            ...prev,
+            recorded: true,
+            retrying: false,
+            message:
+              result.message ||
+              `${result.submitted} score(s) submitted successfully.`,
+          }));
+        } else if (result.submitted > 0) {
+          // Partial success
+          setScoreStatus((prev) => ({
+            ...prev,
+            retrying: false,
+            queued: result.remaining > 0,
+            pendingCount: result.remaining,
+            message:
+              result.message ||
+              `${result.submitted} score(s) submitted. ${result.remaining} still pending.`,
+          }));
+        } else {
+          // No success
+          setScoreStatus((prev) => ({
+            ...prev,
+            retrying: false,
+            error:
+              result.message || "Failed to submit scores. Will retry later.",
+          }));
+        }
+      } else if (scoreStatus.attempted && !scoreStatus.recorded) {
+        // No pending scores but we haven't recorded current score
+        // Try again from scratch
+        setScoreStatus({
+          attempted: false,
+          recorded: false,
+          error: null,
+          authRequired: false,
+          retrying: false,
+        });
+      } else {
+        // Nothing to retry
+        setScoreStatus((prev) => ({
+          ...prev,
+          retrying: false,
+          message: "No pending scores to submit.",
+        }));
+      }
+    } catch (error) {
+      console.error("Error retrying score submission:", error);
+      setScoreStatus((prev) => ({
+        ...prev,
+        retrying: false,
+        error: "Failed to submit scores. Please try again later.",
+      }));
+    }
+  }, [isAuthenticated, scoreStatus.attempted, scoreStatus.recorded]);
 
   // Handle login and then retry score recording
   const handleLoginAndRecordScore = useCallback(() => {
@@ -57,6 +148,8 @@ const WinCelebration = ({
     setScoreStatus({
       attempted: false,
       recorded: false,
+      queued: scoreService.getPendingCount() > 0,
+      pendingCount: scoreService.getPendingCount(),
       error: null,
       authRequired: false,
     });
@@ -80,70 +173,82 @@ const WinCelebration = ({
     }
   }, [isAuthenticated, scoreStatus.authRequired]);
 
-  // Record score to backend with proper auth state handling
+  // Record score to backend with proper auth state and offline handling
   useEffect(() => {
     const recordGameScore = async () => {
       // Only proceed if user has won and hasn't attempted to record score yet
       if (hasWon && !scoreStatus.attempted) {
         // Check auth state at the moment of execution
         const currentIsAuthenticated = isAuthenticated;
+        const networkAvailable = isOnline();
 
-        console.log("Attempting to record score, auth state:", {
+        console.log("Attempting to record score:", {
           isAuthenticated: currentIsAuthenticated,
+          networkAvailable,
+          pendingScores: scoreService.getPendingCount(),
         });
 
-        // Mark as attempted regardless of auth state
+        // Mark as attempted regardless of auth state or network
         setScoreStatus((prev) => ({ ...prev, attempted: true }));
 
-        // Only try to record if authenticated
-        if (currentIsAuthenticated) {
-          try {
-            // Calculate score based on mistakes and time
-            const gameTimeSeconds = (completionTime - startTime) / 1000;
-            const score = calculateScore(
-              maxMistakes,
-              mistakes,
-              gameTimeSeconds,
-            );
+        // Calculate score based on mistakes and time
+        const gameTimeSeconds = (completionTime - startTime) / 1000;
+        const score = calculateScore(maxMistakes, mistakes, gameTimeSeconds);
 
-            const gameData = {
-              score,
-              mistakes,
-              timeTaken: Math.round(gameTimeSeconds),
-              difficulty: getDifficultyFromMaxMistakes(maxMistakes),
-            };
+        const gameData = {
+          score,
+          mistakes,
+          timeTaken: Math.round(gameTimeSeconds),
+          difficulty: getDifficultyFromMaxMistakes(maxMistakes),
+          timestamp: Date.now(), // Add timestamp to track when score was earned
+        };
 
-            console.log("Recording score with data:", gameData);
+        console.log("Recording score with data:", gameData);
 
-            const result = await apiService.recordScore(gameData);
-            console.log("Score recording response:", result);
+        try {
+          // Use new scoreService which handles both online and offline cases
+          const result = await scoreService.submitScore(
+            gameData,
+            currentIsAuthenticated,
+          );
+          console.log("Score submission result:", result);
 
-            // Check for success based on both 200 and 201 status codes
-            if (result.success || result.score_id || result.message) {
-              setScoreStatus((prev) => ({
-                ...prev,
-                recorded: true,
-                message: result.message || "Score recorded successfully!",
-              }));
-              console.log("Score recorded successfully:", result);
-            } else {
-              throw new Error("Unexpected response format");
-            }
-          } catch (error) {
-            console.error("Failed to record score:", error);
+          if (result.success) {
+            // Successfully submitted to server
             setScoreStatus((prev) => ({
               ...prev,
-              error: "Failed to record score. Please try again.",
+              recorded: true,
+              message: result.message || "Score recorded successfully!",
             }));
+          } else if (result.queued) {
+            // Saved to queue (offline or other error)
+            setScoreStatus((prev) => ({
+              ...prev,
+              queued: true,
+              pendingCount: result.pendingCount || 1,
+              message:
+                result.message ||
+                "Score saved offline. Will submit when online.",
+            }));
+          } else if (result.authRequired) {
+            // Authentication required
+            setScoreStatus((prev) => ({
+              ...prev,
+              authRequired: true,
+              queued: true,
+              pendingCount: result.pendingCount || 1,
+              message: "Login to save your score!",
+            }));
+          } else {
+            // Other error
+            throw new Error(result.error || "Failed to record score");
           }
-        } else {
-          // Not authenticated, show login prompt
+        } catch (error) {
+          console.error("Error recording score:", error);
           setScoreStatus((prev) => ({
             ...prev,
-            authRequired: true,
-            message: "Login to save your score!",
+            error: error.message || "Failed to record score. Will retry later.",
           }));
-          console.log("User not authenticated, showing login prompt");
         }
       }
     };
@@ -426,19 +531,48 @@ const WinCelebration = ({
             {isAuthenticated ? (
               scoreStatus.recorded ? (
                 <p className="score-success">Your score has been recorded!</p>
+              ) : scoreStatus.retrying ? (
+                <p className="score-recording">Submitting scores...</p>
+              ) : scoreStatus.queued ? (
+                <div className="score-queued">
+                  <p>
+                    {scoreStatus.message ||
+                      `Score saved offline (${scoreStatus.pendingCount} pending).`}
+                  </p>
+                  <button
+                    onClick={handleRetryScoreSubmit}
+                    className="retry-button"
+                    disabled={!isOnline()}
+                  >
+                    Submit Now
+                  </button>
+                </div>
               ) : scoreStatus.error ? (
-                <>
-                  <p className="score-error">{scoreStatus.error}</p>
+                <div className="score-error">
+                  <p>{scoreStatus.error}</p>
                   <button
                     onClick={handleRetryScoreSubmit}
                     className="retry-button"
                   >
                     Try Again
                   </button>
-                </>
-              ) : (
+                </div>
+              ) : scoreStatus.attempted ? (
                 <p className="score-recording">Recording your score...</p>
-              )
+              ) : null
+            ) : scoreStatus.queued ? (
+              <div className="login-prompt">
+                <p>
+                  {scoreStatus.message ||
+                    `Score saved offline (${scoreStatus.pendingCount} pending). Login to submit.`}
+                </p>
+                <button
+                  onClick={handleLoginAndRecordScore}
+                  className="login-button"
+                >
+                  Login or Create Account
+                </button>
+              </div>
             ) : scoreStatus.authRequired ? (
               <div className="login-prompt">
                 <p>Login to save your score to the leaderboard!</p>
