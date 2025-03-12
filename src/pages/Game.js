@@ -98,7 +98,7 @@ const reducer = (state, action) => {
 function Game() {
   // Get settings directly from context
   const { settings, maxMistakes } = useSettings();
-  const { toggleSounds, soundsEnabled } = useSound();
+  const { toggleSounds, soundEnabled } = useSound();
 
   // Get UI state directly from context
   const {
@@ -124,10 +124,10 @@ function Game() {
 
   useEffect(() => {
     // Check if current sound state matches settings
-    if (settings.soundEnabled !== soundsEnabled) {
+    if (settings.soundEnabled !== soundEnabled) {
       toggleSounds(); // Toggle sounds to match settings
     }
-  }, [settings.soundEnabled, soundsEnabled, toggleSounds]);
+  }, [settings.soundEnabled, soundEnabled, toggleSounds]);
 
   // Modal context access - safely retrieve with defensive coding
   const modalContext = useModalContext();
@@ -926,6 +926,7 @@ function Game() {
             {JSON.stringify(
               {
                 theme: settings.theme,
+                sound: settings.soundEnabled,
                 difficulty: settings.difficulty,
                 gridSorting: settings.gridSorting,
                 hardcoreMode: settings.hardcoreMode,

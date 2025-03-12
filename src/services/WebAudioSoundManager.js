@@ -1,12 +1,13 @@
 // src/services/WebAudioSoundManager.js
 import { useState, useCallback, useRef } from "react";
+import { vibrate, isVibrationEnabled } from "../utils/hapticUtils";
 
 /**
  * Custom hook for sound management using Web Audio API
  * Generates sounds on-the-fly instead of loading MP3 files
  */
 const useSound = () => {
-  const [soundsEnabled, setSoundsEnabled] = useState(true);
+  const [soundEnabled, setSoundEnabled] = useState(true);
   const audioContextRef = useRef(null);
   const initializedRef = useRef(false);
 
@@ -38,7 +39,7 @@ const useSound = () => {
 
   // Generate and play a "correct" sound (pleasant major chord)
   const playCorrectSound = useCallback(() => {
-    if (!soundsEnabled || !initAudioContext()) return;
+    if (!soundEnabled || !initAudioContext()) return;
 
     const ctx = audioContextRef.current;
     const now = ctx.currentTime;
@@ -98,11 +99,11 @@ const useSound = () => {
     osc1.stop(now + 0.5);
     osc2.stop(now + 0.5);
     osc3.stop(now + 0.5);
-  }, [soundsEnabled, initAudioContext]);
+  }, [soundEnabled, initAudioContext]);
 
   // Generate and play an "incorrect" sound (dissonant minor second)
   const playIncorrectSound = useCallback(() => {
-    if (!soundsEnabled || !initAudioContext()) return;
+    if (!soundEnabled || !initAudioContext()) return;
 
     const ctx = audioContextRef.current;
     const now = ctx.currentTime;
@@ -146,11 +147,11 @@ const useSound = () => {
 
     osc1.stop(now + 0.3);
     osc2.stop(now + 0.3);
-  }, [soundsEnabled, initAudioContext]);
+  }, [soundEnabled, initAudioContext]);
 
   // Generate and play a "keyclick" sound (short click)
   const playKeyClickSound = useCallback(() => {
-    if (!soundsEnabled || !initAudioContext()) return;
+    if (!soundEnabled || !initAudioContext()) return;
 
     const ctx = audioContextRef.current;
     const now = ctx.currentTime;
@@ -181,11 +182,11 @@ const useSound = () => {
     // Start and stop
     osc.start(now);
     osc.stop(now + 0.05);
-  }, [soundsEnabled, initAudioContext]);
+  }, [soundEnabled, initAudioContext]);
 
   // Generate and play a "hint" sound (first two notes of a digital arpeggio)
   const playHintSound = useCallback(() => {
-    if (!soundsEnabled || !initAudioContext()) return;
+    if (!soundEnabled || !initAudioContext()) return;
 
     const ctx = audioContextRef.current;
     const now = ctx.currentTime;
@@ -239,11 +240,11 @@ const useSound = () => {
     // Start and stop
     osc.start(now);
     osc.stop(now + 0.4);
-  }, [soundsEnabled, initAudioContext]);
+  }, [soundEnabled, initAudioContext]);
 
   // Array of different win sounds for variety
   const playWinSound = useCallback(() => {
-    if (!soundsEnabled || !initAudioContext()) return;
+    if (!soundEnabled || !initAudioContext()) return;
 
     const ctx = audioContextRef.current;
     const now = ctx.currentTime;
@@ -522,11 +523,11 @@ const useSound = () => {
       osc1.stop(now + 1.2);
       osc2.stop(now + 1.2);
     }
-  }, [soundsEnabled, initAudioContext]);
+  }, [soundEnabled, initAudioContext]);
 
   // Generate and play a "lose" sound (sad descending notes)
   const playLoseSound = useCallback(() => {
-    if (!soundsEnabled || !initAudioContext()) return;
+    if (!soundEnabled || !initAudioContext()) return;
 
     const ctx = audioContextRef.current;
     const now = ctx.currentTime;
@@ -556,12 +557,34 @@ const useSound = () => {
     // Start and stop
     osc.start(now);
     osc.stop(now + 0.8);
-  }, [soundsEnabled, initAudioContext]);
+  }, [soundEnabled, initAudioContext]);
 
   // Main playSound function that routes to specific sound generators
   const playSound = useCallback(
     (soundType) => {
-      if (!soundsEnabled) return;
+      if (!soundEnabled) return;
+      if (isVibrationEnabled()) {
+        // Map sound types to vibration patterns
+        switch (soundType) {
+          case "correct":
+            vibrate("success");
+            break;
+          case "incorrect":
+            vibrate("error");
+            break;
+          case "keyclick":
+            vibrate("keyclick");
+            break;
+          case "hint":
+            vibrate("hint");
+            break;
+          case "win":
+            vibrate("win");
+            break;
+          default:
+            vibrate("default");
+        }
+      }
 
       // Ensure audio context is initialized
       if (!initAudioContext()) {
@@ -597,7 +620,7 @@ const useSound = () => {
       }
     },
     [
-      soundsEnabled,
+      soundEnabled,
       initAudioContext,
       playCorrectSound,
       playIncorrectSound,
@@ -610,7 +633,7 @@ const useSound = () => {
 
   // Toggle sounds on/off
   const toggleSounds = useCallback(() => {
-    setSoundsEnabled((prev) => !prev);
+    setSoundEnabled((prev) => !prev);
   }, []);
 
   // Unlock audio context on first user interaction
@@ -622,7 +645,7 @@ const useSound = () => {
   // Return API
   return {
     playSound,
-    soundsEnabled,
+    soundEnabled,
     toggleSounds,
     unlockAudioContext,
     // Legacy compatibility properties

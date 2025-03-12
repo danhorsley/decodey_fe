@@ -8,7 +8,7 @@ import { vibrate, isVibrationEnabled } from "../utils/hapticUtils";
  */
 const useSound = () => {
   const [soundsLoaded, setSoundsLoaded] = useState(false);
-  const [soundsEnabled, setSoundsEnabled] = useState(() => {
+  const [soundEnabled, setSoundEnabled] = useState(() => {
     try {
       const savedSettings = localStorage.getItem("uncrypt-settings");
       if (savedSettings) {
@@ -250,7 +250,10 @@ const useSound = () => {
   // Play a sound with debounce to prevent double-triggers
   const playSound = useCallback(
     (soundType) => {
-      if (!soundsEnabled) return;
+      if (!soundEnabled) {
+        console.log("Sound disabled, not playing:", soundType);
+        return;
+      }
 
       // Try to unlock audio context when sound is played
       unlockAudioContext();
@@ -322,12 +325,12 @@ const useSound = () => {
         console.warn(`Error playing sound ${soundType}:`, error);
       }
     },
-    [soundsEnabled, initializeSound, unlockAudioContext],
+    [soundEnabled, initializeSound, unlockAudioContext],
   );
 
   // Toggle sounds on/off
   const toggleSounds = useCallback(() => {
-    setSoundsEnabled((prev) => !prev);
+    setSoundEnabled((prev) => !prev);
     // We don't adjust Howler master volume to avoid affecting other sounds on the page
   }, []);
 
@@ -335,7 +338,7 @@ const useSound = () => {
   return {
     playSound,
     soundsLoaded,
-    soundsEnabled,
+    soundEnabled,
     loadSounds,
     toggleSounds,
     loadProgress: () => loadingProgress,
