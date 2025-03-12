@@ -186,6 +186,7 @@ const WinCelebration = ({
           isAuthenticated: currentIsAuthenticated,
           networkAvailable,
           pendingScores: scoreService.getPendingCount(),
+          gameId: localStorage.getItem("uncrypt-game-id"),
         });
 
         // Mark as attempted regardless of auth state or network
@@ -201,6 +202,8 @@ const WinCelebration = ({
           timeTaken: Math.round(gameTimeSeconds),
           difficulty: getDifficultyFromMaxMistakes(maxMistakes),
           timestamp: Date.now(), // Add timestamp to track when score was earned
+          completed: true, // Explicitly mark as completed
+          game_id: localStorage.getItem("uncrypt-game-id"), // Ensure game_id is included
         };
 
         console.log("Recording score with data:", gameData);

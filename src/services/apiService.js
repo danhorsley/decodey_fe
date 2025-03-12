@@ -778,16 +778,17 @@ const apiService = {
     const gameId = localStorage.getItem("uncrypt-game-id");
 
     try {
-      // Use the standardized header helper to get headers
+      // Use the standardized header helper to get headers with authentication
       const headers = config.session.getHeaders();
 
-      // Prepare request body
+      // Prepare request body with consistent game_id
       const requestBody = {
         ...scoreData,
         game_id: gameId || scoreData.game_id,
       };
 
-      console.log("Recording score with data:", requestBody);
+      console.log("Recording score with request body:", requestBody);
+      console.log("Using headers:", headers);
 
       const response = await fetch(`${config.apiUrl}${endpoint}`, {
         method: "POST",
@@ -796,6 +797,8 @@ const apiService = {
         headers: headers,
         body: JSON.stringify(requestBody),
       });
+
+      console.log("Score recording response status:", response.status);
 
       if (!response.ok) {
         // Special handling for 401 Unauthorized
@@ -830,6 +833,7 @@ const apiService = {
 
       // Parse and return response
       const data = await response.json();
+      console.log("Score recording successful, response:", data);
       return data;
     } catch (error) {
       console.error("Error recording score:", error);

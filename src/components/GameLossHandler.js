@@ -1,4 +1,5 @@
-// src/components/GameLossHandler.js
+// Create new file: src/components/GameLossHandler.js
+
 import React, { useEffect } from "react";
 import { getDifficultyFromMaxMistakes } from "../utils/utils";
 import scoreService from "../services/scoreService";
@@ -42,6 +43,7 @@ const GameLossHandler = ({
         difficulty: getDifficultyFromMaxMistakes(maxMistakes),
         timestamp: Date.now(),
         completed: false, // This is the key difference - mark as incomplete
+        game_id: localStorage.getItem("uncrypt-game-id"),
       };
 
       console.log("Recording loss with data:", gameData);

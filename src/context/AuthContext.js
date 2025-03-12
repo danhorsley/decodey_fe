@@ -182,8 +182,9 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // Logout method - clear auth state and storage
+
   const logout = useCallback(() => {
-    console.log("Performing logout - clearing auth state");
+    console.log("Performing logout - clearing auth state and game data");
 
     // First update auth state to prevent flashing of authenticated content
     setAuthState({
@@ -194,7 +195,14 @@ export const AuthProvider = ({ children }) => {
       token: null,
     });
 
-    // Use the centralized clear function to clean up storage
+    // Clear all game-related data from localStorage
+    localStorage.removeItem("uncrypt-game-id");
+    localStorage.removeItem("uncrypt-game-data");
+    localStorage.removeItem("game-loss-recorded");
+    localStorage.removeItem("restore-timestamp");
+    localStorage.removeItem("force-load-server-game");
+
+    // Use the centralized clear function to clean up authentication storage
     if (config.session && typeof config.session.clearSession === "function") {
       config.session.clearSession();
     } else {
@@ -215,7 +223,7 @@ export const AuthProvider = ({ children }) => {
       credentials: "include",
     }).catch((err) => console.error("Logout endpoint error:", err));
 
-    console.log("Logout completed, all auth data cleared");
+    console.log("Logout completed, all auth and game data cleared");
   }, []);
 
   // Add function to handle fetching leaderboard data
