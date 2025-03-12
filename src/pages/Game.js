@@ -98,6 +98,7 @@ const reducer = (state, action) => {
 function Game() {
   // Get settings directly from context
   const { settings, maxMistakes } = useSettings();
+  const { toggleSounds, soundsEnabled } = useSound();
 
   // Get UI state directly from context
   const {
@@ -120,6 +121,13 @@ function Game() {
       userId: user?.id,
     });
   }, [isAuthenticated, authLoading, user]);
+
+  useEffect(() => {
+    // Check if current sound state matches settings
+    if (settings.soundEnabled !== soundsEnabled) {
+      toggleSounds(); // Toggle sounds to match settings
+    }
+  }, [settings.soundEnabled, soundsEnabled, toggleSounds]);
 
   // Modal context access - safely retrieve with defensive coding
   const modalContext = useModalContext();

@@ -17,6 +17,8 @@ const defaultSettings = {
   hardcoreMode: false,
   mobileMode: "auto",
   textColor: "default",
+  soundEnabled: true,
+  vibrationEnabled: true,
 };
 
 // Get max mistakes based on difficulty

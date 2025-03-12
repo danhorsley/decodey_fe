@@ -1,13 +1,29 @@
 // src/services/SoundManager.js - Updated to fix audio context suspension
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Howl, Howler } from "howler";
+import { vibrate, isVibrationEnabled } from "../utils/hapticUtils";
 
 /**
  * Sound manager using Howler.js with fixes for lazy loading and AudioContext issues
  */
 const useSound = () => {
   const [soundsLoaded, setSoundsLoaded] = useState(false);
-  const [soundsEnabled, setSoundsEnabled] = useState(true);
+  const [soundsEnabled, setSoundsEnabled] = useState(() => {
+    try {
+      const savedSettings = localStorage.getItem("uncrypt-settings");
+      if (savedSettings) {
+        const parsedSettings = JSON.parse(savedSettings);
+        // Return the sound setting if available, otherwise default to true
+        return parsedSettings.soundEnabled !== undefined
+          ? parsedSettings.soundEnabled
+          : true;
+      }
+      return true; // Default to enabled if no settings found
+    } catch (error) {
+      console.warn("Error loading sound settings:", error);
+      return true; // Default to enabled on error
+    }
+  });
   const [loadingProgress, setLoadingProgress] = useState(0);
   const soundsRef = useRef({});
   const playingRef = useRef({});
@@ -22,7 +38,7 @@ const useSound = () => {
 
   // Define sounds configuration with process.env.PUBLIC_URL for correct path resolution
   // This ensures paths work correctly with lazy loading
-  const publicUrl = process.env.PUBLIC_URL || '';
+  const publicUrl = process.env.PUBLIC_URL || "";
   const soundConfigs = {
     correct: {
       src: [`${publicUrl}/sounds/correct.mp3`],
@@ -137,7 +153,7 @@ const useSound = () => {
 
     try {
       console.log(`Initializing sound: ${soundType}`, config.src);
-      
+
       // Ensure the audio context is ready
       unlockAudioContext();
 
@@ -178,7 +194,7 @@ const useSound = () => {
         },
         onloaderror: (id, err) => {
           console.warn(`Error loading sound ${soundType}:`, err);
-          
+
           // Retry loading with a delay (helps with lazy loading timing issues)
           setTimeout(() => {
             console.log(`Retrying to load sound: ${soundType}`);
@@ -190,7 +206,7 @@ const useSound = () => {
               initializeSound(soundType);
             }
           }, 2000);
-          
+
           // Count as loaded to avoid getting stuck in UI
           loadedSounds.current += 1;
           setLoadingProgress(
@@ -238,7 +254,37 @@ const useSound = () => {
 
       // Try to unlock audio context when sound is played
       unlockAudioContext();
+      // Also trigger haptic feedback for mobile
+      if (isVibrationEnabled()) {
+        // Map sound types to vibration patterns
+        switch (soundType) {
+          case "correct":
+            vibrate("success");
+            break;
+          case "incorrect":
+            vibrate("error");
+            break;
+          case "keyclick":
+            vibrate("keyclick");
+            break;
+          case "hint":
+            vibrate("hint");
+            break;
+          case "win":
+            vibrate("win");
+            break;
+          default:
+            vibrate("default");
+        }
+      }
 
+      // Ensure audio context is initialized
+      if (!initAudioContext()) {
+        console.warn(
+          "Could not play sound: Audio context initialization failed",
+        );
+        return;
+      }
       try {
         // Get or initialize the sound
         let sound = soundsRef.current[soundType];

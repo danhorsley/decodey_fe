@@ -113,7 +113,48 @@ function Settings({ onCancel }) {
               </label>
             </div>
           </div>
+          <div className="settings-section">
+            <h2>Feedback Settings</h2>
+            <div className="settings-options">
+              {/* Sound toggle */}
+              <label className="settings-option">
+                <input
+                  type="checkbox"
+                  checked={settings.soundEnabled}
+                  onChange={() =>
+                    handleChange("soundEnabled", !settings.soundEnabled)
+                  }
+                />
+                <span className="option-label">Enable sound effects</span>
+              </label>
+              <p className="settings-description">
+                Play sound effects for interactions and game events.
+              </p>
 
+              {/* Only show vibration option on mobile devices */}
+              {isMobile && (
+                <>
+                  <label className="settings-option">
+                    <input
+                      type="checkbox"
+                      checked={settings.vibrationEnabled}
+                      onChange={() =>
+                        handleChange(
+                          "vibrationEnabled",
+                          !settings.vibrationEnabled,
+                        )
+                      }
+                    />
+                    <span className="option-label">Enable haptic feedback</span>
+                  </label>
+                  <p className="settings-description">
+                    Provides gentle vibrations when interacting with the game.
+                    Only works on supported mobile devices.
+                  </p>
+                </>
+              )}
+            </div>
+          </div>
           {/* Difficulty Setting - Now second */}
           <div className="settings-section">
             <h2>Difficulty</h2>
