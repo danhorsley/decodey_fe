@@ -1,4 +1,3 @@
-
 // src/components/AccountButtonWrapper.js
 import React from "react";
 import { FaUserCircle } from "react-icons/fa";
@@ -17,17 +16,21 @@ function AccountButtonWrapper() {
   const { openLogin } = useModalContext();
 
   const handleClick = () => {
-    console.log("Account button clicked, auth state:", { isAuthenticated, username: user?.username });
+    console.log("Account button clicked, auth state:", {
+      isAuthenticated,
+      username: user?.username,
+    });
 
     // If authenticated, log out, otherwise open login modal
     if (isAuthenticated) {
-      if (confirm("Do you want to log out?")) {
+      const confirmation = window.confirm("Do you want to log out?");
+      if (confirmation) {
         logout();
       }
     } else {
       openLogin();
     }
-  }
+  };
 
   return (
     <button

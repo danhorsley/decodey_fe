@@ -3,9 +3,11 @@ import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 import "../../Styles/Settings.css";
 import "../../Styles/About.css";
-import { useSettings } from "../../context/SettingsContext"; // Direct import of settings context
+import { useSettings } from "../../context/SettingsContext";
+import useDeviceDetection from "../../hooks/useDeviceDetection";
 
 function Settings({ onCancel }) {
+  const { isMobile } = useDeviceDetection();
   // Get settings directly from the context
   const { settings: currentSettings, updateSettings } = useSettings();
 
