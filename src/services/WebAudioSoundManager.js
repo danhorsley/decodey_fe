@@ -1,15 +1,30 @@
 // src/services/WebAudioSoundManager.js
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { vibrate, isVibrationEnabled } from "../utils/hapticUtils";
+import { useSettings } from "../context/SettingsContext"; // Import useSettings hook
 
 /**
  * Custom hook for sound management using Web Audio API
  * Generates sounds on-the-fly instead of loading MP3 files
  */
 const useSound = () => {
-  const [soundEnabled, setSoundEnabled] = useState(true);
+  // Use settings context for sound state
+  const { settings, updateSettings } = useSettings();
+  const [soundEnabled, setSoundEnabled] = useState(
+    settings?.soundEnabled !== undefined ? settings.soundEnabled : true,
+  );
   const audioContextRef = useRef(null);
   const initializedRef = useRef(false);
+
+  // Keep local state in sync with settings
+  useEffect(() => {
+    if (
+      settings?.soundEnabled !== undefined &&
+      settings.soundEnabled !== soundEnabled
+    ) {
+      setSoundEnabled(settings.soundEnabled);
+    }
+  }, [settings?.soundEnabled, soundEnabled]);
 
   // Initialize audio context on demand (for browser autoplay policies)
   const initAudioContext = useCallback(() => {
@@ -631,10 +646,28 @@ const useSound = () => {
     ],
   );
 
-  // Toggle sounds on/off
+  // Toggle sounds on/off - update both local state and settings context
   const toggleSounds = useCallback(() => {
-    setSoundEnabled((prev) => !prev);
-  }, []);
+    const newSoundState = !soundEnabled;
+
+    // Update local state
+    setSoundEnabled(newSoundState);
+
+    // Update global settings context
+    if (updateSettings) {
+      updateSettings({
+        ...settings,
+        soundEnabled: newSoundState,
+      });
+      console.log(
+        `Sound ${newSoundState ? "enabled" : "disabled"} - Updated settings context`,
+      );
+    } else {
+      console.warn(
+        "Could not update settings context - updateSettings is not available",
+      );
+    }
+  }, [soundEnabled, settings, updateSettings]);
 
   // Unlock audio context on first user interaction
   const unlockAudioContext = useCallback(() => {
