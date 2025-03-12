@@ -39,7 +39,13 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   // Auth state management
   const [authState, setAuthState] = useState(defaultUserState);
-
+  const [leaderboardData, setLeaderboardData] = useState({
+    entries: [],
+    loading: false,
+    error: null,
+    currentPage: 1,
+    totalPages: 1,
+  });
   // Initialize auth state from stored token
   useEffect(() => {
     const initAuth = async () => {
