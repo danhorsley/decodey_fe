@@ -1,36 +1,25 @@
+// src/services/apiService.js
 import config from "../config";
 
 // Simple auth debug function - call this where auth issues occur
 function debugAuth() {
   console.log("=== AUTH DEBUG ===");
-  console.log(
-    "localStorage token:",
-    localStorage.getItem("uncrypt-token")?.substr(0, 10) + "...",
-  );
-  console.log(
-    "sessionStorage token:",
-    sessionStorage.getItem("uncrypt-token")?.substr(0, 10) + "...",
-  );
-  console.log("localStorage user_id:", localStorage.getItem("uncrypt-user-id"));
-  console.log(
-    "sessionStorage user_id:",
-    sessionStorage.getItem("uncrypt-user-id"),
-  );
+  // Use the new helper functions to check token
+  const token = config.session.getAuthToken();
+  const userId = config.session.getAuthUserId();
+
+  console.log("Token (masked):", token ? token.substr(0, 10) + "..." : "none");
+  console.log("User ID:", userId || "none");
 
   // Check if auth paths are consistent
-  const hasToken = Boolean(
-    localStorage.getItem("uncrypt-token") ||
-      sessionStorage.getItem("uncrypt-token"),
-  );
-  const hasUserId = Boolean(
-    localStorage.getItem("uncrypt-user-id") ||
-      sessionStorage.getItem("uncrypt-user-id"),
-  );
+  const hasToken = Boolean(token);
+  const hasUserId = Boolean(userId);
   console.log(
     "Token/UserID consistency:",
     hasToken === hasUserId ? "OK" : "MISMATCH",
   );
 }
+
 // Debug logging function
 const logApiOperation = (
   method,
@@ -125,6 +114,10 @@ const apiService = {
         hasToken: Boolean(data.token),
       });
 
+      // Process and save headers if needed
+      const rememberMe = credentials.rememberMe !== false; // Default to true
+      config.session.saveSession(response.headers, rememberMe);
+
       // Return a consistently structured response
       return {
         success: true,
@@ -142,16 +135,19 @@ const apiService = {
       throw new Error(error.message || "Login failed");
     }
   },
+
   /**
    * Checks if the logged-in user has an active game and handles restoration
-   * @param {string} token - The auth token from successful login
    * @returns {Promise<Object>} Result of the active game check and handling
    */
-  checkAndHandleActiveGame: async (token) => {
-    console.log(
-      "checkAndHandleActiveGame called with token:",
-      token ? "token present" : "no token",
-    );
+  checkAndHandleActiveGame: async () => {
+    console.log("checkAndHandleActiveGame called");
+    const token = config.session.getAuthToken();
+
+    if (!token) {
+      console.log("No authentication token found, skipping active game check");
+      return { handled: false };
+    }
 
     try {
       // Check if user has an active game
@@ -159,11 +155,7 @@ const apiService = {
         `${config.apiUrl}/check_active_game`,
         {
           method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-            ...config.session.getHeaders(),
-          },
+          headers: config.session.getHeaders(), // Use the helper for headers
           credentials: "include",
           mode: "cors",
         },
@@ -205,11 +197,7 @@ const apiService = {
           // User chose not to restore - delete the active game
           await fetch(`${config.apiUrl}/completed`, {
             method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-              ...config.session.getHeaders(),
-            },
+            headers: config.session.getHeaders(),
             body: JSON.stringify({ game_id: activeGameData.game_id }),
             credentials: "include",
             mode: "cors",
@@ -227,24 +215,24 @@ const apiService = {
       return { handled: false, error: error.message };
     }
   },
-  
+
   // Signup functionality
-  signup: async (email, password) => {
+  signup: async (email, username, password) => {
     const endpoint = "/signup";
 
     try {
       const requestBody = {
         email,
+        username,
         password,
       };
 
       const headers = {
         "Content-Type": "application/json",
         Accept: "application/json",
-        ...config.session.getHeaders(),
       };
 
-      logApiOperation("POST", endpoint, { email: email });
+      logApiOperation("POST", endpoint, { email, username });
 
       const response = await fetch(`${config.apiUrl}${endpoint}`, {
         method: "POST",
@@ -254,7 +242,7 @@ const apiService = {
         body: JSON.stringify(requestBody),
       });
 
-      logApiOperation("POST", endpoint, { email: email }, response);
+      logApiOperation("POST", endpoint, { email, username }, response);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -271,7 +259,7 @@ const apiService = {
       const data = await response.json();
       return data;
     } catch (error) {
-      logApiOperation("POST", endpoint, { email: email }, null, error);
+      logApiOperation("POST", endpoint, { email, username }, null, error);
       console.error("Error during signup:", error);
       throw error;
     }
@@ -285,9 +273,7 @@ const apiService = {
 
       const response = await fetch(`${config.apiUrl}${endpoint}`, {
         method: "GET",
-        headers: {
-          ...config.session.getHeaders(),
-        },
+        headers: config.session.getHeaders({ publicEndpoint: true }),
         credentials: "include",
         mode: "cors",
       });
@@ -306,12 +292,8 @@ const apiService = {
     const endpoint = useLongQuotes ? "/longstart" : "/start";
 
     try {
-      // Use minimal headers for public endpoints - don't include auth token
-      // This is important because the /start endpoint doesn't require authentication
-      const headers = {
-        Accept: "application/json",
-        // Only include basic content headers, not auth tokens
-      };
+      // Use public endpoint headers since this doesn't require auth
+      const headers = config.session.getHeaders({ publicEndpoint: true });
 
       if (config.DEBUG) {
         console.log(
@@ -408,6 +390,7 @@ const apiService = {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
+          "X-Game-Id": gameId || "",
         },
         body: JSON.stringify(requestBody),
       });
@@ -517,10 +500,7 @@ const apiService = {
       : "/get_attribution";
 
     try {
-      const headers = {
-        Accept: "application/json",
-        ...config.session.getHeaders(),
-      };
+      const headers = config.session.getHeaders();
 
       logApiOperation("GET", endpoint, { headers });
 
@@ -563,11 +543,7 @@ const apiService = {
     const endpoint = "/save_quote";
 
     try {
-      const headers = {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        ...config.session.getHeaders(),
-      };
+      const headers = config.session.getHeaders();
 
       logApiOperation("POST", endpoint, { headers });
 
@@ -607,10 +583,7 @@ const apiService = {
     const endpoint = `/leaderboard?period=${period}&page=${page}&per_page=${per_page}`;
 
     try {
-      const headers = {
-        Accept: "application/json",
-        ...config.session.getHeaders(),
-      };
+      const headers = config.session.getHeaders();
 
       logApiOperation("GET", endpoint, { headers });
 
@@ -685,17 +658,7 @@ const apiService = {
     const endpoint = `/streak_leaderboard?type=${streakType}&period=${period}&page=${page}&per_page=${per_page}`;
 
     try {
-      // Get token for authorization
-      const token = localStorage.getItem("uncrypt-token");
-      const headers = {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      };
-
-      // Add Authorization header if available
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
+      const headers = config.session.getHeaders();
 
       logApiOperation("GET", endpoint, { headers });
 
@@ -718,9 +681,7 @@ const apiService = {
       }
 
       // Save session if applicable
-      if (config.session && config.session.saveSession) {
-        config.session.saveSession(response.headers);
-      }
+      config.session.saveSession(response.headers);
 
       // Parse JSON and log for debugging
       const data = await response.json();
@@ -773,10 +734,7 @@ const apiService = {
     const endpoint = "/user_stats";
 
     try {
-      const headers = {
-        Accept: "application/json",
-        ...config.session.getHeaders(),
-      };
+      const headers = config.session.getHeaders();
 
       logApiOperation("GET", endpoint, { headers });
 
@@ -815,36 +773,13 @@ const apiService = {
     console.log("Recording score with data:", scoreData);
     // Debug auth state before API call
     debugAuth();
-    // Get token explicitly to debug
-    const token =
-      localStorage.getItem("uncrypt-token") ||
-      sessionStorage.getItem("uncrypt-token");
-    console.log("Using token:", token ? "Yes" : "No");
+
     const endpoint = "/record_score";
     const gameId = localStorage.getItem("uncrypt-game-id");
 
     try {
-      // Use standardized header approach with config helper
-      const headers = {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      };
-
-      // Try to get token using the more reliable approach
-      const token =
-        localStorage.getItem("uncrypt-token") ||
-        sessionStorage.getItem("uncrypt-token") ||
-        localStorage.getItem("auth_token");
-
-      // Add Authorization header if token exists
-      if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
-      }
-
-      // Add game ID to headers if available
-      if (gameId) {
-        headers["X-Game-Id"] = gameId;
-      }
+      // Use the standardized header helper to get headers
+      const headers = config.session.getHeaders();
 
       // Prepare request body
       const requestBody = {
