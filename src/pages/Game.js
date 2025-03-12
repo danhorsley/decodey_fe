@@ -22,6 +22,7 @@ import apiService from "../services/apiService";
 import { FaTrophy } from "react-icons/fa";
 import HeaderControls from "../components/HeaderControls";
 import scoreService from "../services/scoreService";
+import { getDifficultyFromMaxMistakes } from "../utils/utils";
 
 // Debug flag
 const DEBUG = true;
@@ -100,7 +101,7 @@ function Game() {
   // Get settings directly from context
   const { settings, maxMistakes } = useSettings();
   const { toggleSounds, soundEnabled } = useSound();
-  
+
   // Get UI state directly from context
   const {
     currentView,
@@ -115,12 +116,16 @@ function Game() {
   const { isAuthenticated, authLoading, user } = useAuth();
   const recordLossScore = useCallback(async () => {
     // Only record if we have the necessary game data and haven't already recorded
-    if (!encrypted || !startTime || localStorage.getItem('game-loss-recorded')) {
+    if (
+      !encrypted ||
+      !startTime ||
+      localStorage.getItem("game-loss-recorded")
+    ) {
       return;
     }
 
     // Mark that we've recorded this loss to prevent duplicate recordings
-    localStorage.setItem('game-loss-recorded', 'true');
+    localStorage.setItem("game-loss-recorded", "true");
 
     // Calculate time played before loss
     const gameTimeSeconds = Math.floor((Date.now() - startTime) / 1000);
@@ -132,7 +137,7 @@ function Game() {
       timeTaken: gameTimeSeconds,
       difficulty: getDifficultyFromMaxMistakes(maxMistakes),
       timestamp: Date.now(),
-      completed: false // This is the key difference - mark as incomplete
+      completed: false, // This is the key difference - mark as incomplete
     };
 
     if (DEBUG) {
@@ -156,7 +161,7 @@ function Game() {
     // Check if the game is lost (too many mistakes)
     if (mistakes >= maxMistakes && encrypted) {
       // Clear the loss recorded flag when starting a new game
-      localStorage.removeItem('game-loss-recorded');
+      localStorage.removeItem("game-loss-recorded");
       // Record the loss
       recordLossScore();
     }
@@ -272,7 +277,7 @@ function Game() {
 
     // Clear any existing game state from localStorage to avoid conflicts
     localStorage.removeItem("uncrypt-game-id");
-
+    localStorage.removeItem("game-loss-recorded");
     apiService
       .startGame(settings.longText)
       .then((data) => {
