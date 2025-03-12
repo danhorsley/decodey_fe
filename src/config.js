@@ -105,6 +105,9 @@ const saveSession = (headers, rememberMe = null) => {
 
 // Main configuration object
 const config = {
+  // Expose AUTH_KEYS for use in other files
+  AUTH_KEYS,
+
   // API URL - uses environment variables with fallback
   apiUrl:
     process.env.REACT_APP_BACKEND_URL ||
@@ -143,7 +146,7 @@ const config = {
         return {
           Accept: "application/json",
           "Content-Type": "application/json",
-          Origin: "https://uncryptbe.replit.app",
+          Origin: window.location.origin,
         };
       }
 
@@ -155,7 +158,7 @@ const config = {
 
       // Build headers object with all available identifiers
       const headers = {
-        Origin: "https://uncryptbe.replit.app",
+        Origin: window.location.origin,
         Accept: "application/json",
         "Content-Type": "application/json",
       };
@@ -183,7 +186,10 @@ const config = {
     try {
       const response = await fetch(`${config.apiUrl}/health`, {
         method: "GET",
-        headers: config.session.getHeaders({ publicEndpoint: true }), // Health check is public
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
         credentials: "include",
         mode: "cors",
       });

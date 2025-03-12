@@ -22,9 +22,10 @@ import apiService from "../services/apiService";
 import { FaTrophy } from "react-icons/fa";
 import HeaderControls from "../components/HeaderControls";
 import GameLossHandler from "../components/GameLossHandler";
+import AuthTest from "../tests/authTest";
 
 // Debug flag
-const DEBUG = true;
+const DEBUG = false;
 
 // Memoized LetterCell component
 const LetterCell = React.memo(
@@ -993,6 +994,7 @@ function Game() {
           </pre>
         </div>
       )}
+      <AuthTest />
       <GameLossHandler
         encrypted={encrypted}
         startTime={startTime}

@@ -18,21 +18,6 @@ const defaultUserState = {
   authError: null,
 };
 
-// Auth constants
-const AUTH_KEYS = {
-  TOKEN: "uncrypt-token",
-  USER_ID: "uncrypt-user-id",
-  USERNAME: "uncrypt-username",
-  REMEMBER_ME: "uncrypt-remember-me",
-};
-
-// Helper function to get storage based on rememberMe preference
-const getStorage = () => {
-  // Check rememberMe preference - default to true for better UX
-  const rememberMe = localStorage.getItem(AUTH_KEYS.REMEMBER_ME) !== "false";
-  return rememberMe ? localStorage : sessionStorage;
-};
-
 // Create context
 const AuthContext = createContext();
 
@@ -46,7 +31,8 @@ export const AuthProvider = ({ children }) => {
     currentPage: 1,
     totalPages: 1,
   });
-  // Initialize auth state from stored token
+
+  // Initialize auth state from token if exists
   useEffect(() => {
     const initAuth = async () => {
       // Set loading state immediately
@@ -93,9 +79,9 @@ export const AuthProvider = ({ children }) => {
           console.warn("Token validation endpoint failed:", error);
         }
 
-        // Get username from storage or default to "User"
+        // Get username from storage
         const storage = config.session.getStorage();
-        const username = storage.getItem(AUTH_KEYS.USERNAME) || "User";
+        const username = storage.getItem(config.AUTH_KEYS?.USERNAME) || "User";
 
         // Update auth state with user data (validated or from storage)
         setAuthState({
@@ -122,8 +108,6 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // Login method - centralized auth handling
-  // In AuthContext.js - Refactored login function
-
   const login = useCallback(async (credentials) => {
     // Set loading state immediately
     setAuthState((prev) => ({ ...prev, authLoading: true, authError: null }));
@@ -133,7 +117,7 @@ export const AuthProvider = ({ children }) => {
         throw new Error("Missing login credentials");
       }
 
-      // Extract remember me preference with default to true
+      // Extract remember me preference with default to true for better user experience
       const { rememberMe = true, ...loginCredentials } = credentials;
 
       console.log("Attempting login with username:", loginCredentials.username);
@@ -153,13 +137,20 @@ export const AuthProvider = ({ children }) => {
       };
 
       // Store rememberMe preference in localStorage
-      localStorage.setItem(AUTH_KEYS.REMEMBER_ME, String(rememberMe));
+      localStorage.setItem(
+        config.AUTH_KEYS?.REMEMBER_ME || "uncrypt-remember-me",
+        String(rememberMe),
+      );
 
-      // Store auth data in appropriate storage
+      // Store auth data in appropriate storage based on rememberMe
       const storage = rememberMe ? localStorage : sessionStorage;
-      storage.setItem(AUTH_KEYS.TOKEN, data.token);
-      storage.setItem(AUTH_KEYS.USER_ID, user.id);
-      storage.setItem(AUTH_KEYS.USERNAME, user.username);
+      const tokenKey = config.AUTH_KEYS?.TOKEN || "uncrypt-token";
+      const userIdKey = config.AUTH_KEYS?.USER_ID || "uncrypt-user-id";
+      const usernameKey = config.AUTH_KEYS?.USERNAME || "uncrypt-username";
+
+      storage.setItem(tokenKey, data.token);
+      storage.setItem(userIdKey, user.id);
+      storage.setItem(usernameKey, user.username);
 
       // Update auth state
       setAuthState({
@@ -191,8 +182,6 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // Logout method - clear auth state and storage
-  // In AuthContext.js - Refactored logout function
-
   const logout = useCallback(() => {
     console.log("Performing logout - clearing auth state");
 
@@ -205,8 +194,20 @@ export const AuthProvider = ({ children }) => {
       token: null,
     });
 
-    // Use the centralized clear function
-    config.session.clearSession();
+    // Use the centralized clear function to clean up storage
+    if (config.session && typeof config.session.clearSession === "function") {
+      config.session.clearSession();
+    } else {
+      // Fallback if clearSession is not available
+      localStorage.removeItem(config.AUTH_KEYS?.TOKEN || "uncrypt-token");
+      localStorage.removeItem(config.AUTH_KEYS?.USER_ID || "uncrypt-user-id");
+      localStorage.removeItem(config.AUTH_KEYS?.USERNAME || "uncrypt-username");
+      sessionStorage.removeItem(config.AUTH_KEYS?.TOKEN || "uncrypt-token");
+      sessionStorage.removeItem(config.AUTH_KEYS?.USER_ID || "uncrypt-user-id");
+      sessionStorage.removeItem(
+        config.AUTH_KEYS?.USERNAME || "uncrypt-username",
+      );
+    }
 
     // Call backend logout endpoint
     fetch(`${config.apiUrl}/logout`, {
@@ -217,7 +218,7 @@ export const AuthProvider = ({ children }) => {
     console.log("Logout completed, all auth data cleared");
   }, []);
 
-  // Add this function to handle fetching leaderboard data
+  // Add function to handle fetching leaderboard data
   const fetchLeaderboard = useCallback(async (page = 1, limit = 10) => {
     setLeaderboardData((prev) => ({ ...prev, loading: true, error: null }));
 
@@ -225,11 +226,11 @@ export const AuthProvider = ({ children }) => {
       const data = await apiService.getLeaderboard(page, limit);
 
       setLeaderboardData({
-        entries: data.scores || [],
+        entries: data.topEntries || [],
         loading: false,
         error: null,
         currentPage: page,
-        totalPages: data.totalPages || 1,
+        totalPages: data.pagination?.total_pages || 1,
       });
 
       return data;
