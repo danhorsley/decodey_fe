@@ -175,7 +175,19 @@ export const submitPendingScores = async (isAuthenticated = null) => {
  * @param {boolean} isAuthenticated Current authentication state
  * @returns {Promise<Object>} Result object
  */
+/**
+ * Submit a score with offline queueing, handling both wins and losses
+ * @param {Object} scoreData Score data to submit
+ * @param {boolean} isAuthenticated Current authentication state
+ * @returns {Promise<Object>} Result object
+ */
 export const submitScore = async (scoreData, isAuthenticated = null) => {
+  // Ensure completed flag is included
+  if (scoreData.completed === undefined) {
+    // Default to true for backward compatibility
+    scoreData.completed = true;
+  }
+
   // If offline, queue the score
   if (!isOnline()) {
     return queueScore(scoreData);
