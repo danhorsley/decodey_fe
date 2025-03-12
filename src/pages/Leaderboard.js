@@ -117,39 +117,44 @@ const Leaderboard = ({ onClose }) => {
   // New function to fetch personal stats with useCallback
   const fetchPersonalStats = useCallback(
     async (showRefreshAnimation = false) => {
+      console.log(
+        "fetchPersonalStats called with showRefreshAnimation =",
+        showRefreshAnimation,
+      );
+
       // Don't try to fetch stats if auth is still loading or user is not authenticated
       if (authLoading || !isAuthenticated) {
         console.log(
           "Skipping fetchPersonalStats - auth loading or not authenticated",
-          {
-            authLoading,
-            isAuthenticated,
-          },
         );
         return;
       }
 
       console.log("Fetching personal stats for authenticated user");
 
+      // Set loading state based on animation flag
       if (showRefreshAnimation) {
         setIsRefreshing(true);
       } else {
         setIsPersonalLoading(true);
       }
 
+      // Clear previous errors
       setPersonalError(null);
 
       try {
+        console.log("Making API call to get user stats...");
+
         // Get user stats from the API
         const response = await apiService.getUserStats();
+        console.log("API response received:", response);
 
         // Check for error responses
         if (response.error) {
+          console.error("Error in API response:", response.error);
           if (response.authenticated === false) {
-            // Auth error - let the user know they need to log in
             setPersonalError("Please log in to view your stats.");
           } else {
-            // Other error
             setPersonalError(
               response.message || "Failed to load your personal stats.",
             );
@@ -157,24 +162,29 @@ const Leaderboard = ({ onClose }) => {
           setPersonalStats(null);
         } else {
           // Success - set the stats
+          console.log("Setting personal stats with data:", response);
           setPersonalStats(response);
         }
       } catch (err) {
-        console.error("Error fetching personal stats:", err);
+        console.error("Exception in fetchPersonalStats:", err);
         setPersonalError(
           "Failed to load your personal stats. Please try again.",
         );
         setPersonalStats(null);
       } finally {
+        // Important: Always reset the loading states
         setIsPersonalLoading(false);
+
+        // For refresh animation, use a timer for visual feedback
         if (showRefreshAnimation) {
-          // Reset refresh animation after a short delay
-          setTimeout(() => setIsRefreshing(false), 600);
+          setTimeout(() => {
+            setIsRefreshing(false);
+          }, 600);
         }
       }
     },
     [isAuthenticated, authLoading],
-  );
+  ); // Make sure all dependencies are included
 
   // Fetch leaderboard data
   useEffect(() => {
@@ -222,10 +232,40 @@ const Leaderboard = ({ onClose }) => {
   };
 
   // Refresh personal stats data
-  const handleRefreshPersonalStats = () => {
-    fetchPersonalStats(true);
-  };
+  const handleRefreshPersonalStats = useCallback(() => {
+    console.log("Refresh button clicked!");
 
+    // Check if already refreshing or loading to prevent double-clicks
+    if (isRefreshing || isPersonalLoading) {
+      console.log("Refresh canceled - already in progress");
+      return;
+    }
+
+    console.log("Starting refresh process...");
+
+    // The key fix: Call fetchPersonalStats DIRECTLY, don't wrap in another try/catch
+    // This avoids issues with async/await handling
+    fetchPersonalStats(true);
+
+    console.log("Refresh action triggered");
+  }, [fetchPersonalStats, isRefreshing, isPersonalLoading]);
+
+  const renderRefreshButton = () => (
+    <button
+      className="refresh-button"
+      onClick={handleRefreshPersonalStats}
+      disabled={isRefreshing || isPersonalLoading}
+      style={{
+        transform: isRefreshing ? "rotate(180deg)" : "none",
+        transition: "transform 0.3s ease",
+        position: "relative", // Ensure proper stacking
+        zIndex: 10, // Make sure it's clickable
+        pointerEvents: "auto", // Explicitly enable click events
+      }}
+    >
+      <FiRefreshCw />
+    </button>
+  );
   const renderTabs = () => (
     <div className="tabs-container">
       {/* Back button on the left side with improved styling */}

@@ -95,10 +95,13 @@
   background-color: #000;
   color: #fff;
   border: none;
-  border-radius: 50%; /* Keep 50% for perfect circle */
+  border-radius: 50%;
+  /* Keep 50% for perfect circle */
   cursor: pointer;
-  width: 32px; /* Slightly larger for better proportions */
-  height: 32px; /* Keep equal width and height for circle */
+  width: 32px;
+  /* Slightly larger for better proportions */
+  height: 32px;
+  /* Keep equal width and height for circle */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -119,9 +122,12 @@
 .back-button svg {
   margin: 0;
   padding: 0;
-  width: 20px; /* Explicit width */
-  height: 20px; /* Explicit height */
-  display: block; /* Ensures proper display */
+  width: 20px;
+  /* Explicit width */
+  height: 20px;
+  /* Explicit height */
+  display: block;
+  /* Ensures proper display */
   /* Fix for some browsers that might hide the icon */
   fill: currentColor;
   color: white;
@@ -133,11 +139,13 @@
 }
 
 .dark-theme .back-button {
-  background-color:#333;
+  background-color: #333;
 }
-.dark-theme .back-button svg{
-  color:#4cc9f0;
+
+.dark-theme .back-button svg {
+  color: #4cc9f0;
 }
+
 .dark-theme .back-button:hover {
   background: rgb(0, 225, 152);
   box-shadow: 0 0 10px rgba(0, 225, 152, 0.3);
@@ -312,36 +320,36 @@
 }
 
 /* Alternating row colors for light theme */
-.table-grid > .table-cell:nth-child(5n+1),
-.table-grid > .table-cell:nth-child(5n+2),
-.table-grid > .table-cell:nth-child(5n+3),
-.table-grid > .table-cell:nth-child(5n+4),
-.table-grid > .table-cell:nth-child(5n+5) {
+.table-grid>.table-cell:nth-child(5n+1),
+.table-grid>.table-cell:nth-child(5n+2),
+.table-grid>.table-cell:nth-child(5n+3),
+.table-grid>.table-cell:nth-child(5n+4),
+.table-grid>.table-cell:nth-child(5n+5) {
   color: rgb(0, 66, 170);
 }
 
-.table-grid > .table-cell:nth-child(10n+6),
-.table-grid > .table-cell:nth-child(10n+7),
-.table-grid > .table-cell:nth-child(10n+8),
-.table-grid > .table-cell:nth-child(10n+9),
-.table-grid > .table-cell:nth-child(10n+10) {
+.table-grid>.table-cell:nth-child(10n+6),
+.table-grid>.table-cell:nth-child(10n+7),
+.table-grid>.table-cell:nth-child(10n+8),
+.table-grid>.table-cell:nth-child(10n+9),
+.table-grid>.table-cell:nth-child(10n+10) {
   color: #000;
 }
 
 /* Alternating row colors for dark theme */
-.dark-theme .table-grid > .table-cell:nth-child(5n+1),
-.dark-theme .table-grid > .table-cell:nth-child(5n+2),
-.dark-theme .table-grid > .table-cell:nth-child(5n+3),
-.dark-theme .table-grid > .table-cell:nth-child(5n+4),
-.dark-theme .table-grid > .table-cell:nth-child(5n+5) {
+.dark-theme .table-grid>.table-cell:nth-child(5n+1),
+.dark-theme .table-grid>.table-cell:nth-child(5n+2),
+.dark-theme .table-grid>.table-cell:nth-child(5n+3),
+.dark-theme .table-grid>.table-cell:nth-child(5n+4),
+.dark-theme .table-grid>.table-cell:nth-child(5n+5) {
   color: #4cc9f0;
 }
 
-.dark-theme .table-grid > .table-cell:nth-child(10n+6),
-.dark-theme .table-grid > .table-cell:nth-child(10n+7),
-.dark-theme .table-grid > .table-cell:nth-child(10n+8),
-.dark-theme .table-grid > .table-cell:nth-child(10n+9),
-.dark-theme .table-grid > .table-cell:nth-child(10n+10) {
+.dark-theme .table-grid>.table-cell:nth-child(10n+6),
+.dark-theme .table-grid>.table-cell:nth-child(10n+7),
+.dark-theme .table-grid>.table-cell:nth-child(10n+8),
+.dark-theme .table-grid>.table-cell:nth-child(10n+9),
+.dark-theme .table-grid>.table-cell:nth-child(10n+10) {
   color: rgb(0, 225, 152);
   text-shadow: 0 0 8px rgba(0, 225, 152, 0.5);
 }
@@ -726,7 +734,7 @@
 
 /* ===== 8. STATUS MESSAGES ===== */
 /* Loading and Error States */
-.loading, 
+.loading,
 .loading-spinner {
   text-align: center;
   padding: 20px;
@@ -861,7 +869,7 @@
     font-size: 0.9rem;
   }
 
-  .round-button, 
+  .round-button,
   .account-icon-container {
     width: 36px;
     height: 36px;
