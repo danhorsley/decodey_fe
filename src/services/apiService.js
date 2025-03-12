@@ -142,6 +142,82 @@ const apiService = {
       throw new Error(error.message || "Login failed");
     }
   },
+  /**
+   * Checks if the logged-in user has an active game and handles restoration
+   * @param {string} token - The auth token from successful login
+   * @returns {Promise<Object>} Result of the active game check and handling
+   */
+  checkAndHandleActiveGame: async (token) => {
+    try {
+      // Check if user has an active game
+      const activeGameResponse = await fetch(
+        `${config.apiUrl}/check_active_game`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+            ...config.session.getHeaders(),
+          },
+          credentials: "include",
+          mode: "cors",
+        },
+      );
+
+      if (!activeGameResponse.ok) {
+        console.warn(
+          "Error checking for active game:",
+          activeGameResponse.status,
+        );
+        return { handled: false };
+      }
+
+      const activeGameData = await activeGameResponse.json();
+
+      // If there's an active game, ask user if they want to restore it
+      if (activeGameData.has_active_game) {
+        const percentComplete = activeGameData.progress_percentage || 0;
+        const mistakes = activeGameData.mistakes || 0;
+
+        const shouldRestore = window.confirm(
+          `You have a game in progress (${percentComplete}% complete, ${mistakes} mistakes). ` +
+            `Would you like to restore it?`,
+        );
+
+        if (shouldRestore) {
+          // Return data about the active game so the caller can handle the restoration
+          return {
+            handled: true,
+            restore: true,
+            gameId: activeGameData.game_id,
+            percentComplete,
+            mistakes,
+          };
+        } else {
+          // User chose not to restore - delete the active game
+          await fetch(`${config.apiUrl}/completed`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+              ...config.session.getHeaders(),
+            },
+            body: JSON.stringify({ game_id: activeGameData.game_id }),
+            credentials: "include",
+            mode: "cors",
+          });
+
+          return { handled: true, restore: false };
+        }
+      }
+
+      // No active game found
+      return { handled: false };
+    } catch (error) {
+      console.error("Error checking for active game:", error);
+      return { handled: false, error: error.message };
+    }
+  },
 
   // Signup functionality
   signup: async (email, password) => {

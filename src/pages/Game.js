@@ -21,8 +21,7 @@ import MobileLayout from "../components/layout/MobileLayout";
 import apiService from "../services/apiService";
 import { FaTrophy } from "react-icons/fa";
 import HeaderControls from "../components/HeaderControls";
-import scoreService from "../services/scoreService";
-import { getDifficultyFromMaxMistakes } from "../utils/utils";
+import GameLossHandler from "../components/GameLossHandler";
 
 // Debug flag
 const DEBUG = true;
@@ -114,59 +113,7 @@ function Game() {
 
   // Get auth state
   const { isAuthenticated, authLoading, user } = useAuth();
-  const recordLossScore = useCallback(async () => {
-    // Only record if we have the necessary game data and haven't already recorded
-    if (
-      !encrypted ||
-      !startTime ||
-      localStorage.getItem("game-loss-recorded")
-    ) {
-      return;
-    }
 
-    // Mark that we've recorded this loss to prevent duplicate recordings
-    localStorage.setItem("game-loss-recorded", "true");
-
-    // Calculate time played before loss
-    const gameTimeSeconds = Math.floor((Date.now() - startTime) / 1000);
-
-    // Prepare the score data - similar to win recording
-    const gameData = {
-      score: 0, // No points for losses
-      mistakes: mistakes,
-      timeTaken: gameTimeSeconds,
-      difficulty: getDifficultyFromMaxMistakes(maxMistakes),
-      timestamp: Date.now(),
-      completed: false, // This is the key difference - mark as incomplete
-    };
-
-    if (DEBUG) {
-      console.log("Recording loss with data:", gameData);
-    }
-
-    try {
-      // Use isAuthenticated from component scope
-      const result = await scoreService.submitScore(gameData, isAuthenticated);
-
-      if (DEBUG) {
-        console.log("Loss recording result:", result);
-      }
-    } catch (error) {
-      console.error("Error recording loss:", error);
-    }
-  }, [encrypted, startTime, mistakes, maxMistakes, isAuthenticated]);
-
-  // Add effect to trigger loss recording when game is lost
-  useEffect(() => {
-    // Check if the game is lost (too many mistakes)
-    if (mistakes >= maxMistakes && encrypted) {
-      // Clear the loss recorded flag when starting a new game
-      localStorage.removeItem("game-loss-recorded");
-      // Record the loss
-      recordLossScore();
-    }
-  }, [mistakes, maxMistakes, encrypted, recordLossScore]);
-  // Log auth state for debugging
   useEffect(() => {
     console.log("Game component auth state:", {
       isAuthenticated,
@@ -999,6 +946,14 @@ function Game() {
           </pre>
         </div>
       )}
+      <GameLossHandler
+        encrypted={encrypted}
+        startTime={startTime}
+        mistakes={mistakes}
+        maxMistakes={maxMistakes}
+        isAuthenticated={isAuthenticated}
+        isGameLost={mistakes >= maxMistakes && Boolean(encrypted)}
+      />
     </div>
   );
 }

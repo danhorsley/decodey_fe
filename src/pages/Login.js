@@ -5,6 +5,7 @@ import "../Styles/Login.css";
 import { useSettings } from "../context/SettingsContext";
 import { useAuth } from "../context/AuthContext";
 import { useModalContext } from "../components/modals/ModalManager";
+import apiService from "../services/apiService";
 
 function Login({ onClose }) {
   // Get contexts directly
@@ -50,8 +51,18 @@ function Login({ onClose }) {
       console.log("Login.js handleSubmit", username, password, rememberMe);
       const result = await login(credentials);
       if (result.success) {
-        console.log("Login successful");
-        onClose();
+        const activeGameCheck = await apiService.checkAndHandleActiveGame(
+          result.token,
+        );
+
+        if (activeGameCheck.handled && activeGameCheck.restore) {
+          // User chose to restore their game - reload the page
+          window.location.reload();
+        } else {
+          // No active game or user chose not to restore
+          // Close the login modal and continue
+          onClose();
+        }
       } else {
         setError(
           result.error || "Login failed. Please check your credentials.",
