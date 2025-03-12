@@ -18,9 +18,8 @@ const defaultUserState = {
   authError: null,
 };
 
-
-
-  // Check if auth paths are consistent
+// Function to check if auth paths are consistent
+const checkAuthConsistency = () => {
   const hasToken = Boolean(
     localStorage.getItem("uncrypt-token") ||
       sessionStorage.getItem("uncrypt-token"),
@@ -33,7 +32,7 @@ const defaultUserState = {
     "Token/UserID consistency:",
     hasToken === hasUserId ? "OK" : "MISMATCH",
   );
-}
+};
 
 // Create context
 const AuthContext = createContext();
