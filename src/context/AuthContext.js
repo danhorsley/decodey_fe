@@ -18,20 +18,19 @@ const defaultUserState = {
   authError: null,
 };
 
-// Function to check if auth paths are consistent
-const checkAuthConsistency = () => {
-  const hasToken = Boolean(
-    localStorage.getItem("uncrypt-token") ||
-      sessionStorage.getItem("uncrypt-token"),
-  );
-  const hasUserId = Boolean(
-    localStorage.getItem("uncrypt-user-id") ||
-      sessionStorage.getItem("uncrypt-user-id"),
-  );
-  console.log(
-    "Token/UserID consistency:",
-    hasToken === hasUserId ? "OK" : "MISMATCH",
-  );
+// Auth constants
+const AUTH_KEYS = {
+  TOKEN: "uncrypt-token",
+  USER_ID: "uncrypt-user-id",
+  USERNAME: "uncrypt-username",
+  REMEMBER_ME: "uncrypt-remember-me",
+};
+
+// Helper function to get storage based on rememberMe preference
+const getStorage = () => {
+  // Check rememberMe preference - default to true for better UX
+  const rememberMe = localStorage.getItem(AUTH_KEYS.REMEMBER_ME) !== "false";
+  return rememberMe ? localStorage : sessionStorage;
 };
 
 // Create context
@@ -41,7 +40,7 @@ export const AuthProvider = ({ children }) => {
   // Auth state management
   const [authState, setAuthState] = useState(defaultUserState);
 
-  // Initialize auth state from token if exists
+  // Initialize auth state from stored token
   useEffect(() => {
     const initAuth = async () => {
       // Set loading state immediately
@@ -50,35 +49,9 @@ export const AuthProvider = ({ children }) => {
       console.log("Initializing auth state...");
 
       try {
-        const response = await fetch(`${config.apiUrl}/validate-token`, {
-          method: "GET", // Ensure we're using GET
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-        // Standardize on uncrypt- prefixed keys, but check old keys as fallback
-        let token = null;
-        let userId = null;
-        let username = null;
-
-        // First check localStorage for persistent logins
-        token =
-          localStorage.getItem("uncrypt-token") ||
-          localStorage.getItem("auth_token");
-        userId =
-          localStorage.getItem("uncrypt-user-id") ||
-          localStorage.getItem("user_id");
-        username =
-          localStorage.getItem("uncrypt-username") ||
-          localStorage.getItem("username");
-
-        // If not in localStorage, check sessionStorage for session-only logins
-        if (!token) {
-          token = sessionStorage.getItem("uncrypt-token");
-          userId = sessionStorage.getItem("uncrypt-user-id");
-          username = sessionStorage.getItem("uncrypt-username");
-        }
+        // Get token and user info using helper functions
+        const token = config.session.getAuthToken();
+        const userId = config.session.getAuthUserId();
 
         // If no token or userId found, user is not authenticated
         if (!token || !userId) {
@@ -94,6 +67,7 @@ export const AuthProvider = ({ children }) => {
 
         // Try to validate the token with backend
         let isValidToken = false;
+        let userData = null;
 
         try {
           const response = await fetch(`${config.apiUrl}/validate-token`, {
@@ -105,54 +79,29 @@ export const AuthProvider = ({ children }) => {
           });
 
           if (response.ok) {
-            const userData = await response.json();
+            userData = await response.json();
             console.log("Token validation successful:", userData);
-
-            // Update auth state with validated user data
-            setAuthState({
-              user: {
-                id: userData.user_id || userId,
-                username: userData.username || username,
-              },
-              isAuthenticated: true,
-              authLoading: false,
-              token: token,
-              authError: null,
-            });
             isValidToken = true;
-
-            // Standardize on new keys - store in localStorage
-            localStorage.setItem("uncrypt-token", token);
-            localStorage.setItem("uncrypt-user-id", userData.user_id || userId);
-            localStorage.setItem(
-              "uncrypt-username",
-              userData.username || username,
-            );
           }
         } catch (error) {
           console.warn("Token validation endpoint failed:", error);
         }
 
-        // Fallback: If endpoint validation failed but we have token and userId,
-        // assume the token is valid (for backends without validation endpoint)
-        if (!isValidToken && token && userId) {
-          console.log("Using fallback authentication with existing token");
-          setAuthState({
-            user: {
-              id: userId,
-              username: username || "User",
-            },
-            isAuthenticated: true,
-            authLoading: false,
-            token: token,
-            authError: null,
-          });
+        // Get username from storage or default to "User"
+        const storage = config.session.getStorage();
+        const username = storage.getItem(AUTH_KEYS.USERNAME) || "User";
 
-          // Standardize storage on new keys
-          localStorage.setItem("uncrypt-token", token);
-          localStorage.setItem("uncrypt-user-id", userId);
-          if (username) localStorage.setItem("uncrypt-username", username);
-        }
+        // Update auth state with user data (validated or from storage)
+        setAuthState({
+          user: {
+            id: userData?.user_id || userId,
+            username: userData?.username || username,
+          },
+          isAuthenticated: true,
+          authLoading: false,
+          token: token,
+          authError: null,
+        });
       } catch (error) {
         console.error("Auth initialization error:", error);
         setAuthState({
@@ -166,39 +115,9 @@ export const AuthProvider = ({ children }) => {
     initAuth();
   }, []);
 
-  // submit pending scores after login
-  useEffect(() => {
-    // Whenever auth state changes to authenticated
-    if (authState.isAuthenticated) {
-      const submitPendingScores = async () => {
-        const pendingScores = JSON.parse(
-          localStorage.getItem("uncrypt-pending-scores") || "[]",
-        );
-
-        if (pendingScores.length > 0) {
-          console.log(
-            `Found ${pendingScores.length} pending scores to submit after auth change`,
-          );
-
-          for (const scoreData of pendingScores) {
-            try {
-              await apiService.recordScore(scoreData);
-              console.log("Pending score submitted successfully");
-            } catch (err) {
-              console.error("Error submitting pending score:", err);
-            }
-          }
-
-          // Clear pending scores after submitting
-          localStorage.removeItem("uncrypt-pending-scores");
-        }
-      };
-
-      submitPendingScores();
-    }
-  }, [authState.isAuthenticated]);
-
   // Login method - centralized auth handling
+  // In AuthContext.js - Refactored login function
+
   const login = useCallback(async (credentials) => {
     // Set loading state immediately
     setAuthState((prev) => ({ ...prev, authLoading: true, authError: null }));
@@ -208,7 +127,7 @@ export const AuthProvider = ({ children }) => {
         throw new Error("Missing login credentials");
       }
 
-      // Extract remember me preference with default to true for better user experience
+      // Extract remember me preference with default to true
       const { rememberMe = true, ...loginCredentials } = credentials;
 
       console.log("Attempting login with username:", loginCredentials.username);
@@ -216,39 +135,27 @@ export const AuthProvider = ({ children }) => {
       // Use apiService for login
       const data = await apiService.loginapi(loginCredentials);
 
-      // Robust error checking on response
-      if (!data) {
-        throw new Error("No response received from login service");
+      // Validate response
+      if (!data || !data.token) {
+        throw new Error("Invalid response from login service");
       }
 
-      if (!data.token) {
-        console.error("Login response missing token:", data);
-        throw new Error("Login successful but no token received");
-      }
-
-      if (!data.user_id) {
-        console.warn("Login response missing user_id:", data);
-        // Continue but log warning - user_id is important for API calls
-      }
-
-      // Create a consistent user object
+      // Create user object
       const user = {
         id: data.user_id,
         username: data.username || credentials.username,
       };
 
-      // Choose primary storage based on rememberMe preference
+      // Store rememberMe preference in localStorage
+      localStorage.setItem(AUTH_KEYS.REMEMBER_ME, String(rememberMe));
+
+      // Store auth data in appropriate storage
       const storage = rememberMe ? localStorage : sessionStorage;
+      storage.setItem(AUTH_KEYS.TOKEN, data.token);
+      storage.setItem(AUTH_KEYS.USER_ID, user.id);
+      storage.setItem(AUTH_KEYS.USERNAME, user.username);
 
-      // Store auth data using consistent naming (new format)
-      storage.setItem("uncrypt-token", data.token);
-      storage.setItem("uncrypt-user-id", user.id);
-      storage.setItem("uncrypt-username", user.username);
-
-      // Always store the rememberMe preference in localStorage
-      localStorage.setItem("uncrypt-remember-me", rememberMe);
-
-      // Update auth state with the new user information
+      // Update auth state
       setAuthState({
         user,
         isAuthenticated: true,
@@ -257,12 +164,9 @@ export const AuthProvider = ({ children }) => {
         authError: null,
       });
 
-      console.log("Authentication successful:", {
-        username: user.username,
-        authenticated: true,
-      });
+      console.log("Authentication successful");
 
-      return { success: true };
+      return { success: true, token: data.token };
     } catch (error) {
       console.error("Login error:", error);
 
@@ -280,7 +184,9 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // Logout method - centralized token/auth management
+  // Logout method - clear auth state and storage
+  // In AuthContext.js - Refactored logout function
+
   const logout = useCallback(() => {
     console.log("Performing logout - clearing auth state");
 
@@ -293,23 +199,8 @@ export const AuthProvider = ({ children }) => {
       token: null,
     });
 
-    // Clear all auth tokens from storage
-    const keysToRemove = [
-      // New format keys
-      "uncrypt-token",
-      "uncrypt-user-id",
-      "uncrypt-username",
-      // Old format keys
-      "auth_token",
-      "user_id",
-      "username",
-    ];
-
-    // Remove from both localStorage and sessionStorage to be thorough
-    keysToRemove.forEach((key) => {
-      localStorage.removeItem(key);
-      sessionStorage.removeItem(key);
-    });
+    // Use the centralized clear function
+    config.session.clearSession();
 
     // Call backend logout endpoint
     fetch(`${config.apiUrl}/logout`, {
@@ -319,15 +210,6 @@ export const AuthProvider = ({ children }) => {
 
     console.log("Logout completed, all auth data cleared");
   }, []);
-
-  // Leaderboard state and methods
-  const [leaderboardData, setLeaderboardData] = useState({
-    entries: [],
-    loading: false,
-    error: null,
-    currentPage: 1,
-    totalPages: 1,
-  });
 
   // Add this function to handle fetching leaderboard data
   const fetchLeaderboard = useCallback(async (page = 1, limit = 10) => {
