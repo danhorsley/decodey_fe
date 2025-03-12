@@ -50,6 +50,13 @@ export const AuthProvider = ({ children }) => {
       console.log("Initializing auth state...");
 
       try {
+        const response = await fetch(`${config.apiUrl}/validate-token`, {
+          method: "GET", // Ensure we're using GET
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
         // Standardize on uncrypt- prefixed keys, but check old keys as fallback
         let token = null;
         let userId = null;

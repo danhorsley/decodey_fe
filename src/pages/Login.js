@@ -51,16 +51,36 @@ function Login({ onClose }) {
       console.log("Login.js handleSubmit", username, password, rememberMe);
       const result = await login(credentials);
       if (result.success) {
+        console.log("Login successful, checking for active game");
         const activeGameCheck = await apiService.checkAndHandleActiveGame(
           result.token,
         );
 
+        console.log("Active game check result:", activeGameCheck);
+
         if (activeGameCheck.handled && activeGameCheck.restore) {
-          // User chose to restore their game - reload the page
-          window.location.reload();
+          console.log(
+            "About to restore server game with ID:",
+            activeGameCheck.gameId,
+          );
+
+          // THIS IS CRITICAL: We need to update localStorage with the server's game ID
+          localStorage.setItem("uncrypt-game-id", activeGameCheck.gameId);
+
+          // IMPORTANT: Remove any existing game data to force server fetch
+          localStorage.removeItem("uncrypt-game-data");
+
+          // We also need to create a special flag to force the /start endpoint to recognize this game ID
+          localStorage.setItem("force-load-server-game", "true");
+
+          console.log(
+            "Local game state cleared, game ID updated to server value",
+          );
+
+          // Instead of just reloading, let's be more explicit
+          window.location.href = "/"; // Navigate to home to ensure clean state
         } else {
           // No active game or user chose not to restore
-          // Close the login modal and continue
           onClose();
         }
       } else {

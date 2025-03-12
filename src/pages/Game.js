@@ -221,8 +221,24 @@ function Game() {
   // Start Game function - initiates a new game
   const startGame = useCallback(() => {
     if (DEBUG) console.log("Starting new game with settings:", settings);
+    console.log("Game.js startGame called, settings:", settings);
+    console.log(
+      "Local storage game ID:",
+      localStorage.getItem("uncrypt-game-id"),
+    );
+    console.log("Auth state:", {
+      isAuthenticated,
+      authLoading,
+      userId: user?.id,
+    });
+    console.log("startGame called with context:", {
+      existingGameId: localStorage.getItem("uncrypt-game-id"),
+      hasStorageData: Boolean(localStorage.getItem("uncrypt-game-data")),
+      restoreTimestamp: localStorage.getItem("restore-timestamp"),
+    });
 
     // Clear any existing game state from localStorage to avoid conflicts
+    localStorage.removeItem("restore-timestamp");
     localStorage.removeItem("uncrypt-game-id");
     localStorage.removeItem("game-loss-recorded");
     apiService
@@ -311,6 +327,16 @@ function Game() {
 
       // Get the current game ID
       const gameId = localStorage.getItem("uncrypt-game-id");
+      const restoreTimestamp = localStorage.getItem("restore-timestamp");
+
+      console.log("Game initialization with:", {
+        gameId,
+        restoreTimestamp,
+        now: Date.now().toString(),
+        timeSinceRestore: restoreTimestamp
+          ? Date.now() - parseInt(restoreTimestamp)
+          : "N/A",
+      });
 
       if (DEBUG) {
         console.log(
@@ -552,12 +578,33 @@ function Game() {
   // Effects
   useEffect(() => {
     // Check if there's an existing game in progress
-    const gameId = localStorage.getItem("uncrypt-game-id");
-    const gameInProgress =
-      Boolean(gameId) &&
-      // Check if we have any game data to prevent unnecessarily starting a new game
-      (encrypted || localStorage.getItem("uncrypt-game-data"));
+    const forceServerRestore =
+      sessionStorage.getItem("force-server-restore") === "true";
 
+    if (forceServerRestore) {
+      // Clear the flag so it doesn't affect future loads
+      sessionStorage.removeItem("force-server-restore");
+      console.log("Forcing server game restoration");
+
+      // Simply start a new game - it will fetch from server using the game ID
+      startGame();
+      return;
+    }
+
+    // Regular initialization logic
+    const gameId = localStorage.getItem("uncrypt-game-id");
+    const gameDataInStorage = localStorage.getItem("uncrypt-game-data");
+    const gameInProgress = Boolean(gameId) && (encrypted || gameDataInStorage);
+
+    console.log("Game initialization status:", {
+      existingGameId: gameId,
+      hasStorageData: Boolean(gameDataInStorage),
+      hasEncryptedData: Boolean(encrypted),
+      gameInProgress,
+      isAuthenticated,
+      authLoading,
+      forceServerRestore,
+    });
     if (DEBUG) {
       console.log("Game component mounted with:", {
         existingGameId: gameId,

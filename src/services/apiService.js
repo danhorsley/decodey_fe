@@ -148,6 +148,11 @@ const apiService = {
    * @returns {Promise<Object>} Result of the active game check and handling
    */
   checkAndHandleActiveGame: async (token) => {
+    console.log(
+      "checkAndHandleActiveGame called with token:",
+      token ? "token present" : "no token",
+    );
+
     try {
       // Check if user has an active game
       const activeGameResponse = await fetch(
@@ -173,6 +178,7 @@ const apiService = {
       }
 
       const activeGameData = await activeGameResponse.json();
+      console.log("Active game check response:", activeGameData);
 
       // If there's an active game, ask user if they want to restore it
       if (activeGameData.has_active_game) {
@@ -183,6 +189,8 @@ const apiService = {
           `You have a game in progress (${percentComplete}% complete, ${mistakes} mistakes). ` +
             `Would you like to restore it?`,
         );
+
+        console.log("User chose to restore game:", shouldRestore);
 
         if (shouldRestore) {
           // Return data about the active game so the caller can handle the restoration
@@ -212,13 +220,14 @@ const apiService = {
       }
 
       // No active game found
+      console.log("No active game found");
       return { handled: false };
     } catch (error) {
       console.error("Error checking for active game:", error);
       return { handled: false, error: error.message };
     }
   },
-
+  
   // Signup functionality
   signup: async (email, password) => {
     const endpoint = "/signup";
