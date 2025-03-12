@@ -18,6 +18,23 @@ const defaultUserState = {
   authError: null,
 };
 
+
+
+  // Check if auth paths are consistent
+  const hasToken = Boolean(
+    localStorage.getItem("uncrypt-token") ||
+      sessionStorage.getItem("uncrypt-token"),
+  );
+  const hasUserId = Boolean(
+    localStorage.getItem("uncrypt-user-id") ||
+      sessionStorage.getItem("uncrypt-user-id"),
+  );
+  console.log(
+    "Token/UserID consistency:",
+    hasToken === hasUserId ? "OK" : "MISMATCH",
+  );
+}
+
 // Create context
 const AuthContext = createContext();
 

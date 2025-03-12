@@ -1,5 +1,36 @@
 import config from "../config";
 
+// Simple auth debug function - call this where auth issues occur
+function debugAuth() {
+  console.log("=== AUTH DEBUG ===");
+  console.log(
+    "localStorage token:",
+    localStorage.getItem("uncrypt-token")?.substr(0, 10) + "...",
+  );
+  console.log(
+    "sessionStorage token:",
+    sessionStorage.getItem("uncrypt-token")?.substr(0, 10) + "...",
+  );
+  console.log("localStorage user_id:", localStorage.getItem("uncrypt-user-id"));
+  console.log(
+    "sessionStorage user_id:",
+    sessionStorage.getItem("uncrypt-user-id"),
+  );
+
+  // Check if auth paths are consistent
+  const hasToken = Boolean(
+    localStorage.getItem("uncrypt-token") ||
+      sessionStorage.getItem("uncrypt-token"),
+  );
+  const hasUserId = Boolean(
+    localStorage.getItem("uncrypt-user-id") ||
+      sessionStorage.getItem("uncrypt-user-id"),
+  );
+  console.log(
+    "Token/UserID consistency:",
+    hasToken === hasUserId ? "OK" : "MISMATCH",
+  );
+}
 // Debug logging function
 const logApiOperation = (
   method,
@@ -696,6 +727,14 @@ const apiService = {
 
   // Record Score function
   recordScore: async (scoreData) => {
+    console.log("Recording score with data:", scoreData);
+    // Debug auth state before API call
+    debugAuth();
+    // Get token explicitly to debug
+    const token =
+      localStorage.getItem("uncrypt-token") ||
+      sessionStorage.getItem("uncrypt-token");
+    console.log("Using token:", token ? "Yes" : "No");
     const endpoint = "/record_score";
     const gameId = localStorage.getItem("uncrypt-game-id");
 
