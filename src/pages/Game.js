@@ -145,7 +145,7 @@ function Game() {
     }
 
     try {
-      // Reuse the existing score service
+      // Use isAuthenticated from component scope
       const result = await scoreService.submitScore(gameData, isAuthenticated);
 
       if (DEBUG) {
