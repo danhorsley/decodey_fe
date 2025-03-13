@@ -79,15 +79,64 @@ class ApiService {
 
   // Game methods - must add longstart to back end
   async startGame(options = {}) {
-    const endpoint = options.longText ? "/longstart" : "/start";
-    console.log("endpoint", endpoint);
-    return this.api.get(endpoint).then((res) => res.data);
+    try {
+      console.log("Starting startGame function in apiService");
+
+      // Get token and verify it exists
+      const token = localStorage.getItem("token");
+      console.log("Token from localStorage:", token ? "exists" : "missing");
+
+      const endpoint = options.longText ? "api/longstart" : "/api/start";
+      console.log("endpoint", endpoint);
+      console.log(
+        `Making request to endpoint: ${this.api.defaults.baseURL}${endpoint}`,
+      );
+
+      // Log request configuration
+      const config = {
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      };
+
+      if (token) {
+        config.headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      console.log("Request config:", JSON.stringify(config));
+
+      // Make the request
+      const response = await this.api.get(endpoint, config);
+
+      // Log response for debugging
+      console.log("Response received:", {
+        status: response.status,
+        statusText: response.statusText,
+        contentType: response.headers["content-type"],
+        responseType: typeof response.data,
+        content: response.data,
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error("Error in startGame:", error);
+      if (error.response) {
+        console.error("Response details:", {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          contentType: error.response.headers["content-type"],
+          data: error.response.data,
+        });
+      }
+      throw error;
+    }
   }
 
   async submitGuess(encryptedLetter, guessedLetter) {
     const gameId = localStorage.getItem("uncrypt-game-id");
     return this.api
-      .post("/guess", {
+      .post("/api/guess", {
         encrypted_letter: encryptedLetter,
         guessed_letter: guessedLetter,
         game_id: gameId,
@@ -97,7 +146,9 @@ class ApiService {
 
   async getHint() {
     const gameId = localStorage.getItem("uncrypt-game-id");
-    return this.api.post("/hint", { game_id: gameId }).then((res) => res.data);
+    return this.api
+      .post("/api/hint", { game_id: gameId })
+      .then((res) => res.data);
   }
 
   // Server-sent events for win notifications
