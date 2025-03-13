@@ -21,7 +21,7 @@ import MobileLayout from "../components/layout/MobileLayout";
 import apiService from "../services/apiService";
 import { FaTrophy } from "react-icons/fa";
 import HeaderControls from "../components/HeaderControls";
-import GameLossHandler from "../components/GameLossHandler";
+// import GameLossHandler from "../components/GameLossHandler";
 import AuthTest from "../tests/authTest";
 
 // Debug flag
@@ -101,6 +101,7 @@ function Game() {
   // Get settings directly from context
   const { settings, maxMistakes } = useSettings();
   const { toggleSounds, soundEnabled } = useSound();
+  const { hasWon, winData, startGame } = useGameState();
 
   // Get UI state directly from context
   const {
@@ -220,86 +221,86 @@ function Game() {
   }, [encrypted, display, useMobileMode]);
 
   // Start Game function - initiates a new game
-  const startGame = useCallback(() => {
-    if (DEBUG) console.log("Starting new game with settings:", settings);
-    console.log("Game.js startGame called, settings:", settings);
-    console.log(
-      "Local storage game ID:",
-      localStorage.getItem("uncrypt-game-id"),
-    );
-    console.log("Auth state:", {
-      isAuthenticated,
-      authLoading,
-      userId: user?.id,
-    });
-    console.log("startGame called with context:", {
-      existingGameId: localStorage.getItem("uncrypt-game-id"),
-      hasStorageData: Boolean(localStorage.getItem("uncrypt-game-data")),
-      restoreTimestamp: localStorage.getItem("restore-timestamp"),
-    });
+  // const startGame = useCallback(() => {
+  //   if (DEBUG) console.log("Starting new game with settings:", settings);
+  //   console.log("Game.js startGame called, settings:", settings);
+  //   console.log(
+  //     "Local storage game ID:",
+  //     localStorage.getItem("uncrypt-game-id"),
+  //   );
+  //   console.log("Auth state:", {
+  //     isAuthenticated,
+  //     authLoading,
+  //     userId: user?.id,
+  //   });
+  //   console.log("startGame called with context:", {
+  //     existingGameId: localStorage.getItem("uncrypt-game-id"),
+  //     hasStorageData: Boolean(localStorage.getItem("uncrypt-game-data")),
+  //     restoreTimestamp: localStorage.getItem("restore-timestamp"),
+  //   });
 
-    // Clear any existing game state from localStorage to avoid conflicts
-    localStorage.removeItem("restore-timestamp");
-    localStorage.removeItem("uncrypt-game-id");
-    localStorage.removeItem("game-loss-recorded");
-    apiService
-      .startGame(settings.longText)
-      .then((data) => {
-        if (DEBUG) console.log("Game data received:", data);
+  //   // Clear any existing game state from localStorage to avoid conflicts
+  //   localStorage.removeItem("restore-timestamp");
+  //   localStorage.removeItem("uncrypt-game-id");
+  //   localStorage.removeItem("game-loss-recorded");
+  //   apiService
+  //     .startGame(settings.longText)
+  //     .then((data) => {
+  //       if (DEBUG) console.log("Game data received:", data);
 
-        // Store the game ID in localStorage
-        if (data.game_id) {
-          localStorage.setItem("uncrypt-game-id", data.game_id);
-          if (DEBUG) console.log("Game ID stored:", data.game_id);
-        }
+  //       // Store the game ID in localStorage
+  //       if (data.game_id) {
+  //         localStorage.setItem("uncrypt-game-id", data.game_id);
+  //         if (DEBUG) console.log("Game ID stored:", data.game_id);
+  //       }
 
-        // Process the encrypted text
-        let encryptedText = data.encrypted_paragraph;
-        let displayText = data.display;
+  //       // Process the encrypted text
+  //       let encryptedText = data.encrypted_paragraph;
+  //       let displayText = data.display;
 
-        // Apply hardcore mode filtering if needed
-        if (settings.hardcoreMode) {
-          encryptedText = encryptedText.replace(/[^A-Z]/g, "");
-          displayText = displayText.replace(/[^A-Z█]/g, "");
-        }
+  //       // Apply hardcore mode filtering if needed
+  //       if (settings.hardcoreMode) {
+  //         encryptedText = encryptedText.replace(/[^A-Z]/g, "");
+  //         displayText = displayText.replace(/[^A-Z█]/g, "");
+  //       }
 
-        // Calculate letter frequencies
-        const calculatedFrequency = {};
-        for (const char of encryptedText) {
-          if (/[A-Z]/.test(char))
-            calculatedFrequency[char] = (calculatedFrequency[char] || 0) + 1;
-        }
+  //       // Calculate letter frequencies
+  //       const calculatedFrequency = {};
+  //       for (const char of encryptedText) {
+  //         if (/[A-Z]/.test(char))
+  //           calculatedFrequency[char] = (calculatedFrequency[char] || 0) + 1;
+  //       }
 
-        // Ensure all letters have a frequency value (even if 0)
-        for (let i = 0; i < 26; i++) {
-          const letter = String.fromCharCode(65 + i);
-          calculatedFrequency[letter] = calculatedFrequency[letter] || 0;
-        }
+  //       // Ensure all letters have a frequency value (even if 0)
+  //       for (let i = 0; i < 26; i++) {
+  //         const letter = String.fromCharCode(65 + i);
+  //         calculatedFrequency[letter] = calculatedFrequency[letter] || 0;
+  //       }
 
-        // Update game state
-        dispatch({
-          type: "START_GAME",
-          payload: {
-            encrypted: encryptedText,
-            display: displayText,
-            mistakes: data.mistakes || 0,
-            correctlyGuessed: [],
-            selectedEncrypted: null,
-            lastCorrectGuess: null,
-            letterFrequency: calculatedFrequency,
-            guessedMappings: {},
-            originalLetters: data.original_letters || [],
-            startTime: Date.now(),
-          },
-        });
-      })
-      .catch((err) => {
-        console.error("Error starting game:", err);
-        alert(
-          "Failed to start game. Check your connection or console for details.",
-        );
-      });
-  }, [settings.hardcoreMode, settings.longText]);
+  //       // Update game state
+  //       dispatch({
+  //         type: "START_GAME",
+  //         payload: {
+  //           encrypted: encryptedText,
+  //           display: displayText,
+  //           mistakes: data.mistakes || 0,
+  //           correctlyGuessed: [],
+  //           selectedEncrypted: null,
+  //           lastCorrectGuess: null,
+  //           letterFrequency: calculatedFrequency,
+  //           guessedMappings: {},
+  //           originalLetters: data.original_letters || [],
+  //           startTime: Date.now(),
+  //         },
+  //       });
+  //     })
+  //     .catch((err) => {
+  //       console.error("Error starting game:", err);
+  //       alert(
+  //         "Failed to start game. Check your connection or console for details.",
+  //       );
+  //     });
+  // }, [settings.hardcoreMode, settings.longText]);
 
   // Handle clicking on encrypted letters
   const handleEncryptedClick = useCallback(
@@ -576,79 +577,99 @@ function Game() {
       });
     };
   }, [loadSounds, unlockAudioContext]);
-  // Effects
+
   useEffect(() => {
-    // Check if there's an existing game in progress
-    const forceServerRestore =
-      sessionStorage.getItem("force-server-restore") === "true";
+    const winSubscription = apiService.on("game:win", (data) => {
+      // Handle win event from server
+      // data contains all win details: score, mistakes, time, attribution, etc.
+      console.log("Game win event received:", data);
 
-    if (forceServerRestore) {
-      // Clear the flag so it doesn't affect future loads
-      sessionStorage.removeItem("force-server-restore");
-      console.log("Forcing server game restoration");
+      // Update game state with win data
+      // setGameWon(true);
+      // setWinData(data);
 
-      // Simply start a new game - it will fetch from server using the game ID
-      startGame();
-      return;
-    }
-
-    // Regular initialization logic
-    const gameId = localStorage.getItem("uncrypt-game-id");
-    const gameDataInStorage = localStorage.getItem("uncrypt-game-data");
-    const gameInProgress = Boolean(gameId) && (encrypted || gameDataInStorage);
-
-    console.log("Game initialization status:", {
-      existingGameId: gameId,
-      hasStorageData: Boolean(gameDataInStorage),
-      hasEncryptedData: Boolean(encrypted),
-      gameInProgress,
-      isAuthenticated,
-      authLoading,
-      forceServerRestore,
+      // Play win sound
+      playSound("win");
     });
-    if (DEBUG) {
-      console.log("Game component mounted with:", {
-        existingGameId: gameId,
-        hasEncryptedData: Boolean(encrypted),
-        gameInProgress,
-        currentSettings: settings,
-      });
-    }
 
-    // Only start a new game if there isn't one in progress
-    if (!gameInProgress) {
-      console.log("No game in progress, starting a new game...");
-      startGame();
-    } else {
-      console.log("Existing game found, not starting a new one");
+    return () => {
+      winSubscription();
+    };
+  }, [playSound]);
+  // Effects
 
-      // Try to restore game state if we have encrypted data but no display data
-      // This handles cases where we have a game ID but the state was partially lost
-      if (gameId && !encrypted) {
-        try {
-          // Attempt to restore from localStorage
-          const savedGameData = localStorage.getItem("uncrypt-game-data");
-          if (savedGameData) {
-            const gameData = JSON.parse(savedGameData);
-            console.log("Restoring game data from localStorage");
+  // useEffect(() => {
+  //   // Check if there's an existing game in progress
+  //   const forceServerRestore =
+  //     sessionStorage.getItem("force-server-restore") === "true";
 
-            // Restore game state
-            dispatch({
-              type: "START_GAME",
-              payload: gameData,
-            });
-          } else {
-            // If we can't restore, start a new game
-            console.log("Could not restore game data, starting new game");
-            startGame();
-          }
-        } catch (error) {
-          console.error("Error restoring game:", error);
-          startGame();
-        }
-      }
-    }
-  }, [startGame, settings, encrypted]);
+  //   if (forceServerRestore) {
+  //     // Clear the flag so it doesn't affect future loads
+  //     sessionStorage.removeItem("force-server-restore");
+  //     console.log("Forcing server game restoration");
+
+  //     // Simply start a new game - it will fetch from server using the game ID
+  //     startGame();
+  //     return;
+  //   }
+
+  // Regular initialization logic
+  //   const gameId = localStorage.getItem("uncrypt-game-id");
+  //   const gameDataInStorage = localStorage.getItem("uncrypt-game-data");
+  //   const gameInProgress = Boolean(gameId) && (encrypted || gameDataInStorage);
+
+  //   console.log("Game initialization status:", {
+  //     existingGameId: gameId,
+  //     hasStorageData: Boolean(gameDataInStorage),
+  //     hasEncryptedData: Boolean(encrypted),
+  //     gameInProgress,
+  //     isAuthenticated,
+  //     authLoading,
+  //     forceServerRestore,
+  //   });
+  //   if (DEBUG) {
+  //     console.log("Game component mounted with:", {
+  //       existingGameId: gameId,
+  //       hasEncryptedData: Boolean(encrypted),
+  //       gameInProgress,
+  //       currentSettings: settings,
+  //     });
+  //   }
+
+  //   // Only start a new game if there isn't one in progress
+  //   if (!gameInProgress) {
+  //     console.log("No game in progress, starting a new game...");
+  //     startGame();
+  //   } else {
+  //     console.log("Existing game found, not starting a new one");
+
+  //     // Try to restore game state if we have encrypted data but no display data
+  //     // This handles cases where we have a game ID but the state was partially lost
+  //     if (gameId && !encrypted) {
+  //       try {
+  //         // Attempt to restore from localStorage
+  //         const savedGameData = localStorage.getItem("uncrypt-game-data");
+  //         if (savedGameData) {
+  //           const gameData = JSON.parse(savedGameData);
+  //           console.log("Restoring game data from localStorage");
+
+  //           // Restore game state
+  //           dispatch({
+  //             type: "START_GAME",
+  //             payload: gameData,
+  //           });
+  //         } else {
+  //           // If we can't restore, start a new game
+  //           console.log("Could not restore game data, starting new game");
+  //           startGame();
+  //         }
+  //       } catch (error) {
+  //         console.error("Error restoring game:", error);
+  //         startGame();
+  //       }
+  //     }
+  //   }
+  // }, [startGame, settings, encrypted]);
 
   useThemeEffect(settings.theme);
 
@@ -995,14 +1016,14 @@ function Game() {
         </div>
       )}
       <AuthTest />
-      <GameLossHandler
+      {/* <GameLossHandler
         encrypted={encrypted}
         startTime={startTime}
         mistakes={mistakes}
         maxMistakes={maxMistakes}
         isAuthenticated={isAuthenticated}
         isGameLost={mistakes >= maxMistakes && Boolean(encrypted)}
-      />
+      /> */}
     </div>
   );
 }

@@ -8,7 +8,7 @@ import {
   useLocation,
 } from "react-router-dom";
 // CSS files are now imported at the application root level in index.js
-import scoreService from "./services/scoreService";
+// import scoreService from "./services/scoreService";
 import { useAuth } from "./context/AuthContext";
 import { isOnline } from "./utils/networkUtils";
 import ModalManager from "./components/modals/ModalManager";
@@ -20,7 +20,7 @@ import OfflineDetector from "./components/OfflineDetector";
 const Game = lazy(() => import("./pages/Game"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const Privacy = lazy(() => import("./pages/Privacy"));
-const WinCelebrationTest = lazy(() => import("./pages/WinCelebrationTest"));
+// const WinCelebrationTest = lazy(() => import("./pages/WinCelebrationTest"));
 
 // Simple loading component
 const Loading = () => (
@@ -46,40 +46,6 @@ function GlobalUIElements() {
   // Get auth state
   const { isAuthenticated } = useAuth();
 
-  // Check for pending scores and try to submit them
-  useEffect(() => {
-    const checkPendingScores = async () => {
-      // Get count of pending scores
-      const pendingCount = scoreService.getPendingCount();
-
-      if (pendingCount > 0 && isOnline() && isAuthenticated) {
-        console.log(
-          `App loaded with ${pendingCount} pending scores. Attempting to submit...`,
-        );
-
-        try {
-          const result =
-            await scoreService.submitPendingScores(isAuthenticated);
-
-          if (result.submitted > 0) {
-            // Show a toast notification
-            console.log(
-              `Successfully submitted ${result.submitted} pending scores.`,
-            );
-
-            // Could add a toast notification library here
-            // For simplicity, we'll just log to console for now
-          }
-        } catch (error) {
-          console.error("Error submitting pending scores on app load:", error);
-        }
-      }
-    };
-
-    // Run once when component mounts
-    checkPendingScores();
-  }, [isAuthenticated]);
-
   return !isLeaderboardPage ? <AccountButtonWrapper /> : null;
 }
 
@@ -93,7 +59,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Game />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
-            <Route path="/wctest" element={<WinCelebrationTest />} />
+            {/* <Route path="/wctest" element={<WinCelebrationTest />} /> */}
             <Route path="/privacy" element={<Privacy />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>

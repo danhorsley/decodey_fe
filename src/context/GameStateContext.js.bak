@@ -23,9 +23,7 @@ const initialState = {
   completionTime: null,
   gameId: null,
   hasGameStarted: false,
-  hasWon: false,
-  winData: null,
-  hasLost: false,
+  attributionData: null,
   hardcoreMode: false,
 };
 
@@ -37,31 +35,17 @@ const gameReducer = (state, action) => {
         ...initialState,
         ...action.payload,
         hasGameStarted: true,
-        hasWon: false,
-        winData: null,
-        hasLost: false,
       };
-
     case "SUBMIT_GUESS":
       return { ...state, ...action.payload };
-
     case "SET_HINT":
       return { ...state, ...action.payload };
-
-    case "SET_GAME_WON":
-      return {
-        ...state,
-        hasWon: true,
-        completionTime: action.payload.completionTime || Date.now(),
-        winData: action.payload,
-      };
-
-    case "SET_GAME_LOST":
-      return { ...state, hasLost: true };
-
+    case "SET_COMPLETION":
+      return { ...state, completionTime: action.payload };
+    case "SET_ATTRIBUTION":
+      return { ...state, attributionData: action.payload };
     case "RESET_GAME":
       return initialState;
-
     default:
       return state;
   }
@@ -138,7 +122,7 @@ export const GameStateProvider = ({ children }) => {
     [],
   );
 
-  // Handle encrypted letter selection
+  // Handle click on encrypted letter
   const handleEncryptedSelect = useCallback(
     (letter) => {
       if (letter === null || !state.correctlyGuessed.includes(letter)) {
@@ -153,7 +137,7 @@ export const GameStateProvider = ({ children }) => {
     [state.correctlyGuessed],
   );
 
-  // Submit guess function
+  // Submit guess for a letter mapping
   const submitGuess = useCallback(
     async (encryptedLetter, guessedLetter) => {
       if (!encryptedLetter || !guessedLetter) {
@@ -163,6 +147,7 @@ export const GameStateProvider = ({ children }) => {
       try {
         const gameId = localStorage.getItem("uncrypt-game-id");
         const data = await apiService.submitGuess(
+          gameId,
           encryptedLetter,
           guessedLetter,
         );
@@ -212,31 +197,6 @@ export const GameStateProvider = ({ children }) => {
               [encryptedLetter]: guessedLetter.toUpperCase(),
             };
           }
-        }
-
-        // Check if game is won (determined by backend)
-        if (data.game_won) {
-          dispatch({
-            type: "SET_GAME_WON",
-            payload: {
-              completionTime: Date.now(),
-              score: data.score,
-              mistakes: data.mistakes,
-              maxMistakes: data.max_mistakes,
-              gameTimeSeconds: data.game_time_seconds,
-              rating: data.rating,
-              encrypted: state.encrypted,
-              display: displayText || state.display,
-              attribution: data.attribution,
-              scoreStatus: data.score_status,
-            },
-          });
-
-          return {
-            success: true,
-            isCorrect: true,
-            gameWon: true,
-          };
         }
 
         // Update the game state
@@ -305,57 +265,12 @@ export const GameStateProvider = ({ children }) => {
         },
       });
 
-      // Check if game is won (determined by backend)
-      if (data.game_won) {
-        dispatch({
-          type: "SET_GAME_WON",
-          payload: {
-            completionTime: Date.now(),
-            score: data.score,
-            mistakes: data.mistakes,
-            maxMistakes: data.max_mistakes,
-            gameTimeSeconds: data.game_time_seconds,
-            rating: data.rating,
-            encrypted: state.encrypted,
-            display: displayText,
-            attribution: data.attribution,
-            scoreStatus: data.score_status,
-          },
-        });
-      }
-
       return { success: true };
     } catch (error) {
       console.error("Error getting hint:", error);
       return { success: false, error: error.message };
     }
   }, [state]);
-
-  // Listen for server-sent events about game state changes
-  useEffect(() => {
-    // Subscribe to game win events from server
-    const winSubscription = apiService.on("game:win", (data) => {
-      console.log("Win event received from server:", data);
-
-      dispatch({
-        type: "SET_GAME_WON",
-        payload: {
-          completionTime: Date.now(),
-          ...data,
-        },
-      });
-    });
-
-    // Subscribe to game loss events
-    const lossSubscription = apiService.on("game:loss", () => {
-      dispatch({ type: "SET_GAME_LOST" });
-    });
-
-    return () => {
-      winSubscription();
-      lossSubscription();
-    };
-  }, []);
 
   // Clear last correct guess after a delay
   useEffect(() => {
@@ -370,6 +285,29 @@ export const GameStateProvider = ({ children }) => {
       return () => clearTimeout(timer);
     }
   }, [state.lastCorrectGuess]);
+
+  // Check for game completion
+  useEffect(() => {
+    if (
+      state.encrypted &&
+      state.correctlyGuessed.length > 0 &&
+      new Set(state.encrypted.match(/[A-Z]/g)).size <=
+        state.correctlyGuessed.length &&
+      !state.completionTime
+    ) {
+      dispatch({ type: "SET_COMPLETION", payload: Date.now() });
+
+      // Fetch attribution data
+      apiService
+        .getAttribution()
+        .then((data) => {
+          dispatch({ type: "SET_ATTRIBUTION", payload: data });
+        })
+        .catch((error) => {
+          console.error("Error fetching attribution:", error);
+        });
+    }
+  }, [state.encrypted, state.correctlyGuessed, state.completionTime]);
 
   // Save game state to localStorage
   useEffect(() => {
@@ -389,20 +327,11 @@ export const GameStateProvider = ({ children }) => {
       // Save game state to localStorage
       localStorage.setItem("uncrypt-game-data", JSON.stringify(gameState));
     }
-  }, [
-    state.encrypted,
-    state.display,
-    state.mistakes,
-    state.correctlyGuessed,
-    state.letterFrequency,
-    state.guessedMappings,
-    state.originalLetters,
-    state.startTime,
-  ]);
+  }, [state]);
 
   // Determine if game is active
   const isGameActive =
-    Boolean(state.encrypted) && !state.hasWon && !state.hasLost;
+    Boolean(state.encrypted) && !state.completionTime && state.mistakes < 8; // Default to max 8 mistakes
 
   return (
     <GameStateContext.Provider
@@ -421,11 +350,9 @@ export const GameStateProvider = ({ children }) => {
         completionTime: state.completionTime,
         gameId: state.gameId,
         hasGameStarted: state.hasGameStarted,
+        attributionData: state.attributionData,
         isGameActive,
         hardcoreMode: state.hardcoreMode,
-        hasWon: state.hasWon,
-        winData: state.winData,
-        hasLost: state.hasLost,
 
         // Game actions
         startGame,
