@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect } from "react";
 
 /**
  * Custom hook to handle keyboard inputs for the Decrypto game
- * 
+ *
  * @param {Object} props - Configuration and callback functions
  * @param {boolean} props.enabled - Whether keyboard control is enabled
  * @param {boolean} props.speedMode - Whether speed mode is active
@@ -22,20 +22,48 @@ const useKeyboardInput = ({
   selectedEncrypted = null,
   onEncryptedSelect,
   onGuessSubmit,
-  playSound
+  playSound,
 }) => {
   // Handle all keyboard events
   useEffect(() => {
-    if (!enabled) return;
+    // Early return if not enabled - IMPORTANT for modals
+    if (!enabled) {
+      return;
+    }
+
+    // Safety checks for required callback functions
+    if (
+      typeof onEncryptedSelect !== "function" ||
+      typeof onGuessSubmit !== "function"
+    ) {
+      console.error("KeyboardController: required callbacks are missing");
+      return;
+    }
 
     const handleKeyPress = (event) => {
+      // First check if input or textarea is focused - don't handle keyboard events
+      // when user is typing in a form field
+      if (
+        document.activeElement.tagName === "INPUT" ||
+        document.activeElement.tagName === "TEXTAREA" ||
+        document.activeElement.isContentEditable
+      ) {
+        return;
+      }
+
+      // Add safety check - event must have a key property
+      if (!event.key) {
+        return;
+      }
+
+      // Convert to uppercase safely
       const key = event.key.toUpperCase();
-      
+
       // Handle ESC key to deselect
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
         if (selectedEncrypted) {
           onEncryptedSelect(null);
-          playSound('keyclick');
+          playSound && playSound("keyclick");
           event.preventDefault();
         }
         return;
@@ -47,13 +75,14 @@ const useKeyboardInput = ({
         if (speedMode) {
           // If no letter is selected, try to select from encrypted grid
           if (!selectedEncrypted) {
-            const encryptedLetter = encryptedLetters.find(letter => letter === key);
-            if (encryptedLetter) {
-              onEncryptedSelect(encryptedLetter);
-              playSound('keyclick');
+            // Check if this letter exists in the encrypted grid
+            const isInEncryptedGrid = encryptedLetters.includes(key);
+            if (isInEncryptedGrid) {
+              onEncryptedSelect(key);
+              playSound && playSound("keyclick");
               event.preventDefault();
             }
-          } 
+          }
           // If a letter is already selected, submit the guess
           else {
             // Check if key is in original letters
@@ -62,7 +91,7 @@ const useKeyboardInput = ({
               event.preventDefault();
             }
           }
-        } 
+        }
         // In normal mode, just submit guess if a letter is selected
         else if (selectedEncrypted) {
           onGuessSubmit(key);
@@ -71,8 +100,8 @@ const useKeyboardInput = ({
       }
     };
 
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
   }, [
     enabled,
     speedMode,
@@ -81,13 +110,13 @@ const useKeyboardInput = ({
     selectedEncrypted,
     onEncryptedSelect,
     onGuessSubmit,
-    playSound
+    playSound,
   ]);
 
   // Return the current state (could be extended with more state if needed)
   return {
     isActive: enabled,
-    speedModeActive: speedMode
+    speedModeActive: speedMode,
   };
 };
 

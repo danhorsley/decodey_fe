@@ -1,33 +1,31 @@
-// src/pages/Game.js
-import React, {
-  useReducer,
-  useEffect,
-  useCallback,
-  useMemo,
-  useState,
-} from "react";
+// src/pages/Game.js - Simplified
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSettings } from "../context/SettingsContext"; // Direct import for settings
-import { useUI } from "../context/UIContext"; // Direct import for UI state
-import { useGameState } from "../context/GameStateContext"; // Direct import for game state
-import { useAuth } from "../context/AuthContext"; // Direct import for auth
-import { useModalContext } from "../components/modals/ModalManager"; // Import for modal state
-// import useSound from "../services/SoundManager";
+import { FaTrophy } from "react-icons/fa";
+// Direct context imports
+import { useSettings } from "../context/SettingsContext";
+import { useGameState } from "../context/GameStateContext";
+import { useAuth } from "../context/AuthContext";
+import { useModalContext } from "../components/modals/ModalManager";
+import { useUI } from "../context/UIContext";
+// Utility imports
 import useSound from "../services/WebAudioSoundManager";
 import useKeyboardInput from "../hooks/KeyboardController";
-import { formatAlternatingLines, preventWordBreaks } from "../utils/utils";
-import WinCelebration from "../components/modals/WinCelebration";
-import MobileLayout from "../components/layout/MobileLayout";
 import apiService from "../services/apiService";
-import { FaTrophy } from "react-icons/fa";
+import { formatAlternatingLines } from "../utils/utils";
+// Component imports
 import HeaderControls from "../components/HeaderControls";
-// import GameLossHandler from "../components/GameLossHandler";
-import AuthTest from "../tests/authTest";
+import MobileLayout from "../components/layout/MobileLayout";
+import WinCelebration from "../components/modals/WinCelebration";
+// Click handlers
+import {
+  handleEncryptedClick,
+  handleGuessClick,
+  submitGuess,
+  handleHint,
+} from "../utils/ClickHandlers";
 
-// Debug flag
-const DEBUG = false;
-
-// Memoized LetterCell component
+// Letter cell component using memo to reduce re-renders
 const LetterCell = React.memo(
   ({
     letter,
@@ -39,9 +37,7 @@ const LetterCell = React.memo(
     disabled,
   }) => (
     <div
-      className={`letter-cell ${isSelected ? "selected" : ""} ${
-        isGuessed ? "guessed" : ""
-      } ${isFlashing ? "flash" : ""}`}
+      className={`letter-cell ${isSelected ? "selected" : ""} ${isGuessed ? "guessed" : ""} ${isFlashing ? "flash" : ""}`}
       onClick={!disabled ? onClick : undefined}
     >
       {letter}
@@ -52,110 +48,13 @@ const LetterCell = React.memo(
   ),
 );
 
-// Custom hook for theme management
-const useThemeEffect = (theme) => {
-  useEffect(() => {
-    const className = "dark-theme";
-    if (theme === "dark") {
-      document.documentElement.classList.add(className);
-      document.body.classList.add(className);
-    } else {
-      document.documentElement.classList.remove(className);
-      document.body.classList.remove(className);
-    }
-  }, [theme]);
-};
-
-// Reducer for state management
-const initialState = {
-  encrypted: "",
-  display: "",
-  mistakes: 0,
-  correctlyGuessed: [],
-  selectedEncrypted: null,
-  lastCorrectGuess: null,
-  letterFrequency: {},
-  guessedMappings: {},
-  originalLetters: [],
-  startTime: null,
-  completionTime: null,
-};
-
-const reducer = (state, action) => {
-  switch (action.type) {
-    case "START_GAME":
-      return { ...initialState, ...action.payload };
-    case "SUBMIT_GUESS":
-      return { ...state, ...action.payload };
-    case "SET_HINT":
-      return { ...state, ...action.payload };
-    case "SET_COMPLETION":
-      return { ...state, completionTime: action.payload };
-    default:
-      return state;
-  }
-};
-
-// Main Game component
 function Game() {
-  // Get settings directly from context
-  const { settings, maxMistakes } = useSettings();
-  const { toggleSounds, soundEnabled } = useSound();
-  const { hasWon, winData, startGame } = useGameState();
-  const handleStartNewGame = () => {
-    // You can pass options if needed:
-    startGame(settings.longText, settings.hardcoreMode);
-  };
-
-  // Or call it directly in useEffect for initial game load:
-  // useEffect(() => {
-  //   startGame();
-  // }, []);
-
-  // Get UI state directly from context
-  const {
-    currentView,
-    showSettings,
-    showGame,
-    isAboutOpen: uiAboutOpen, // Rename to avoid potential conflicts
-    isLandscape,
-    useMobileMode,
-  } = useUI();
-
-  // Get auth state
-  const { isAuthenticated, authLoading, user } = useAuth();
-
-  useEffect(() => {
-    console.log("Game component auth state:", {
-      isAuthenticated,
-      authLoading,
-      userId: user?.id,
-    });
-  }, [isAuthenticated, authLoading, user]);
-
-  useEffect(() => {
-    // Check if current sound state matches settings
-    if (settings.soundEnabled !== soundEnabled) {
-      toggleSounds(); // Toggle sounds to match settings
-    }
-  }, [settings.soundEnabled, soundEnabled, toggleSounds]);
-
-  // Modal context access - safely retrieve with defensive coding
-  const modalContext = useModalContext();
-
-  // Extract modal states safely with fallbacks to prevent errors
-  const isLoginOpen = modalContext?.isLoginOpen || false;
-  const isSignupOpen = modalContext?.isSignupOpen || false;
-  const isSettingsOpen = modalContext?.isSettingsOpen || false;
-  const isAboutOpen = modalContext?.isAboutOpen || false;
-
-  // Log modal states for debugging
-
+  console.log("Game component rendering");
   const navigate = useNavigate();
-  const [attributionData, setAttributionData] = useState(null);
 
-  // State management with reducer
-  const [state, dispatch] = useReducer(reducer, initialState);
+  // Get all context data
+  const { settings, maxMistakes } = useSettings();
+  const { isAuthenticated } = useAuth();
   const {
     encrypted,
     display,
@@ -168,670 +67,289 @@ function Game() {
     originalLetters,
     startTime,
     completionTime,
-  } = state;
+    startGame,
+    handleEncryptedSelect: contextHandleEncryptedSelect,
+  } = useGameState();
+  // UI context for mobile detection
+  const { useMobileMode, isLandscape } = useUI();
+
+  // Modal context for checking open modals
+  const modalContext = useModalContext();
+
+  // Local state
+  const [loading, setLoading] = useState(true);
+  const [gameLoaded, setGameLoaded] = useState(false);
+  const [attributionData, setAttributionData] = useState(null);
+
+  // Sound handling
+  const { playSound, loadSounds, unlockAudioContext, soundEnabled } =
+    useSound();
+
+  // Initialize game when component mounts
   useEffect(() => {
-    console.log("Modal states in Game component:", {
-      isLoginOpen,
-      isSignupOpen,
-      isSettingsOpen,
-      isAboutOpen,
-      modalContextExists: !!modalContext,
-    });
-  }, [isLoginOpen, isSignupOpen, isSettingsOpen, isAboutOpen, modalContext]);
+    console.log("Game mount effect - initializing game");
 
-  // Sound and keyboard hooks
-  const { playSound, loadSounds, unlockAudioContext } = useSound();
-  const isGameActive = !completionTime && mistakes < maxMistakes;
-
-  // Memoized computed values
-  const encryptedLetters = useMemo(
-    () => [...new Set(encrypted.match(/[A-Z]/g) || [])],
-    [encrypted],
-  );
-
-  const sortedEncryptedLetters = useMemo(
-    () =>
-      settings.gridSorting === "alphabetical"
-        ? [...encryptedLetters].sort()
-        : encryptedLetters,
-    [encryptedLetters, settings.gridSorting],
-  );
-
-  const usedGuessLetters = useMemo(
-    () => Object.values(guessedMappings),
-    [guessedMappings],
-  );
-
-  const gameOverStyle = useMemo(
-    () => ({
-      position: "fixed",
-      top: "50%",
-      left: "50%",
-      transform: "translate(-50%, -50%)",
-      zIndex: 1100,
-      backgroundColor: settings.theme === "dark" ? "#333" : "#f0f8ff",
-      color: settings.theme === "dark" ? "#f8f9fa" : "#212529",
-      padding: "25px",
-      borderRadius: "12px",
-      boxShadow: "0 5px 15px rgba(0, 0, 0, 0.3)",
-      textAlign: "center",
-      maxWidth: "280px",
-      width: "85%",
-      margin: "0 auto",
-      boxSizing: "border-box",
-    }),
-    [settings.theme],
-  );
-
-  const formattedText = useMemo(() => {
-    const enc = useMobileMode ? preventWordBreaks(encrypted) : encrypted;
-    const disp = useMobileMode ? preventWordBreaks(display) : display;
-    return formatAlternatingLines(enc, disp, true);
-  }, [encrypted, display, useMobileMode]);
-  useEffect(() => {
-    console.log("Game component state:", {
-      hasEncrypted: Boolean(encrypted),
-      encryptedLength: encrypted?.length,
-      displayLength: display?.length,
-      originalLettersCount: originalLetters?.length,
-    });
-  }, [encrypted, display, originalLetters]);
-  // Start Game function - initiates a new game
-  // const startGame = useCallback(() => {
-  //   if (DEBUG) console.log("Starting new game with settings:", settings);
-  //   console.log("Game.js startGame called, settings:", settings);
-  //   console.log(
-  //     "Local storage game ID:",
-  //     localStorage.getItem("uncrypt-game-id"),
-  //   );
-  //   console.log("Auth state:", {
-  //     isAuthenticated,
-  //     authLoading,
-  //     userId: user?.id,
-  //   });
-  //   console.log("startGame called with context:", {
-  //     existingGameId: localStorage.getItem("uncrypt-game-id"),
-  //     hasStorageData: Boolean(localStorage.getItem("uncrypt-game-data")),
-  //     restoreTimestamp: localStorage.getItem("restore-timestamp"),
-  //   });
-
-  //   // Clear any existing game state from localStorage to avoid conflicts
-  //   localStorage.removeItem("restore-timestamp");
-  //   localStorage.removeItem("uncrypt-game-id");
-  //   localStorage.removeItem("game-loss-recorded");
-  //   apiService
-  //     .startGame(settings.longText)
-  //     .then((data) => {
-  //       if (DEBUG) console.log("Game data received:", data);
-
-  //       // Store the game ID in localStorage
-  //       if (data.game_id) {
-  //         localStorage.setItem("uncrypt-game-id", data.game_id);
-  //         if (DEBUG) console.log("Game ID stored:", data.game_id);
-  //       }
-
-  //       // Process the encrypted text
-  //       let encryptedText = data.encrypted_paragraph;
-  //       let displayText = data.display;
-
-  //       // Apply hardcore mode filtering if needed
-  //       if (settings.hardcoreMode) {
-  //         encryptedText = encryptedText.replace(/[^A-Z]/g, "");
-  //         displayText = displayText.replace(/[^A-Z█]/g, "");
-  //       }
-
-  //       // Calculate letter frequencies
-  //       const calculatedFrequency = {};
-  //       for (const char of encryptedText) {
-  //         if (/[A-Z]/.test(char))
-  //           calculatedFrequency[char] = (calculatedFrequency[char] || 0) + 1;
-  //       }
-
-  //       // Ensure all letters have a frequency value (even if 0)
-  //       for (let i = 0; i < 26; i++) {
-  //         const letter = String.fromCharCode(65 + i);
-  //         calculatedFrequency[letter] = calculatedFrequency[letter] || 0;
-  //       }
-
-  //       // Update game state
-  //       dispatch({
-  //         type: "START_GAME",
-  //         payload: {
-  //           encrypted: encryptedText,
-  //           display: displayText,
-  //           mistakes: data.mistakes || 0,
-  //           correctlyGuessed: [],
-  //           selectedEncrypted: null,
-  //           lastCorrectGuess: null,
-  //           letterFrequency: calculatedFrequency,
-  //           guessedMappings: {},
-  //           originalLetters: data.original_letters || [],
-  //           startTime: Date.now(),
-  //         },
-  //       });
-  //     })
-  //     .catch((err) => {
-  //       console.error("Error starting game:", err);
-  //       alert(
-  //         "Failed to start game. Check your connection or console for details.",
-  //       );
-  //     });
-  // }, [settings.hardcoreMode, settings.longText]);
-
-  // Handle clicking on encrypted letters
-  const handleEncryptedClick = useCallback(
-    (letter) => {
-      if (!correctlyGuessed.includes(letter)) {
-        dispatch({
-          type: "SUBMIT_GUESS",
-          payload: { selectedEncrypted: letter },
-        });
-        playSound("keyclick");
+    const initializeGame = async () => {
+      setLoading(true);
+      try {
+        console.log("Starting new game...");
+        await startGame(settings.longText, settings.hardcoreMode);
+        console.log("Game started successfully");
+        setGameLoaded(true);
+      } catch (err) {
+        console.error("Error starting game:", err);
+      } finally {
+        setLoading(false);
       }
-    },
-    [correctlyGuessed, playSound],
-  );
+    };
 
-  // Submit a guess for letter mapping
-  const submitGuess = useCallback(
-    (guessedLetter) => {
-      // Safety check - if no letter is selected, don't proceed
-      if (!selectedEncrypted || !guessedLetter) {
-        console.warn(
-          "Cannot submit guess: No encrypted letter selected or no guess provided",
-        );
-        return;
-      }
-
-      // Get the current game ID
-      const gameId = localStorage.getItem("uncrypt-game-id");
-      const restoreTimestamp = localStorage.getItem("restore-timestamp");
-
-      console.log("Game initialization with:", {
-        gameId,
-        restoreTimestamp,
-        now: Date.now().toString(),
-        timeSinceRestore: restoreTimestamp
-          ? Date.now() - parseInt(restoreTimestamp)
-          : "N/A",
+    if (!encrypted || !gameLoaded) {
+      initializeGame();
+    } else {
+      setLoading(false);
+      console.log("Game already loaded:", {
+        encryptedLength: encrypted?.length || 0,
+        displayLength: display?.length || 0,
       });
+    }
 
-      if (DEBUG) {
-        console.log(
-          `Submitting guess: ${selectedEncrypted} → ${guessedLetter}`,
-        );
-        console.log(`Current game ID: ${gameId || "None"}`);
-      }
+    // Initialize audio
+    loadSounds();
+    const handleFirstInteraction = () => {
+      unlockAudioContext();
+      loadSounds();
+    };
 
-      // Show some visual feedback that something is happening
-      // You could add a small loading state here if you want
+    window.addEventListener("click", handleFirstInteraction, { once: true });
+    window.addEventListener("keydown", handleFirstInteraction, { once: true });
 
-      apiService
-        .submitGuess(gameId, selectedEncrypted, guessedLetter)
-        .then((data) => {
-          // Safety check for data
-          if (!data) {
-            console.error("Received empty response from submitGuess");
+    return () => {
+      window.removeEventListener("click", handleFirstInteraction);
+      window.removeEventListener("keydown", handleFirstInteraction);
+    };
+  }, [startGame, settings.longText, settings.hardcoreMode]);
+
+  // Ensure theme is applied to body and document
+  useEffect(() => {
+    const className = "dark-theme";
+    if (settings.theme === "dark") {
+      document.documentElement.classList.add(className);
+      document.body.classList.add(className);
+    } else {
+      document.documentElement.classList.remove(className);
+      document.body.classList.remove(className);
+    }
+  }, [settings.theme]);
+
+  // Start a new game manually
+  const handleStartNewGame = useCallback(() => {
+    console.log("Starting new game manually");
+    startGame(settings.longText, settings.hardcoreMode);
+  }, [startGame, settings.longText, settings.hardcoreMode]);
+
+  // Handle submit guess wrapper function
+  const handleSubmitGuess = useCallback(
+    (guessedLetter) => {
+      submitGuess(
+        selectedEncrypted,
+        guessedLetter,
+        {
+          encrypted,
+          display,
+          mistakes,
+          correctlyGuessed,
+          guessedMappings,
+          hardcoreMode: settings.hardcoreMode,
+        },
+        apiService,
+        (action) => {
+          // If session expired, restart the game
+          if (action.payload && action.payload.sessionExpired) {
+            startGame(settings.longText, settings.hardcoreMode);
             return;
           }
 
-          // Check for session expired error
-          if (data.error && data.error.includes("Session expired")) {
-            console.warn("Session expired, starting new game");
-
-            // Store the new game ID if returned
-            if (data.game_id) {
-              localStorage.setItem("uncrypt-game-id", data.game_id);
-            }
-
-            // Restart the game
-            startGame();
-            return;
-          }
-
-          // Process display text for hardcore mode if needed
-          let displayText = data.display;
-          if (settings.hardcoreMode && displayText) {
-            displayText = displayText.replace(/[^A-Z█]/g, "");
-          }
-
-          // Prepare state update payload with safe fallbacks
-          const payload = {
-            display: displayText || display, // Fall back to current display if none returned
-            mistakes:
-              typeof data.mistakes === "number" ? data.mistakes : mistakes, // Keep current if not returned
-            selectedEncrypted: null, // Reset selected letter
-          };
-
-          // Handle correctly guessed letters with safety check
-          if (Array.isArray(data.correctly_guessed)) {
-            payload.correctlyGuessed = data.correctly_guessed;
-
-            // Check if this guess was correct (not previously guessed)
-            if (
-              data.correctly_guessed.includes(selectedEncrypted) &&
-              !correctlyGuessed.includes(selectedEncrypted)
-            ) {
-              // This was a new correct guess
-              payload.lastCorrectGuess = selectedEncrypted;
-              payload.guessedMappings = {
-                ...guessedMappings,
-                [selectedEncrypted]: guessedLetter.toUpperCase(),
-              };
-
-              // Play correct sound
-              playSound("correct");
-
-              // Clear the correct guess highlight after a delay
-              setTimeout(
-                () =>
-                  dispatch({
-                    type: "SUBMIT_GUESS",
-                    payload: { lastCorrectGuess: null },
-                  }),
-                500,
-              );
-            } else if (data.mistakes > mistakes) {
-              // This was an incorrect guess
-              playSound("incorrect");
-            }
-          }
-
-          // Update the game state
-          dispatch({ type: "SUBMIT_GUESS", payload });
-        })
-        .catch((err) => {
-          console.error("Error submitting guess:", err);
-          // Don't alert - just log to console and continue
-          // This prevents the game from breaking on network errors
-        });
+          // Normal dispatch through GameStateContext
+          contextHandleEncryptedSelect(null);
+        },
+        playSound,
+      );
     },
     [
       selectedEncrypted,
+      encrypted,
+      display,
+      mistakes,
       correctlyGuessed,
       guessedMappings,
       settings.hardcoreMode,
+      contextHandleEncryptedSelect,
       startGame,
+      settings.longText,
       playSound,
-      mistakes,
-      display, // Added for fallback
     ],
   );
 
-  // Handle clicking on guess letters
-  const handleGuessClick = useCallback(
-    (guessedLetter) => {
-      if (selectedEncrypted) submitGuess(guessedLetter);
+  // Handle encrypted grid click
+  const onEncryptedClick = useCallback(
+    (letter) => {
+      contextHandleEncryptedSelect(letter);
+      playSound("keyclick");
     },
-    [selectedEncrypted, submitGuess],
+    [contextHandleEncryptedSelect, playSound],
   );
 
-  // Handle getting a hint
-  const handleHint = useCallback(() => {
-    console.log("Hint button clicked, preparing to make API call");
+  // Handle guess grid click
+  const onGuessClick = useCallback(
+    (guessedLetter) => {
+      if (selectedEncrypted) {
+        handleSubmitGuess(guessedLetter);
+      }
+    },
+    [selectedEncrypted, handleSubmitGuess],
+  );
 
-    apiService
-      .getHint()
-      .then((data) => {
-        console.log("Hint API response received:", data);
-
-        if (data.error && data.error.includes("Session expired")) {
-          console.log("Session expired, starting new game");
-          if (data.game_id)
-            localStorage.setItem("uncrypt-game-id", data.game_id);
-          startGame();
+  // Handle hint button click
+  const onHintClick = useCallback(() => {
+    handleHint(
+      apiService,
+      {
+        encrypted,
+        correctlyGuessed,
+        guessedMappings,
+        hardcoreMode: settings.hardcoreMode,
+      },
+      (action) => {
+        // If session expired, restart the game
+        if (action.payload && action.payload.sessionExpired) {
+          startGame(settings.longText, settings.hardcoreMode);
           return;
         }
 
-        let displayText = data.display;
-        console.log("Display text before processing:", displayText);
-
-        if (settings.hardcoreMode) {
-          displayText = displayText.replace(/[^A-Z█]/g, "");
-          console.log(
-            "Display text after hardcore mode processing:",
-            displayText,
-          );
-        }
-
-        const newCorrectlyGuessed = data.correctly_guessed || correctlyGuessed;
-        console.log("New correctly guessed letters:", newCorrectlyGuessed);
-
-        const newMappings = { ...guessedMappings };
-        console.log("Previous mappings:", guessedMappings);
-
-        // Track which new letters were added
-        const newlyAddedLetters = [];
-
-        newCorrectlyGuessed
-          .filter((letter) => !correctlyGuessed.includes(letter))
-          .forEach((encryptedLetter) => {
-            newlyAddedLetters.push(encryptedLetter);
-            for (let i = 0; i < encrypted.length; i++) {
-              if (encrypted[i] === encryptedLetter && data.display[i] !== "?") {
-                newMappings[encryptedLetter] = data.display[i];
-                break;
-              }
-            }
-          });
-
-        console.log("Newly added letters:", newlyAddedLetters);
-        console.log("Updated mappings:", newMappings);
-
-        // Create the payload before dispatching
-        const payload = {
-          display: displayText,
-          mistakes: data.mistakes,
-          correctlyGuessed: newCorrectlyGuessed,
-          guessedMappings: newMappings,
-        };
-        console.log("Dispatching hint payload:", payload);
-
-        dispatch({
-          type: "SET_HINT",
-          payload,
-        });
-
-        console.log("Hint state updated, playing sound");
-        playSound("hint");
-      })
-      .catch((err) => {
-        console.error("Error getting hint - full details:", err);
-        console.error("Error message:", err.message);
-        console.error("Error stack:", err.stack);
-        alert("Failed to get hint. Check your connection.");
-      });
+        // Normal dispatch would happen through GameStateContext
+      },
+      playSound,
+    );
   }, [
+    encrypted,
     correctlyGuessed,
     guessedMappings,
     settings.hardcoreMode,
     startGame,
-    encrypted,
+    settings.longText,
     playSound,
   ]);
 
-  // Keyboard handlers
-  const handleEncryptedSelect = useCallback(
-    (letter) => {
-      dispatch({
-        type: "SUBMIT_GUESS",
-        payload: { selectedEncrypted: letter },
-      });
-      if (letter) playSound("keyclick");
-    },
-    [playSound],
-  );
+  // Memoized computed values
+  const encryptedLetters = useMemo(() => {
+    if (!encrypted) return [];
+    const matches = encrypted.match(/[A-Z]/g);
+    return matches ? [...new Set(matches)] : [];
+  }, [encrypted]);
 
-  const handleGuessSubmit = useCallback(
-    (guessedLetter) => {
-      if (selectedEncrypted) submitGuess(guessedLetter);
-    },
-    [selectedEncrypted, submitGuess],
-  );
-  useEffect(() => {
-    // Initialize sounds on component mount
-    console.log("Game component mounted - initializing sounds");
-    loadSounds();
+  const sortedEncryptedLetters = useMemo(() => {
+    return settings.gridSorting === "alphabetical"
+      ? [...encryptedLetters].sort()
+      : encryptedLetters;
+  }, [encryptedLetters, settings.gridSorting]);
 
-    // Create interaction handlers to unlock audio
-    const handleInteraction = () => {
-      console.log("User interaction detected - unlocking audio");
-      unlockAudioContext();
-      loadSounds();
-    };
+  const usedGuessLetters = useMemo(() => {
+    return Object.values(guessedMappings);
+  }, [guessedMappings]);
 
-    // Add event listeners for user interactions
-    const events = ["mousedown", "touchstart", "keydown"];
-    events.forEach((event) => {
-      document.addEventListener(event, handleInteraction, { once: true });
-    });
+  // Format text for display
+  const formattedText = useMemo(() => {
+    if (!encrypted || !display) return { __html: "" };
+    return formatAlternatingLines(encrypted, display, true);
+  }, [encrypted, display]);
 
-    return () => {
-      // Clean up event listeners
-      events.forEach((event) => {
-        document.removeEventListener(event, handleInteraction);
-      });
-    };
-  }, [loadSounds, unlockAudioContext]);
+  // Determine if game is active
+  const isGameActive = !!encrypted && !completionTime && mistakes < maxMistakes;
 
-  useEffect(() => {
-    const winSubscription = apiService.on("game:win", (data) => {
-      // Handle win event from server
-      // data contains all win details: score, mistakes, time, attribution, etc.
-      console.log("Game win event received:", data);
+  // Get modal states to disable keyboard when modals are open
+  const { isLoginOpen, isSignupOpen, isSettingsOpen, isAboutOpen } =
+    useModalContext();
 
-      // Update game state with win data
-      // setGameWon(true);
-      // setWinData(data);
-
-      // Play win sound
-      playSound("win");
-    });
-
-    return () => {
-      winSubscription();
-    };
-  }, [playSound]);
-  // Effects
-
-  // useEffect(() => {
-  //   // Check if there's an existing game in progress
-  //   const forceServerRestore =
-  //     sessionStorage.getItem("force-server-restore") === "true";
-
-  //   if (forceServerRestore) {
-  //     // Clear the flag so it doesn't affect future loads
-  //     sessionStorage.removeItem("force-server-restore");
-  //     console.log("Forcing server game restoration");
-
-  //     // Simply start a new game - it will fetch from server using the game ID
-  //     startGame();
-  //     return;
-  //   }
-
-  // Regular initialization logic
-  //   const gameId = localStorage.getItem("uncrypt-game-id");
-  //   const gameDataInStorage = localStorage.getItem("uncrypt-game-data");
-  //   const gameInProgress = Boolean(gameId) && (encrypted || gameDataInStorage);
-
-  //   console.log("Game initialization status:", {
-  //     existingGameId: gameId,
-  //     hasStorageData: Boolean(gameDataInStorage),
-  //     hasEncryptedData: Boolean(encrypted),
-  //     gameInProgress,
-  //     isAuthenticated,
-  //     authLoading,
-  //     forceServerRestore,
-  //   });
-  //   if (DEBUG) {
-  //     console.log("Game component mounted with:", {
-  //       existingGameId: gameId,
-  //       hasEncryptedData: Boolean(encrypted),
-  //       gameInProgress,
-  //       currentSettings: settings,
-  //     });
-  //   }
-
-  //   // Only start a new game if there isn't one in progress
-  //   if (!gameInProgress) {
-  //     console.log("No game in progress, starting a new game...");
-  //     startGame();
-  //   } else {
-  //     console.log("Existing game found, not starting a new one");
-
-  //     // Try to restore game state if we have encrypted data but no display data
-  //     // This handles cases where we have a game ID but the state was partially lost
-  //     if (gameId && !encrypted) {
-  //       try {
-  //         // Attempt to restore from localStorage
-  //         const savedGameData = localStorage.getItem("uncrypt-game-data");
-  //         if (savedGameData) {
-  //           const gameData = JSON.parse(savedGameData);
-  //           console.log("Restoring game data from localStorage");
-
-  //           // Restore game state
-  //           dispatch({
-  //             type: "START_GAME",
-  //             payload: gameData,
-  //           });
-  //         } else {
-  //           // If we can't restore, start a new game
-  //           console.log("Could not restore game data, starting new game");
-  //           startGame();
-  //         }
-  //       } catch (error) {
-  //         console.error("Error restoring game:", error);
-  //         startGame();
-  //       }
-  //     }
-  //   }
-  // }, [startGame, settings, encrypted]);
-
-  useThemeEffect(settings.theme);
-
-  // Add this useEffect to Game.js
-  useEffect(() => {
-    // Only save if we have actual game data
-    if (encrypted && display) {
-      const gameState = {
-        encrypted,
-        display,
-        mistakes,
-        correctlyGuessed,
-        letterFrequency,
-        guessedMappings,
-        originalLetters,
-        startTime,
-        startGame,
-        selectedEncrypted,
-        lastCorrectGuess,
-      };
-
-      // Save game state to localStorage
-      localStorage.setItem("uncrypt-game-data", JSON.stringify(gameState));
-
-      if (DEBUG) {
-        console.log("Saved game state to localStorage");
-      }
-    }
-  }, [
-    encrypted,
-    display,
-    mistakes,
-    correctlyGuessed,
-    letterFrequency,
-    guessedMappings,
-    originalLetters,
-    startTime,
-  ]);
-
-  useEffect(() => {
-    // Pre-load sounds as soon as component mounts to ensure they're ready
-    loadSounds();
-
-    const handleFirstInteraction = () => {
-      // Unlock audio context and ensure sounds are loaded on first interaction
-      unlockAudioContext();
-      loadSounds();
-
-      // Play a silent sound to fully initialize audio context
-      const silent = new Audio();
-      silent
-        .play()
-        .then(() => {
-          console.log("Silent sound played successfully");
-        })
-        .catch((err) => {
-          console.warn("Failed to play silent sound:", err);
-        });
-
-      window.removeEventListener("click", handleFirstInteraction);
-      window.removeEventListener("keydown", handleFirstInteraction);
-    };
-
-    window.addEventListener("click", handleFirstInteraction);
-    window.addEventListener("keydown", handleFirstInteraction);
-
-    return () => {
-      window.removeEventListener("click", handleFirstInteraction);
-      window.removeEventListener("keydown", handleFirstInteraction);
-    };
-  }, [loadSounds, unlockAudioContext]);
-  useEffect(() => {
-    window.testSound = (soundName = "keyclick") => {
-      console.log(`Testing sound: ${soundName}`);
-      unlockAudioContext();
-      setTimeout(() => {
-        playSound(soundName);
-        console.log(`Sound ${soundName} playback initiated`);
-      }, 100);
-    };
-
-    return () => {
-      delete window.testSound;
-    };
-  }, [playSound, unlockAudioContext]);
   // Determine if we should enable keyboard input
   const keyboardEnabled = useMemo(() => {
+    // Disable keyboard when any modal is open
     const anyModalOpen =
       isLoginOpen || isSignupOpen || isSettingsOpen || isAboutOpen;
-    const result = isGameActive && !anyModalOpen;
 
-    console.log("Keyboard input enabled:", result, {
+    // Keyboard should only be active when game is active AND no modals are open
+    const enabled = isGameActive && !anyModalOpen;
+
+    console.log("Keyboard input enabled:", enabled, {
       isGameActive,
-      anyModalOpen,
-      modals: { isLoginOpen, isSignupOpen, isSettingsOpen, isAboutOpen },
+      modalStates: { isLoginOpen, isSignupOpen, isSettingsOpen, isAboutOpen },
     });
 
-    return result;
+    return enabled;
   }, [isGameActive, isLoginOpen, isSignupOpen, isSettingsOpen, isAboutOpen]);
 
-  // Updated keyboard input hook to disable when any modal is open
-  useKeyboardInput({
+  // Set up keyboard input with explicit modal awareness
+  const { isActive } = useKeyboardInput({
     enabled: keyboardEnabled,
-    speedMode: settings.speedMode,
+    speedMode: true,
     encryptedLetters,
     originalLetters,
     selectedEncrypted,
-    onEncryptedSelect: handleEncryptedSelect,
-    onGuessSubmit: handleGuessSubmit,
+    onEncryptedSelect: contextHandleEncryptedSelect,
+    onGuessSubmit: handleSubmitGuess,
     playSound,
   });
 
-  useEffect(() => {
-    if (
-      encrypted &&
-      encryptedLetters.length > 0 &&
-      correctlyGuessed.length >= encryptedLetters.length &&
-      !completionTime
-    ) {
-      dispatch({ type: "SET_COMPLETION", payload: Date.now() });
-      playSound("win");
-    }
-  }, [
-    encrypted,
-    encryptedLetters,
-    correctlyGuessed,
-    completionTime,
-    playSound,
-  ]);
+  // If loading, show simple loading screen
+  if (loading) {
+    return (
+      <div
+        className={`App-container ${settings.theme === "dark" ? "dark-theme" : ""}`}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "80vh",
+          }}
+        >
+          <h2>Loading game...</h2>
+        </div>
+      </div>
+    );
+  }
 
-  useEffect(() => {
-    if (completionTime && !attributionData) {
-      // Game is won, fetch attribution data
-      apiService
-        .getAttribution()
-        .then((data) => {
-          console.log("Attribution data fetched:", data);
-          setAttributionData(data);
-        })
-        .catch((error) => {
-          console.error("Error fetching attribution:", error);
-        });
-    }
-  }, [completionTime, attributionData]);
+  // If the game hasn't loaded properly, show error and retry button
+  if (!encrypted && !loading) {
+    return (
+      <div
+        className={`App-container ${settings.theme === "dark" ? "dark-theme" : ""}`}
+      >
+        <HeaderControls title="uncrypt" />
+        <div
+          style={{
+            textAlign: "center",
+            margin: "50px auto",
+            maxWidth: "400px",
+            padding: "20px",
+            backgroundColor: settings.theme === "dark" ? "#333" : "#f0f8ff",
+            borderRadius: "8px",
+          }}
+        >
+          <h2>Game failed to load</h2>
+          <p>There was a problem loading the game data.</p>
+          <button
+            onClick={handleStartNewGame}
+            style={{ marginTop: "20px", padding: "10px 20px" }}
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
-  // Render logic
+  // Render UI Components
   const renderGameHeader = () => <HeaderControls title="uncrypt" />;
 
   const renderTextContainer = () => (
@@ -859,7 +377,7 @@ function Game() {
             isGuessed={correctlyGuessed.includes(letter)}
             isFlashing={lastCorrectGuess === letter}
             frequency={letterFrequency[letter]}
-            onClick={() => handleEncryptedClick(letter)}
+            onClick={() => onEncryptedClick(letter)}
             disabled={!isGameActive}
           />
         ))}
@@ -870,7 +388,7 @@ function Game() {
             key={letter}
             letter={letter}
             isGuessed={usedGuessLetters.includes(letter)}
-            onClick={() => handleGuessClick(letter)}
+            onClick={() => onGuessClick(letter)}
             disabled={!isGameActive || !selectedEncrypted}
           />
         ))}
@@ -885,7 +403,7 @@ function Game() {
           Mistakes: {mistakes}/{maxMistakes}
         </p>
         <button
-          onClick={handleHint}
+          onClick={onHintClick}
           disabled={mistakes >= maxMistakes - 1 || !isGameActive}
           className="hint-button"
         >
@@ -905,67 +423,87 @@ function Game() {
     </button>
   );
 
-  const renderGameOverCelebration = () =>
-    completionTime ? (
-      <WinCelebration
-        startGame={startGame}
-        playSound={playSound}
-        mistakes={mistakes}
-        maxMistakes={maxMistakes}
-        startTime={startTime}
-        completionTime={completionTime}
-        theme={settings.theme}
-        textColor={settings.textColor}
-        encrypted={encrypted}
-        display={display}
-        correctlyGuessed={correctlyGuessed}
-        guessedMappings={guessedMappings}
-        attribution={attributionData}
-        hasWon={true}
-      />
-    ) : mistakes >= maxMistakes ? (
-      <div className="game-message" style={gameOverStyle}>
-        <p
-          style={{
-            fontSize: "1.2rem",
-            marginBottom: "20px",
-            fontWeight: "bold",
+  const renderGameOver = () => {
+    if (completionTime) {
+      return (
+        <WinCelebration
+          startGame={handleStartNewGame}
+          playSound={playSound}
+          theme={settings.theme}
+          textColor={settings.textColor}
+          winData={{
+            score: 800, // Placeholder
+            mistakes,
+            maxMistakes,
+            gameTimeSeconds: startTime
+              ? Math.floor((completionTime - startTime) / 1000)
+              : 0,
+            rating: "Cryptanalyst",
+            encrypted,
+            display,
+            attribution: attributionData,
           }}
-        >
-          Game Over! Too many mistakes.
-        </p>
-        <button
-          onClick={startGame}
+        />
+      );
+    }
+
+    if (mistakes >= maxMistakes) {
+      return (
+        <div
+          className="game-message"
           style={{
-            margin: "15px auto 0",
-            padding: "12px 20px",
-            fontSize: "1.1rem",
-            display: "block",
-            width: "90%",
-            maxWidth: "160px",
+            position: "fixed",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            zIndex: 1100,
+            backgroundColor: settings.theme === "dark" ? "#333" : "#f0f8ff",
+            color: settings.theme === "dark" ? "#f8f9fa" : "#212529",
+            padding: "25px",
+            borderRadius: "12px",
+            boxShadow: "0 5px 15px rgba(0, 0, 0, 0.3)",
             textAlign: "center",
-            fontWeight: "bold",
-            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
-            position: "relative",
-            zIndex: 1010,
-            borderRadius: "8px",
+            maxWidth: "280px",
+            width: "85%",
+            margin: "0 auto",
           }}
         >
-          Try Again
-        </button>
-      </div>
-    ) : null;
+          <p
+            style={{
+              fontSize: "1.2rem",
+              marginBottom: "20px",
+              fontWeight: "bold",
+            }}
+          >
+            Game Over! Too many mistakes.
+          </p>
+          <button
+            onClick={handleStartNewGame}
+            style={{
+              margin: "15px auto 0",
+              padding: "12px 20px",
+              fontSize: "1.1rem",
+              display: "block",
+              width: "90%",
+              maxWidth: "160px",
+              textAlign: "center",
+              fontWeight: "bold",
+              boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+              position: "relative",
+              zIndex: 1010,
+              borderRadius: "8px",
+            }}
+          >
+            Try Again
+          </button>
+        </div>
+      );
+    }
 
-  if (currentView === "settings") {
-    return (
-      <div
-        className={`App-container ${settings.theme === "dark" ? "dark-theme" : ""}`}
-      >
-        {/* Settings handled by ModalManager now */}
-      </div>
-    );
-  }
+    return null;
+  };
 
+  // Use mobile layout if needed
   if (useMobileMode) {
     return (
       <div className="App-container">
@@ -974,12 +512,13 @@ function Game() {
           {renderTextContainer()}
           {renderGrids()}
           {renderControls()}
-          {renderGameOverCelebration()}
+          {renderGameOver()}
         </MobileLayout>
       </div>
     );
   }
 
+  // Standard desktop layout
   return (
     <div
       className={`App-container ${settings.theme === "dark" ? "dark-theme" : ""}`}
@@ -988,53 +527,13 @@ function Game() {
       {renderTextContainer()}
       {renderGrids()}
       {renderControls()}
-      {renderGameOverCelebration()}
+      {renderGameOver()}
       {renderLeaderboardButton()}
-      {/* Debug display */}
-      {DEBUG && (
-        <div
-          style={{
-            position: "fixed",
-            bottom: 10,
-            left: 10,
-            background: "rgba(0,0,0,0.7)",
-            color: "white",
-            padding: 10,
-            borderRadius: 5,
-            fontSize: 12,
-            zIndex: 9999,
-            maxWidth: 250,
-            maxHeight: 150,
-            overflow: "auto",
-          }}
-        >
-          <p>Debug Info:</p>
-          <pre style={{ fontSize: 10 }}>
-            {JSON.stringify(
-              {
-                theme: settings.theme,
-                sound: settings.soundEnabled,
-                difficulty: settings.difficulty,
-                gridSorting: settings.gridSorting,
-                hardcoreMode: settings.hardcoreMode,
-                maxMistakes,
-                modalsOpen: {
-                  isLoginOpen,
-                  isSignupOpen,
-                  isSettingsOpen,
-                  isAboutOpen,
-                  contextAvailable: !!modalContext,
-                },
-                keyboardEnabled,
-              },
-              null,
-              2,
-            )}
-          </pre>
-        </div>
-      )}
-      <AuthTest />
-      <button onClick={handleStartNewGame}>Start New Game</button>;
+
+      {/* Debug button at the bottom of the screen */}
+      <div style={{ marginTop: "20px", textAlign: "center" }}>
+        <button onClick={handleStartNewGame}>Start New Game</button>
+      </div>
     </div>
   );
 }
