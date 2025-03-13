@@ -36,6 +36,7 @@ class ApiService {
 
   // Auth methods
   async login(credentials) {
+    console.log("api login attempt with credentials : ", credentials);
     try {
       const response = await this.api.post("/login", credentials);
       if (response.data.access_token) {
@@ -43,6 +44,7 @@ class ApiService {
         this.setupSSE(); // Start SSE connection after login
         this.events.emit("auth:login", response.data);
       }
+      console.log("back end log iin respose data", response.data);
       return response.data;
     } catch (error) {
       console.error("Login error:", error);

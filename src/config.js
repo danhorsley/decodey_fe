@@ -112,7 +112,7 @@ const config = {
   apiUrl:
     process.env.REACT_APP_BACKEND_URL ||
     process.env.REACT_APP_API_URL ||
-    "https://uncryptbe.replit.app",
+    "https://7264097a-b4a2-42c7-988c-db8c0c9b107a-00-1lx57x7wg68m5.janeway.replit.dev",
 
   // Initialize and log API URL when config is first loaded
   init: (() => {

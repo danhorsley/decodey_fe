@@ -5,7 +5,6 @@ import "../Styles/Login.css";
 import { useSettings } from "../context/SettingsContext";
 import { useModalContext } from "../components/modals/ModalManager";
 import apiService from "../services/apiService";
-import config from "../config";
 
 function Signup({ onClose }) {
   // Get contexts directly
@@ -25,6 +24,7 @@ function Signup({ onClose }) {
     message: "",
   });
 
+  // Handle form submission
   const handleSubmit = useCallback(
     async (e) => {
       e.preventDefault();
@@ -39,29 +39,27 @@ function Signup({ onClose }) {
       setError("");
 
       try {
-        // Make the signup request to the backend
-        const response = await fetch(`${config.apiUrl}/signup`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email, username, password }),
+        // Make signup request using apiService
+        const result = await apiService.api.post("/signup", {
+          email,
+          username,
+          password,
         });
 
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.message || "Signup failed");
+        if (result.status === 201 || result.status === 200) {
+          alert("Account created successfully! You can now log in.");
+          onClose();
+          openLogin();
+        } else {
+          throw new Error(result.data?.message || "Signup failed");
         }
-
-        console.log("Signup successful:", data);
-        alert("Account created successfully! You can now log in.");
-        onClose();
-        // Open the login form
-        openLogin();
       } catch (err) {
         console.error("Signup error:", err);
-        setError(err.message || "Signup failed. Please try again.");
+        setError(
+          err.response?.data?.message ||
+            err.message ||
+            "Signup failed. Please try again.",
+        );
       } finally {
         setIsLoading(false);
       }
@@ -69,6 +67,7 @@ function Signup({ onClose }) {
     [password, confirmPassword, email, username, openLogin, onClose],
   );
 
+  // Debounce function for username availability check
   const debounce = (func, delay) => {
     let timeoutId;
     return (...args) => {
@@ -79,6 +78,7 @@ function Signup({ onClose }) {
     };
   };
 
+  // Username availability check
   const checkUsername = useCallback(
     debounce(async (value) => {
       if (value.length < 3) {
@@ -93,18 +93,14 @@ function Signup({ onClose }) {
       setUsernameStatus((prev) => ({ ...prev, checking: true }));
 
       try {
-        const response = await fetch(`${config.apiUrl}/check-username`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username: value }),
+        const response = await apiService.api.post("/check-username", {
+          username: value,
         });
-
-        const data = await response.json();
 
         setUsernameStatus({
           checking: false,
-          available: data.available,
-          message: data.available
+          available: response.data.available,
+          message: response.data.available
             ? "Username available!"
             : "Username already taken",
         });
@@ -119,6 +115,7 @@ function Signup({ onClose }) {
     [],
   );
 
+  // Check username availability when username changes
   useEffect(() => {
     if (username.length >= 3) {
       checkUsername(username);

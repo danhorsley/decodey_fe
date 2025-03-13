@@ -12,7 +12,7 @@ module.exports = function (app) {
 
   // Create a single proxy middleware for all API endpoints
   // Get backend URL from environment variable or fallback to default
-  const backendUrl = process.env.REACT_APP_BACKEND_URL || "https://uncryptbe.replit.app";
+  const backendUrl = process.env.REACT_APP_BACKEND_URL || "https://7264097a-b4a2-42c7-988c-db8c0c9b107a-00-1lx57x7wg68m5.janeway.replit.dev";
   console.log(`[Proxy] Using backend URL: ${backendUrl}`);
   
   // Extract hostname from URL for headers

@@ -102,6 +102,15 @@ function Game() {
   const { settings, maxMistakes } = useSettings();
   const { toggleSounds, soundEnabled } = useSound();
   const { hasWon, winData, startGame } = useGameState();
+  const handleStartNewGame = () => {
+    // You can pass options if needed:
+    startGame(settings.longText, settings.hardcoreMode);
+  };
+
+  // Or call it directly in useEffect for initial game load:
+  // useEffect(() => {
+  //   startGame();
+  // }, []);
 
   // Get UI state directly from context
   const {
@@ -971,7 +980,6 @@ function Game() {
       {renderControls()}
       {renderGameOverCelebration()}
       {renderLeaderboardButton()}
-
       {/* Debug display */}
       {DEBUG && (
         <div
@@ -1016,14 +1024,7 @@ function Game() {
         </div>
       )}
       <AuthTest />
-      {/* <GameLossHandler
-        encrypted={encrypted}
-        startTime={startTime}
-        mistakes={mistakes}
-        maxMistakes={maxMistakes}
-        isAuthenticated={isAuthenticated}
-        isGameLost={mistakes >= maxMistakes && Boolean(encrypted)}
-      /> */}
+      <button onClick={handleStartNewGame}>Start New Game</button>;
     </div>
   );
 }

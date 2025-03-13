@@ -5,7 +5,6 @@ import "../Styles/Login.css";
 import { useSettings } from "../context/SettingsContext";
 import { useAuth } from "../context/AuthContext";
 import { useModalContext } from "../components/modals/ModalManager";
-import apiService from "../services/apiService";
 
 function Login({ onClose }) {
   // Get contexts directly
@@ -16,25 +15,20 @@ function Login({ onClose }) {
   // Local state
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  // Initialize rememberMe from localStorage if available
   const [rememberMe, setRememberMe] = useState(() => {
-    const savedPreference = localStorage.getItem("uncrypt-remember-me");
-    return savedPreference === "true";
+    return localStorage.getItem("uncrypt-remember-me") === "true";
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
   // Handle forgotten password
   const handleForgotPassword = () => {
-    // For now, just show an alert
     alert("Password reset functionality will be available soon!");
-    // You could also set up a modal or redirect to a password reset page
   };
 
   // Handle account creation
   const handleCreateAccount = () => {
     openSignup();
-    // Don't call onClose here to prevent closing both modals
   };
 
   // Handle form submission
@@ -42,47 +36,20 @@ function Login({ onClose }) {
     e.preventDefault();
     setIsLoading(true);
     setError("");
+
     const credentials = {
       username: username,
       password: password,
       rememberMe: rememberMe,
     };
+
     try {
-      console.log("Login.js handleSubmit", username, password, rememberMe);
       const result = await login(credentials);
+
       if (result.success) {
-        console.log("Login successful, checking for active game");
-        const activeGameCheck = await apiService.checkAndHandleActiveGame(
-          result.token,
-        );
-
-        console.log("Active game check result:", activeGameCheck);
-
-        if (activeGameCheck.handled && activeGameCheck.restore) {
-          console.log(
-            "About to restore server game with ID:",
-            activeGameCheck.gameId,
-          );
-
-          // THIS IS CRITICAL: We need to update localStorage with the server's game ID
-          localStorage.setItem("uncrypt-game-id", activeGameCheck.gameId);
-
-          // IMPORTANT: Remove any existing game data to force server fetch
-          localStorage.removeItem("uncrypt-game-data");
-
-          // We also need to create a special flag to force the /start endpoint to recognize this game ID
-          localStorage.setItem("force-load-server-game", "true");
-
-          console.log(
-            "Local game state cleared, game ID updated to server value",
-          );
-
-          // Instead of just reloading, let's be more explicit
-          window.location.href = "/"; // Navigate to home to ensure clean state
-        } else {
-          // No active game or user chose not to restore
-          onClose();
-        }
+        // Store remember me preference
+        localStorage.setItem("uncrypt-remember-me", rememberMe.toString());
+        onClose();
       } else {
         setError(
           result.error || "Login failed. Please check your credentials.",
