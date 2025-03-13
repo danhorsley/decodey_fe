@@ -46,7 +46,20 @@ const gameReducer = (state, action) => {
       return { ...state, ...action.payload };
 
     case "SET_HINT":
-      return { ...state, ...action.payload };
+      console.log("SET_HINT reducer processing payload:", action.payload);
+      // Create a completely new state object with all fields from current state
+      // Then carefully apply updates from the payload
+      return {
+        ...state,
+        display: action.payload.display ?? state.display,
+        mistakes: action.payload.mistakes ?? state.mistakes,
+        correctlyGuessed:
+          action.payload.correctlyGuessed ?? state.correctlyGuessed,
+        guessedMappings:
+          action.payload.guessedMappings ?? state.guessedMappings,
+        // Add log to verify update
+        lastStateUpdate: Date.now(), // Add a timestamp for debugging
+      };
 
     case "SET_GAME_WON":
       return {

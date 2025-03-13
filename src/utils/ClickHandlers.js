@@ -28,7 +28,7 @@ export const submitGuess = async (
   selectedEncrypted,
   guessedLetter,
   gameState,
-  apiService,
+  apiService, // This parameter might be undefined
   dispatch,
   playSound,
 ) => {
@@ -37,18 +37,20 @@ export const submitGuess = async (
     console.warn(
       "Cannot submit guess: No encrypted letter selected or no guess provided",
     );
-    return;
+    return { success: false, error: "Missing parameters" };
   }
 
-  const gameId = localStorage.getItem("uncrypt-game-id");
   console.log(`Submitting guess: ${selectedEncrypted} → ${guessedLetter}`);
 
   try {
-    const data = await apiService.submitGuess(
-      gameId,
-      selectedEncrypted,
-      guessedLetter,
-    );
+    // Check if apiService is defined
+    if (!apiService || typeof apiService.submitGuess !== "function") {
+      console.error("API service or submitGuess function is not defined");
+      return { success: false, error: "API service not available" };
+    }
+
+    // Make the API call
+    const data = await apiService.submitGuess(selectedEncrypted, guessedLetter);
 
     if (!data) {
       console.error("Received empty response from submitGuess");
@@ -134,25 +136,19 @@ export const handleHint = async (
 
   try {
     const data = await apiService.getHint();
-
-    if (!data) {
-      console.error("Received empty response from getHint");
-      return;
-    }
-
-    // Handle authentication required
-    if (data.authRequired) {
-      console.warn("Authentication required for hint");
-      return { authRequired: true };
-    }
-
-    // Handle session expiration
-    if (data.error && data.error.includes("Session expired")) {
-      console.warn("Session expired, restarting game");
-      return { sessionExpired: true };
-    }
-
     console.log("Processing hint response:", data);
+
+    // Check for error in response
+    if (data && data.error) {
+      console.error("Error in hint response:", data.error);
+      return { success: false, error: data.error };
+    }
+
+    // Check for missing data
+    if (!data || !data.display) {
+      console.error("Invalid or incomplete hint response:", data);
+      return { success: false, error: "Invalid response from server" };
+    }
 
     // Process display text
     let displayText = data.display;
@@ -161,8 +157,7 @@ export const handleHint = async (
     }
 
     // Calculate which letters were newly revealed
-    const newCorrectlyGuessed =
-      data.correctly_guessed || gameState.correctlyGuessed;
+    const newCorrectlyGuessed = data.correctly_guessed || [];
     const newlyAdded = newCorrectlyGuessed.filter(
       (letter) => !gameState.correctlyGuessed.includes(letter),
     );
@@ -208,6 +203,6 @@ export const handleHint = async (
     return { success: true };
   } catch (err) {
     console.error("Error getting hint:", err);
-    return { success: false, error: err };
+    return { success: false, error: err.message };
   }
 };

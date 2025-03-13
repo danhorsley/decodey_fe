@@ -14,6 +14,20 @@ const getStorage = () => {
   const rememberMe = localStorage.getItem(AUTH_KEYS.REMEMBER_ME) !== "false";
   return rememberMe ? localStorage : sessionStorage;
 };
+
+// Helper function to get the auth token from storage
+const getAuthToken = () => {
+  // Get appropriate storage based on rememberMe preference
+  const storage = getStorage();
+  return storage.getItem(AUTH_KEYS.TOKEN);
+};
+
+// Helper function to get the user ID from storage
+const getAuthUserId = () => {
+  // Get appropriate storage based on rememberMe preference
+  const storage = getStorage();
+  return storage.getItem(AUTH_KEYS.USER_ID);
+};
 const debugTokenState = () => {
   console.group("Token Debug");
   console.log(
@@ -30,23 +44,6 @@ const debugTokenState = () => {
   );
   console.groupEnd();
 };
-
-// Export this function so we can call it where needed
-export { debugTokenState };
-// Helper function to get the auth token from storage
-const getAuthToken = () => {
-  // Get appropriate storage based on rememberMe preference
-  const storage = getStorage();
-  return storage.getItem(AUTH_KEYS.TOKEN);
-};
-export { debugTokenState };
-// Helper function to get the user ID from storage
-const getAuthUserId = () => {
-  // Get appropriate storage based on rememberMe preference
-  const storage = getStorage();
-  return storage.getItem(AUTH_KEYS.USER_ID);
-};
-
 // Function to clear session data (useful for logout)
 const clearSession = () => {
   // Clear auth data from both storages to be thorough
@@ -145,7 +142,7 @@ const config = {
 
   // Debug flag to control logging
   DEBUG: true,
-
+  debugTokenState,
   // Session management methods
   session: {
     // Auth helper functions

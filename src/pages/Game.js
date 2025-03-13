@@ -1,5 +1,11 @@
 // src/pages/Game.js - Simplified
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, {
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+  useContext,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import { FaTrophy } from "react-icons/fa";
 // Direct context imports
@@ -17,6 +23,7 @@ import { formatAlternatingLines } from "../utils/utils";
 import HeaderControls from "../components/HeaderControls";
 import MobileLayout from "../components/layout/MobileLayout";
 import WinCelebration from "../components/modals/WinCelebration";
+
 // Click handlers
 import {
   handleEncryptedClick,
@@ -50,6 +57,7 @@ const LetterCell = React.memo(
 
 function Game() {
   console.log("Game component rendering");
+
   const navigate = useNavigate();
 
   // Get all context data
@@ -69,10 +77,11 @@ function Game() {
     completionTime,
     startGame,
     handleEncryptedSelect: contextHandleEncryptedSelect,
+    getHint,
   } = useGameState();
   // UI context for mobile detection
   const { useMobileMode, isLandscape } = useUI();
-
+  // const { dispatch } = useContext(GameStateContext);
   // Modal context for checking open modals
   const modalContext = useModalContext();
 
@@ -84,7 +93,11 @@ function Game() {
   // Sound handling
   const { playSound, loadSounds, unlockAudioContext, soundEnabled } =
     useSound();
-
+  useEffect(() => {
+    console.log("Game state changed - display:", display);
+    console.log("Correctly guessed letters:", correctlyGuessed);
+    console.log("Guessed mappings:", guessedMappings);
+  }, [display, correctlyGuessed, guessedMappings]);
   // Initialize game when component mounts
   useEffect(() => {
     console.log("Game mount effect - initializing game");
@@ -158,8 +171,22 @@ function Game() {
   }, [startGame, settings.longText, settings.hardcoreMode]);
 
   // Handle submit guess wrapper function
+  // Update handleSubmitGuess in Game.js
   const handleSubmitGuess = useCallback(
     (guessedLetter) => {
+      if (!selectedEncrypted) {
+        console.warn("Cannot submit guess: No encrypted letter selected");
+        return;
+      }
+
+      console.log(`Submitting guess: ${selectedEncrypted} → ${guessedLetter}`);
+
+      // Make sure apiService is defined and passed correctly
+      if (!apiService) {
+        console.error("API service is not defined");
+        return;
+      }
+
       submitGuess(
         selectedEncrypted,
         guessedLetter,
@@ -171,15 +198,10 @@ function Game() {
           guessedMappings,
           hardcoreMode: settings.hardcoreMode,
         },
-        apiService,
+        apiService, // Make sure this is defined
         (action) => {
-          // If session expired, restart the game
-          if (action.payload && action.payload.sessionExpired) {
-            startGame(settings.longText, settings.hardcoreMode);
-            return;
-          }
-
-          // Normal dispatch through GameStateContext
+          console.log("Handling guess result:", action);
+          // Reset selected letter
           contextHandleEncryptedSelect(null);
         },
         playSound,
@@ -194,8 +216,6 @@ function Game() {
       guessedMappings,
       settings.hardcoreMode,
       contextHandleEncryptedSelect,
-      startGame,
-      settings.longText,
       playSound,
     ],
   );
@@ -220,35 +240,25 @@ function Game() {
   );
 
   // Handle hint button click
-  const onHintClick = useCallback(() => {
-    handleHint(
-      apiService,
-      {
-        encrypted,
-        correctlyGuessed,
-        guessedMappings,
-        hardcoreMode: settings.hardcoreMode,
-      },
-      (action) => {
-        // If session expired, restart the game
-        if (action.payload && action.payload.sessionExpired) {
-          startGame(settings.longText, settings.hardcoreMode);
-          return;
-        }
+  const onHintClick = useCallback(async () => {
+    console.log("Hint button clicked");
 
-        // Normal dispatch would happen through GameStateContext
-      },
-      playSound,
-    );
-  }, [
-    encrypted,
-    correctlyGuessed,
-    guessedMappings,
-    settings.hardcoreMode,
-    startGame,
-    settings.longText,
-    playSound,
-  ]);
+    try {
+      // Use the getHint function provided by useGameState
+      const result = await getHint();
+      console.log("Hint result from context:", result);
+
+      // Play sound if successful
+      if (result.success) {
+        playSound && playSound("hint");
+      }
+    } catch (error) {
+      console.error("Error in hint button handler:", error);
+    }
+  }, [getHint, playSound]);
+
+  // Add this state for forcing updates
+  const [forceUpdate, setForceUpdate] = useState(false);
 
   // Memoized computed values
   const encryptedLetters = useMemo(() => {

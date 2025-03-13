@@ -1,6 +1,7 @@
 // src/services/apiService.js
 import axios from "axios";
 import EventEmitter from "events";
+import debugTokenState from "../config";
 let isRefreshing = false;
 let refreshFailureTime = 0;
 const REFRESH_COOLDOWN = 30000; // 30 seconds cooldown after a refresh failure
@@ -232,12 +233,26 @@ class ApiService {
       const gameId = localStorage.getItem("uncrypt-game-id");
       console.log(`Submitting guess: ${encryptedLetter} → ${guessedLetter}`);
 
-      // Debug token state
-      debugTokenState();
+      // Simple token debugging inline
+      console.group("Token Debug for submitGuess");
+      console.log(
+        "Access Token:",
+        localStorage.getItem("token") ? "Present" : "Missing",
+      );
+      console.log("Game ID:", gameId ? "Present" : "Missing");
+      console.groupEnd();
 
       // Make a direct fetch request to bypass axios interceptors
-      const url = `${this.api.defaults.baseURL}/api/guess`;
+      const baseUrl =
+        this.api.defaults.baseURL || process.env.REACT_APP_API_URL || "";
+      const url = `${baseUrl}/api/guess`;
       const token = localStorage.getItem("token");
+
+      console.log(`Making fetch request to ${url} with data:`, {
+        encrypted_letter: encryptedLetter,
+        guessed_letter: guessedLetter,
+        game_id: gameId,
+      });
 
       const response = await fetch(url, {
         method: "POST",
@@ -252,6 +267,8 @@ class ApiService {
         }),
         credentials: "include",
       });
+
+      console.log("Fetch response status:", response.status);
 
       if (!response.ok) {
         // Handle non-200 responses
@@ -278,12 +295,22 @@ class ApiService {
       const gameId = localStorage.getItem("uncrypt-game-id");
       console.log(`Sending hint request with game_id: ${gameId}`);
 
-      // Debug token state
-      debugTokenState();
+      // Simple token debugging without relying on external function
+      console.group("Token Debug");
+      console.log(
+        "Access Token:",
+        localStorage.getItem("token") ? "Present" : "Missing",
+      );
+      console.log("Game ID:", gameId ? "Present" : "Missing");
+      console.groupEnd();
 
       // Make a direct fetch request to bypass axios interceptors
-      const url = `${this.api.defaults.baseURL}/api/hint`;
+      const baseUrl =
+        this.api.defaults.baseURL || process.env.REACT_APP_API_URL || "";
+      const url = `${baseUrl}/api/hint`;
       const token = localStorage.getItem("token");
+
+      console.log(`Making fetch request to ${url}`);
 
       const response = await fetch(url, {
         method: "POST",
@@ -294,6 +321,8 @@ class ApiService {
         body: JSON.stringify({ game_id: gameId }),
         credentials: "include",
       });
+
+      console.log("Fetch response status:", response.status);
 
       if (!response.ok) {
         // Handle non-200 responses
