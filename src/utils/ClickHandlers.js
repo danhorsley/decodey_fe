@@ -140,11 +140,19 @@ export const handleHint = async (
       return;
     }
 
+    // Handle authentication required
+    if (data.authRequired) {
+      console.warn("Authentication required for hint");
+      return { authRequired: true };
+    }
+
     // Handle session expiration
     if (data.error && data.error.includes("Session expired")) {
       console.warn("Session expired, restarting game");
       return { sessionExpired: true };
     }
+
+    console.log("Processing hint response:", data);
 
     // Process display text
     let displayText = data.display;
@@ -159,19 +167,23 @@ export const handleHint = async (
       (letter) => !gameState.correctlyGuessed.includes(letter),
     );
 
-    console.log("Hint revealed:", newlyAdded);
+    console.log("Hint revealed new letters:", newlyAdded);
 
     // Update mappings for newly revealed letters
     const newMappings = { ...gameState.guessedMappings };
 
+    // For each newly revealed letter, find its original mapping
     newlyAdded.forEach((encryptedLetter) => {
+      // Find the corresponding original letter in the display
       for (let i = 0; i < gameState.encrypted.length; i++) {
         if (
           gameState.encrypted[i] === encryptedLetter &&
-          data.display[i] !== "?" &&
-          data.display[i] !== "█"
+          displayText[i] !== "█" &&
+          displayText[i] !== "?"
         ) {
-          newMappings[encryptedLetter] = data.display[i];
+          // Found a match - add to mappings
+          newMappings[encryptedLetter] = displayText[i];
+          console.log(`Added mapping: ${encryptedLetter} → ${displayText[i]}`);
           break;
         }
       }
@@ -184,6 +196,8 @@ export const handleHint = async (
       correctlyGuessed: newCorrectlyGuessed,
       guessedMappings: newMappings,
     };
+
+    console.log("Updating game state with hint data:", payload);
 
     // Update game state
     dispatch({ type: "SET_HINT", payload });

@@ -1,6 +1,9 @@
 // src/services/apiService.js
 import axios from "axios";
 import EventEmitter from "events";
+let isRefreshing = false;
+let refreshFailureTime = 0;
+const REFRESH_COOLDOWN = 30000; // 30 seconds cooldown after a refresh failure
 
 class ApiService {
   constructor() {
@@ -9,7 +12,22 @@ class ApiService {
       timeout: 10000,
       withCredentials: true,
     });
-
+    // Add request interceptor to consistently add auth token to all requests
+    this.api.interceptors.request.use(
+      (config) => {
+        const token = localStorage.getItem("token");
+        if (token) {
+          console.log(`Adding auth token to ${config.url}`);
+          config.headers.Authorization = `Bearer ${token}`;
+        } else {
+          console.warn(`No token available for request to ${config.url}`);
+        }
+        return config;
+      },
+      (error) => {
+        return Promise.reject(error);
+      },
+    );
     this.events = new EventEmitter();
     this.sseConnection = null;
 
@@ -36,15 +54,22 @@ class ApiService {
 
   // Auth methods
   async login(credentials) {
-    console.log("api login attempt with credentials : ", credentials);
     try {
       const response = await this.api.post("/login", credentials);
       if (response.data.access_token) {
         localStorage.setItem("token", response.data.access_token);
-        this.setupSSE(); // Start SSE connection after login
+
+        // Ensure we save the refresh token if provided
+        if (response.data.refresh_token) {
+          localStorage.setItem("refresh_token", response.data.refresh_token);
+          console.log("Refresh token saved successfully");
+        } else {
+          console.warn("No refresh token received from login endpoint");
+        }
+
+        this.setupSSE();
         this.events.emit("auth:login", response.data);
       }
-      console.log("back end log iin respose data", response.data);
       return response.data;
     } catch (error) {
       console.error("Login error:", error);
@@ -69,12 +94,81 @@ class ApiService {
   }
 
   async refreshToken() {
-    const response = await this.api.post("/refresh");
-    if (response.data.access_token) {
-      localStorage.setItem("token", response.data.access_token);
-      return response.data;
+    // Prevent concurrent refresh attempts
+    if (isRefreshing) {
+      console.log("Token refresh already in progress, skipping");
+      return Promise.reject(new Error("Refresh already in progress"));
     }
-    throw new Error("Token refresh failed");
+
+    // Check if we actually have a refresh token before attempting
+    const refreshToken = localStorage.getItem("refresh_token");
+    if (!refreshToken) {
+      console.warn("No refresh token available - cannot refresh");
+
+      // If we also don't have an access token, we should consider the user logged out
+      if (!localStorage.getItem("token")) {
+        console.log("No access token either, emitting auth:logout event");
+        this.events.emit("auth:logout");
+      } else {
+        // Otherwise, we should prompt for login to get a new refresh token
+        console.log(
+          "Access token exists but no refresh token, emitting auth:required event",
+        );
+        this.events.emit("auth:required");
+      }
+
+      return Promise.reject(new Error("No refresh token available"));
+    }
+
+    try {
+      console.log("Attempting to refresh token...");
+      isRefreshing = true;
+      console.log("Attempting to refresh token...");
+      isRefreshing = true;
+
+      // Check if we actually have a refresh token before attempting
+      const refreshToken = localStorage.getItem("refresh_token");
+      if (!refreshToken) {
+        console.warn("No refresh token available - cannot refresh");
+        throw new Error("No refresh token available");
+      }
+
+      const response = await this.api.post(
+        "/refresh",
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${refreshToken}`,
+          },
+        },
+      );
+
+      if (response.data.access_token) {
+        console.log("Successfully refreshed access token");
+        localStorage.setItem("token", response.data.access_token);
+        isRefreshing = false;
+        return response.data;
+      } else {
+        throw new Error("Invalid response from refresh endpoint");
+      }
+    } catch (error) {
+      console.error("Token refresh failed:", error.message);
+
+      // Record the failure time to implement cooldown
+      refreshFailureTime = Date.now();
+      isRefreshing = false;
+
+      // Force logout if the refresh endpoint returned 401
+      if (error.response && error.response.status === 401) {
+        console.warn("Refresh token is invalid or expired - logging out");
+        // Clear tokens
+        localStorage.removeItem("token");
+        localStorage.removeItem("refresh_token");
+        this.events.emit("auth:logout");
+      }
+
+      throw error;
+    }
   }
 
   // Game methods - must add longstart to back end
@@ -134,21 +228,90 @@ class ApiService {
   }
 
   async submitGuess(encryptedLetter, guessedLetter) {
-    const gameId = localStorage.getItem("uncrypt-game-id");
-    return this.api
-      .post("/api/guess", {
-        encrypted_letter: encryptedLetter,
-        guessed_letter: guessedLetter,
-        game_id: gameId,
-      })
-      .then((res) => res.data);
+    try {
+      const gameId = localStorage.getItem("uncrypt-game-id");
+      console.log(`Submitting guess: ${encryptedLetter} → ${guessedLetter}`);
+
+      // Debug token state
+      debugTokenState();
+
+      // Make a direct fetch request to bypass axios interceptors
+      const url = `${this.api.defaults.baseURL}/api/guess`;
+      const token = localStorage.getItem("token");
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+        body: JSON.stringify({
+          encrypted_letter: encryptedLetter,
+          guessed_letter: guessedLetter,
+          game_id: gameId,
+        }),
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        // Handle non-200 responses
+        if (response.status === 401) {
+          console.warn("Authentication required for guess");
+          this.events.emit("auth:required");
+          return { error: "Authentication required", authRequired: true };
+        }
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Guess response:", data);
+      return data;
+    } catch (error) {
+      console.error("Error submitting guess:", error);
+      return { error: error.message };
+    }
   }
 
+  // Update in src/services/apiService.js
   async getHint() {
-    const gameId = localStorage.getItem("uncrypt-game-id");
-    return this.api
-      .post("/api/hint", { game_id: gameId })
-      .then((res) => res.data);
+    try {
+      const gameId = localStorage.getItem("uncrypt-game-id");
+      console.log(`Sending hint request with game_id: ${gameId}`);
+
+      // Debug token state
+      debugTokenState();
+
+      // Make a direct fetch request to bypass axios interceptors
+      const url = `${this.api.defaults.baseURL}/api/hint`;
+      const token = localStorage.getItem("token");
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+        body: JSON.stringify({ game_id: gameId }),
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        // Handle non-200 responses
+        if (response.status === 401) {
+          console.warn("Authentication required for hint");
+          this.events.emit("auth:required");
+          return { error: "Authentication required", authRequired: true };
+        }
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Hint response:", data);
+      return data;
+    } catch (error) {
+      console.error("Error getting hint:", error);
+      return { error: error.message };
+    }
   }
 
   // Server-sent events for win notifications

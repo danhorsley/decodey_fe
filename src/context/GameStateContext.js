@@ -263,43 +263,51 @@ export const GameStateProvider = ({ children }) => {
   const getHint = useCallback(async () => {
     try {
       const data = await apiService.getHint();
+      console.log("Hint response in context:", data);
 
-      // Handle session expiration
-      if (data.error && data.error.includes("Session expired")) {
-        // Store the new game ID if returned
-        if (data.game_id) {
-          localStorage.setItem("uncrypt-game-id", data.game_id);
-        }
-
-        return { success: false, sessionExpired: true };
+      // Handle authentication required
+      if (data.authRequired) {
+        console.warn("Authentication required for hint");
+        return { success: false, authRequired: true };
       }
 
-      // Process display text
+      // Handle errors
+      if (data.error) {
+        console.error("Error in hint response:", data.error);
+        return { success: false, error: data.error };
+      }
+
+      // Process display text and update state
       let displayText = data.display;
       if (state.hardcoreMode && displayText) {
         displayText = displayText.replace(/[^A-Z█]/g, "");
       }
 
-      const newCorrectlyGuessed =
-        data.correctly_guessed || state.correctlyGuessed;
+      // Update mappings and correctlyGuessed
+      const newCorrectlyGuessed = data.correctly_guessed || [];
       const newMappings = { ...state.guessedMappings };
 
-      // Update mappings for newly guessed letters
-      newCorrectlyGuessed
-        .filter((letter) => !state.correctlyGuessed.includes(letter))
-        .forEach((encryptedLetter) => {
+      // For each letter in correctly_guessed that isn't already in our state
+      newCorrectlyGuessed.forEach((letter) => {
+        if (!state.correctlyGuessed.includes(letter)) {
+          // Find the corresponding original letter in the display
           for (let i = 0; i < state.encrypted.length; i++) {
-            if (
-              state.encrypted[i] === encryptedLetter &&
-              data.display[i] !== "?"
-            ) {
-              newMappings[encryptedLetter] = data.display[i];
+            if (state.encrypted[i] === letter && displayText[i] !== "█") {
+              newMappings[letter] = displayText[i];
               break;
             }
           }
-        });
+        }
+      });
 
-      // Dispatch hint update
+      console.log("Updating state with hint data:", {
+        display: displayText,
+        mistakes: data.mistakes,
+        correctlyGuessed: newCorrectlyGuessed,
+        mappings: newMappings,
+      });
+
+      // Update state with all hint data
       dispatch({
         type: "SET_HINT",
         payload: {
@@ -310,31 +318,12 @@ export const GameStateProvider = ({ children }) => {
         },
       });
 
-      // Check if game is won (determined by backend)
-      if (data.game_won) {
-        dispatch({
-          type: "SET_GAME_WON",
-          payload: {
-            completionTime: Date.now(),
-            score: data.score,
-            mistakes: data.mistakes,
-            maxMistakes: data.max_mistakes,
-            gameTimeSeconds: data.game_time_seconds,
-            rating: data.rating,
-            encrypted: state.encrypted,
-            display: displayText,
-            attribution: data.attribution,
-            scoreStatus: data.score_status,
-          },
-        });
-      }
-
       return { success: true };
     } catch (error) {
       console.error("Error getting hint:", error);
       return { success: false, error: error.message };
     }
-  }, [state]);
+  }, [state, dispatch]);
 
   // Listen for server-sent events about game state changes
   useEffect(() => {

@@ -140,7 +140,17 @@ function Game() {
       document.body.classList.remove(className);
     }
   }, [settings.theme]);
+  useEffect(() => {
+    const authRequiredSubscription = apiService.on("auth:required", () => {
+      // Show a message to the user
+      alert("You need to log in again to continue.");
+      // Optionally open the login modal
+    });
 
+    return () => {
+      authRequiredSubscription(); // Clean up the subscription
+    };
+  }, []);
   // Start a new game manually
   const handleStartNewGame = useCallback(() => {
     console.log("Starting new game manually");

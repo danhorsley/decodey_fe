@@ -14,14 +14,32 @@ const getStorage = () => {
   const rememberMe = localStorage.getItem(AUTH_KEYS.REMEMBER_ME) !== "false";
   return rememberMe ? localStorage : sessionStorage;
 };
+const debugTokenState = () => {
+  console.group("Token Debug");
+  console.log(
+    "Access Token:",
+    localStorage.getItem("token") ? "Present" : "Missing",
+  );
+  console.log(
+    "Refresh Token:",
+    localStorage.getItem("refresh_token") ? "Present" : "Missing",
+  );
+  console.log(
+    "Game ID:",
+    localStorage.getItem("uncrypt-game-id") ? "Present" : "Missing",
+  );
+  console.groupEnd();
+};
 
+// Export this function so we can call it where needed
+export { debugTokenState };
 // Helper function to get the auth token from storage
 const getAuthToken = () => {
   // Get appropriate storage based on rememberMe preference
   const storage = getStorage();
   return storage.getItem(AUTH_KEYS.TOKEN);
 };
-
+export { debugTokenState };
 // Helper function to get the user ID from storage
 const getAuthUserId = () => {
   // Get appropriate storage based on rememberMe preference
