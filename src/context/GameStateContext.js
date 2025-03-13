@@ -129,7 +129,11 @@ export const GameStateProvider = ({ children }) => {
             hardcoreMode: hardcoreMode,
           },
         });
-
+        console.log("State updated in GameStateContext:", {
+          encryptedText,
+          displayTextLength: displayText?.length,
+          originalLettersCount: data.original_letters?.length || 0,
+        });
         return true;
       } catch (error) {
         console.error("Error starting game:", error);

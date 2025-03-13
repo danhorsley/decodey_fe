@@ -150,15 +150,6 @@ function Game() {
   const isAboutOpen = modalContext?.isAboutOpen || false;
 
   // Log modal states for debugging
-  useEffect(() => {
-    console.log("Modal states in Game component:", {
-      isLoginOpen,
-      isSignupOpen,
-      isSettingsOpen,
-      isAboutOpen,
-      modalContextExists: !!modalContext,
-    });
-  }, [isLoginOpen, isSignupOpen, isSettingsOpen, isAboutOpen, modalContext]);
 
   const navigate = useNavigate();
   const [attributionData, setAttributionData] = useState(null);
@@ -178,6 +169,15 @@ function Game() {
     startTime,
     completionTime,
   } = state;
+  useEffect(() => {
+    console.log("Modal states in Game component:", {
+      isLoginOpen,
+      isSignupOpen,
+      isSettingsOpen,
+      isAboutOpen,
+      modalContextExists: !!modalContext,
+    });
+  }, [isLoginOpen, isSignupOpen, isSettingsOpen, isAboutOpen, modalContext]);
 
   // Sound and keyboard hooks
   const { playSound, loadSounds, unlockAudioContext } = useSound();
@@ -228,7 +228,14 @@ function Game() {
     const disp = useMobileMode ? preventWordBreaks(display) : display;
     return formatAlternatingLines(enc, disp, true);
   }, [encrypted, display, useMobileMode]);
-
+  useEffect(() => {
+    console.log("Game component state:", {
+      hasEncrypted: Boolean(encrypted),
+      encryptedLength: encrypted?.length,
+      displayLength: display?.length,
+      originalLettersCount: originalLetters?.length,
+    });
+  }, [encrypted, display, originalLetters]);
   // Start Game function - initiates a new game
   // const startGame = useCallback(() => {
   //   if (DEBUG) console.log("Starting new game with settings:", settings);
@@ -695,6 +702,9 @@ function Game() {
         guessedMappings,
         originalLetters,
         startTime,
+        startGame,
+        selectedEncrypted,
+        lastCorrectGuess,
       };
 
       // Save game state to localStorage

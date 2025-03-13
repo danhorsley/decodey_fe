@@ -158,9 +158,12 @@ class ApiService {
     const token = localStorage.getItem("token");
     if (!token) return;
 
-    this.sseConnection = new EventSource(
-      `${process.env.REACT_APP_API_URL}/events?token=${token}`,
-    );
+    // Fix: Construct a proper URL for the events endpoint
+    const baseUrl = process.env.REACT_APP_API_URL || "";
+    const eventsUrl = `${baseUrl}/events?token=${token}`;
+    console.log("Setting up SSE connection to:", eventsUrl);
+
+    this.sseConnection = new EventSource(eventsUrl);
 
     this.sseConnection.onmessage = (event) => {
       try {
