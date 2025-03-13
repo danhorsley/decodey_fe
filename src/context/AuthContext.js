@@ -1,6 +1,7 @@
 // src/context/AuthContext.js
 import React, { createContext, useState, useEffect, useContext } from "react";
 import apiService from "../services/apiService";
+import config from "../config";
 
 const AuthContext = createContext();
 
@@ -13,7 +14,8 @@ export const AuthProvider = ({ children }) => {
 
   // Initialize auth state from token
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    // Check for token in both localStorage and sessionStorage using consistent key names
+    const token = localStorage.getItem(config.AUTH_KEYS.TOKEN) || sessionStorage.getItem(config.AUTH_KEYS.TOKEN);
 
     if (token) {
       // Verify token with backend
@@ -106,6 +108,9 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       await apiService.logout();
+      // Ensure token is removed from both storage locations
+      localStorage.removeItem(config.AUTH_KEYS.TOKEN);
+      sessionStorage.removeItem(config.AUTH_KEYS.TOKEN);
       return { success: true };
     } catch (error) {
       return {
