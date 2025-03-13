@@ -80,6 +80,7 @@ class ApiService {
   // Game methods - must add longstart to back end
   async startGame(options = {}) {
     const endpoint = options.longText ? "/longstart" : "/start";
+    console.log("endpoint", endpoint);
     return this.api.get(endpoint).then((res) => res.data);
   }
 

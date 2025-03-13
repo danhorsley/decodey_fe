@@ -76,12 +76,13 @@ export const GameStateProvider = ({ children }) => {
   // Start game function
   const startGame = useCallback(
     async (useLongText = false, hardcoreMode = false) => {
+      console.log("startGame triggered in GameStateContext");
       try {
         // Clear any existing game state from localStorage to avoid conflicts
         localStorage.removeItem("uncrypt-game-id");
 
         const data = await apiService.startGame(useLongText);
-
+        console.log("startGame response", data);
         // Store the game ID in localStorage
         if (data.game_id) {
           localStorage.setItem("uncrypt-game-id", data.game_id);
