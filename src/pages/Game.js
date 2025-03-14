@@ -366,13 +366,13 @@ function Game() {
     !!encrypted && !completionTime && (mistakes || 0) < effectiveMaxMistakes;
 
   // Add detailed logging for debugging
-  console.log("Game active status:", {
-    encrypted: !!encrypted,
-    completionTime: !!completionTime,
-    mistakes,
-    maxMistakes: effectiveMaxMistakes,
-    isGameActive,
-  });
+  // console.log("Game active status:", {
+  //   encrypted: !!encrypted,
+  //   completionTime: !!completionTime,
+  //   mistakes,
+  //   maxMistakes: effectiveMaxMistakes,
+  //   isGameActive,
+  // });
 
   // Get modal states to disable keyboard when modals are open
   const { isLoginOpen, isSignupOpen, isSettingsOpen, isAboutOpen } =
