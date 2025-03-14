@@ -31,6 +31,8 @@ const initialState = {
   isLocalWinDetected: false,
   isWinVerificationInProgress: false,
   difficulty: "easy",
+  showContinueGamePrompt: false,
+  activeGameData: null,
 };
 
 // Reducer for state management
@@ -82,6 +84,27 @@ const gameReducer = (state, action) => {
 
     case "RESET_GAME":
       return initialState;
+
+    case "SET_ACTIVE_GAME_DATA":
+      return {
+        ...state,
+        activeGameData: action.payload,
+        showContinueGamePrompt: true,
+      };
+
+    case "CONTINUE_ACTIVE_GAME":
+      return {
+        ...initialState,
+        ...action.payload.gameState,
+        hasGameStarted: true,
+      };
+
+    case "DISMISS_CONTINUE_PROMPT":
+      return {
+        ...state,
+        showContinueGamePrompt: false,
+        activeGameData: null,
+      };
 
     default:
       return state;
@@ -496,68 +519,90 @@ export const GameStateProvider = ({ children }) => {
     }
   }, [state.lastCorrectGuess]);
 
-  // Polling for game status updates - check for wins/losses
-  // useEffect(() => {
-  //   // Only poll if there's an active game that hasn't been won or lost yet
-  //   if (!state.encrypted || state.hasWon || state.hasLost) {
-  //     return;
-  //   }
+  const checkForActiveGame = useCallback(async () => {
+    // Only check if user is authenticated
+    const token = localStorage.getItem("token");
+    if (!token) return;
 
-  //   // Set up polling interval
-  //   const pollInterval = setInterval(async () => {
-  //     try {
-  //       // Check if we have auth token before making the request
-  //       const token = localStorage.getItem("token");
-  //       if (!token) {
-  //         return;
-  //       }
+    try {
+      console.log("Checking for active game from server...");
+      const response = await apiService.api.get("/check-active-game");
 
-  //       const data = await apiService.getGameStatus();
+      if (response.data.has_active_game) {
+        console.log("Active game found:", response.data.game_stats);
+        dispatch({
+          type: "SET_ACTIVE_GAME_DATA",
+          payload: response.data.game_stats,
+        });
+      }
+    } catch (error) {
+      console.error("Error checking for active game:", error);
+    }
+  }, []);
+  const continueActiveGame = useCallback(async () => {
+    try {
+      console.log("Loading active game from server...");
+      const response = await apiService.api.get("/continue-game");
 
-  //       // Skip processing if there was an error or no active game
-  //       if (data.error || !data.hasActiveGame) {
-  //         return;
-  //       }
+      if (response.data) {
+        console.log("Active game data loaded:", response.data);
 
-  //       // Check if game is won
-  //       if (data.hasWon && data.winData) {
-  //         // Update game state with win data
-  //         dispatch({
-  //           type: "SET_GAME_WON",
-  //           payload: {
-  //             completionTime: Date.now(),
-  //             score: data.winData.score,
-  //             mistakes: data.winData.mistakes,
-  //             maxMistakes: data.winData.maxMistakes,
-  //             gameTimeSeconds: data.winData.gameTimeSeconds,
-  //             rating: data.winData.rating,
-  //             encrypted: state.encrypted,
-  //             display: state.display,
-  //             attribution: data.winData.attribution,
-  //             scoreStatus: {
-  //               recorded: true,
-  //               message: "Score recorded successfully!",
-  //             },
-  //           },
-  //         });
-  //       }
+        // Process the encrypted text
+        let encryptedText = response.data.encrypted_paragraph;
+        let displayText = response.data.display;
 
-  //       // Check if game is lost
-  //       if (data.gameComplete && !data.hasWon) {
-  //         dispatch({ type: "SET_GAME_LOST" });
-  //       }
-  //     } catch (error) {
-  //       console.error("Error polling game status:", error);
-  //     }
-  //   }, 3000); // Poll every 3 seconds
+        // Apply hardcore mode filtering if needed
+        if (response.data.hardcoreMode) {
+          encryptedText = encryptedText.replace(/[^A-Z]/g, "");
+          displayText = displayText.replace(/[^A-Z█]/g, "");
+        }
 
-  //   // Clean up interval on unmount
-  //   return () => {
-  //     clearInterval(pollInterval);
-  //   };
-  // }, [state.encrypted, state.hasWon, state.hasLost, state.display, dispatch]);
+        // Dispatch action to load the game
+        dispatch({
+          type: "CONTINUE_ACTIVE_GAME",
+          payload: {
+            gameState: {
+              encrypted: encryptedText,
+              display: displayText,
+              mistakes: response.data.mistakes || 0,
+              correctlyGuessed: response.data.correctly_guessed || [],
+              letterFrequency: response.data.letter_frequency || {},
+              guessedMappings: response.data.guessedMappings || {},
+              originalLetters: response.data.original_letters || [],
+              startTime: Date.now(),
+              gameId: response.data.game_id,
+              hardcoreMode: response.data.hardcoreMode || false,
+              difficulty: response.data.difficulty || "easy",
+              maxMistakes: response.data.max_mistakes || 8,
+            },
+          },
+        });
 
-  // Save game state to localStorage
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Error continuing active game:", error);
+      return false;
+    }
+  }, [dispatch]);
+
+  // Add this function to dismiss the continue prompt
+  const dismissContinuePrompt = useCallback(() => {
+    dispatch({ type: "DISMISS_CONTINUE_PROMPT" });
+  }, [dispatch]);
+
+  useEffect(() => {
+    // Check for active game on mount
+    const checkOnMount = async () => {
+      // Only check if we don't already have a game loaded
+      if (!state.encrypted && !state.hasGameStarted) {
+        await checkForActiveGame();
+      }
+    };
+
+    checkOnMount();
+  }, [checkForActiveGame, state.encrypted, state.hasGameStarted]);
   useEffect(() => {
     if (state.encrypted && state.display) {
       const gameState = {
@@ -628,6 +673,11 @@ export const GameStateProvider = ({ children }) => {
         handleEncryptedSelect,
         submitGuess,
         getHint,
+        //continue prior game
+        showContinueGamePrompt: state.showContinueGamePrompt,
+        activeGameData: state.activeGameData,
+        continueActiveGame,
+        dismissContinuePrompt,
 
         // Reset function
         resetGame: useCallback(() => {

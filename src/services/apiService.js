@@ -346,7 +346,39 @@ class ApiService {
       return { error: error.message };
     }
   }
+  async checkActiveGame() {
+    try {
+      console.log("Checking for active game");
+      const token = localStorage.getItem("token");
 
+      if (!token) {
+        return { has_active_game: false };
+      }
+
+      const response = await this.api.get("/check-active-game");
+      return response.data;
+    } catch (error) {
+      console.error("Error checking active game:", error);
+      return { has_active_game: false };
+    }
+  }
+
+  async continueGame() {
+    try {
+      console.log("Fetching active game data");
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        return null;
+      }
+
+      const response = await this.api.get("/continue-game");
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching active game:", error);
+      return null;
+    }
+  }
   async getGameStatus() {
     try {
       console.log("Fetching game status");

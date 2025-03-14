@@ -17,6 +17,7 @@ import HeaderControls from "../components/HeaderControls";
 import MobileLayout from "../components/layout/MobileLayout";
 import WinCelebration from "../components/modals/WinCelebration";
 import MatrixRain from "../components/effects/MatrixRain";
+import ContinueGamePrompt from "../components/ContinueGamePrompt";
 
 // Letter cell component using memo to reduce re-renders
 const LetterCell = React.memo(
@@ -82,6 +83,10 @@ function Game() {
     winData = null,
     difficulty = "easy",
     maxMistakes = 8,
+    showContinueGamePrompt = false,
+    activeGameData = null,
+    continueActiveGame = async () => false,
+    dismissContinuePrompt = () => {},
   } = gameStateContext || {};
 
   // Get UI context safely
@@ -764,7 +769,19 @@ function Game() {
         />
       );
     }
-
+    {
+      showContinueGamePrompt && activeGameData && (
+        <ContinueGamePrompt
+          gameData={activeGameData}
+          theme={settings?.theme}
+          onContinue={continueActiveGame}
+          onNewGame={() => {
+            dismissContinuePrompt();
+            handleStartNewGame();
+          }}
+        />
+      );
+    }
     // Show Matrix transition if a local win is detected
     if (showMatrixTransition === true && hasWon !== true) {
       return (
