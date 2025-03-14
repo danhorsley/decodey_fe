@@ -720,19 +720,31 @@ const renderPersonalStats = () => {
 };
 
 const renderPersonalLeaderboard = () => {
-  // Access state variables correctly from component scope
-  if (isLoading || authContextLoading) {
+  // Access state variables from component scope
+  const { isAuthenticated } = useAuth();
+  
+  if (isPersonalLoading || authContextLoading) {
     return (
       <div className="loading-spinner">Checking authentication status...</div>
     );
   }
 
-  // Personal tab now uses the new renderPersonalStats function
+  // Handle not authenticated state
   if (!isAuthenticated) {
     return (
       <div className="not-authenticated">
         <p>Please log in to view your personal stats</p>
         <button onClick={() => openLogin()}>Log In</button>
+      </div>
+    );
+  }
+
+  // Show error state if there is one
+  if (personalError) {
+    return (
+      <div className="error-message">
+        <p>{personalError}</p>
+        <button onClick={fetchPersonalStats}>Try Again</button>
       </div>
     );
   }
