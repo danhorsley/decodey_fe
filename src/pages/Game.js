@@ -450,10 +450,20 @@ function Game() {
     <div className="controls">
       <div className="controls-main">
         <p>
-          Mistakes: {mistakes}/{maxMistakes}
+          Mistakes: {mistakes || 0}/{maxMistakes || 8}{" "}
+          {/* Add fallback values */}
         </p>
         <button
-          onClick={onHintClick}
+          onClick={() => {
+            console.log("Hint clicked");
+            console.log("Button state:", {
+              isDisabled: mistakes >= maxMistakes - 1 || !isGameActive,
+              mistakes,
+              maxMistakes,
+              isGameActive,
+            });
+            onHintClick();
+          }}
           disabled={mistakes >= maxMistakes - 1 || !isGameActive}
           className="hint-button"
         >

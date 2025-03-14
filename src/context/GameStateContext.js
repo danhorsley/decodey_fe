@@ -173,6 +173,7 @@ export const GameStateProvider = ({ children }) => {
             gameId: data.game_id,
             hardcoreMode: hardcoreMode,
             difficulty: difficulty,
+            maxMistakes: data.max_mistakes || maxMistakes,
           },
         });
         return true;
