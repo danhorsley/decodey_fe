@@ -68,7 +68,10 @@ class ApiService {
           console.warn("No refresh token received from login endpoint");
         }
 
+        // Set up SSE connection after successful login
+        console.log("Setting up SSE connection after login");
         this.setupSSE();
+
         this.events.emit("auth:login", response.data);
       }
       return response.data;
@@ -342,44 +345,135 @@ class ApiService {
       return { error: error.message };
     }
   }
+  async getGameStatus() {
+    try {
+      console.log("Fetching game status");
 
+      // Get token and game ID
+      const token = localStorage.getItem("token");
+      const gameId = localStorage.getItem("uncrypt-game-id");
+
+      // Simple token debugging
+      console.group("Token Debug for getGameStatus");
+      console.log("Access Token:", token ? "Present" : "Missing");
+      console.log("Game ID:", gameId ? "Present" : "Missing");
+      console.groupEnd();
+
+      // Make a direct fetch request
+      const baseUrl =
+        this.api.defaults.baseURL || process.env.REACT_APP_API_URL || "";
+      const url = `${baseUrl}/api/game-status`;
+
+      console.log(`Making fetch request to ${url}`);
+
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+        credentials: "include",
+      });
+
+      console.log("Fetch response status:", response.status);
+
+      if (!response.ok) {
+        // Handle non-200 responses
+        if (response.status === 401) {
+          console.warn("Authentication required for game status");
+          this.events.emit("auth:required");
+          return { error: "Authentication required", authRequired: true };
+        }
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Game status response:", data);
+      return data;
+    } catch (error) {
+      console.error("Error getting game status:", error);
+      return { error: error.message };
+    }
+  }
   // Server-sent events for win notifications
   setupSSE() {
     if (this.sseConnection) this.closeSSE();
 
     const token = localStorage.getItem("token");
-    if (!token) return;
+    if (!token) {
+      console.log("No token available, can't set up SSE connection");
+      return;
+    }
 
     // Fix: Construct a proper URL for the events endpoint
     const baseUrl = process.env.REACT_APP_API_URL || "";
     const eventsUrl = `${baseUrl}/events?token=${token}`;
     console.log("Setting up SSE connection to:", eventsUrl);
 
-    this.sseConnection = new EventSource(eventsUrl);
+    try {
+      this.sseConnection = new EventSource(eventsUrl);
+      console.log("SSE connection created");
 
-    this.sseConnection.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        this.events.emit("sse:message", data);
+      // Listen for the "connected" event
+      this.sseConnection.addEventListener("connected", (event) => {
+        console.log("SSE connection established:", event.data);
+      });
 
-        // Handle specific event types
-        if (data.type === "win") {
+      // Listen for the "gameWon" event (name must match what backend sends)
+      this.sseConnection.addEventListener("gameWon", (event) => {
+        console.log("Game won event received:", event.data);
+        try {
+          const data = JSON.parse(event.data);
           this.events.emit("game:win", data);
-        } else if (data.type === "game_state") {
-          this.events.emit("game:state", data);
+        } catch (error) {
+          console.error("Error parsing game won data:", error);
         }
-      } catch (error) {
-        console.error("Error processing SSE message:", error);
-      }
-    };
+      });
 
-    this.sseConnection.onerror = (error) => {
-      console.error("SSE connection error:", error);
-      this.closeSSE();
+      // Listen for "gameState" updates
+      this.sseConnection.addEventListener("gameState", (event) => {
+        console.log("Game state event received:", event.data);
+        try {
+          const data = JSON.parse(event.data);
+          this.events.emit("game:state", data);
+        } catch (error) {
+          console.error("Error parsing game state data:", error);
+        }
+      });
 
-      // Try to reconnect after 5s
-      setTimeout(() => this.setupSSE(), 5000);
-    };
+      // Listen for "ping" events to keep connection alive
+      this.sseConnection.addEventListener("ping", (event) => {
+        console.log("Ping received from server");
+      });
+
+      // Also keep the default message handler for backward compatibility
+      this.sseConnection.onmessage = (event) => {
+        console.log("Default message event received:", event.data);
+        try {
+          const data = JSON.parse(event.data);
+          this.events.emit("sse:message", data);
+
+          // Handle legacy format events
+          if (data.type === "win") {
+            this.events.emit("game:win", data);
+          } else if (data.type === "game_state") {
+            this.events.emit("game:state", data);
+          }
+        } catch (error) {
+          console.error("Error processing default SSE message:", error);
+        }
+      };
+
+      this.sseConnection.onerror = (error) => {
+        console.error("SSE connection error:", error);
+        this.closeSSE();
+
+        // Try to reconnect after 5s
+        setTimeout(() => this.setupSSE(), 5000);
+      };
+    } catch (error) {
+      console.error("Error creating SSE connection:", error);
+    }
   }
 
   closeSSE() {

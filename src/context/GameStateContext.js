@@ -406,11 +406,137 @@ export const GameStateProvider = ({ children }) => {
     state.originalLetters,
     state.startTime,
   ]);
+  useEffect(() => {
+    console.log("Setting up game event listeners");
+
+    // Subscribe to game win events from server
+    const winSubscription = apiService.on("game:win", (data) => {
+      console.log("Win event received from server:", data);
+
+      dispatch({
+        type: "SET_GAME_WON",
+        payload: {
+          completionTime: Date.now(),
+          score: data.score,
+          mistakes: data.mistakes,
+          maxMistakes: data.maxMistakes,
+          gameTimeSeconds: data.gameTimeSeconds,
+          rating: data.rating,
+          encrypted: state.encrypted,
+          display: state.display,
+          attribution: data.attribution,
+          scoreStatus: data.score_status || { recorded: true },
+        },
+      });
+    });
+
+    // Subscribe to game loss events
+    const lossSubscription = apiService.on("game:loss", (data) => {
+      console.log("Loss event received from server:", data);
+      dispatch({
+        type: "SET_GAME_LOST",
+        payload: data,
+      });
+    });
+
+    return () => {
+      console.log("Cleaning up game event listeners");
+      winSubscription();
+      lossSubscription();
+    };
+  }, []);
 
   // Determine if game is active
   const isGameActive =
     Boolean(state.encrypted) && !state.hasWon && !state.hasLost;
+  useEffect(() => {
+    // Only poll if there's an active game that hasn't been won or lost yet
+    if (!state.encrypted || state.hasWon || state.hasLost) {
+      return;
+    }
 
+    console.log("Starting game status polling");
+
+    // Set up polling interval
+    const pollInterval = setInterval(async () => {
+      try {
+        // Check if we have auth token before making the request
+        const token = localStorage.getItem("token");
+        if (!token) {
+          console.log("No auth token, skipping game status poll");
+          return;
+        }
+
+        console.log("Polling for game status...");
+
+        // Make a direct fetch request to bypass axios interceptors
+        const baseUrl = process.env.REACT_APP_API_URL || "";
+        const url = `${baseUrl}/api/game-status`;
+
+        const response = await fetch(url, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          credentials: "include",
+        });
+
+        if (!response.ok) {
+          console.warn(`Game status poll failed: ${response.status}`);
+          return;
+        }
+
+        const data = await response.json();
+        console.log("Game status poll response:", data);
+
+        // Check if the game is active
+        if (!data.hasActiveGame) {
+          console.log("No active game found during polling");
+          return;
+        }
+
+        // Check if game is won
+        if (data.hasWon && data.winData) {
+          console.log("Win detected during polling!", data.winData);
+
+          // Update game state with win data
+          dispatch({
+            type: "SET_GAME_WON",
+            payload: {
+              completionTime: Date.now(),
+              score: data.winData.score,
+              mistakes: data.winData.mistakes,
+              maxMistakes: data.winData.maxMistakes,
+              gameTimeSeconds: data.winData.gameTimeSeconds,
+              rating: data.winData.rating,
+              encrypted: state.encrypted,
+              display: state.display,
+              attribution: data.winData.attribution,
+              scoreStatus: {
+                recorded: true,
+                message: "Score recorded successfully!",
+              },
+            },
+          });
+        }
+
+        // Check if game is lost
+        if (data.gameComplete && !data.hasWon) {
+          console.log("Game loss detected during polling");
+          dispatch({ type: "SET_GAME_LOST" });
+        }
+      } catch (error) {
+        console.error("Error polling game status:", error);
+      }
+    }, 3000); // Poll every 3 seconds
+
+    // Clean up interval on unmount
+    return () => {
+      console.log("Stopping game status polling");
+      clearInterval(pollInterval);
+    };
+  }, [state.encrypted, state.hasWon, state.hasLost, dispatch]);
   return (
     <GameStateContext.Provider
       value={{

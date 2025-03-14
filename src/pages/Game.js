@@ -25,12 +25,12 @@ import MobileLayout from "../components/layout/MobileLayout";
 import WinCelebration from "../components/modals/WinCelebration";
 
 // Click handlers
-import {
-  handleEncryptedClick,
-  handleGuessClick,
-  submitGuess,
-  handleHint,
-} from "../utils/ClickHandlers";
+// import {
+//   handleEncryptedClick,
+//   handleGuessClick,
+//   submitGuess,
+//   handleHint,
+// } from "../utils/ClickHandlers";
 
 // Letter cell component using memo to reduce re-renders
 const LetterCell = React.memo(
@@ -78,6 +78,10 @@ function Game() {
     startGame,
     handleEncryptedSelect: contextHandleEncryptedSelect,
     getHint,
+    submitGuess,
+    hasWon,
+    hasLost,
+    winData,
   } = useGameState();
   // UI context for mobile detection
   const { useMobileMode, isLandscape } = useUI();
@@ -173,7 +177,7 @@ function Game() {
   // Handle submit guess wrapper function
   // Update handleSubmitGuess in Game.js
   const handleSubmitGuess = useCallback(
-    (guessedLetter) => {
+    async (guessedLetter) => {
       if (!selectedEncrypted) {
         console.warn("Cannot submit guess: No encrypted letter selected");
         return;
@@ -181,40 +185,30 @@ function Game() {
 
       console.log(`Submitting guess: ${selectedEncrypted} → ${guessedLetter}`);
 
-      // Make sure apiService is defined and passed correctly
-      if (!apiService) {
-        console.error("API service is not defined");
-        return;
-      }
+      try {
+        // Use the submitGuess function from context (defined in GameStateContext.js)
+        const result = await submitGuess(selectedEncrypted, guessedLetter);
+        console.log("Guess result:", result);
 
-      submitGuess(
-        selectedEncrypted,
-        guessedLetter,
-        {
-          encrypted,
-          display,
-          mistakes,
-          correctlyGuessed,
-          guessedMappings,
-          hardcoreMode: settings.hardcoreMode,
-        },
-        apiService, // Make sure this is defined
-        (action) => {
-          console.log("Handling guess result:", action);
-          // Reset selected letter
-          contextHandleEncryptedSelect(null);
-        },
-        playSound,
-      );
+        // Play sound based on result
+        if (result.success) {
+          if (result.isCorrect) {
+            playSound("correct");
+          } else {
+            playSound("incorrect");
+          }
+        }
+
+        // Reset selected letter regardless of result
+        contextHandleEncryptedSelect(null);
+      } catch (error) {
+        console.error("Error submitting guess:", error);
+        contextHandleEncryptedSelect(null);
+      }
     },
     [
       selectedEncrypted,
-      encrypted,
-      display,
-      mistakes,
-      correctlyGuessed,
-      guessedMappings,
-      settings.hardcoreMode,
+      submitGuess, // The submitGuess function from GameStateContext
       contextHandleEncryptedSelect,
       playSound,
     ],
@@ -397,7 +391,10 @@ function Game() {
             isGuessed={correctlyGuessed.includes(letter)}
             isFlashing={lastCorrectGuess === letter}
             frequency={letterFrequency[letter]}
-            onClick={() => onEncryptedClick(letter)}
+            onClick={() => {
+              console.log(`Clicking encrypted letter: ${letter}`);
+              onEncryptedClick(letter);
+            }}
             disabled={!isGameActive}
           />
         ))}
@@ -408,7 +405,12 @@ function Game() {
             key={letter}
             letter={letter}
             isGuessed={usedGuessLetters.includes(letter)}
-            onClick={() => onGuessClick(letter)}
+            onClick={() => {
+              console.log(
+                `Clicking guess letter: ${letter}, selectedEncrypted: ${selectedEncrypted}`,
+              );
+              onGuessClick(letter);
+            }}
             disabled={!isGameActive || !selectedEncrypted}
           />
         ))}
@@ -444,30 +446,19 @@ function Game() {
   );
 
   const renderGameOver = () => {
-    if (completionTime) {
+    if (hasWon) {
       return (
         <WinCelebration
           startGame={handleStartNewGame}
           playSound={playSound}
           theme={settings.theme}
           textColor={settings.textColor}
-          winData={{
-            score: 800, // Placeholder
-            mistakes,
-            maxMistakes,
-            gameTimeSeconds: startTime
-              ? Math.floor((completionTime - startTime) / 1000)
-              : 0,
-            rating: "Cryptanalyst",
-            encrypted,
-            display,
-            attribution: attributionData,
-          }}
+          winData={winData} // Pass the win data from context
         />
       );
     }
 
-    if (mistakes >= maxMistakes) {
+    if (hasLost) {
       return (
         <div
           className="game-message"
