@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { useAppContext } from "../context/AppContext";
+import { useAuth, useSettings } from "../context";
 import WinCelebration from "../components/modals/WinCelebration";
 import "../Styles/WinCelebrationTest.css";
 
 function WinCelebrationTest() {
-  const { settings, updateSettings } = useAppContext();
+  const { settings, updateSettings } = useSettings();
   const [showCelebration, setShowCelebration] = useState(false);
   const [previewMode, setPreviewMode] = useState("desktop"); // desktop or mobile
 

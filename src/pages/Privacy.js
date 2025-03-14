@@ -1,12 +1,12 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { useAppContext } from "../context/AppContext";
+import { useUI } from "../context";
 import "../Styles/About.css";
 import "../Styles/Privacy.css";
 
 const Privacy = () => {
   const navigate = useNavigate();
-  const { settings } = useAppContext();
+  const { settings } = useUI();
 
   return (
     <div className="about-overlay">

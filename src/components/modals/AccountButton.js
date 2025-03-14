@@ -1,9 +1,11 @@
+
 import React from "react";
 import { FaUserCircle } from "react-icons/fa";
-import { useAppContext } from "../../context/AppContext";
-// Login handlers
+import { useSettings, useUI } from "../../context";
+
 function AccountButton() {
-  const { settings, openLogin } = useAppContext();
+  const { settings } = useSettings();
+  const { openLogin } = useUI();
 
   return (
     <button
