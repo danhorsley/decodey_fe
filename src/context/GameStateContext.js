@@ -7,6 +7,7 @@ import React, {
   useEffect,
 } from "react";
 import apiService from "../services/apiService";
+import { useSettings } from "./SettingsContext";
 
 // Initial game state
 const initialState = {
@@ -29,6 +30,7 @@ const initialState = {
   hardcoreMode: false,
   isLocalWinDetected: false,
   isWinVerificationInProgress: false,
+  difficulty: "easy",
 };
 
 // Reducer for state management
@@ -91,6 +93,7 @@ const GameStateContext = createContext();
 
 export const GameStateProvider = ({ children }) => {
   const [state, dispatch] = useReducer(gameReducer, initialState);
+  const { settings } = useSettings();
 
   // Start game function
   const startGame = useCallback(
@@ -98,9 +101,31 @@ export const GameStateProvider = ({ children }) => {
       try {
         // Clear any existing game state from localStorage to avoid conflicts
         localStorage.removeItem("uncrypt-game-id");
+        const difficulty = settings?.difficulty || "easy";
 
+        // Get maxMistakes based on difficulty
+        let maxMistakes = 8; // Default to easy
+        switch (difficulty) {
+          case "hard":
+            maxMistakes = 3;
+            break;
+          case "normal":
+            maxMistakes = 5;
+            break;
+          case "easy":
+          default:
+            maxMistakes = 8;
+            break;
+        }
+
+        console.log(
+          `Starting new game with difficulty: ${difficulty}, maxMistakes: ${maxMistakes}`,
+        );
+
+        // Pass difficulty to the API
         const data = await apiService.startGame({
           longText: useLongText,
+          difficulty: difficulty,
         });
 
         // Store the game ID in localStorage
@@ -147,6 +172,7 @@ export const GameStateProvider = ({ children }) => {
             startTime: Date.now(),
             gameId: data.game_id,
             hardcoreMode: hardcoreMode,
+            difficulty: difficulty,
           },
         });
         return true;
@@ -556,6 +582,8 @@ export const GameStateProvider = ({ children }) => {
     state.guessedMappings,
     state.originalLetters,
     state.startTime,
+    state.maxMistakes,
+    state.difficulty,
   ]);
 
   // Determine if game is active
@@ -590,6 +618,7 @@ export const GameStateProvider = ({ children }) => {
 
         // Game actions
         startGame,
+        difficulty: state.difficulty,
         handleEncryptedSelect,
         submitGuess,
         getHint,

@@ -1,9 +1,10 @@
 // src/components/modals/Settings.js
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import ReactDOM from "react-dom";
 import "../../Styles/Settings.css";
 import "../../Styles/About.css";
 import { useSettings } from "../../context/SettingsContext";
+import { useGameState } from "../../context/GameStateContext";
 import useDeviceDetection from "../../hooks/useDeviceDetection";
 
 function Settings({ onCancel }) {
@@ -11,15 +12,30 @@ function Settings({ onCancel }) {
   // Get settings directly from the context
   const { settings: currentSettings, updateSettings } = useSettings();
 
+  // Get game state to check if game has started
+  const { hasGameStarted, correctlyGuessed } = useGameState();
+
   // Local state to track changes before saving
   const [settings, setSettings] = useState(currentSettings || {});
+
+  // State to track warning modal
+  const [showWarningModal, setShowWarningModal] = useState(false);
+  const [pendingDifficulty, setPendingDifficulty] = useState(null);
+
+  // State to track whether gameplay has started (made at least one guess)
+  const hasStartedPlaying = hasGameStarted && correctlyGuessed.length > 0;
 
   // Add debugging to see what's happening
   console.log(
     "Settings component rendered with currentSettings:",
     currentSettings,
+    "hasGameStarted:",
+    hasGameStarted,
+    "correctlyGuessed:",
+    correctlyGuessed,
+    "hasStartedPlaying:",
+    hasStartedPlaying,
   );
-  console.log("Local settings state:", settings);
 
   useEffect(() => {
     // Update local state when context settings change
@@ -34,6 +50,14 @@ function Settings({ onCancel }) {
 
   const handleChange = (setting, value) => {
     console.log(`Setting ${setting} changing to:`, value);
+
+    // Special handling for difficulty changes if game has started playing
+    if (setting === "difficulty" && hasStartedPlaying) {
+      console.log("Game in progress, showing difficulty change warning");
+      setPendingDifficulty(value);
+      setShowWarningModal(true);
+      return;
+    }
 
     // For theme changes, also update textColor accordingly
     if (setting === "theme") {
@@ -65,6 +89,28 @@ function Settings({ onCancel }) {
     const settingsToSave = { ...settings };
     updateSettings(settingsToSave);
     if (onCancel) onCancel();
+  };
+
+  // Handle confirming difficulty change when game has started
+  const handleConfirmDifficultyChange = () => {
+    console.log("Difficulty change confirmed, updating to:", pendingDifficulty);
+
+    // Update settings with the new difficulty
+    setSettings((prev) => ({
+      ...prev,
+      difficulty: pendingDifficulty,
+    }));
+
+    // Close the warning modal
+    setShowWarningModal(false);
+    setPendingDifficulty(null);
+  };
+
+  // Handle canceling difficulty change
+  const handleCancelDifficultyChange = () => {
+    console.log("Difficulty change canceled");
+    setShowWarningModal(false);
+    setPendingDifficulty(null);
   };
 
   if (!currentSettings) {
@@ -188,6 +234,12 @@ function Settings({ onCancel }) {
                 />
                 <span className="option-label">Hard (3 mistakes)</span>
               </label>
+
+              {hasStartedPlaying && (
+                <p className="settings-description warning-text">
+                  Note: Changing difficulty will only affect your next game.
+                </p>
+              )}
             </div>
           </div>
 
@@ -209,6 +261,12 @@ function Settings({ onCancel }) {
                 When enabled, spaces and punctuation will be removed from the
                 encrypted text, making it more challenging to decrypt.
               </p>
+
+              {hasStartedPlaying && (
+                <p className="settings-description warning-text">
+                  Note: Hardcore mode changes will only affect your next game.
+                </p>
+              )}
             </div>
           </div>
 
@@ -297,6 +355,12 @@ function Settings({ onCancel }) {
                 smaller screens or in mobile view. Best used on desktop or
                 larger tablet displays.
               </p>
+
+              {hasStartedPlaying && (
+                <p className="settings-description warning-text">
+                  Note: Quote length changes will only affect your next game.
+                </p>
+              )}
             </div>
           </div>
 
@@ -309,22 +373,49 @@ function Settings({ onCancel }) {
               Save & Return to Game
             </button>
           </div>
-
-          {/* Add debug display of current settings */}
-          <div
-            style={{
-              marginTop: "20px",
-              borderTop: "1px solid #ccc",
-              paddingTop: "10px",
-              fontSize: "10px",
-              color: "#999",
-            }}
-          >
-            <p>Debug - Current Settings:</p>
-            <pre>{JSON.stringify(settings, null, 2)}</pre>
-          </div>
         </div>
       </div>
+
+      {/* Difficulty Change Warning Modal */}
+      {showWarningModal && (
+        <div className="about-overlay" style={{ zIndex: 10000 }}>
+          <div
+            className={`about-container ${currentSettings.theme === "dark" ? "dark-theme" : ""}`}
+            style={{ maxWidth: "400px" }}
+          >
+            <h2>Change Difficulty?</h2>
+            <p>
+              You've already started a game. Changing difficulty will only
+              affect your next game.
+            </p>
+            <p>
+              Your current game will continue with the{" "}
+              {currentSettings.difficulty} difficulty setting.
+            </p>
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginTop: "20px",
+              }}
+            >
+              <button
+                className="settings-button cancel"
+                onClick={handleCancelDifficultyChange}
+              >
+                Cancel
+              </button>
+              <button
+                className="settings-button save"
+                onClick={handleConfirmDifficultyChange}
+              >
+                Change Difficulty
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>,
     document.getElementById("root"), // Mount directly to root element
   );

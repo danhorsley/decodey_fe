@@ -4,7 +4,6 @@ import EventEmitter from "events";
 
 let isRefreshing = false;
 let refreshFailureTime = 0;
-const REFRESH_COOLDOWN = 30000; // 30 seconds cooldown after a refresh failure
 
 class ApiService {
   constructor() {

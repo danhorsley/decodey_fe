@@ -54,7 +54,7 @@ function Game() {
   const navigate = useNavigate();
 
   // Get all context data
-  const { settings, maxMistakes } = useSettings();
+  const { settings } = useSettings();
   const { isAuthenticated } = useAuth();
   const {
     encrypted,
@@ -76,6 +76,8 @@ function Game() {
     isLocalWinDetected,
     hasLost,
     winData,
+    difficulty, // Add difficulty to destructuring
+    maxMistakes, // Get maxMistakes from game state instead of settings
   } = useGameState();
   // UI context for mobile detection
   const { useMobileMode, isLandscape } = useUI();
@@ -174,6 +176,15 @@ function Game() {
       document.body.classList.remove(className);
     }
   }, [settings.theme]);
+
+  useEffect(() => {
+    console.log("Game state changed - display:", display);
+    console.log("Correctly guessed letters:", correctlyGuessed);
+    console.log("Guessed mappings:", guessedMappings);
+    console.log("Current difficulty:", difficulty);
+    console.log("Max mistakes allowed:", maxMistakes);
+  }, [display, correctlyGuessed, guessedMappings, difficulty, maxMistakes]);
+
   useEffect(() => {
     const authRequiredSubscription = apiService.on("auth:required", () => {
       // Show a message to the user
