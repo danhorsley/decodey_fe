@@ -94,8 +94,11 @@ export const GameStateProvider = ({ children }) => {
         // Clear any existing game state from localStorage to avoid conflicts
         localStorage.removeItem("uncrypt-game-id");
 
-        const data = await apiService.startGame(useLongText);
+        const data = await apiService.startGame({
+          longText: useLongText,
+        });
         console.log("startGame response", data);
+
         // Store the game ID in localStorage
         if (data.game_id) {
           localStorage.setItem("uncrypt-game-id", data.game_id);
@@ -232,31 +235,6 @@ export const GameStateProvider = ({ children }) => {
           }
         }
 
-        // Check if game is won (determined by backend)
-        if (data.game_won) {
-          dispatch({
-            type: "SET_GAME_WON",
-            payload: {
-              completionTime: Date.now(),
-              score: data.score,
-              mistakes: data.mistakes,
-              maxMistakes: data.max_mistakes,
-              gameTimeSeconds: data.game_time_seconds,
-              rating: data.rating,
-              encrypted: state.encrypted,
-              display: displayText || state.display,
-              attribution: data.attribution,
-              scoreStatus: data.score_status,
-            },
-          });
-
-          return {
-            success: true,
-            isCorrect: true,
-            gameWon: true,
-          };
-        }
-
         // Update the game state
         dispatch({ type: "SUBMIT_GUESS", payload });
 
@@ -338,32 +316,6 @@ export const GameStateProvider = ({ children }) => {
     }
   }, [state, dispatch]);
 
-  // Listen for server-sent events about game state changes
-  useEffect(() => {
-    // Subscribe to game win events from server
-    const winSubscription = apiService.on("game:win", (data) => {
-      console.log("Win event received from server:", data);
-
-      dispatch({
-        type: "SET_GAME_WON",
-        payload: {
-          completionTime: Date.now(),
-          ...data,
-        },
-      });
-    });
-
-    // Subscribe to game loss events
-    const lossSubscription = apiService.on("game:loss", () => {
-      dispatch({ type: "SET_GAME_LOST" });
-    });
-
-    return () => {
-      winSubscription();
-      lossSubscription();
-    };
-  }, []);
-
   // Clear last correct guess after a delay
   useEffect(() => {
     if (state.lastCorrectGuess) {
@@ -378,77 +330,7 @@ export const GameStateProvider = ({ children }) => {
     }
   }, [state.lastCorrectGuess]);
 
-  // Save game state to localStorage
-  useEffect(() => {
-    if (state.encrypted && state.display) {
-      const gameState = {
-        encrypted: state.encrypted,
-        display: state.display,
-        mistakes: state.mistakes,
-        correctlyGuessed: state.correctlyGuessed,
-        letterFrequency: state.letterFrequency,
-        guessedMappings: state.guessedMappings,
-        originalLetters: state.originalLetters,
-        startTime: state.startTime,
-        hardcoreMode: state.hardcoreMode,
-      };
-
-      // Save game state to localStorage
-      localStorage.setItem("uncrypt-game-data", JSON.stringify(gameState));
-    }
-  }, [
-    state.encrypted,
-    state.display,
-    state.mistakes,
-    state.correctlyGuessed,
-    state.letterFrequency,
-    state.guessedMappings,
-    state.originalLetters,
-    state.startTime,
-  ]);
-  useEffect(() => {
-    console.log("Setting up game event listeners");
-
-    // Subscribe to game win events from server
-    const winSubscription = apiService.on("game:win", (data) => {
-      console.log("Win event received from server:", data);
-
-      dispatch({
-        type: "SET_GAME_WON",
-        payload: {
-          completionTime: Date.now(),
-          score: data.score,
-          mistakes: data.mistakes,
-          maxMistakes: data.maxMistakes,
-          gameTimeSeconds: data.gameTimeSeconds,
-          rating: data.rating,
-          encrypted: state.encrypted,
-          display: state.display,
-          attribution: data.attribution,
-          scoreStatus: data.score_status || { recorded: true },
-        },
-      });
-    });
-
-    // Subscribe to game loss events
-    const lossSubscription = apiService.on("game:loss", (data) => {
-      console.log("Loss event received from server:", data);
-      dispatch({
-        type: "SET_GAME_LOST",
-        payload: data,
-      });
-    });
-
-    return () => {
-      console.log("Cleaning up game event listeners");
-      winSubscription();
-      lossSubscription();
-    };
-  }, []);
-
-  // Determine if game is active
-  const isGameActive =
-    Boolean(state.encrypted) && !state.hasWon && !state.hasLost;
+  // Polling for game status updates - check for wins/losses
   useEffect(() => {
     // Only poll if there's an active game that hasn't been won or lost yet
     if (!state.encrypted || state.hasWon || state.hasLost) {
@@ -469,30 +351,11 @@ export const GameStateProvider = ({ children }) => {
 
         console.log("Polling for game status...");
 
-        // Make a direct fetch request to bypass axios interceptors
-        const baseUrl = process.env.REACT_APP_API_URL || "";
-        const url = `${baseUrl}/api/game-status`;
-
-        const response = await fetch(url, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          credentials: "include",
-        });
-
-        if (!response.ok) {
-          console.warn(`Game status poll failed: ${response.status}`);
-          return;
-        }
-
-        const data = await response.json();
+        const data = await apiService.getGameStatus();
         console.log("Game status poll response:", data);
 
-        // Check if the game is active
-        if (!data.hasActiveGame) {
-          console.log("No active game found during polling");
+        // Skip processing if there was an error or no active game
+        if (data.error || !data.hasActiveGame) {
           return;
         }
 
@@ -536,7 +399,41 @@ export const GameStateProvider = ({ children }) => {
       console.log("Stopping game status polling");
       clearInterval(pollInterval);
     };
-  }, [state.encrypted, state.hasWon, state.hasLost, dispatch]);
+  }, [state.encrypted, state.hasWon, state.hasLost, state.display, dispatch]);
+
+  // Save game state to localStorage
+  useEffect(() => {
+    if (state.encrypted && state.display) {
+      const gameState = {
+        encrypted: state.encrypted,
+        display: state.display,
+        mistakes: state.mistakes,
+        correctlyGuessed: state.correctlyGuessed,
+        letterFrequency: state.letterFrequency,
+        guessedMappings: state.guessedMappings,
+        originalLetters: state.originalLetters,
+        startTime: state.startTime,
+        hardcoreMode: state.hardcoreMode,
+      };
+
+      // Save game state to localStorage
+      localStorage.setItem("uncrypt-game-data", JSON.stringify(gameState));
+    }
+  }, [
+    state.encrypted,
+    state.display,
+    state.mistakes,
+    state.correctlyGuessed,
+    state.letterFrequency,
+    state.guessedMappings,
+    state.originalLetters,
+    state.startTime,
+  ]);
+
+  // Determine if game is active
+  const isGameActive =
+    Boolean(state.encrypted) && !state.hasWon && !state.hasLost;
+
   return (
     <GameStateContext.Provider
       value={{

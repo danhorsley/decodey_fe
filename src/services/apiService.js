@@ -1,7 +1,7 @@
 // src/services/apiService.js
 import axios from "axios";
 import EventEmitter from "events";
-import debugTokenState from "../config";
+
 let isRefreshing = false;
 let refreshFailureTime = 0;
 const REFRESH_COOLDOWN = 30000; // 30 seconds cooldown after a refresh failure
@@ -13,6 +13,7 @@ class ApiService {
       timeout: 10000,
       withCredentials: true,
     });
+
     // Add request interceptor to consistently add auth token to all requests
     this.api.interceptors.request.use(
       (config) => {
@@ -29,15 +30,16 @@ class ApiService {
         return Promise.reject(error);
       },
     );
+
+    // Create event emitter for auth events
     this.events = new EventEmitter();
-    this.sseConnection = null;
 
     // Add interceptor for token refresh
     this.api.interceptors.response.use(
       (response) => response,
       async (error) => {
         const originalRequest = error.config;
-        if (error.response.status === 401 && !originalRequest._retry) {
+        if (error.response?.status === 401 && !originalRequest._retry) {
           originalRequest._retry = true;
           try {
             await this.refreshToken();
@@ -68,10 +70,6 @@ class ApiService {
           console.warn("No refresh token received from login endpoint");
         }
 
-        // Set up SSE connection after successful login
-        console.log("Setting up SSE connection after login");
-        this.setupSSE();
-
         this.events.emit("auth:login", response.data);
       }
       return response.data;
@@ -85,13 +83,14 @@ class ApiService {
     try {
       await this.api.post("/logout");
       localStorage.removeItem("token");
-      this.closeSSE();
+      localStorage.removeItem("refresh_token");
       this.events.emit("auth:logout");
       return { success: true };
     } catch (error) {
       console.error("Logout error:", error);
       // Still clear token on frontend
       localStorage.removeItem("token");
+      localStorage.removeItem("refresh_token");
       this.events.emit("auth:logout");
       return { success: false, error };
     }
@@ -127,15 +126,6 @@ class ApiService {
     try {
       console.log("Attempting to refresh token...");
       isRefreshing = true;
-      console.log("Attempting to refresh token...");
-      isRefreshing = true;
-
-      // Check if we actually have a refresh token before attempting
-      const refreshToken = localStorage.getItem("refresh_token");
-      if (!refreshToken) {
-        console.warn("No refresh token available - cannot refresh");
-        throw new Error("No refresh token available");
-      }
 
       const response = await this.api.post(
         "/refresh",
@@ -175,7 +165,7 @@ class ApiService {
     }
   }
 
-  // Game methods - must add longstart to back end
+  // Game methods
   async startGame(options = {}) {
     try {
       console.log("Starting startGame function in apiService");
@@ -213,7 +203,6 @@ class ApiService {
         statusText: response.statusText,
         contentType: response.headers["content-type"],
         responseType: typeof response.data,
-        content: response.data,
       });
 
       return response.data;
@@ -292,13 +281,12 @@ class ApiService {
     }
   }
 
-  // Update in src/services/apiService.js
   async getHint() {
     try {
       const gameId = localStorage.getItem("uncrypt-game-id");
       console.log(`Sending hint request with game_id: ${gameId}`);
 
-      // Simple token debugging without relying on external function
+      // Simple token debugging
       console.group("Token Debug");
       console.log(
         "Access Token:",
@@ -345,6 +333,7 @@ class ApiService {
       return { error: error.message };
     }
   }
+
   async getGameStatus() {
     try {
       console.log("Fetching game status");
@@ -393,93 +382,6 @@ class ApiService {
     } catch (error) {
       console.error("Error getting game status:", error);
       return { error: error.message };
-    }
-  }
-  // Server-sent events for win notifications
-  setupSSE() {
-    if (this.sseConnection) this.closeSSE();
-
-    const token = localStorage.getItem("token");
-    if (!token) {
-      console.log("No token available, can't set up SSE connection");
-      return;
-    }
-
-    // Fix: Construct a proper URL for the events endpoint
-    const baseUrl = process.env.REACT_APP_API_URL || "";
-    const eventsUrl = `${baseUrl}/events?token=${token}`;
-    console.log("Setting up SSE connection to:", eventsUrl);
-
-    try {
-      this.sseConnection = new EventSource(eventsUrl);
-      console.log("SSE connection created");
-
-      // Listen for the "connected" event
-      this.sseConnection.addEventListener("connected", (event) => {
-        console.log("SSE connection established:", event.data);
-      });
-
-      // Listen for the "gameWon" event (name must match what backend sends)
-      this.sseConnection.addEventListener("gameWon", (event) => {
-        console.log("Game won event received:", event.data);
-        try {
-          const data = JSON.parse(event.data);
-          this.events.emit("game:win", data);
-        } catch (error) {
-          console.error("Error parsing game won data:", error);
-        }
-      });
-
-      // Listen for "gameState" updates
-      this.sseConnection.addEventListener("gameState", (event) => {
-        console.log("Game state event received:", event.data);
-        try {
-          const data = JSON.parse(event.data);
-          this.events.emit("game:state", data);
-        } catch (error) {
-          console.error("Error parsing game state data:", error);
-        }
-      });
-
-      // Listen for "ping" events to keep connection alive
-      this.sseConnection.addEventListener("ping", (event) => {
-        console.log("Ping received from server");
-      });
-
-      // Also keep the default message handler for backward compatibility
-      this.sseConnection.onmessage = (event) => {
-        console.log("Default message event received:", event.data);
-        try {
-          const data = JSON.parse(event.data);
-          this.events.emit("sse:message", data);
-
-          // Handle legacy format events
-          if (data.type === "win") {
-            this.events.emit("game:win", data);
-          } else if (data.type === "game_state") {
-            this.events.emit("game:state", data);
-          }
-        } catch (error) {
-          console.error("Error processing default SSE message:", error);
-        }
-      };
-
-      this.sseConnection.onerror = (error) => {
-        console.error("SSE connection error:", error);
-        this.closeSSE();
-
-        // Try to reconnect after 5s
-        setTimeout(() => this.setupSSE(), 5000);
-      };
-    } catch (error) {
-      console.error("Error creating SSE connection:", error);
-    }
-  }
-
-  closeSSE() {
-    if (this.sseConnection) {
-      this.sseConnection.close();
-      this.sseConnection = null;
     }
   }
 
