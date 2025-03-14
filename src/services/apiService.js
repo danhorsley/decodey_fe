@@ -1,4 +1,4 @@
-// src/services/apiService.js
+// src/services/apiService.js - Updated startGame method
 import axios from "axios";
 import EventEmitter from "events";
 
@@ -19,7 +19,10 @@ class ApiService {
       (config) => {
         const token = localStorage.getItem("token");
         if (token) {
+          console.log(`Adding auth token to ${config.url}`);
           config.headers.Authorization = `Bearer ${token}`;
+        } else {
+          console.warn(`No token available for request to ${config.url}`);
         }
         return config;
       },
@@ -62,6 +65,9 @@ class ApiService {
         // Ensure we save the refresh token if provided
         if (response.data.refresh_token) {
           localStorage.setItem("refresh_token", response.data.refresh_token);
+          console.log("Refresh token saved successfully");
+        } else {
+          console.warn("No refresh token received from login endpoint");
         }
 
         this.events.emit("auth:login", response.data);
@@ -93,17 +99,24 @@ class ApiService {
   async refreshToken() {
     // Prevent concurrent refresh attempts
     if (isRefreshing) {
+      console.log("Token refresh already in progress, skipping");
       return Promise.reject(new Error("Refresh already in progress"));
     }
 
     // Check if we actually have a refresh token before attempting
     const refreshToken = localStorage.getItem("refresh_token");
     if (!refreshToken) {
+      console.warn("No refresh token available - cannot refresh");
+
       // If we also don't have an access token, we should consider the user logged out
       if (!localStorage.getItem("token")) {
+        console.log("No access token either, emitting auth:logout event");
         this.events.emit("auth:logout");
       } else {
         // Otherwise, we should prompt for login to get a new refresh token
+        console.log(
+          "Access token exists but no refresh token, emitting auth:required event",
+        );
         this.events.emit("auth:required");
       }
 
@@ -111,6 +124,7 @@ class ApiService {
     }
 
     try {
+      console.log("Attempting to refresh token...");
       isRefreshing = true;
 
       const response = await this.api.post(
@@ -124,6 +138,7 @@ class ApiService {
       );
 
       if (response.data.access_token) {
+        console.log("Successfully refreshed access token");
         localStorage.setItem("token", response.data.access_token);
         isRefreshing = false;
         return response.data;
@@ -131,12 +146,15 @@ class ApiService {
         throw new Error("Invalid response from refresh endpoint");
       }
     } catch (error) {
+      console.error("Token refresh failed:", error.message);
+
       // Record the failure time to implement cooldown
       refreshFailureTime = Date.now();
       isRefreshing = false;
 
       // Force logout if the refresh endpoint returned 401
       if (error.response && error.response.status === 401) {
+        console.warn("Refresh token is invalid or expired - logging out");
         // Clear tokens
         localStorage.removeItem("token");
         localStorage.removeItem("refresh_token");
@@ -150,12 +168,33 @@ class ApiService {
   // Game methods
   async startGame(options = {}) {
     try {
+      console.log(
+        "Starting startGame function in apiService with options:",
+        options,
+      );
+
+      // Get token and verify it exists
+      const token = localStorage.getItem("token");
+      console.log("Token from localStorage:", token ? "exists" : "missing");
+
+      // Determine endpoint based on longText option
       const endpoint = options.longText ? "api/longstart" : "/api/start";
 
-      // Get token for request config
-      const token = localStorage.getItem("token");
+      // Build query parameters, including difficulty if provided
+      const queryParams = new URLSearchParams();
+      if (options.difficulty) {
+        queryParams.append("difficulty", options.difficulty);
+        console.log(`Adding difficulty=${options.difficulty} parameter`);
+      }
 
-      // Make the request
+      // Create full URL with query parameters
+      const url = `${endpoint}${queryParams.toString() ? "?" + queryParams.toString() : ""}`;
+
+      console.log(
+        `Making request to endpoint: ${this.api.defaults.baseURL}${url}`,
+      );
+
+      // Log request configuration
       const config = {
         headers: {
           Accept: "application/json",
@@ -167,12 +206,29 @@ class ApiService {
         config.headers["Authorization"] = `Bearer ${token}`;
       }
 
-      const response = await this.api.get(endpoint, config);
+      console.log("Request config:", JSON.stringify(config));
+
+      // Make the request
+      const response = await this.api.get(url, config);
+
+      // Log response for debugging
+      console.log("Response received:", {
+        status: response.status,
+        statusText: response.statusText,
+        contentType: response.headers["content-type"],
+        responseType: typeof response.data,
+      });
+
       return response.data;
     } catch (error) {
       console.error("Error in startGame:", error);
       if (error.response) {
-        console.error("Response status:", error.response.status);
+        console.error("Response details:", {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          contentType: error.response.headers["content-type"],
+          data: error.response.data,
+        });
       }
       throw error;
     }
@@ -181,12 +237,28 @@ class ApiService {
   async submitGuess(encryptedLetter, guessedLetter) {
     try {
       const gameId = localStorage.getItem("uncrypt-game-id");
+      console.log(`Submitting guess: ${encryptedLetter} → ${guessedLetter}`);
+
+      // Simple token debugging inline
+      console.group("Token Debug for submitGuess");
+      console.log(
+        "Access Token:",
+        localStorage.getItem("token") ? "Present" : "Missing",
+      );
+      console.log("Game ID:", gameId ? "Present" : "Missing");
+      console.groupEnd();
 
       // Make a direct fetch request to bypass axios interceptors
       const baseUrl =
         this.api.defaults.baseURL || process.env.REACT_APP_API_URL || "";
       const url = `${baseUrl}/api/guess`;
       const token = localStorage.getItem("token");
+
+      console.log(`Making fetch request to ${url} with data:`, {
+        encrypted_letter: encryptedLetter,
+        guessed_letter: guessedLetter,
+        game_id: gameId,
+      });
 
       const response = await fetch(url, {
         method: "POST",
@@ -202,9 +274,12 @@ class ApiService {
         credentials: "include",
       });
 
+      console.log("Fetch response status:", response.status);
+
       if (!response.ok) {
         // Handle non-200 responses
         if (response.status === 401) {
+          console.warn("Authentication required for guess");
           this.events.emit("auth:required");
           return { error: "Authentication required", authRequired: true };
         }
@@ -212,6 +287,7 @@ class ApiService {
       }
 
       const data = await response.json();
+      console.log("Guess response:", data);
       return data;
     } catch (error) {
       console.error("Error submitting guess:", error);
@@ -222,12 +298,24 @@ class ApiService {
   async getHint() {
     try {
       const gameId = localStorage.getItem("uncrypt-game-id");
+      console.log(`Sending hint request with game_id: ${gameId}`);
+
+      // Simple token debugging
+      console.group("Token Debug");
+      console.log(
+        "Access Token:",
+        localStorage.getItem("token") ? "Present" : "Missing",
+      );
+      console.log("Game ID:", gameId ? "Present" : "Missing");
+      console.groupEnd();
 
       // Make a direct fetch request to bypass axios interceptors
       const baseUrl =
         this.api.defaults.baseURL || process.env.REACT_APP_API_URL || "";
       const url = `${baseUrl}/api/hint`;
       const token = localStorage.getItem("token");
+
+      console.log(`Making fetch request to ${url}`);
 
       const response = await fetch(url, {
         method: "POST",
@@ -239,9 +327,12 @@ class ApiService {
         credentials: "include",
       });
 
+      console.log("Fetch response status:", response.status);
+
       if (!response.ok) {
         // Handle non-200 responses
         if (response.status === 401) {
+          console.warn("Authentication required for hint");
           this.events.emit("auth:required");
           return { error: "Authentication required", authRequired: true };
         }
@@ -249,6 +340,7 @@ class ApiService {
       }
 
       const data = await response.json();
+      console.log("Hint response:", data);
       return data;
     } catch (error) {
       console.error("Error getting hint:", error);
@@ -258,13 +350,24 @@ class ApiService {
 
   async getGameStatus() {
     try {
+      console.log("Fetching game status");
+
       // Get token and game ID
       const token = localStorage.getItem("token");
+      const gameId = localStorage.getItem("uncrypt-game-id");
+
+      // Simple token debugging
+      console.group("Token Debug for getGameStatus");
+      console.log("Access Token:", token ? "Present" : "Missing");
+      console.log("Game ID:", gameId ? "Present" : "Missing");
+      console.groupEnd();
 
       // Make a direct fetch request
       const baseUrl =
         this.api.defaults.baseURL || process.env.REACT_APP_API_URL || "";
       const url = `${baseUrl}/api/game-status`;
+
+      console.log(`Making fetch request to ${url}`);
 
       const response = await fetch(url, {
         method: "GET",
@@ -275,9 +378,12 @@ class ApiService {
         credentials: "include",
       });
 
+      console.log("Fetch response status:", response.status);
+
       if (!response.ok) {
         // Handle non-200 responses
         if (response.status === 401) {
+          console.warn("Authentication required for game status");
           this.events.emit("auth:required");
           return { error: "Authentication required", authRequired: true };
         }
@@ -285,6 +391,7 @@ class ApiService {
       }
 
       const data = await response.json();
+      console.log("Game status response:", data);
       return data;
     } catch (error) {
       console.error("Error getting game status:", error);
