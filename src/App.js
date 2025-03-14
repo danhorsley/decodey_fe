@@ -15,6 +15,7 @@ import ModalManager from "./components/modals/ModalManager";
 import AccountButtonWrapper from "./components/AccountButtonWrapper";
 import ServiceWorkerUpdater from "./components/ServiceWorkerUpdater";
 import OfflineDetector from "./components/OfflineDetector";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 // Lazy load components for code splitting
 const Game = lazy(() => import("./pages/Game"));
@@ -62,6 +63,20 @@ function App() {
             {/* <Route path="/wctest" element={<WinCelebrationTest />} /> */}
             <Route path="/privacy" element={<Privacy />} />
             <Route path="*" element={<Navigate to="/" />} />
+            <Route
+              path="/"
+              element={
+                <ErrorBoundary
+                  fallback={
+                    <button onClick={() => window.location.reload()}>
+                      Reload Game
+                    </button>
+                  }
+                >
+                  <Game />
+                </ErrorBoundary>
+              }
+            />
           </Routes>
         </Suspense>
 
