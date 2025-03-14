@@ -86,7 +86,7 @@ const Leaderboard = ({ onClose }) => {
       streakPeriod,
       page,
     });
-    
+
     try {
       setIsStreakLoading(true);
       setStreakError(null);
@@ -375,13 +375,66 @@ const Leaderboard = ({ onClose }) => {
               >
                 #{entry.rank}
               </div>
-        )}
+              <div
+                className={`table-cell ${entry.is_current_user || (currentUserEntry && entry.user_id === currentUserEntry.user_id) ? "user-highlight" : ""}`}
+              >
+                {entry.username}
+                {(entry.is_current_user ||
+                  (currentUserEntry &&
+                    entry.user_id === currentUserEntry.user_id)) && (
+                  <span className="you-badge">YOU</span>
+                )}
+              </div>
+              <div
+                className={`table-cell ${entry.is_current_user || (currentUserEntry && entry.user_id === currentUserEntry.user_id) ? "user-highlight" : ""}`}
+              >
+                {entry.score.toLocaleString()}
+              </div>
+              <div
+                className={`table-cell ${entry.is_current_user || (currentUserEntry && entry.user_id === currentUserEntry.user_id) ? "user-highlight" : ""}`}
+              >
+                {entry.games_played}
+              </div>
+              <div
+                className={`table-cell ${entry.is_current_user || (currentUserEntry && entry.user_id === currentUserEntry.user_id) ? "user-highlight" : ""}`}
+              >
+                {entry.avg_score.toLocaleString()}
+              </div>
+            </React.Fragment>
+          ))}
 
-        {/* Pagination, only shown if we have enough entries */}
-        {hasEntries &&
-          pagination &&
-          pagination.total_pages > 1 &&
-          renderPagination(pagination)}
+          {/* Carve out separator and user entry */}
+          {shouldShowCarveOut && currentUserEntry && (
+            <>
+              {/* Separator row */}
+              <div className="table-cell separator"></div>
+              <div className="table-cell separator">...</div>
+              <div className="table-cell separator"></div>
+              <div className="table-cell separator"></div>
+              <div className="table-cell separator"></div>
+
+              {/* User entry row */}
+              <div className="table-cell user-highlight">
+                #{currentUserEntry.rank}
+              </div>
+              <div className="table-cell user-highlight">
+                {currentUserEntry.username}{" "}
+                <span className="you-badge">YOU</span>
+              </div>
+              <div className="table-cell user-highlight">
+                {currentUserEntry.score.toLocaleString()}
+              </div>
+              <div className="table-cell user-highlight">
+                {currentUserEntry.games_played}
+              </div>
+              <div className="table-cell user-highlight">
+                {currentUserEntry.avg_score.toLocaleString()}
+              </div>
+            </>
+          )}
+        </div>
+
+        {renderPagination(pagination)}
       </div>
     );
   };
@@ -507,69 +560,7 @@ const Leaderboard = ({ onClose }) => {
       ) : null}
     </div>
   );
-              <div
-                className={`table-cell ${entry.is_current_user || (currentUserEntry && entry.user_id === currentUserEntry.user_id) ? "user-highlight" : ""}`}
-              >
-                {entry.username}
-                {(entry.is_current_user ||
-                  (currentUserEntry &&
-                    entry.user_id === currentUserEntry.user_id)) && (
-                  <span className="you-badge">YOU</span>
-                )}
-              </div>
-              <div
-                className={`table-cell ${entry.is_current_user || (currentUserEntry && entry.user_id === currentUserEntry.user_id) ? "user-highlight" : ""}`}
-              >
-                {entry.score.toLocaleString()}
-              </div>
-              <div
-                className={`table-cell ${entry.is_current_user || (currentUserEntry && entry.user_id === currentUserEntry.user_id) ? "user-highlight" : ""}`}
-              >
-                {entry.games_played}
-              </div>
-              <div
-                className={`table-cell ${entry.is_current_user || (currentUserEntry && entry.user_id === currentUserEntry.user_id) ? "user-highlight" : ""}`}
-              >
-                {entry.avg_score.toLocaleString()}
-              </div>
-            </React.Fragment>
-          ))}
-
-          {/* Carve out separator and user entry */}
-          {shouldShowCarveOut && currentUserEntry && (
-            <>
-              {/* Separator row */}
-              <div className="table-cell separator"></div>
-              <div className="table-cell separator">...</div>
-              <div className="table-cell separator"></div>
-              <div className="table-cell separator"></div>
-              <div className="table-cell separator"></div>
-
-              {/* User entry row */}
-              <div className="table-cell user-highlight">
-                #{currentUserEntry.rank}
-              </div>
-              <div className="table-cell user-highlight">
-                {currentUserEntry.username}{" "}
-                <span className="you-badge">YOU</span>
-              </div>
-              <div className="table-cell user-highlight">
-                {currentUserEntry.score.toLocaleString()}
-              </div>
-              <div className="table-cell user-highlight">
-                {currentUserEntry.games_played}
-              </div>
-              <div className="table-cell user-highlight">
-                {currentUserEntry.avg_score.toLocaleString()}
-              </div>
-            </>
-          )}
-        </div>
-
-        {renderPagination(pagination)}
-      </div>
-    );
-  };
+};
 
   // New function to render personal stats tab
   const renderPersonalStats = () => {
@@ -915,5 +906,15 @@ const Leaderboard = ({ onClose }) => {
               </>
             )}
           </div>
+        )}
+
+        {/* Pagination, only shown if we have enough entries */}
+        {hasEntries &&
+          pagination &&
+          pagination.total_pages > 1 &&
+          renderPagination(pagination)}
+      </div>
+    );
+  };
 
 export default Leaderboard;
