@@ -34,7 +34,7 @@ html.dark-theme {
   font-weight: bold;
 
   /* Diagonal gradient background */
-  background: linear-gradient(135deg, 
+  background: linear-gradient(135deg,
       #4cc9f0 25%,
       rgb(0, 249, 0) 100%);
 
@@ -118,6 +118,11 @@ html.dark-theme {
   background-color: #333;
   color: rgb(0, 225, 152);
   text-shadow: 0 0 5px rgba(0, 225, 152, 0.5);
+}
+
+.dark-theme .account-icon {
+  background-color: #333;
+  color: #4cc9f0;
 }
 
 .dark-theme .account-icon:hover {

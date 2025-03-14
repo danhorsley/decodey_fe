@@ -260,3 +260,15 @@
 .dark-theme .consent-label {
   color: #f0f0f0;
 }
+
+.consent-info {
+  margin-top: 5px;
+  margin-left: 25px;
+  font-size: 0.85rem;
+  color: #6c757d;
+  line-height: 1.4;
+}
+
+.dark-theme .consent-info {
+  color: #adb5bd;
+}
