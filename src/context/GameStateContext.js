@@ -46,9 +46,6 @@ const gameReducer = (state, action) => {
       return { ...state, ...action.payload };
 
     case "SET_HINT":
-      console.log("SET_HINT reducer processing payload:", action.payload);
-      // Create a completely new state object with all fields from current state
-      // Then carefully apply updates from the payload
       return {
         ...state,
         display: action.payload.display ?? state.display,
@@ -57,8 +54,6 @@ const gameReducer = (state, action) => {
           action.payload.correctlyGuessed ?? state.correctlyGuessed,
         guessedMappings:
           action.payload.guessedMappings ?? state.guessedMappings,
-        // Add log to verify update
-        lastStateUpdate: Date.now(), // Add a timestamp for debugging
       };
 
     case "SET_GAME_WON":
@@ -89,7 +84,6 @@ export const GameStateProvider = ({ children }) => {
   // Start game function
   const startGame = useCallback(
     async (useLongText = false, hardcoreMode = false) => {
-      console.log("startGame triggered in GameStateContext");
       try {
         // Clear any existing game state from localStorage to avoid conflicts
         localStorage.removeItem("uncrypt-game-id");
@@ -97,7 +91,6 @@ export const GameStateProvider = ({ children }) => {
         const data = await apiService.startGame({
           longText: useLongText,
         });
-        console.log("startGame response", data);
 
         // Store the game ID in localStorage
         if (data.game_id) {
@@ -145,11 +138,6 @@ export const GameStateProvider = ({ children }) => {
             hardcoreMode: hardcoreMode,
           },
         });
-        console.log("State updated in GameStateContext:", {
-          encryptedText,
-          displayTextLength: displayText?.length,
-          originalLettersCount: data.original_letters?.length || 0,
-        });
         return true;
       } catch (error) {
         console.error("Error starting game:", error);
@@ -182,7 +170,6 @@ export const GameStateProvider = ({ children }) => {
       }
 
       try {
-        const gameId = localStorage.getItem("uncrypt-game-id");
         const data = await apiService.submitGuess(
           encryptedLetter,
           guessedLetter,
@@ -254,17 +241,14 @@ export const GameStateProvider = ({ children }) => {
   const getHint = useCallback(async () => {
     try {
       const data = await apiService.getHint();
-      console.log("Hint response in context:", data);
 
       // Handle authentication required
       if (data.authRequired) {
-        console.warn("Authentication required for hint");
         return { success: false, authRequired: true };
       }
 
       // Handle errors
       if (data.error) {
-        console.error("Error in hint response:", data.error);
         return { success: false, error: data.error };
       }
 
@@ -289,13 +273,6 @@ export const GameStateProvider = ({ children }) => {
             }
           }
         }
-      });
-
-      console.log("Updating state with hint data:", {
-        display: displayText,
-        mistakes: data.mistakes,
-        correctlyGuessed: newCorrectlyGuessed,
-        mappings: newMappings,
       });
 
       // Update state with all hint data
@@ -337,22 +314,16 @@ export const GameStateProvider = ({ children }) => {
       return;
     }
 
-    console.log("Starting game status polling");
-
     // Set up polling interval
     const pollInterval = setInterval(async () => {
       try {
         // Check if we have auth token before making the request
         const token = localStorage.getItem("token");
         if (!token) {
-          console.log("No auth token, skipping game status poll");
           return;
         }
 
-        console.log("Polling for game status...");
-
         const data = await apiService.getGameStatus();
-        console.log("Game status poll response:", data);
 
         // Skip processing if there was an error or no active game
         if (data.error || !data.hasActiveGame) {
@@ -361,8 +332,6 @@ export const GameStateProvider = ({ children }) => {
 
         // Check if game is won
         if (data.hasWon && data.winData) {
-          console.log("Win detected during polling!", data.winData);
-
           // Update game state with win data
           dispatch({
             type: "SET_GAME_WON",
@@ -386,7 +355,6 @@ export const GameStateProvider = ({ children }) => {
 
         // Check if game is lost
         if (data.gameComplete && !data.hasWon) {
-          console.log("Game loss detected during polling");
           dispatch({ type: "SET_GAME_LOST" });
         }
       } catch (error) {
@@ -396,7 +364,6 @@ export const GameStateProvider = ({ children }) => {
 
     // Clean up interval on unmount
     return () => {
-      console.log("Stopping game status polling");
       clearInterval(pollInterval);
     };
   }, [state.encrypted, state.hasWon, state.hasLost, state.display, dispatch]);

@@ -42,23 +42,15 @@ export const SettingsProvider = ({ children }) => {
   const [settings, setSettings] = useState(() => {
     try {
       const savedSettings = localStorage.getItem("uncrypt-settings");
-      console.log("Loading settings from localStorage:", savedSettings);
 
       if (savedSettings) {
         const parsedSettings = JSON.parse(savedSettings);
-        console.log("Parsed settings:", parsedSettings);
 
         // Make sure we have all required properties by merging with defaults
-        const completeSettings = {
+        return {
           ...defaultSettings,
           ...parsedSettings,
         };
-
-        console.log(
-          "Complete settings after merging with defaults:",
-          completeSettings,
-        );
-        return completeSettings;
       }
 
       return defaultSettings;
@@ -71,11 +63,7 @@ export const SettingsProvider = ({ children }) => {
   // Update settings with validation and normalization
   const updateSettings = useCallback(
     (newSettings) => {
-      console.log("SettingsContext updateSettings called with:", newSettings);
-
       // Create a complete settings object with all properties
-      // First spread the current settings to keep any values not in newSettings
-      // Then spread newSettings to override those values
       const completeSettings = {
         ...defaultSettings, // Start with defaults to ensure all fields exist
         ...settings, // Add current settings
@@ -85,7 +73,6 @@ export const SettingsProvider = ({ children }) => {
         speedMode: true, // Always ensure speed mode is on
       };
 
-      console.log("Updating settings with complete object:", completeSettings);
       setSettings(completeSettings);
     },
     [settings],
@@ -93,55 +80,34 @@ export const SettingsProvider = ({ children }) => {
 
   // Save settings to localStorage whenever they change
   useEffect(() => {
-    console.log("Saving settings to localStorage:", settings);
     localStorage.setItem("uncrypt-settings", JSON.stringify(settings));
-
-    // Debug: immediately read back to verify
-    const savedSettings = localStorage.getItem("uncrypt-settings");
-    console.log(
-      "Verification - settings saved to localStorage:",
-      savedSettings,
-    );
-
-    try {
-      const parsed = JSON.parse(savedSettings);
-      console.log("Verification - parsed settings:", parsed);
-    } catch (e) {
-      console.error("Error parsing saved settings:", e);
-    }
   }, [settings]);
 
   // Apply theme whenever settings change
   useEffect(() => {
-    try {
-      // Use a forced timeout to ensure theme is applied on all browsers
-      setTimeout(() => {
-        if (settings.theme === "dark") {
-          document.documentElement.classList.add("dark-theme");
-          document.body.classList.add("dark-theme");
-          document.documentElement.setAttribute("data-theme", "dark");
+    const className = "dark-theme";
+    if (settings.theme === "dark") {
+      document.documentElement.classList.add(className);
+      document.body.classList.add(className);
+      document.documentElement.setAttribute("data-theme", "dark");
 
-          // Force mobile browser compatibility
-          if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-            document.documentElement.style.backgroundColor = "#222";
-            document.body.style.backgroundColor = "#222";
-            document.body.style.color = "#f8f9fa";
-          }
-        } else {
-          document.documentElement.classList.remove("dark-theme");
-          document.body.classList.remove("dark-theme");
-          document.documentElement.setAttribute("data-theme", "light");
+      // Force mobile browser compatibility
+      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        document.documentElement.style.backgroundColor = "#222";
+        document.body.style.backgroundColor = "#222";
+        document.body.style.color = "#f8f9fa";
+      }
+    } else {
+      document.documentElement.classList.remove(className);
+      document.body.classList.remove(className);
+      document.documentElement.setAttribute("data-theme", "light");
 
-          // Force mobile browser compatibility
-          if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-            document.documentElement.style.backgroundColor = "#ffffff";
-            document.body.style.backgroundColor = "#ffffff";
-            document.body.style.color = "#212529";
-          }
-        }
-      }, 100);
-    } catch (e) {
-      console.error("Error applying theme:", e);
+      // Force mobile browser compatibility
+      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        document.documentElement.style.backgroundColor = "#ffffff";
+        document.body.style.backgroundColor = "#ffffff";
+        document.body.style.color = "#212529";
+      }
     }
   }, [settings.theme]);
 

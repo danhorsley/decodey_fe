@@ -1,24 +1,17 @@
 // src/components/modals/About.js
-import React, { useEffect } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import "../../Styles/About.css";
-import { useAppContext } from "../../context/AppContext";
+import { useSettings } from "../../context/SettingsContext";
 
 function About({ isOpen, onClose }) {
-  const { settings } = useAppContext();
+  // Get settings directly from context
+  const { settings } = useSettings();
 
-  // Debug logging
-  useEffect(() => {
-    console.log("About component rendered with isOpen:", isOpen);
-  }, [isOpen]);
-
-  // Don't render if not open (the isOpen prop is passed directly in App.js now)
+  // Don't render if not open
   if (!isOpen) {
-    console.log("About component not showing because isOpen is falsy");
     return null;
   }
-
-  console.log("About component is showing");
 
   return (
     <div className="about-overlay">

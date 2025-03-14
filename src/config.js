@@ -1,4 +1,4 @@
-// src/config.js - Complete configuration for the app
+// src/config.js - Simplified configuration for the app
 
 // Auth constants for consistent token handling
 const AUTH_KEYS = {
@@ -28,22 +28,7 @@ const getAuthUserId = () => {
   const storage = getStorage();
   return storage.getItem(AUTH_KEYS.USER_ID);
 };
-const debugTokenState = () => {
-  console.group("Token Debug");
-  console.log(
-    "Access Token:",
-    localStorage.getItem("token") ? "Present" : "Missing",
-  );
-  console.log(
-    "Refresh Token:",
-    localStorage.getItem("refresh_token") ? "Present" : "Missing",
-  );
-  console.log(
-    "Game ID:",
-    localStorage.getItem("uncrypt-game-id") ? "Present" : "Missing",
-  );
-  console.groupEnd();
-};
+
 // Function to clear session data (useful for logout)
 const clearSession = () => {
   // Clear auth data from both storages to be thorough
@@ -62,10 +47,6 @@ const clearSession = () => {
     localStorage.removeItem(key);
     sessionStorage.removeItem(key);
   });
-
-  // Don't clear rememberMe preference
-
-  console.log("Auth session data cleared from both storage types");
 };
 
 // Function to save session data from headers
@@ -77,14 +58,12 @@ const saveSession = (headers, rememberMe = null) => {
     const gameId = headers.get("X-Game-Id");
     if (gameId) {
       localStorage.setItem("uncrypt-game-id", gameId);
-      console.log("Game ID saved from headers:", gameId);
     }
 
     // Check for session_id in headers
     const sessionId = headers.get("X-Session-ID");
     if (sessionId) {
       localStorage.setItem("uncrypt-session-id", sessionId);
-      console.log("Session ID saved from headers:", sessionId);
     }
 
     // Check for auth token in headers (some APIs send this)
@@ -107,14 +86,9 @@ const saveSession = (headers, rememberMe = null) => {
 
       // Store the token
       storage.setItem(AUTH_KEYS.TOKEN, token);
-      console.log(
-        "Auth token saved from headers to",
-        shouldRemember ? "localStorage" : "sessionStorage",
-      );
     }
   } catch (error) {
     console.error("Error saving session data from headers:", error);
-    // Continue execution - this is non-critical
   }
 };
 
@@ -129,20 +103,9 @@ const config = {
     process.env.REACT_APP_API_URL ||
     "https://7264097a-b4a2-42c7-988c-db8c0c9b107a-00-1lx57x7wg68m5.janeway.replit.dev",
 
-  // Initialize and log API URL when config is first loaded
-  init: (() => {
-    console.log(
-      "🌐 API URL configured as:",
-      process.env.REACT_APP_BACKEND_URL ||
-        process.env.REACT_APP_API_URL ||
-        "https://uncryptbe.replit.app",
-    );
-    return true;
-  })(),
-
   // Debug flag to control logging
-  DEBUG: true,
-  debugTokenState,
+  DEBUG: false,
+
   // Session management methods
   session: {
     // Auth helper functions

@@ -68,9 +68,6 @@ const useDeviceDetection = () => {
 
       deviceInfoRef.current = newInfo;
       setDeviceInfo(newInfo);
-
-      // Log mobile device detection for debugging
-      console.log("Real mobile device detected:", userAgent);
       return;
     }
 
@@ -134,6 +131,7 @@ const useDeviceDetection = () => {
       setDeviceInfo(newInfo);
     }
   }, []); // Empty dependency array ensures this function doesn't change
+
   // Set up event listeners and initial detection
   useEffect(() => {
     // Initial detection

@@ -55,44 +55,36 @@ const ModalManager = ({ children }) => {
 
   // Modal functions
   const openAbout = useCallback(() => {
-    console.log("ModalManager: openAbout called");
     setIsAboutOpen(true);
   }, []);
 
   const closeAbout = useCallback(() => {
-    console.log("ModalManager: closeAbout called");
     setIsAboutOpen(false);
   }, []);
 
   const openLogin = useCallback(() => {
-    console.log("ModalManager: openLogin called");
     setIsSignupOpen(false); // Close signup if open
     setIsLoginOpen(true);
   }, []);
 
   const closeLogin = useCallback(() => {
-    console.log("ModalManager: closeLogin called");
     setIsLoginOpen(false);
   }, []);
 
   const openSignup = useCallback(() => {
-    console.log("ModalManager: openSignup called");
     setIsLoginOpen(false); // Close login if open
     setIsSignupOpen(true);
   }, []);
 
   const closeSignup = useCallback(() => {
-    console.log("ModalManager: closeSignup called");
     setIsSignupOpen(false);
   }, []);
 
   const openSettings = useCallback(() => {
-    console.log("ModalManager: openSettings called");
     setIsSettingsOpen(true);
   }, []);
 
   const closeSettings = useCallback(() => {
-    console.log("ModalManager: closeSettings called");
     setIsSettingsOpen(false);
   }, []);
 
@@ -120,13 +112,6 @@ const ModalManager = ({ children }) => {
     showSignup: openSignup,
     showSettings: openSettings,
   };
-
-  console.log("ModalManager state:", {
-    isAboutOpen,
-    isLoginOpen,
-    isSignupOpen,
-    isSettingsOpen,
-  });
 
   return (
     <ModalContext.Provider value={contextValue}>

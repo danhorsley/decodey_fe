@@ -15,7 +15,9 @@ export const AuthProvider = ({ children }) => {
   // Initialize auth state from token
   useEffect(() => {
     // Check for token in both localStorage and sessionStorage using consistent key names
-    const token = localStorage.getItem(config.AUTH_KEYS.TOKEN) || sessionStorage.getItem(config.AUTH_KEYS.TOKEN);
+    const token =
+      localStorage.getItem(config.AUTH_KEYS.TOKEN) ||
+      sessionStorage.getItem(config.AUTH_KEYS.TOKEN);
 
     if (token) {
       // Verify token with backend

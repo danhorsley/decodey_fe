@@ -19,11 +19,6 @@ function AccountButtonWrapper() {
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
 
   const handleClick = () => {
-    console.log("Account button clicked, auth state:", {
-      isAuthenticated,
-      username: user?.username,
-    });
-
     // If authenticated, show logout confirmation, otherwise open login modal
     if (isAuthenticated) {
       setShowLogoutConfirmation(true);

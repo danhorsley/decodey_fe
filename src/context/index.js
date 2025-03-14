@@ -10,7 +10,6 @@ import { GameStateProvider, useGameState } from "./GameStateContext";
  * This component also manages interactions between different contexts
  */
 export const AppProviders = ({ children }) => {
-  // We'll add a child component that can access all contexts to handle interactions
   return (
     <SettingsProvider>
       <AuthProvider>
@@ -30,7 +29,6 @@ export const AppProviders = ({ children }) => {
 const ContextInteractions = ({ children }) => {
   const { settings } = useSettings();
   const { updateMobileMode } = useUI();
-  const { isAuthenticated, authLoading, user } = useAuth();
 
   // Update mobile mode when settings change
   useEffect(() => {
@@ -38,17 +36,6 @@ const ContextInteractions = ({ children }) => {
       updateMobileMode(settings.mobileMode);
     }
   }, [settings, updateMobileMode]);
-
-  // Log auth state changes for debugging
-  useEffect(() => {
-    console.log("Auth state in ContextInteractions:", {
-      isAuthenticated,
-      authLoading,
-      userId: user?.id,
-    });
-  }, [isAuthenticated, authLoading, user]);
-
-  // Add more cross-context interactions here as needed
 
   return children;
 };
@@ -71,14 +58,6 @@ export const useAppContext = () => {
     console.warn("One or more contexts are undefined in useAppContext");
     return null;
   }
-
-  // Log auth state for debugging
-  const { authLoading, isAuthenticated, user } = auth;
-  console.log("useAppContext auth state:", {
-    authLoading,
-    isAuthenticated,
-    userId: user?.id,
-  });
 
   // Combine all contexts into a single object that matches
   // the structure of the original AppContext
