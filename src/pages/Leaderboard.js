@@ -86,12 +86,11 @@ const Leaderboard = ({ onClose }) => {
       streakPeriod,
       page,
     });
-    setIsStreakLoading(true);
-    setStreakError(null);
-
+    
     try {
-      // Clear data first to avoid rendering stale data
-      setStreakData(null);
+      setIsStreakLoading(true);
+      setStreakError(null);
+      setStreakData(null); // Clear data first to avoid rendering stale data
 
       const response = await leaderboardService.getStreakLeaderboard(
         streakType,
@@ -99,12 +98,12 @@ const Leaderboard = ({ onClose }) => {
         page
       );
 
-      if (response) {
-        console.log("Streak API returned:", response);
-        setStreakData(response);
-      } else {
+      if (!response) {
         throw new Error("No data returned from API");
       }
+
+      console.log("Streak API returned:", response);
+      setStreakData(response);
     } catch (err) {
       console.error("Error in fetchStreakData:", err.message);
       setStreakError(`Failed to load streak leaderboard data: ${err.message}`);
