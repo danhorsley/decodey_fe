@@ -118,15 +118,15 @@ export const GameStateProvider = ({ children }) => {
             break;
         }
 
-        console.log(
-          `Starting new game with difficulty: ${difficulty}, maxMistakes: ${maxMistakes}`,
-        );
-        console.log("API response data:", data);
-        // Pass difficulty to the API
+        console.log(`Making API call with difficulty=${difficulty}`);
         const data = await apiService.startGame({
           longText: useLongText,
           difficulty: difficulty,
         });
+
+        // Log the response to see what we got back
+        console.log("API response:", data);
+        // Pass difficulty to the API
 
         // Store the game ID in localStorage
         if (data.game_id) {
@@ -183,7 +183,7 @@ export const GameStateProvider = ({ children }) => {
         return false;
       }
     },
-    [],
+    [settings?.difficulty],
   );
 
   // Handle encrypted letter selection
@@ -586,6 +586,7 @@ export const GameStateProvider = ({ children }) => {
     state.startTime,
     state.maxMistakes,
     state.difficulty,
+    state.hardcoreMode, // Added the missing dependency
   ]);
 
   // Determine if game is active

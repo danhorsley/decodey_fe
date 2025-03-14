@@ -201,7 +201,12 @@ function Game() {
   const handleStartNewGame = useCallback(() => {
     console.log("Starting new game manually");
     startGame(settings.longText, settings.hardcoreMode);
-  }, [startGame, settings.longText, settings.hardcoreMode]);
+  }, [
+    startGame,
+    settings.longText,
+    settings.hardcoreMode,
+    settings?.difficulty,
+  ]);
 
   // Handle submit guess wrapper function
   // Update handleSubmitGuess in Game.js
