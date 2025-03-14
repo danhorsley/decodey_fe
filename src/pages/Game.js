@@ -90,6 +90,7 @@ function Game() {
   const [gameLoaded, setGameLoaded] = useState(false);
   const [attributionData, setAttributionData] = useState(null);
   const [showMatrixTransition, setShowMatrixTransition] = useState(false);
+
   // Sound handling
   const { playSound, loadSounds, unlockAudioContext, soundEnabled } =
     useSound();
@@ -212,6 +213,12 @@ function Game() {
       }
 
       console.log(`Submitting guess: ${selectedEncrypted} → ${guessedLetter}`);
+      console.log("Current state:", {
+        mistakes,
+        maxMistakes,
+        isGameActive,
+        difficulty,
+      });
 
       try {
         // Use the submitGuess function from context (defined in GameStateContext.js)
@@ -239,6 +246,10 @@ function Game() {
       submitGuess, // The submitGuess function from GameStateContext
       contextHandleEncryptedSelect,
       playSound,
+      mistakes, // Add dependencies for logging
+      maxMistakes,
+      isGameActive,
+      difficulty,
     ],
   );
 
@@ -262,10 +273,33 @@ function Game() {
   );
 
   // Handle hint button click
+  // Handle hint button click
   const onHintClick = useCallback(async () => {
     console.log("Hint button clicked");
+    console.log("Current game state:", {
+      mistakes,
+      maxMistakes,
+      isGameActive,
+      difficulty,
+      encrypted: !!encrypted,
+      hasWon,
+      hasLost,
+    });
 
     try {
+      // Check if we should even allow hint
+      const effectiveMaxMistakes =
+        typeof maxMistakes === "number" ? maxMistakes : 8;
+      if ((mistakes || 0) >= effectiveMaxMistakes - 1) {
+        console.warn("Cannot use hint - would exceed max mistakes");
+        return;
+      }
+
+      if (!isGameActive) {
+        console.warn("Cannot use hint - game not active");
+        return;
+      }
+
       // Use the getHint function provided by useGameState
       const result = await getHint();
       console.log("Hint result from context:", result);
@@ -273,11 +307,26 @@ function Game() {
       // Play sound if successful
       if (result.success) {
         playSound && playSound("hint");
+      } else {
+        console.warn(
+          "Hint request not successful:",
+          result.error || "Unknown error",
+        );
       }
     } catch (error) {
       console.error("Error in hint button handler:", error);
     }
-  }, [getHint, playSound]);
+  }, [
+    getHint,
+    playSound,
+    mistakes,
+    maxMistakes,
+    isGameActive,
+    difficulty,
+    encrypted,
+    hasWon,
+    hasLost,
+  ]);
 
   // Add this state for forcing updates
   const [forceUpdate, setForceUpdate] = useState(false);
@@ -306,7 +355,19 @@ function Game() {
   }, [encrypted, display]);
 
   // Determine if game is active
-  const isGameActive = !!encrypted && !completionTime && mistakes < maxMistakes;
+  const effectiveMaxMistakes =
+    typeof maxMistakes === "number" ? maxMistakes : 8;
+  const isGameActive =
+    !!encrypted && !completionTime && (mistakes || 0) < effectiveMaxMistakes;
+
+  // Add detailed logging for debugging
+  console.log("Game active status:", {
+    encrypted: !!encrypted,
+    completionTime: !!completionTime,
+    mistakes,
+    maxMistakes: effectiveMaxMistakes,
+    isGameActive,
+  });
 
   // Get modal states to disable keyboard when modals are open
   const { isLoginOpen, isSignupOpen, isSettingsOpen, isAboutOpen } =
@@ -446,32 +507,46 @@ function Game() {
     </div>
   );
 
-  const renderControls = () => (
-    <div className="controls">
-      <div className="controls-main">
-        <p>
-          Mistakes: {mistakes || 0}/{maxMistakes || 8}{" "}
-          {/* Add fallback values */}
-        </p>
-        <button
-          onClick={() => {
-            console.log("Hint clicked");
-            console.log("Button state:", {
-              isDisabled: mistakes >= maxMistakes - 1 || !isGameActive,
-              mistakes,
-              maxMistakes,
-              isGameActive,
-            });
-            onHintClick();
-          }}
-          disabled={mistakes >= maxMistakes - 1 || !isGameActive}
-          className="hint-button"
-        >
-          Hint (Costs 1 Mistake)
-        </button>
+  const renderControls = () => {
+    // Ensure maxMistakes has a valid value
+    const effectiveMaxMistakes =
+      typeof maxMistakes === "number" ? maxMistakes : 8;
+
+    console.log("Rendering controls with:", {
+      mistakes,
+      maxMistakes: effectiveMaxMistakes,
+      isGameActive,
+    });
+
+    return (
+      <div className="controls">
+        <div className="controls-main">
+          <p>
+            Mistakes: {mistakes || 0}/{effectiveMaxMistakes}{" "}
+          </p>
+          <button
+            onClick={() => {
+              console.log("Hint clicked");
+              console.log("Button state:", {
+                isDisabled:
+                  (mistakes || 0) >= effectiveMaxMistakes - 1 || !isGameActive,
+                mistakes,
+                maxMistakes: effectiveMaxMistakes,
+                isGameActive,
+              });
+              onHintClick();
+            }}
+            disabled={
+              (mistakes || 0) >= effectiveMaxMistakes - 1 || !isGameActive
+            }
+            className="hint-button"
+          >
+            Hint (Costs 1 Mistake)
+          </button>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderLeaderboardButton = () => (
     <button

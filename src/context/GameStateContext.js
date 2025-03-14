@@ -121,7 +121,7 @@ export const GameStateProvider = ({ children }) => {
         console.log(
           `Starting new game with difficulty: ${difficulty}, maxMistakes: ${maxMistakes}`,
         );
-
+        console.log("API response data:", data);
         // Pass difficulty to the API
         const data = await apiService.startGame({
           longText: useLongText,
@@ -173,7 +173,8 @@ export const GameStateProvider = ({ children }) => {
             gameId: data.game_id,
             hardcoreMode: hardcoreMode,
             difficulty: difficulty,
-            maxMistakes: data.max_mistakes || maxMistakes,
+            maxMistakes:
+              data.max_mistakes !== undefined ? data.max_mistakes : maxMistakes,
           },
         });
         return true;
@@ -616,6 +617,9 @@ export const GameStateProvider = ({ children }) => {
         //Local win actions
         isLocalWinDetected: state.isLocalWinDetected,
         isWinVerificationInProgress: state.isWinVerificationInProgress,
+
+        // Important: Add maxMistakes to the context
+        maxMistakes: state.maxMistakes,
 
         // Game actions
         startGame,
