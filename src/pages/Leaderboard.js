@@ -23,7 +23,7 @@ const Leaderboard = ({ onClose }) => {
   const { openLogin } = useModalContext();
 
   // Update our local auth loading state when context updates
-  const [localAuthLoading, setLocalAuthLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(true);
   useEffect(() => {
     console.log("Auth context update in Leaderboard:", {
       authContextLoading,
@@ -33,7 +33,7 @@ const Leaderboard = ({ onClose }) => {
     });
 
     if (!authContextLoading) {
-      setLocalAuthLoading(false);
+      setAuthLoading(false);
     }
   }, [authContextLoading, isAuthenticated, user]);
 
@@ -121,7 +121,7 @@ const Leaderboard = ({ onClose }) => {
       );
 
       // Don't try to fetch stats if auth is still loading or user is not authenticated
-      if (authContextLoading || !isAuthenticated) {
+      if (authLoading || !isAuthenticated) {
         console.log(
           "Skipping fetchPersonalStats - auth loading or not authenticated",
         );
@@ -181,7 +181,7 @@ const Leaderboard = ({ onClose }) => {
         }
       }
     },
-    [isAuthenticated, authContextLoading],
+    [isAuthenticated, authLoading],
   );
 
   // Fetch leaderboard data
@@ -216,7 +216,7 @@ const Leaderboard = ({ onClose }) => {
       tab === "personal" &&
       !personalStats &&
       isAuthenticated &&
-      !authContextLoading
+      !authLoading
     ) {
       console.log("Fetching personal stats on tab change");
       fetchPersonalStats();
@@ -224,7 +224,7 @@ const Leaderboard = ({ onClose }) => {
       console.log("Not fetching personal stats on tab change:", {
         hasExistingStats: !!personalStats,
         isAuthenticated,
-        authContextLoading,
+        authLoading,
       });
     }
   };
@@ -565,7 +565,7 @@ const Leaderboard = ({ onClose }) => {
 // New function to render personal stats tab
 const renderPersonalStats = () => {
   // Don't show the login prompt if we're still loading auth state
-  if (!isAuthenticated && !authContextLoading) {
+  if (!isAuthenticated && !authLoading) {
     return (
       <div className="personal-stats-login-required">
         <p>Please log in to view your personal stats.</p>
@@ -721,7 +721,7 @@ const renderPersonalStats = () => {
 
 const renderPersonalLeaderboard = () => {
   // Handle auth loading state
-  if (authContextLoading) {
+  if (authLoading) {
     return (
       <div className="loading-spinner">Checking authentication status...</div>
     );
