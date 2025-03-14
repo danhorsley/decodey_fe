@@ -99,21 +99,14 @@ const Leaderboard = ({ onClose }) => {
         page
       );
 
-      console.log("Streak API returned:", response);
-      setStreakData(response);
+      if (response) {
+        console.log("Streak API returned:", response);
+        setStreakData(response);
+      } else {
+        throw new Error("No data returned from API");
+      }
     } catch (err) {
-      console.error("Error in fetchStreakData:", err);
-      setStreakError(`Failed to load streak leaderboard data: ${err.message}`);
-    } finally {
-      setIsStreakLoading(false);
-    }
-
-export default Leaderboard;
-
-      console.log("Streak API returned:", response);
-      setStreakData(response);
-    } catch (err) {
-      console.error("Error in fetchStreakData:", err);
+      console.error("Error in fetchStreakData:", err.message);
       setStreakError(`Failed to load streak leaderboard data: ${err.message}`);
     } finally {
       setIsStreakLoading(false);
@@ -923,3 +916,5 @@ export default Leaderboard;
               </>
             )}
           </div>
+
+export default Leaderboard;
