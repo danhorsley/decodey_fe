@@ -720,14 +720,23 @@ const renderPersonalStats = () => {
 };
 
 const renderPersonalLeaderboard = () => {
-  // Handle auth loading state
-  if (authLoading) {
+  // Access state variables correctly from component scope
+  if (isLoading || authContextLoading) {
     return (
       <div className="loading-spinner">Checking authentication status...</div>
     );
   }
 
   // Personal tab now uses the new renderPersonalStats function
+  if (!isAuthenticated) {
+    return (
+      <div className="not-authenticated">
+        <p>Please log in to view your personal stats</p>
+        <button onClick={() => openLogin()}>Log In</button>
+      </div>
+    );
+  }
+
   return renderPersonalStats();
 };
 
