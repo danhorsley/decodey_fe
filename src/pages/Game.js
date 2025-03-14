@@ -1,11 +1,5 @@
-// src/pages/Game.js - Simplified
-import React, {
-  useEffect,
-  useState,
-  useCallback,
-  useMemo,
-  useContext,
-} from "react";
+// src/pages/Game.js - Complete Rewrite
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaTrophy } from "react-icons/fa";
 // Direct context imports
@@ -17,7 +11,6 @@ import { useUI } from "../context/UIContext";
 // Utility imports
 import useSound from "../services/WebAudioSoundManager";
 import useKeyboardInput from "../hooks/KeyboardController";
-import apiService from "../services/apiService";
 import { formatAlternatingLines } from "../utils/utils";
 // Component imports
 import HeaderControls from "../components/HeaderControls";
@@ -41,79 +34,145 @@ const LetterCell = React.memo(
       onClick={!disabled ? onClick : undefined}
     >
       {letter}
-      {frequency !== undefined && (
-        <span className="frequency-indicator">{frequency || 0}</span>
+      {typeof frequency !== "undefined" && (
+        <span className="frequency-indicator">{frequency}</span>
       )}
     </div>
   ),
 );
 
 function Game() {
-  console.log("Game component rendering");
-
+  // Initialize navigate
   const navigate = useNavigate();
 
-  // Get all context data
-  const { settings } = useSettings();
-  const { isAuthenticated } = useAuth();
+  // Get settings safely
+  const settingsContext = useSettings();
+  const settings = settingsContext?.settings || {
+    theme: "light",
+    difficulty: "easy",
+    longText: false,
+    hardcoreMode: false,
+  };
+
+  // Get auth state safely
+  const authContext = useAuth();
+  const isAuthenticated = authContext?.isAuthenticated || false;
+
+  // Get game state safely
+  const gameStateContext = useGameState();
   const {
+    encrypted = "",
+    display = "",
+    mistakes = 0,
+    correctlyGuessed = [],
+    selectedEncrypted = null,
+    lastCorrectGuess = null,
+    letterFrequency = {},
+    guessedMappings = {},
+    originalLetters = [],
+    startTime = null,
+    completionTime = null,
+    startGame = async () => false,
+    handleEncryptedSelect: contextHandleEncryptedSelect = () => {},
+    getHint = async () => ({ success: false }),
+    submitGuess = async () => ({ success: false }),
+    hasWon = false,
+    isLocalWinDetected = false,
+    hasLost = false,
+    winData = null,
+    difficulty = "easy",
+    maxMistakes = 8,
+  } = gameStateContext || {};
+
+  // Get UI context safely
+  const uiContext = useUI();
+  const useMobileMode = uiContext?.useMobileMode || false;
+  const isLandscape = uiContext?.isLandscape || true;
+
+  // Get modal context safely
+  const modalContext = useModalContext();
+  const {
+    isLoginOpen = false,
+    isSignupOpen = false,
+    isSettingsOpen = false,
+    isAboutOpen = false,
+  } = modalContext || {};
+
+  // Local state
+  const [loading, setLoading] = useState(true);
+  const [gameLoaded, setGameLoaded] = useState(false);
+  const [showMatrixTransition, setShowMatrixTransition] = useState(false);
+  const [forceUpdate, setForceUpdate] = useState(false);
+
+  // Get sound handlers safely
+  const soundContext = useSound();
+  const {
+    playSound = () => {},
+    loadSounds = () => {},
+    unlockAudioContext = () => {},
+    soundEnabled = true,
+  } = soundContext || {};
+
+  // Debug logging
+  useEffect(() => {
+    console.log("Game state:", {
+      encrypted:
+        typeof encrypted === "string"
+          ? encrypted.substring(0, 20) + "..."
+          : encrypted,
+      display:
+        typeof display === "string"
+          ? display.substring(0, 20) + "..."
+          : display,
+      mistakes,
+      correctlyGuessed,
+      selectedEncrypted,
+      difficulty,
+      maxMistakes,
+    });
+  }, [
     encrypted,
     display,
     mistakes,
     correctlyGuessed,
     selectedEncrypted,
-    lastCorrectGuess,
-    letterFrequency,
-    guessedMappings,
-    originalLetters,
-    startTime,
-    completionTime,
-    startGame,
-    handleEncryptedSelect: contextHandleEncryptedSelect,
-    getHint,
-    submitGuess,
-    hasWon,
-    isLocalWinDetected,
-    hasLost,
-    winData,
-    difficulty, // Add difficulty to destructuring
-    maxMistakes, // Get maxMistakes from game state instead of settings
-  } = useGameState();
-  // UI context for mobile detection
-  const { useMobileMode, isLandscape } = useUI();
-  // const { dispatch } = useContext(GameStateContext);
-  // Modal context for checking open modals
-  const modalContext = useModalContext();
+    difficulty,
+    maxMistakes,
+  ]);
 
-  // Local state
-  const [loading, setLoading] = useState(true);
-  const [gameLoaded, setGameLoaded] = useState(false);
-  const [attributionData, setAttributionData] = useState(null);
-  const [showMatrixTransition, setShowMatrixTransition] = useState(false);
-
-  // Sound handling
-  const { playSound, loadSounds, unlockAudioContext, soundEnabled } =
-    useSound();
-  useEffect(() => {
-    console.log("Game state changed - display:", display);
-    console.log("Correctly guessed letters:", correctlyGuessed);
-    console.log("Guessed mappings:", guessedMappings);
-  }, [display, correctlyGuessed, guessedMappings]);
   // Initialize game when component mounts
   useEffect(() => {
     console.log("Game mount effect - initializing game");
+    let mounted = true; // Flag to prevent state updates after unmount
 
     const initializeGame = async () => {
       setLoading(true);
       try {
+        if (typeof startGame !== "function") {
+          console.error("startGame is not a function:", startGame);
+          return;
+        }
+
         console.log("Starting new game...");
-        await startGame(settings.longText, settings.hardcoreMode);
+
+        // Get settings safely
+        const longTextSetting = settings?.longText === true;
+        const hardcoreModeSetting = settings?.hardcoreMode === true;
+
+        console.log("Game settings:", { longTextSetting, hardcoreModeSetting });
+
+        await startGame(longTextSetting, hardcoreModeSetting);
         console.log("Game started successfully");
-        setGameLoaded(true);
+
+        if (mounted) {
+          setGameLoaded(true);
+        }
       } catch (err) {
         console.error("Error starting game:", err);
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -127,133 +186,180 @@ function Game() {
       });
     }
 
-    // Initialize audio
-    loadSounds();
-    const handleFirstInteraction = () => {
-      unlockAudioContext();
-      loadSounds();
-    };
+    // Initialize audio safely
+    try {
+      if (typeof loadSounds === "function") {
+        loadSounds();
+      }
 
-    window.addEventListener("click", handleFirstInteraction, { once: true });
-    window.addEventListener("keydown", handleFirstInteraction, { once: true });
+      const handleFirstInteraction = () => {
+        if (typeof unlockAudioContext === "function") {
+          unlockAudioContext();
+        }
+        if (typeof loadSounds === "function") {
+          loadSounds();
+        }
+      };
 
-    return () => {
-      window.removeEventListener("click", handleFirstInteraction);
-      window.removeEventListener("keydown", handleFirstInteraction);
-    };
-  }, [startGame, settings.longText, settings.hardcoreMode]);
-  //Add useEffect to watch for local win detection:
-  useEffect(() => {
-    // If local win is detected but full win celebration isn't shown yet
-    if (isLocalWinDetected && !hasWon) {
-      console.log("Local win detected, starting Matrix rain transition");
-      // Start Matrix rain animation
-      setShowMatrixTransition(true);
+      window.addEventListener("click", handleFirstInteraction, { once: true });
+      window.addEventListener("keydown", handleFirstInteraction, {
+        once: true,
+      });
 
-      // Play win sound
-      playSound && playSound("win");
+      return () => {
+        mounted = false;
+        window.removeEventListener("click", handleFirstInteraction);
+        window.removeEventListener("keydown", handleFirstInteraction);
+      };
+    } catch (error) {
+      console.error("Error setting up audio:", error);
+      return () => {
+        mounted = false;
+      };
     }
+  }, [
+    startGame,
+    settings,
+    encrypted,
+    gameLoaded,
+    loadSounds,
+    unlockAudioContext,
+  ]);
 
-    // When full win is confirmed, hide the transition
-    if (hasWon) {
-      setShowMatrixTransition(false);
+  // Watch for local win detection
+  useEffect(() => {
+    try {
+      // If local win is detected but full win celebration isn't shown yet
+      if (isLocalWinDetected === true && hasWon !== true) {
+        console.log("Local win detected, starting Matrix rain transition");
+        // Start Matrix rain animation
+        setShowMatrixTransition(true);
+
+        // Play win sound
+        if (typeof playSound === "function") {
+          playSound("win");
+        }
+      }
+
+      // When full win is confirmed, hide the transition
+      if (hasWon === true) {
+        setShowMatrixTransition(false);
+      }
+    } catch (error) {
+      console.error("Error in win detection effect:", error);
     }
   }, [isLocalWinDetected, hasWon, playSound]);
-  //matrixrain cleanup function
+
+  // Cleanup effect
   useEffect(() => {
     return () => {
       // Clean up win transition if component unmounts
       setShowMatrixTransition(false);
     };
   }, []);
-  // Ensure theme is applied to body and document
+
+  // Apply theme to body
   useEffect(() => {
-    const className = "dark-theme";
-    if (settings.theme === "dark") {
-      document.documentElement.classList.add(className);
-      document.body.classList.add(className);
-    } else {
-      document.documentElement.classList.remove(className);
-      document.body.classList.remove(className);
+    try {
+      const className = "dark-theme";
+      const isDarkTheme = settings?.theme === "dark";
+
+      if (isDarkTheme) {
+        document.documentElement.classList.add(className);
+        document.body.classList.add(className);
+      } else {
+        document.documentElement.classList.remove(className);
+        document.body.classList.remove(className);
+      }
+    } catch (error) {
+      console.error("Error applying theme:", error);
     }
-  }, [settings.theme]);
+  }, [settings?.theme]);
 
-  useEffect(() => {
-    console.log("Game state changed - display:", display);
-    console.log("Correctly guessed letters:", correctlyGuessed);
-    console.log("Guessed mappings:", guessedMappings);
-    console.log("Current difficulty:", difficulty);
-    console.log("Max mistakes allowed:", maxMistakes);
-  }, [display, correctlyGuessed, guessedMappings, difficulty, maxMistakes]);
-
-  useEffect(() => {
-    const authRequiredSubscription = apiService.on("auth:required", () => {
-      // Show a message to the user
-      alert("You need to log in again to continue.");
-      // Optionally open the login modal
-    });
-
-    return () => {
-      authRequiredSubscription(); // Clean up the subscription
-    };
-  }, []);
   // Start a new game manually
   const handleStartNewGame = useCallback(() => {
-    console.log("Starting new game manually");
-    startGame(settings.longText, settings.hardcoreMode);
-  }, [
-    startGame,
-    settings.longText,
-    settings.hardcoreMode,
-    settings?.difficulty,
-  ]);
+    try {
+      console.log("Starting new game manually");
 
-  // Handle submit guess wrapper function
-  // Update handleSubmitGuess in Game.js
-  const handleSubmitGuess = useCallback(
-    async (guessedLetter) => {
-      if (!selectedEncrypted) {
-        console.warn("Cannot submit guess: No encrypted letter selected");
+      if (typeof startGame !== "function") {
+        console.error("startGame is not a function");
         return;
       }
 
-      console.log(`Submitting guess: ${selectedEncrypted} → ${guessedLetter}`);
-      console.log("Current state:", {
-        mistakes,
-        maxMistakes,
-        isGameActive,
-        difficulty,
-      });
+      const longTextSetting = settings?.longText === true;
+      const hardcoreModeSetting = settings?.hardcoreMode === true;
 
+      startGame(longTextSetting, hardcoreModeSetting);
+    } catch (error) {
+      console.error("Error starting new game:", error);
+    }
+  }, [startGame, settings?.longText, settings?.hardcoreMode]);
+
+  // Handle submit guess wrapper function
+  const handleSubmitGuess = useCallback(
+    async (guessedLetter) => {
       try {
-        // Use the submitGuess function from context (defined in GameStateContext.js)
+        if (!selectedEncrypted) {
+          console.warn("Cannot submit guess: No encrypted letter selected");
+          return;
+        }
+
+        if (typeof guessedLetter !== "string" || guessedLetter.length !== 1) {
+          console.warn("Invalid guessed letter:", guessedLetter);
+          return;
+        }
+
+        console.log(
+          `Submitting guess: ${selectedEncrypted} → ${guessedLetter}`,
+        );
+        console.log("Current state:", {
+          mistakes,
+          maxMistakes,
+          difficulty,
+        });
+
+        if (typeof submitGuess !== "function") {
+          console.error("submitGuess is not a function");
+          return;
+        }
+
+        // Use the submitGuess function from context
         const result = await submitGuess(selectedEncrypted, guessedLetter);
         console.log("Guess result:", result);
 
         // Play sound based on result
-        if (result.success) {
-          if (result.isCorrect) {
-            playSound("correct");
+        if (result.success === true) {
+          if (result.isCorrect === true) {
+            if (typeof playSound === "function") {
+              playSound("correct");
+            }
           } else {
-            playSound("incorrect");
+            if (typeof playSound === "function") {
+              playSound("incorrect");
+            }
           }
         }
 
         // Reset selected letter regardless of result
-        contextHandleEncryptedSelect(null);
+        if (typeof contextHandleEncryptedSelect === "function") {
+          contextHandleEncryptedSelect(null);
+        }
       } catch (error) {
         console.error("Error submitting guess:", error);
-        contextHandleEncryptedSelect(null);
+
+        // Reset selected letter on error
+        if (typeof contextHandleEncryptedSelect === "function") {
+          contextHandleEncryptedSelect(null);
+        }
       }
     },
     [
       selectedEncrypted,
-      submitGuess, // The submitGuess function from GameStateContext
+      submitGuess,
       contextHandleEncryptedSelect,
       playSound,
-      mistakes, // Add dependencies for logging
+      mistakes,
       maxMistakes,
-      isGameActive,
       difficulty,
     ],
   );
@@ -261,8 +367,25 @@ function Game() {
   // Handle encrypted grid click
   const onEncryptedClick = useCallback(
     (letter) => {
-      contextHandleEncryptedSelect(letter);
-      playSound("keyclick");
+      try {
+        if (typeof letter !== "string" || letter.length !== 1) {
+          console.warn("Invalid letter:", letter);
+          return;
+        }
+
+        if (typeof contextHandleEncryptedSelect === "function") {
+          contextHandleEncryptedSelect(letter);
+        } else {
+          console.error("contextHandleEncryptedSelect is not a function");
+          return;
+        }
+
+        if (typeof playSound === "function") {
+          playSound("keyclick");
+        }
+      } catch (error) {
+        console.error("Error in encrypted click handler:", error);
+      }
     },
     [contextHandleEncryptedSelect, playSound],
   );
@@ -270,38 +393,41 @@ function Game() {
   // Handle guess grid click
   const onGuessClick = useCallback(
     (guessedLetter) => {
-      if (selectedEncrypted) {
-        handleSubmitGuess(guessedLetter);
+      try {
+        if (typeof guessedLetter !== "string" || guessedLetter.length !== 1) {
+          console.warn("Invalid guessed letter:", guessedLetter);
+          return;
+        }
+
+        if (selectedEncrypted && typeof handleSubmitGuess === "function") {
+          handleSubmitGuess(guessedLetter);
+        } else {
+          console.log(
+            "No encrypted letter selected or handleSubmitGuess not available",
+          );
+        }
+      } catch (error) {
+        console.error("Error in guess click handler:", error);
       }
     },
     [selectedEncrypted, handleSubmitGuess],
   );
 
   // Handle hint button click
-  // Handle hint button click
   const onHintClick = useCallback(async () => {
-    console.log("Hint button clicked");
-    console.log("Current game state:", {
-      mistakes,
-      maxMistakes,
-      isGameActive,
-      difficulty,
-      encrypted: !!encrypted,
-      hasWon,
-      hasLost,
-    });
-
     try {
-      // Check if we should even allow hint
-      const effectiveMaxMistakes =
-        typeof maxMistakes === "number" ? maxMistakes : 8;
-      if ((mistakes || 0) >= effectiveMaxMistakes - 1) {
-        console.warn("Cannot use hint - would exceed max mistakes");
-        return;
-      }
+      console.log("Hint button clicked");
+      console.log("Current game state:", {
+        mistakes,
+        maxMistakes,
+        isGameActive: isGameActiveComputed,
+        difficulty,
+        encrypted: typeof encrypted === "string",
+      });
 
-      if (!isGameActive) {
-        console.warn("Cannot use hint - game not active");
+      // Safety check
+      if (typeof getHint !== "function") {
+        console.error("getHint is not a function");
         return;
       }
 
@@ -310,108 +436,121 @@ function Game() {
       console.log("Hint result from context:", result);
 
       // Play sound if successful
-      if (result.success) {
-        playSound && playSound("hint");
-      } else {
-        console.warn(
-          "Hint request not successful:",
-          result.error || "Unknown error",
-        );
+      if (result.success === true && typeof playSound === "function") {
+        playSound("hint");
       }
     } catch (error) {
       console.error("Error in hint button handler:", error);
     }
-  }, [
-    getHint,
-    playSound,
-    mistakes,
-    maxMistakes,
-    isGameActive,
-    difficulty,
-    encrypted,
-    hasWon,
-    hasLost,
-  ]);
-
-  // Add this state for forcing updates
-  const [forceUpdate, setForceUpdate] = useState(false);
+  }, [getHint, playSound, mistakes, maxMistakes, difficulty, encrypted]);
 
   // Memoized computed values
   const encryptedLetters = useMemo(() => {
-    if (!encrypted) return [];
-    const matches = encrypted.match(/[A-Z]/g);
-    return matches ? [...new Set(matches)] : [];
+    try {
+      if (typeof encrypted !== "string" || encrypted.length === 0) return [];
+
+      const matches = encrypted.match(/[A-Z]/g);
+      return matches ? [...new Set(matches)] : [];
+    } catch (error) {
+      console.error("Error computing encrypted letters:", error);
+      return [];
+    }
   }, [encrypted]);
 
   const sortedEncryptedLetters = useMemo(() => {
-    return settings.gridSorting === "alphabetical"
-      ? [...encryptedLetters].sort()
-      : encryptedLetters;
-  }, [encryptedLetters, settings.gridSorting]);
+    try {
+      if (!Array.isArray(encryptedLetters)) return [];
+
+      const gridSorting = settings?.gridSorting;
+
+      return gridSorting === "alphabetical"
+        ? [...encryptedLetters].sort()
+        : encryptedLetters;
+    } catch (error) {
+      console.error("Error sorting encrypted letters:", error);
+      return [];
+    }
+  }, [encryptedLetters, settings?.gridSorting]);
 
   const usedGuessLetters = useMemo(() => {
-    return Object.values(guessedMappings);
+    try {
+      if (typeof guessedMappings !== "object" || guessedMappings === null) {
+        return [];
+      }
+
+      return Object.values(guessedMappings);
+    } catch (error) {
+      console.error("Error computing used guess letters:", error);
+      return [];
+    }
   }, [guessedMappings]);
 
   // Format text for display
   const formattedText = useMemo(() => {
-    if (!encrypted || !display) return { __html: "" };
-    return formatAlternatingLines(encrypted, display, true);
+    try {
+      if (typeof encrypted !== "string" || typeof display !== "string") {
+        return { __html: "" };
+      }
+
+      if (encrypted.length === 0 || display.length === 0) {
+        return { __html: "" };
+      }
+
+      if (typeof formatAlternatingLines !== "function") {
+        console.error("formatAlternatingLines is not a function");
+        return { __html: "" };
+      }
+
+      return formatAlternatingLines(encrypted, display, true);
+    } catch (error) {
+      console.error("Error formatting text:", error);
+      return { __html: "" };
+    }
   }, [encrypted, display]);
 
-  // Determine if game is active
-  const effectiveMaxMistakes =
-    typeof maxMistakes === "number" ? maxMistakes : 8;
-  const isGameActive =
-    !!encrypted && !completionTime && (mistakes || 0) < effectiveMaxMistakes;
+  // Determine if game is active with robust checks
+  let isGameActiveComputed = false;
+  try {
+    const hasEncrypted = typeof encrypted === "string" && encrypted.length > 0;
+    const isCompleted = !!completionTime;
+    const currentMistakes = typeof mistakes === "number" ? mistakes : 0;
+    const effectiveMaxMistakes =
+      typeof maxMistakes === "number" ? maxMistakes : 8;
+    const mistakesWithinLimit = currentMistakes < effectiveMaxMistakes;
 
-  // Add detailed logging for debugging
-  // console.log("Game active status:", {
-  //   encrypted: !!encrypted,
-  //   completionTime: !!completionTime,
-  //   mistakes,
-  //   maxMistakes: effectiveMaxMistakes,
-  //   isGameActive,
-  // });
+    isGameActiveComputed = hasEncrypted && !isCompleted && mistakesWithinLimit;
+  } catch (error) {
+    console.error("Error calculating game active status:", error);
+    isGameActiveComputed = false;
+  }
 
-  // Get modal states to disable keyboard when modals are open
-  const { isLoginOpen, isSignupOpen, isSettingsOpen, isAboutOpen } =
-    useModalContext();
+  // Any modal open check
+  const anyModalOpen =
+    isLoginOpen || isSignupOpen || isSettingsOpen || isAboutOpen;
 
-  // Determine if we should enable keyboard input
-  const keyboardEnabled = useMemo(() => {
-    // Disable keyboard when any modal is open
-    const anyModalOpen =
-      isLoginOpen || isSignupOpen || isSettingsOpen || isAboutOpen;
+  // Keyboard input setup
+  const keyboardEnabled = isGameActiveComputed && !anyModalOpen;
 
-    // Keyboard should only be active when game is active AND no modals are open
-    const enabled = isGameActive && !anyModalOpen;
-
-    console.log("Keyboard input enabled:", enabled, {
-      isGameActive,
-      modalStates: { isLoginOpen, isSignupOpen, isSettingsOpen, isAboutOpen },
-    });
-
-    return enabled;
-  }, [isGameActive, isLoginOpen, isSignupOpen, isSettingsOpen, isAboutOpen]);
-
-  // Set up keyboard input with explicit modal awareness
   const { isActive } = useKeyboardInput({
     enabled: keyboardEnabled,
     speedMode: true,
-    encryptedLetters,
-    originalLetters,
+    encryptedLetters: Array.isArray(encryptedLetters) ? encryptedLetters : [],
+    originalLetters: Array.isArray(originalLetters) ? originalLetters : [],
     selectedEncrypted,
-    onEncryptedSelect: contextHandleEncryptedSelect,
-    onGuessSubmit: handleSubmitGuess,
-    playSound,
+    onEncryptedSelect:
+      typeof contextHandleEncryptedSelect === "function"
+        ? contextHandleEncryptedSelect
+        : () => {},
+    onGuessSubmit:
+      typeof handleSubmitGuess === "function" ? handleSubmitGuess : () => {},
+    playSound: typeof playSound === "function" ? playSound : undefined,
   });
 
   // If loading, show simple loading screen
   if (loading) {
     return (
       <div
-        className={`App-container ${settings.theme === "dark" ? "dark-theme" : ""}`}
+        className={`App-container ${settings?.theme === "dark" ? "dark-theme" : ""}`}
       >
         <div
           style={{
@@ -431,7 +570,7 @@ function Game() {
   if (!encrypted && !loading) {
     return (
       <div
-        className={`App-container ${settings.theme === "dark" ? "dark-theme" : ""}`}
+        className={`App-container ${settings?.theme === "dark" ? "dark-theme" : ""}`}
       >
         <HeaderControls title="uncrypt" />
         <div
@@ -440,7 +579,7 @@ function Game() {
             margin: "50px auto",
             maxWidth: "400px",
             padding: "20px",
-            backgroundColor: settings.theme === "dark" ? "#333" : "#f0f8ff",
+            backgroundColor: settings?.theme === "dark" ? "#333" : "#f0f8ff",
             borderRadius: "8px",
           }}
         >
@@ -462,87 +601,106 @@ function Game() {
 
   const renderTextContainer = () => (
     <div
-      className={`text-container ${settings.hardcoreMode ? "hardcore-mode" : ""}`}
+      className={`text-container ${settings?.hardcoreMode === true ? "hardcore-mode" : ""}`}
     >
       <div
         className="alternating-text"
         dangerouslySetInnerHTML={formattedText}
       />
-      {settings.hardcoreMode && (
+      {settings?.hardcoreMode === true && (
         <div className="hardcore-badge">HARDCORE MODE</div>
       )}
     </div>
   );
 
-  const renderGrids = () => (
-    <div className="grids">
-      <div className="encrypted-grid">
-        {sortedEncryptedLetters.map((letter) => (
-          <LetterCell
-            key={letter}
-            letter={letter}
-            isSelected={selectedEncrypted === letter}
-            isGuessed={correctlyGuessed.includes(letter)}
-            isFlashing={lastCorrectGuess === letter}
-            frequency={letterFrequency[letter]}
-            onClick={() => {
-              console.log(`Clicking encrypted letter: ${letter}`);
-              onEncryptedClick(letter);
-            }}
-            disabled={!isGameActive}
-          />
-        ))}
+  const renderGrids = () => {
+    // Safety check that arrays are arrays
+    const safeEncryptedLetters = Array.isArray(sortedEncryptedLetters)
+      ? sortedEncryptedLetters
+      : [];
+
+    const safeOriginalLetters = Array.isArray(originalLetters)
+      ? originalLetters
+      : [];
+
+    const safeCorrectlyGuessed = Array.isArray(correctlyGuessed)
+      ? correctlyGuessed
+      : [];
+
+    return (
+      <div className="grids">
+        <div className="encrypted-grid">
+          {safeEncryptedLetters.map((letter) => (
+            <LetterCell
+              key={letter}
+              letter={letter}
+              isSelected={selectedEncrypted === letter}
+              isGuessed={safeCorrectlyGuessed.includes(letter)}
+              isFlashing={lastCorrectGuess === letter}
+              frequency={
+                typeof letterFrequency === "object" && letterFrequency !== null
+                  ? letterFrequency[letter] || 0
+                  : 0
+              }
+              onClick={() => {
+                console.log(`Clicking encrypted letter: ${letter}`);
+                onEncryptedClick(letter);
+              }}
+              disabled={!isGameActiveComputed}
+            />
+          ))}
+        </div>
+        <div className="guess-grid">
+          {safeOriginalLetters.map((letter) => (
+            <LetterCell
+              key={letter}
+              letter={letter}
+              isGuessed={
+                Array.isArray(usedGuessLetters) &&
+                usedGuessLetters.includes(letter)
+              }
+              onClick={() => {
+                console.log(
+                  `Clicking guess letter: ${letter}, selectedEncrypted: ${selectedEncrypted}`,
+                );
+                onGuessClick(letter);
+              }}
+              disabled={!isGameActiveComputed || !selectedEncrypted}
+            />
+          ))}
+        </div>
       </div>
-      <div className="guess-grid">
-        {originalLetters.map((letter) => (
-          <LetterCell
-            key={letter}
-            letter={letter}
-            isGuessed={usedGuessLetters.includes(letter)}
-            onClick={() => {
-              console.log(
-                `Clicking guess letter: ${letter}, selectedEncrypted: ${selectedEncrypted}`,
-              );
-              onGuessClick(letter);
-            }}
-            disabled={!isGameActive || !selectedEncrypted}
-          />
-        ))}
-      </div>
-    </div>
-  );
+    );
+  };
 
   const renderControls = () => {
     // Ensure maxMistakes has a valid value
     const effectiveMaxMistakes =
       typeof maxMistakes === "number" ? maxMistakes : 8;
-
-    console.log("Rendering controls with:", {
-      mistakes,
-      maxMistakes: effectiveMaxMistakes,
-      isGameActive,
-    });
+    const currentMistakes = typeof mistakes === "number" ? mistakes : 0;
 
     return (
       <div className="controls">
         <div className="controls-main">
           <p>
-            Mistakes: {mistakes || 0}/{effectiveMaxMistakes}{" "}
+            Mistakes: {currentMistakes}/{effectiveMaxMistakes}{" "}
           </p>
           <button
             onClick={() => {
               console.log("Hint clicked");
               console.log("Button state:", {
                 isDisabled:
-                  (mistakes || 0) >= effectiveMaxMistakes - 1 || !isGameActive,
-                mistakes,
+                  currentMistakes >= effectiveMaxMistakes - 1 ||
+                  !isGameActiveComputed,
+                mistakes: currentMistakes,
                 maxMistakes: effectiveMaxMistakes,
-                isGameActive,
+                isGameActive: isGameActiveComputed,
               });
               onHintClick();
             }}
             disabled={
-              (mistakes || 0) >= effectiveMaxMistakes - 1 || !isGameActive
+              currentMistakes >= effectiveMaxMistakes - 1 ||
+              !isGameActiveComputed
             }
             className="hint-button"
           >
@@ -563,34 +721,52 @@ function Game() {
     </button>
   );
 
+  const renderMatrixTransition = () => {
+    if (!showMatrixTransition) return null;
+
+    let matrixColor = "#00ff41"; // Default green
+
+    if (settings?.textColor === "scifi-blue") {
+      matrixColor = "#4cc9f0";
+    } else if (settings?.textColor === "retro-green") {
+      matrixColor = "#00ff41";
+    }
+
+    return (
+      <MatrixRain
+        active={true}
+        color={matrixColor}
+        density={70}
+        fadeSpeed={0.05}
+        speedFactor={1}
+        includeKatakana={true}
+      />
+    );
+  };
+
   const renderGameOver = () => {
-    if (hasWon) {
+    if (hasWon === true) {
+      const safeFn =
+        typeof startGame === "function" ? handleStartNewGame : () => {};
+      const safePlaySound =
+        typeof playSound === "function" ? playSound : () => {};
+
+      const safeTheme = settings?.theme || "light";
+      const safeTextColor = settings?.textColor || "default";
+
       return (
         <WinCelebration
-          startGame={handleStartNewGame}
-          playSound={playSound}
-          theme={settings.theme}
-          textColor={settings.textColor}
-          winData={winData} // Pass the win data from context
+          startGame={safeFn}
+          playSound={safePlaySound}
+          theme={safeTheme}
+          textColor={safeTextColor}
+          winData={winData || {}} // Ensure it's not null
         />
       );
     }
-    const renderMatrixTransition = () => {
-      if (!showMatrixTransition) return null;
 
-      return (
-        <MatrixRain
-          active={true}
-          color={settings.textColor === "scifi-blue" ? "#4cc9f0" : "#00ff41"}
-          density={70}
-          fadeSpeed={0.05}
-          speedFactor={1}
-          includeKatakana={true}
-        />
-      );
-    };
-    // Return the Matrix transition if a local win is detected
-    if (showMatrixTransition && !hasWon) {
+    // Show Matrix transition if a local win is detected
+    if (showMatrixTransition === true && hasWon !== true) {
       return (
         <div className="win-transition">
           {renderMatrixTransition()}
@@ -601,7 +777,7 @@ function Game() {
               left: "50%",
               transform: "translate(-50%, -50%)",
               zIndex: 1100,
-              color: settings.theme === "dark" ? "#4cc9f0" : "#007bff",
+              color: settings?.theme === "dark" ? "#4cc9f0" : "#007bff",
               fontSize: "1.5rem",
               textAlign: "center",
               fontWeight: "bold",
@@ -614,7 +790,8 @@ function Game() {
         </div>
       );
     }
-    if (hasLost) {
+
+    if (hasLost === true) {
       return (
         <div
           className="game-message"
@@ -624,8 +801,8 @@ function Game() {
             left: "50%",
             transform: "translate(-50%, -50%)",
             zIndex: 1100,
-            backgroundColor: settings.theme === "dark" ? "#333" : "#f0f8ff",
-            color: settings.theme === "dark" ? "#f8f9fa" : "#212529",
+            backgroundColor: settings?.theme === "dark" ? "#333" : "#f0f8ff",
+            color: settings?.theme === "dark" ? "#f8f9fa" : "#212529",
             padding: "25px",
             borderRadius: "12px",
             boxShadow: "0 5px 15px rgba(0, 0, 0, 0.3)",
@@ -671,10 +848,10 @@ function Game() {
   };
 
   // Use mobile layout if needed
-  if (useMobileMode) {
+  if (useMobileMode === true) {
     return (
       <div className="App-container">
-        <MobileLayout isLandscape={isLandscape}>
+        <MobileLayout isLandscape={!!isLandscape}>
           {renderGameHeader()}
           {renderTextContainer()}
           {renderGrids()}
@@ -688,7 +865,7 @@ function Game() {
   // Standard desktop layout
   return (
     <div
-      className={`App-container ${settings.theme === "dark" ? "dark-theme" : ""}`}
+      className={`App-container ${settings?.theme === "dark" ? "dark-theme" : ""}`}
     >
       {renderGameHeader()}
       {renderTextContainer()}
