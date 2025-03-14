@@ -1,15 +1,14 @@
 // src/pages/Leaderboard.js
 import React, { useState, useEffect, useCallback } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import apiService from "../services/apiService";
+import { useNavigate } from "react-router-dom";
 import "../Styles/Leaderboard.css";
-import { useAuth } from "../context/AuthContext"; // Direct import for auth
-import { useSettings } from "../context/SettingsContext"; // Direct import for settings
-import { useModalContext } from "../components/modals/ModalManager"; // Import for modal functions
+import { useAuth } from "../context/AuthContext";
+import { useSettings } from "../context/SettingsContext";
+import { useModalContext } from "../components/modals/ModalManager";
 import HeaderControls from "../components/HeaderControls";
-import Settings from "../components/modals/Settings";
-import { FiRefreshCw, FiArrowLeft } from "react-icons/fi";
 import AccountButtonWrapper from "../components/AccountButtonWrapper";
+import { FiRefreshCw, FiArrowLeft } from "react-icons/fi";
+import leaderboardService from "../services/leaderboardService";
 
 const Leaderboard = ({ onClose }) => {
   const navigate = useNavigate();
@@ -24,6 +23,7 @@ const Leaderboard = ({ onClose }) => {
   const { openLogin } = useModalContext();
 
   // Update our local auth loading state when context updates
+  const [authLoading, setAuthLoading] = useState(true);
   useEffect(() => {
     console.log("Auth context update in Leaderboard:", {
       authContextLoading,
@@ -37,20 +37,22 @@ const Leaderboard = ({ onClose }) => {
     }
   }, [authContextLoading, isAuthenticated, user]);
 
+  // Tab and pagination state
   const [activeTab, setActiveTab] = useState("all-time");
+  const [page, setPage] = useState(1);
+
+  // Leaderboard data states
   const [leaderboardData, setLeaderboardData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [page, setPage] = useState(1);
-  const [authLoading, setAuthLoading] = useState(true); // Track auth loading state
 
-  // New state for personal stats
+  // Personal stats state
   const [personalStats, setPersonalStats] = useState(null);
   const [isPersonalLoading, setIsPersonalLoading] = useState(false);
   const [personalError, setPersonalError] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // New state for streak leaderboard
+  // Streak leaderboard state
   const [streakData, setStreakData] = useState(null);
   const [streakType, setStreakType] = useState("win"); // 'win' or 'noloss'
   const [streakPeriod, setStreakPeriod] = useState("current"); // 'current' or 'best'
@@ -66,7 +68,7 @@ const Leaderboard = ({ onClose }) => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await apiService.getLeaderboard(activeTab, page);
+      const response = await leaderboardService.getLeaderboard(activeTab, page);
       console.log("Leaderboard API response:", response);
       setLeaderboardData(response);
     } catch (err) {
@@ -91,20 +93,24 @@ const Leaderboard = ({ onClose }) => {
       // Clear data first to avoid rendering stale data
       setStreakData(null);
 
-      const response = await apiService.getStreakLeaderboard(
+      const response = await leaderboardService.getStreakLeaderboard(
         streakType,
         streakPeriod,
-        page,
+        page
       );
 
       console.log("Streak API returned:", response);
+      setStreakData(response);
+    } catch (err) {
+      console.error("Error in fetchStreakData:", err);
+      setStreakError(`Failed to load streak leaderboard data: ${err.message}`);
+    } finally {
+      setIsStreakLoading(false);
+    }
 
-      // Force entries to be an array even if empty
-      if (!response.entries && !response.topEntries) {
-        response.entries = [];
-      }
+export default Leaderboard;
 
-      // Set the data even if empty - we'll handle display in the render function
+      console.log("Streak API returned:", response);
       setStreakData(response);
     } catch (err) {
       console.error("Error in fetchStreakData:", err);
@@ -119,13 +125,13 @@ const Leaderboard = ({ onClose }) => {
     async (showRefreshAnimation = false) => {
       console.log(
         "fetchPersonalStats called with showRefreshAnimation =",
-        showRefreshAnimation,
+        showRefreshAnimation
       );
 
       // Don't try to fetch stats if auth is still loading or user is not authenticated
       if (authLoading || !isAuthenticated) {
         console.log(
-          "Skipping fetchPersonalStats - auth loading or not authenticated",
+          "Skipping fetchPersonalStats - auth loading or not authenticated"
         );
         return;
       }
@@ -146,7 +152,7 @@ const Leaderboard = ({ onClose }) => {
         console.log("Making API call to get user stats...");
 
         // Get user stats from the API
-        const response = await apiService.getUserStats();
+        const response = await leaderboardService.getUserStats();
         console.log("API response received:", response);
 
         // Check for error responses
@@ -156,7 +162,7 @@ const Leaderboard = ({ onClose }) => {
             setPersonalError("Please log in to view your stats.");
           } else {
             setPersonalError(
-              response.message || "Failed to load your personal stats.",
+              response.message || "Failed to load your personal stats."
             );
           }
           setPersonalStats(null);
@@ -168,7 +174,7 @@ const Leaderboard = ({ onClose }) => {
       } catch (err) {
         console.error("Exception in fetchPersonalStats:", err);
         setPersonalError(
-          "Failed to load your personal stats. Please try again.",
+          "Failed to load your personal stats. Please try again."
         );
         setPersonalStats(null);
       } finally {
@@ -183,8 +189,8 @@ const Leaderboard = ({ onClose }) => {
         }
       }
     },
-    [isAuthenticated, authLoading],
-  ); // Make sure all dependencies are included
+    [isAuthenticated, authLoading]
+  );
 
   // Fetch leaderboard data
   useEffect(() => {
@@ -266,6 +272,7 @@ const Leaderboard = ({ onClose }) => {
       <FiRefreshCw />
     </button>
   );
+
   const renderTabs = () => (
     <div className="tabs-container">
       {/* Back button on the left side with improved styling */}
@@ -313,6 +320,7 @@ const Leaderboard = ({ onClose }) => {
       </div>
     </div>
   );
+
   // Improved leaderboard rendering to include the user carve-out
   const renderLeaderboardTable = () => {
     if (!leaderboardData) return null;
@@ -344,7 +352,7 @@ const Leaderboard = ({ onClose }) => {
       !topEntries.some(
         (entry) =>
           entry.is_current_user ||
-          (currentUserEntry && entry.user_id === currentUserEntry.user_id),
+          (currentUserEntry && entry.user_id === currentUserEntry.user_id)
       );
 
     console.log("Carve-out check:", {
@@ -353,7 +361,7 @@ const Leaderboard = ({ onClose }) => {
       isUserInTopEntries: topEntries.some(
         (entry) =>
           entry.is_current_user ||
-          (currentUserEntry && entry.user_id === currentUserEntry.user_id),
+          (currentUserEntry && entry.user_id === currentUserEntry.user_id)
       ),
       shouldShowCarveOut,
     });
@@ -375,6 +383,138 @@ const Leaderboard = ({ onClose }) => {
               >
                 #{entry.rank}
               </div>
+        )}
+
+        {/* Pagination, only shown if we have enough entries */}
+        {hasEntries &&
+          pagination &&
+          pagination.total_pages > 1 &&
+          renderPagination(pagination)}
+      </div>
+    );
+  };
+
+  // Enhanced renderStreakControls function with clear labeling
+  const renderStreakControls = () => (
+    <div className="streak-controls">
+      <div className="streak-type-selector">
+        <button
+          className={`streak-type-button ${streakType === "win" ? "active" : ""}`}
+          onClick={() => {
+            console.log("Setting streak type to 'win'");
+            setStreakType("win");
+            setPage(1); // Reset page when changing type
+          }}
+        >
+          Win Streaks
+        </button>
+        <button
+          className={`streak-type-button ${streakType === "noloss" ? "active" : ""}`}
+          onClick={() => {
+            console.log("Setting streak type to 'noloss'");
+            setStreakType("noloss");
+            setPage(1); // Reset page when changing type
+          }}
+        >
+          No-Loss Streaks
+        </button>
+      </div>
+
+      <div className="streak-period-selector">
+        <button
+          className={`streak-period-button ${streakPeriod === "current" ? "active" : ""}`}
+          onClick={() => {
+            console.log("Setting streak period to 'current'");
+            setStreakPeriod("current");
+            setPage(1); // Reset page when changing period
+          }}
+        >
+          Current
+        </button>
+        <button
+          className={`streak-period-button ${streakPeriod === "best" ? "active" : ""}`}
+          onClick={() => {
+            console.log("Setting streak period to 'best'");
+            setStreakPeriod("best");
+            setPage(1); // Reset page when changing period
+          }}
+        >
+          Best
+        </button>
+      </div>
+    </div>
+  );
+
+  // Updated pagination function to use pagination data from API
+  const renderPagination = (paginationData) => {
+    if (!paginationData) return null;
+
+    console.log("Rendering pagination with data:", paginationData);
+
+    // Extract pagination info with defaults
+    const currentPage = paginationData.current_page || page;
+    const totalPages = paginationData.total_pages || 1;
+
+    // If there's only one page, don't show pagination
+    if (!totalPages || totalPages <= 1) return null;
+
+    console.log("Pagination details:", { currentPage, totalPages });
+
+    return (
+      <div className="pagination">
+        <button
+          onClick={() => {
+            const newPage = Math.max(1, currentPage - 1);
+            console.log("Setting page to:", newPage);
+            setPage(newPage);
+          }}
+          disabled={currentPage <= 1}
+          className="pagination-button"
+        >
+          ←
+        </button>
+        <span>
+          {currentPage} / {totalPages}
+        </span>
+        <button
+          onClick={() => {
+            const newPage = Math.min(totalPages, currentPage + 1);
+            console.log("Setting page to:", newPage);
+            setPage(newPage);
+          }}
+          disabled={currentPage >= totalPages}
+          className="pagination-button"
+        >
+          →
+        </button>
+      </div>
+    );
+  };
+
+  return (
+    <div
+      className={`leaderboard ${settings?.theme === "dark" ? "dark-theme" : ""}`}
+    >
+      {/* Add HeaderControls at the top */}
+      <HeaderControls hideTitle={true} hideAbout={true} hideSettings={true} />
+      <h2>Leaderboard</h2>
+      {/* New tabs container with Back button on the left and Account button on right */}
+      {renderTabs()}
+      {activeTab === "all-time" || activeTab === "weekly" ? (
+        isLoading ? (
+          <div className="loading">Loading...</div>
+        ) : error ? (
+          <div className="error">{error}</div>
+        ) : (
+          renderLeaderboardTable()
+        )
+      ) : activeTab === "personal" ? (
+        renderPersonalLeaderboard()
+      ) : activeTab === "streaks" ? (
+        renderStreakLeaderboard()
+      ) : null}
+    </div>
+  );
               <div
                 className={`table-cell ${entry.is_current_user || (currentUserEntry && entry.user_id === currentUserEntry.user_id) ? "user-highlight" : ""}`}
               >
@@ -667,7 +807,7 @@ const Leaderboard = ({ onClose }) => {
       !entries.some(
         (entry) =>
           entry.is_current_user ||
-          (currentUserEntry && entry.user_id === currentUserEntry.user_id),
+          (currentUserEntry && entry.user_id === currentUserEntry.user_id)
       );
 
     // Determine if we need a date column
@@ -775,7 +915,7 @@ const Leaderboard = ({ onClose }) => {
                   <div className="table-cell user-highlight">
                     {currentUserEntry.last_active
                       ? new Date(
-                          currentUserEntry.last_active,
+                          currentUserEntry.last_active
                         ).toLocaleDateString()
                       : "N/A"}
                   </div>
@@ -783,138 +923,3 @@ const Leaderboard = ({ onClose }) => {
               </>
             )}
           </div>
-        )}
-
-        {/* Pagination, only shown if we have enough entries */}
-        {hasEntries &&
-          pagination &&
-          pagination.total_pages > 1 &&
-          renderPagination(pagination)}
-      </div>
-    );
-  };
-
-  // Enhanced renderStreakControls function with clear labeling
-  const renderStreakControls = () => (
-    <div className="streak-controls">
-      <div className="streak-type-selector">
-        <button
-          className={`streak-type-button ${streakType === "win" ? "active" : ""}`}
-          onClick={() => {
-            console.log("Setting streak type to 'win'");
-            setStreakType("win");
-            setPage(1); // Reset page when changing type
-          }}
-        >
-          Win Streaks
-        </button>
-        <button
-          className={`streak-type-button ${streakType === "noloss" ? "active" : ""}`}
-          onClick={() => {
-            console.log("Setting streak type to 'noloss'");
-            setStreakType("noloss");
-            setPage(1); // Reset page when changing type
-          }}
-        >
-          No-Loss Streaks
-        </button>
-      </div>
-
-      <div className="streak-period-selector">
-        <button
-          className={`streak-period-button ${streakPeriod === "current" ? "active" : ""}`}
-          onClick={() => {
-            console.log("Setting streak period to 'current'");
-            setStreakPeriod("current");
-            setPage(1); // Reset page when changing period
-          }}
-        >
-          Current
-        </button>
-        <button
-          className={`streak-period-button ${streakPeriod === "best" ? "active" : ""}`}
-          onClick={() => {
-            console.log("Setting streak period to 'best'");
-            setStreakPeriod("best");
-            setPage(1); // Reset page when changing period
-          }}
-        >
-          Best
-        </button>
-      </div>
-    </div>
-  );
-
-  // Updated pagination function to use pagination data from API
-  const renderPagination = (paginationData) => {
-    if (!paginationData) return null;
-
-    console.log("Rendering pagination with data:", paginationData);
-
-    // Extract pagination info with defaults
-    const currentPage = paginationData.current_page || page;
-    const totalPages = paginationData.total_pages || 1;
-
-    // If there's only one page, don't show pagination
-    if (!totalPages || totalPages <= 1) return null;
-
-    console.log("Pagination details:", { currentPage, totalPages });
-
-    return (
-      <div className="pagination">
-        <button
-          onClick={() => {
-            const newPage = Math.max(1, currentPage - 1);
-            console.log("Setting page to:", newPage);
-            setPage(newPage);
-          }}
-          disabled={currentPage <= 1}
-          className="pagination-button"
-        >
-          ←
-        </button>
-        <span>
-          {currentPage} / {totalPages}
-        </span>
-        <button
-          onClick={() => {
-            const newPage = Math.min(totalPages, currentPage + 1);
-            console.log("Setting page to:", newPage);
-            setPage(newPage);
-          }}
-          disabled={currentPage >= totalPages}
-          className="pagination-button"
-        >
-          →
-        </button>
-      </div>
-    );
-  };
-
-  return (
-    <div
-      className={`leaderboard ${settings?.theme === "dark" ? "dark-theme" : ""}`}
-    >
-      {/* Add HeaderControls at the top */}
-      <HeaderControls hideTitle={true} hideAbout={true} hideSettings={true} />
-      <h2>Leaderboard</h2>
-      {/* New tabs container with Back button on the left and Account button on right */}
-      {renderTabs()}
-      {activeTab === "all-time" || activeTab === "weekly" ? (
-        isLoading ? (
-          <div className="loading">Loading...</div>
-        ) : error ? (
-          <div className="error">{error}</div>
-        ) : (
-          renderLeaderboardTable()
-        )
-      ) : activeTab === "personal" ? (
-        renderPersonalLeaderboard()
-      ) : activeTab === "streaks" ? (
-        renderStreakLeaderboard()
-      ) : null}
-    </div>
-  );
-};
-
-export default Leaderboard;
