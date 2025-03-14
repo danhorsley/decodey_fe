@@ -238,3 +238,25 @@
 .dark-theme .remember-me-checkbox {
   accent-color: #4cc9f0;
 }
+
+.checkbox-field {
+  margin: 15px 0;
+}
+
+.consent-label {
+  display: flex;
+  align-items: flex-start;
+  cursor: pointer;
+  line-height: 1.4;
+  font-size: 0.9rem;
+  user-select: none;
+}
+
+.consent-checkbox {
+  margin-right: 10px;
+  margin-top: 3px;
+}
+
+.dark-theme .consent-label {
+  color: #f0f0f0;
+}

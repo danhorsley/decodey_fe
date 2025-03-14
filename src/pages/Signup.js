@@ -18,13 +18,14 @@ function Signup({ onClose }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [username, setUsername] = useState("");
+  const [emailConsent, setEmailConsent] = useState(false);
   const [usernameStatus, setUsernameStatus] = useState({
     checking: false,
     available: null,
     message: "",
   });
 
-  // Handle form submission
+  // Update the handleSubmit function to include consent data
   const handleSubmit = useCallback(
     async (e) => {
       e.preventDefault();
@@ -44,6 +45,7 @@ function Signup({ onClose }) {
           email,
           username,
           password,
+          emailConsent, // Add consent data to the request
         });
 
         if (result.status === 201 || result.status === 200) {
@@ -64,7 +66,15 @@ function Signup({ onClose }) {
         setIsLoading(false);
       }
     },
-    [password, confirmPassword, email, username, openLogin, onClose],
+    [
+      password,
+      confirmPassword,
+      email,
+      username,
+      emailConsent,
+      openLogin,
+      onClose,
+    ],
   );
 
   // Debounce function for username availability check
@@ -196,6 +206,24 @@ function Signup({ onClose }) {
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
             />
+          </div>
+          <div className="login-field checkbox-field">
+            <label className="consent-label">
+              <input
+                type="checkbox"
+                checked={emailConsent}
+                onChange={() => setEmailConsent(!emailConsent)}
+                className="consent-checkbox"
+              />
+              <span>
+                I consent to receive occasional emails with game updates, news,
+                and third-party offers.
+              </span>
+            </label>
+            <p className="consent-info">
+              This is the only way to support the game - we don't sell your data
+              or show ads. You can unsubscribe at any time.
+            </p>
           </div>
           <button type="submit" className="login-button" disabled={isLoading}>
             {isLoading ? "Creating Account..." : "Create Account"}

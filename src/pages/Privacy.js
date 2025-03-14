@@ -67,7 +67,52 @@ const Privacy = () => {
             protocols for all data transmission.
           </p>
         </section>
-
+        <section className="privacy-section">
+          <h3>Email Marketing & How We Support The Game</h3>
+          <p>
+            <strong>Opt-in Only:</strong> We only send marketing emails to users
+            who have explicitly opted in during registration.
+          </p>
+          <p>
+            <strong>Our Business Model:</strong> Unlike many free games, we
+            don't:
+          </p>
+          <ul>
+            <li>Sell your personal data to third parties</li>
+            <li>Display advertisements in our game</li>
+            <li>Use tracking cookies for advertising purposes</li>
+          </ul>
+          <p>Instead, we sustain development through:</p>
+          <ul>
+            <li>
+              Occasional emails about game updates and news (only with your
+              explicit consent)
+            </li>
+            <li>
+              Emails containing third-party marketing offers from partners that
+              may interest puzzle enthusiasts (only sent to users who have
+              explicitly consented)
+            </li>
+          </ul>
+          <p>
+            If you've consented to receive emails, you can withdraw this consent
+            at any time by:
+          </p>
+          <ul>
+            <li>Clicking the "unsubscribe" link included in every email</li>
+            <li>
+              Contacting us at{" "}
+              <a href="mailto:support@uncryptgame.com">
+                support@uncryptgame.com
+              </a>
+            </li>
+          </ul>
+          <p className="privacy-highlight">
+            Your consent to receive emails is entirely optional and does not
+            affect your ability to play the game. However, it's the primary way
+            you can support Uncrypt's continued development.
+          </p>
+        </section>
         <section className="privacy-section">
           <h3>Your Rights</h3>
           <p>You have the right to:</p>
