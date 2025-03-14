@@ -8,7 +8,7 @@ import { useModalContext } from "../components/modals/ModalManager";
 import HeaderControls from "../components/HeaderControls";
 import AccountButtonWrapper from "../components/AccountButtonWrapper";
 import { FiRefreshCw, FiArrowLeft } from "react-icons/fi";
-import leaderboardService from "../services/leaderboardService";
+import leaderboardService from "../services/LeaderboardService";
 
 const Leaderboard = ({ onClose }) => {
   const navigate = useNavigate();
@@ -95,7 +95,7 @@ const Leaderboard = ({ onClose }) => {
       const response = await leaderboardService.getStreakLeaderboard(
         streakType,
         streakPeriod,
-        page
+        page,
       );
 
       if (!response) {
@@ -117,13 +117,13 @@ const Leaderboard = ({ onClose }) => {
     async (showRefreshAnimation = false) => {
       console.log(
         "fetchPersonalStats called with showRefreshAnimation =",
-        showRefreshAnimation
+        showRefreshAnimation,
       );
 
       // Don't try to fetch stats if auth is still loading or user is not authenticated
       if (authLoading || !isAuthenticated) {
         console.log(
-          "Skipping fetchPersonalStats - auth loading or not authenticated"
+          "Skipping fetchPersonalStats - auth loading or not authenticated",
         );
         return;
       }
@@ -154,7 +154,7 @@ const Leaderboard = ({ onClose }) => {
             setPersonalError("Please log in to view your stats.");
           } else {
             setPersonalError(
-              response.message || "Failed to load your personal stats."
+              response.message || "Failed to load your personal stats.",
             );
           }
           setPersonalStats(null);
@@ -166,7 +166,7 @@ const Leaderboard = ({ onClose }) => {
       } catch (err) {
         console.error("Exception in fetchPersonalStats:", err);
         setPersonalError(
-          "Failed to load your personal stats. Please try again."
+          "Failed to load your personal stats. Please try again.",
         );
         setPersonalStats(null);
       } finally {
@@ -181,7 +181,7 @@ const Leaderboard = ({ onClose }) => {
         }
       }
     },
-    [isAuthenticated, authLoading]
+    [isAuthenticated, authLoading],
   );
 
   // Fetch leaderboard data
@@ -344,7 +344,7 @@ const Leaderboard = ({ onClose }) => {
       !topEntries.some(
         (entry) =>
           entry.is_current_user ||
-          (currentUserEntry && entry.user_id === currentUserEntry.user_id)
+          (currentUserEntry && entry.user_id === currentUserEntry.user_id),
       );
 
     console.log("Carve-out check:", {
@@ -353,7 +353,7 @@ const Leaderboard = ({ onClose }) => {
       isUserInTopEntries: topEntries.some(
         (entry) =>
           entry.is_current_user ||
-          (currentUserEntry && entry.user_id === currentUserEntry.user_id)
+          (currentUserEntry && entry.user_id === currentUserEntry.user_id),
       ),
       shouldShowCarveOut,
     });
@@ -562,359 +562,357 @@ const Leaderboard = ({ onClose }) => {
   );
 };
 
-  // New function to render personal stats tab
-  const renderPersonalStats = () => {
-    // Don't show the login prompt if we're still loading auth state
-    if (!isAuthenticated && !authLoading) {
-      return (
-        <div className="personal-stats-login-required">
-          <p>Please log in to view your personal stats.</p>
-          <button className="login-button" onClick={openLogin}>
-            Login
-          </button>
-        </div>
-      );
-    }
-
-    if (isPersonalLoading) {
-      return <div className="loading-spinner">Loading your stats...</div>;
-    }
-
-    if (personalError) {
-      return (
-        <div className="error-message">
-          {personalError}
-          <button onClick={() => fetchPersonalStats()}>Try Again</button>
-        </div>
-      );
-    }
-
-    if (!personalStats) {
-      return <div className="loading-spinner">No stats available</div>;
-    }
-
-    // Format date for display
-    const formatDate = (dateString) => {
-      if (!dateString) return "Never";
-      return new Date(dateString).toLocaleDateString();
-    };
-
+// New function to render personal stats tab
+const renderPersonalStats = () => {
+  // Don't show the login prompt if we're still loading auth state
+  if (!isAuthenticated && !authLoading) {
     return (
-      <div className="personal-stats-container">
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "15px",
-          }}
-        >
-          <h3>Your Stats</h3>
-          <button
-            className="refresh-button"
-            onClick={handleRefreshPersonalStats}
-            disabled={isRefreshing || isPersonalLoading}
-            style={{ transform: isRefreshing ? "rotate(180deg)" : "none" }}
-          >
-            <FiRefreshCw />
-          </button>
-        </div>
-
-        {/* Summary Stats */}
-        <div className="stats-summary">
-          <div className="stat-card">
-            <h3>Total Score</h3>
-            <div className="stat-value">
-              {personalStats.cumulative_score?.toLocaleString() || 0}
-            </div>
-          </div>
-          <div className="stat-card">
-            <h3>Weekly Score</h3>
-            <div className="stat-value">
-              {personalStats.weekly_stats?.score?.toLocaleString() || 0}
-            </div>
-          </div>
-          <div className="stat-card">
-            <h3>Games Played</h3>
-            <div className="stat-value">
-              {personalStats.total_games_played || 0}
-            </div>
-          </div>
-          <div className="stat-card">
-            <h3>Current Streak</h3>
-            <div className="stat-value">
-              {personalStats.current_streak || 0}
-            </div>
-          </div>
-        </div>
-
-        {/* Streaks Section */}
-        <div className="streaks-section">
-          <h3>Streaks</h3>
-          <div className="streaks-grid">
-            <div className="streak-item">
-              <span className="streak-label">Current Win Streak</span>
-              <span className="streak-value">
-                {personalStats.current_streak || 0}
-              </span>
-            </div>
-            <div className="streak-item">
-              <span className="streak-label">Best Win Streak</span>
-              <span className="streak-value">
-                {personalStats.max_streak || 0}
-              </span>
-            </div>
-            <div className="streak-item">
-              <span className="streak-label">Current No-Loss Streak</span>
-              <span className="streak-value">
-                {personalStats.current_noloss_streak || 0}
-              </span>
-            </div>
-            <div className="streak-item">
-              <span className="streak-label">Best No-Loss Streak</span>
-              <span className="streak-value">
-                {personalStats.max_noloss_streak || 0}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Top Performances */}
-        {personalStats.top_scores && personalStats.top_scores.length > 0 && (
-          <div className="top-performances">
-            <h3>Top Performances</h3>
-            <table className="top-scores-table">
-              <thead>
-                <tr>
-                  <th>Score</th>
-                  <th>Difficulty</th>
-                  <th>Time</th>
-                  <th>Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {personalStats.top_scores.map((score, index) => (
-                  <tr key={index}>
-                    <td>{score.score.toLocaleString()}</td>
-                    <td style={{ textTransform: "capitalize" }}>
-                      {score.difficulty}
-                    </td>
-                    <td>
-                      {Math.floor(score.time_taken / 60)}m{" "}
-                      {score.time_taken % 60}s
-                    </td>
-                    <td>{new Date(score.date).toLocaleDateString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* Last Played */}
-        {personalStats.last_played_date && (
-          <div className="last-played">
-            Last played: {formatDate(personalStats.last_played_date)}
-          </div>
-        )}
+      <div className="personal-stats-login-required">
+        <p>Please log in to view your personal stats.</p>
+        <button className="login-button" onClick={openLogin}>
+          Login
+        </button>
       </div>
     );
-  };
+  }
 
-  const renderPersonalLeaderboard = () => {
-    // Handle auth loading state
-    if (authLoading) {
-      return (
-        <div className="loading-spinner">Checking authentication status...</div>
-      );
-    }
+  if (isPersonalLoading) {
+    return <div className="loading-spinner">Loading your stats...</div>;
+  }
 
-    // Personal tab now uses the new renderPersonalStats function
-    return renderPersonalStats();
-  };
-
-  // Enhanced renderStreakLeaderboard with comprehensive null checks
-  const renderStreakLeaderboard = () => {
-    console.log("renderStreakLeaderboard called with data:", streakData);
-
-    // Clear loading case
-    if (isStreakLoading) {
-      return <div className="loading">Loading streak data...</div>;
-    }
-
-    // Clear error case
-    if (streakError) {
-      return (
-        <div className="error">
-          {streakError}
-          <button onClick={fetchStreakData} className="retry-button">
-            Try Again
-          </button>
-        </div>
-      );
-    }
-
-    // Handle missing data case
-    if (!streakData) {
-      return (
-        <div className="no-data">
-          <p>No streak data available.</p>
-          <button onClick={fetchStreakData} className="retry-button">
-            Refresh
-          </button>
-        </div>
-      );
-    }
-
-    // Safely extract data with fallbacks for everything
-    const entries = streakData.entries || streakData.topEntries || [];
-    const currentUserEntry = streakData.currentUserEntry || null;
-    const pagination = streakData.pagination || {
-      current_page: page,
-      total_pages: streakData.total_pages || 1,
-      total_entries: streakData.total_entries || entries.length,
-    };
-
-    // Track if we have content to display
-    const hasEntries = entries && entries.length > 0;
-
-    // Create streak type and period descriptions
-    const streakTypeName = streakType === "win" ? "Win" : "No-Loss";
-    const streakPeriodName = streakPeriod === "current" ? "Current" : "Best";
-
-    // Determine if we should show the user carve-out
-    const shouldShowCarveOut =
-      isAuthenticated &&
-      currentUserEntry &&
-      entries.length > 0 &&
-      !entries.some(
-        (entry) =>
-          entry.is_current_user ||
-          (currentUserEntry && entry.user_id === currentUserEntry.user_id)
-      );
-
-    // Determine if we need a date column
-    const showDateColumn = streakPeriod === "current";
-    const tableClass = showDateColumn
-      ? "table-grid streak-table with-date"
-      : "table-grid streak-table";
-
-    // Return the complete UI including streak controls and empty state handling
+  if (personalError) {
     return (
-      <div className="table-container">
-        {/* Always show streak controls */}
-        {renderStreakControls()}
+      <div className="error-message">
+        {personalError}
+        <button onClick={() => fetchPersonalStats()}>Try Again</button>
+      </div>
+    );
+  }
 
-        <h3 className="streak-heading">
-          {streakPeriodName} {streakTypeName} Streaks
-        </h3>
+  if (!personalStats) {
+    return <div className="loading-spinner">No stats available</div>;
+  }
 
-        {/* Show empty state if no entries */}
-        {!hasEntries ? (
-          <div className="no-data">
-            No {streakPeriodName.toLowerCase()} {streakTypeName.toLowerCase()}{" "}
-            streaks found
+  // Format date for display
+  const formatDate = (dateString) => {
+    if (!dateString) return "Never";
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  return (
+    <div className="personal-stats-container">
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "15px",
+        }}
+      >
+        <h3>Your Stats</h3>
+        <button
+          className="refresh-button"
+          onClick={handleRefreshPersonalStats}
+          disabled={isRefreshing || isPersonalLoading}
+          style={{ transform: isRefreshing ? "rotate(180deg)" : "none" }}
+        >
+          <FiRefreshCw />
+        </button>
+      </div>
+
+      {/* Summary Stats */}
+      <div className="stats-summary">
+        <div className="stat-card">
+          <h3>Total Score</h3>
+          <div className="stat-value">
+            {personalStats.cumulative_score?.toLocaleString() || 0}
           </div>
-        ) : (
-          <div className={tableClass}>
-            {/* Table headers */}
-            <div className="table-header">Rank</div>
-            <div className="table-header">Player</div>
-            <div className="table-header">Streak</div>
-            {showDateColumn && <div className="table-header">Last Active</div>}
+        </div>
+        <div className="stat-card">
+          <h3>Weekly Score</h3>
+          <div className="stat-value">
+            {personalStats.weekly_stats?.score?.toLocaleString() || 0}
+          </div>
+        </div>
+        <div className="stat-card">
+          <h3>Games Played</h3>
+          <div className="stat-value">
+            {personalStats.total_games_played || 0}
+          </div>
+        </div>
+        <div className="stat-card">
+          <h3>Current Streak</h3>
+          <div className="stat-value">{personalStats.current_streak || 0}</div>
+        </div>
+      </div>
 
-            {/* Table entries */}
-            {entries.map((entry) => {
-              // Ensure entry has required fields with fallbacks
-              const userEntry = {
-                rank: entry.rank || "?",
-                username: entry.username || "Unknown Player",
-                streak_length: entry.streak_length || 0,
-                user_id: entry.user_id || `unknown-${Math.random()}`,
-                last_active: entry.last_active || null,
-                is_current_user: entry.is_current_user || false,
-              };
+      {/* Streaks Section */}
+      <div className="streaks-section">
+        <h3>Streaks</h3>
+        <div className="streaks-grid">
+          <div className="streak-item">
+            <span className="streak-label">Current Win Streak</span>
+            <span className="streak-value">
+              {personalStats.current_streak || 0}
+            </span>
+          </div>
+          <div className="streak-item">
+            <span className="streak-label">Best Win Streak</span>
+            <span className="streak-value">
+              {personalStats.max_streak || 0}
+            </span>
+          </div>
+          <div className="streak-item">
+            <span className="streak-label">Current No-Loss Streak</span>
+            <span className="streak-value">
+              {personalStats.current_noloss_streak || 0}
+            </span>
+          </div>
+          <div className="streak-item">
+            <span className="streak-label">Best No-Loss Streak</span>
+            <span className="streak-value">
+              {personalStats.max_noloss_streak || 0}
+            </span>
+          </div>
+        </div>
+      </div>
 
-              // Check if this is the current user
-              const isCurrentUser =
-                userEntry.is_current_user ||
-                (currentUserEntry &&
-                  userEntry.user_id === currentUserEntry.user_id);
+      {/* Top Performances */}
+      {personalStats.top_scores && personalStats.top_scores.length > 0 && (
+        <div className="top-performances">
+          <h3>Top Performances</h3>
+          <table className="top-scores-table">
+            <thead>
+              <tr>
+                <th>Score</th>
+                <th>Difficulty</th>
+                <th>Time</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {personalStats.top_scores.map((score, index) => (
+                <tr key={index}>
+                  <td>{score.score.toLocaleString()}</td>
+                  <td style={{ textTransform: "capitalize" }}>
+                    {score.difficulty}
+                  </td>
+                  <td>
+                    {Math.floor(score.time_taken / 60)}m {score.time_taken % 60}
+                    s
+                  </td>
+                  <td>{new Date(score.date).toLocaleDateString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
-              return (
-                <React.Fragment
-                  key={`streak-${userEntry.user_id}-${Math.random()}`}
+      {/* Last Played */}
+      {personalStats.last_played_date && (
+        <div className="last-played">
+          Last played: {formatDate(personalStats.last_played_date)}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const renderPersonalLeaderboard = () => {
+  // Handle auth loading state
+  if (authLoading) {
+    return (
+      <div className="loading-spinner">Checking authentication status...</div>
+    );
+  }
+
+  // Personal tab now uses the new renderPersonalStats function
+  return renderPersonalStats();
+};
+
+// Enhanced renderStreakLeaderboard with comprehensive null checks
+const renderStreakLeaderboard = () => {
+  console.log("renderStreakLeaderboard called with data:", streakData);
+
+  // Clear loading case
+  if (isStreakLoading) {
+    return <div className="loading">Loading streak data...</div>;
+  }
+
+  // Clear error case
+  if (streakError) {
+    return (
+      <div className="error">
+        {streakError}
+        <button onClick={fetchStreakData} className="retry-button">
+          Try Again
+        </button>
+      </div>
+    );
+  }
+
+  // Handle missing data case
+  if (!streakData) {
+    return (
+      <div className="no-data">
+        <p>No streak data available.</p>
+        <button onClick={fetchStreakData} className="retry-button">
+          Refresh
+        </button>
+      </div>
+    );
+  }
+
+  // Safely extract data with fallbacks for everything
+  const entries = streakData.entries || streakData.topEntries || [];
+  const currentUserEntry = streakData.currentUserEntry || null;
+  const pagination = streakData.pagination || {
+    current_page: page,
+    total_pages: streakData.total_pages || 1,
+    total_entries: streakData.total_entries || entries.length,
+  };
+
+  // Track if we have content to display
+  const hasEntries = entries && entries.length > 0;
+
+  // Create streak type and period descriptions
+  const streakTypeName = streakType === "win" ? "Win" : "No-Loss";
+  const streakPeriodName = streakPeriod === "current" ? "Current" : "Best";
+
+  // Determine if we should show the user carve-out
+  const shouldShowCarveOut =
+    isAuthenticated &&
+    currentUserEntry &&
+    entries.length > 0 &&
+    !entries.some(
+      (entry) =>
+        entry.is_current_user ||
+        (currentUserEntry && entry.user_id === currentUserEntry.user_id),
+    );
+
+  // Determine if we need a date column
+  const showDateColumn = streakPeriod === "current";
+  const tableClass = showDateColumn
+    ? "table-grid streak-table with-date"
+    : "table-grid streak-table";
+
+  // Return the complete UI including streak controls and empty state handling
+  return (
+    <div className="table-container">
+      {/* Always show streak controls */}
+      {renderStreakControls()}
+
+      <h3 className="streak-heading">
+        {streakPeriodName} {streakTypeName} Streaks
+      </h3>
+
+      {/* Show empty state if no entries */}
+      {!hasEntries ? (
+        <div className="no-data">
+          No {streakPeriodName.toLowerCase()} {streakTypeName.toLowerCase()}{" "}
+          streaks found
+        </div>
+      ) : (
+        <div className={tableClass}>
+          {/* Table headers */}
+          <div className="table-header">Rank</div>
+          <div className="table-header">Player</div>
+          <div className="table-header">Streak</div>
+          {showDateColumn && <div className="table-header">Last Active</div>}
+
+          {/* Table entries */}
+          {entries.map((entry) => {
+            // Ensure entry has required fields with fallbacks
+            const userEntry = {
+              rank: entry.rank || "?",
+              username: entry.username || "Unknown Player",
+              streak_length: entry.streak_length || 0,
+              user_id: entry.user_id || `unknown-${Math.random()}`,
+              last_active: entry.last_active || null,
+              is_current_user: entry.is_current_user || false,
+            };
+
+            // Check if this is the current user
+            const isCurrentUser =
+              userEntry.is_current_user ||
+              (currentUserEntry &&
+                userEntry.user_id === currentUserEntry.user_id);
+
+            return (
+              <React.Fragment
+                key={`streak-${userEntry.user_id}-${Math.random()}`}
+              >
+                <div
+                  className={`table-cell ${isCurrentUser ? "user-highlight" : ""}`}
                 >
-                  <div
-                    className={`table-cell ${isCurrentUser ? "user-highlight" : ""}`}
-                  >
-                    #{userEntry.rank}
-                  </div>
-                  <div
-                    className={`table-cell ${isCurrentUser ? "user-highlight" : ""}`}
-                  >
-                    {userEntry.username}
-                    {isCurrentUser && <span className="you-badge">YOU</span>}
-                  </div>
-                  <div
-                    className={`table-cell ${isCurrentUser ? "user-highlight" : ""}`}
-                  >
-                    {userEntry.streak_length}
-                  </div>
-                  {showDateColumn && (
-                    <div
-                      className={`table-cell ${isCurrentUser ? "user-highlight" : ""}`}
-                    >
-                      {userEntry.last_active
-                        ? new Date(userEntry.last_active).toLocaleDateString()
-                        : "N/A"}
-                    </div>
-                  )}
-                </React.Fragment>
-              );
-            })}
-
-            {/* Carve out for user's position */}
-            {shouldShowCarveOut && currentUserEntry && (
-              <>
-                {/* Separator row */}
-                <div className="table-cell separator"></div>
-                <div className="table-cell separator">...</div>
-                <div className="table-cell separator"></div>
-                {showDateColumn && <div className="table-cell separator"></div>}
-
-                {/* User entry row */}
-                <div className="table-cell user-highlight">
-                  #{currentUserEntry.rank || "?"}
+                  #{userEntry.rank}
                 </div>
-                <div className="table-cell user-highlight">
-                  {currentUserEntry.username || "You"}{" "}
-                  <span className="you-badge">YOU</span>
+                <div
+                  className={`table-cell ${isCurrentUser ? "user-highlight" : ""}`}
+                >
+                  {userEntry.username}
+                  {isCurrentUser && <span className="you-badge">YOU</span>}
                 </div>
-                <div className="table-cell user-highlight">
-                  {currentUserEntry.streak_length || 0}
+                <div
+                  className={`table-cell ${isCurrentUser ? "user-highlight" : ""}`}
+                >
+                  {userEntry.streak_length}
                 </div>
                 {showDateColumn && (
-                  <div className="table-cell user-highlight">
-                    {currentUserEntry.last_active
-                      ? new Date(
-                          currentUserEntry.last_active
-                        ).toLocaleDateString()
+                  <div
+                    className={`table-cell ${isCurrentUser ? "user-highlight" : ""}`}
+                  >
+                    {userEntry.last_active
+                      ? new Date(userEntry.last_active).toLocaleDateString()
                       : "N/A"}
                   </div>
                 )}
-              </>
-            )}
-          </div>
-        )}
+              </React.Fragment>
+            );
+          })}
 
-        {/* Pagination, only shown if we have enough entries */}
-        {hasEntries &&
-          pagination &&
-          pagination.total_pages > 1 &&
-          renderPagination(pagination)}
-      </div>
-    );
-  };
+          {/* Carve out for user's position */}
+          {shouldShowCarveOut && currentUserEntry && (
+            <>
+              {/* Separator row */}
+              <div className="table-cell separator"></div>
+              <div className="table-cell separator">...</div>
+              <div className="table-cell separator"></div>
+              {showDateColumn && <div className="table-cell separator"></div>}
+
+              {/* User entry row */}
+              <div className="table-cell user-highlight">
+                #{currentUserEntry.rank || "?"}
+              </div>
+              <div className="table-cell user-highlight">
+                {currentUserEntry.username || "You"}{" "}
+                <span className="you-badge">YOU</span>
+              </div>
+              <div className="table-cell user-highlight">
+                {currentUserEntry.streak_length || 0}
+              </div>
+              {showDateColumn && (
+                <div className="table-cell user-highlight">
+                  {currentUserEntry.last_active
+                    ? new Date(
+                        currentUserEntry.last_active,
+                      ).toLocaleDateString()
+                    : "N/A"}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Pagination, only shown if we have enough entries */}
+      {hasEntries &&
+        pagination &&
+        pagination.total_pages > 1 &&
+        renderPagination(pagination)}
+    </div>
+  );
+};
 
 export default Leaderboard;
