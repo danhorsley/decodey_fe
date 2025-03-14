@@ -27,6 +27,8 @@ const initialState = {
   winData: null,
   hasLost: false,
   hardcoreMode: false,
+  isLocalWinDetected: false,
+  isWinVerificationInProgress: false,
 };
 
 // Reducer for state management
@@ -56,10 +58,19 @@ const gameReducer = (state, action) => {
           action.payload.guessedMappings ?? state.guessedMappings,
       };
 
+    case "SET_LOCAL_WIN_DETECTED":
+      return {
+        ...state,
+        isLocalWinDetected: action.payload.isLocalWinDetected,
+        isWinVerificationInProgress: action.payload.isWinVerificationInProgress,
+      };
+
     case "SET_GAME_WON":
       return {
         ...state,
         hasWon: true,
+        isLocalWinDetected: false,
+        isWinVerificationInProgress: false,
         completionTime: action.payload.completionTime || Date.now(),
         winData: action.payload,
       };
@@ -161,7 +172,78 @@ export const GameStateProvider = ({ children }) => {
     },
     [state.correctlyGuessed],
   );
+  // Checks if all encrypted letters have been correctly guessed
+  const checkForLocalWin = (display) => {
+    if (!display) {
+      return false;
+    }
 
+    // Simply check if there are any placeholder characters left
+    // If there are no '█' characters, all letters have been guessed
+    const hasPlaceholders = display.includes("█");
+
+    if (!hasPlaceholders) {
+      console.log(
+        "Local win detected! No placeholder characters remain in display.",
+      );
+      return true;
+    }
+
+    return false;
+  };
+  // Performs a one-time check with the server to verify win and get win data
+  const checkWinWithServer = async (state, dispatch) => {
+    console.log("Verifying win with server...");
+
+    try {
+      // Check if we have auth token before making the request
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.log("No auth token, skipping win verification");
+        return false;
+      }
+
+      const data = await apiService.getGameStatus();
+      console.log("Win verification response:", data);
+
+      // Skip processing if there was an error or no active game
+      if (data.error || !data.hasActiveGame) {
+        return false;
+      }
+
+      // Check if game is won
+      if (data.hasWon && data.winData) {
+        console.log("Win confirmed by server!", data.winData);
+
+        // Update game state with win data
+        dispatch({
+          type: "SET_GAME_WON",
+          payload: {
+            completionTime: Date.now(),
+            score: data.winData.score,
+            mistakes: data.winData.mistakes,
+            maxMistakes: data.winData.maxMistakes,
+            gameTimeSeconds: data.winData.gameTimeSeconds,
+            rating: data.winData.rating,
+            encrypted: state.encrypted,
+            display: state.display,
+            attribution: data.winData.attribution,
+            scoreStatus: {
+              recorded: true,
+              message: "Score recorded successfully!",
+            },
+          },
+        });
+        return true;
+      }
+
+      // Game is not actually won
+      return false;
+    } catch (error) {
+      console.error("Error checking win status:", error);
+      return false;
+    }
+  };
   // Submit guess function
   const submitGuess = useCallback(
     async (encryptedLetter, guessedLetter) => {
@@ -170,6 +252,7 @@ export const GameStateProvider = ({ children }) => {
       }
 
       try {
+        const gameId = localStorage.getItem("uncrypt-game-id");
         const data = await apiService.submitGuess(
           encryptedLetter,
           guessedLetter,
@@ -205,6 +288,7 @@ export const GameStateProvider = ({ children }) => {
         };
 
         // Handle correctly guessed letters
+        let isCorrectGuess = false;
         if (Array.isArray(data.correctly_guessed)) {
           payload.correctlyGuessed = data.correctly_guessed;
 
@@ -214,6 +298,7 @@ export const GameStateProvider = ({ children }) => {
             !state.correctlyGuessed.includes(encryptedLetter)
           ) {
             // This was a new correct guess
+            isCorrectGuess = true;
             payload.lastCorrectGuess = encryptedLetter;
             payload.guessedMappings = {
               ...state.guessedMappings,
@@ -222,33 +307,73 @@ export const GameStateProvider = ({ children }) => {
           }
         }
 
-        // Update the game state
+        // Update game state
         dispatch({ type: "SUBMIT_GUESS", payload });
+
+        // After updating state, check if this guess resulted in a win
+        // Only do this if the guess was correct and we're not already in win verification
+        if (isCorrectGuess && !state.isWinVerificationInProgress) {
+          // Get the updated display text
+          const updatedDisplay = payload.display || state.display;
+
+          // Check for local win using the simplified approach
+          const isLocalWin = checkForLocalWin(updatedDisplay);
+
+          if (isLocalWin) {
+            console.log(
+              "Local win detected from display text! Starting verification...",
+            );
+
+            // Update state to indicate local win detection
+            dispatch({
+              type: "SET_LOCAL_WIN_DETECTED",
+              payload: {
+                isLocalWinDetected: true,
+                isWinVerificationInProgress: true,
+              },
+            });
+
+            // Verify the win with the server
+            setTimeout(() => {
+              checkWinWithServer(
+                {
+                  ...state,
+                  correctlyGuessed:
+                    payload.correctlyGuessed || state.correctlyGuessed,
+                  display: updatedDisplay,
+                },
+                dispatch,
+              );
+            }, 500); // Short delay to allow UI updates before API call
+          }
+        }
 
         return {
           success: true,
-          isCorrect: data.correctly_guessed?.includes(encryptedLetter),
+          isCorrect: isCorrectGuess,
         };
       } catch (error) {
         console.error("Error submitting guess:", error);
         return { success: false, error: error.message };
       }
     },
-    [state],
+    [state, dispatch],
   );
-
   // Get hint function
   const getHint = useCallback(async () => {
     try {
       const data = await apiService.getHint();
+      console.log("Hint response in context:", data);
 
       // Handle authentication required
       if (data.authRequired) {
+        console.warn("Authentication required for hint");
         return { success: false, authRequired: true };
       }
 
       // Handle errors
       if (data.error) {
+        console.error("Error in hint response:", data.error);
         return { success: false, error: data.error };
       }
 
@@ -269,23 +394,59 @@ export const GameStateProvider = ({ children }) => {
           for (let i = 0; i < state.encrypted.length; i++) {
             if (state.encrypted[i] === letter && displayText[i] !== "█") {
               newMappings[letter] = displayText[i];
+              console.log(`Added mapping: ${letter} → ${displayText[i]}`);
               break;
             }
           }
         }
       });
 
-      // Update state with all hint data
-      dispatch({
-        type: "SET_HINT",
-        payload: {
-          display: displayText,
-          mistakes: data.mistakes,
-          correctlyGuessed: newCorrectlyGuessed,
-          guessedMappings: newMappings,
-        },
-      });
+      // Create update payload
+      const payload = {
+        display: displayText,
+        mistakes: data.mistakes,
+        correctlyGuessed: newCorrectlyGuessed,
+        guessedMappings: newMappings,
+      };
 
+      // Update game state
+      dispatch({ type: "SET_HINT", payload });
+
+      // After updating state, check if the hint resulted in a win
+      // Only do this if we're not already in win verification
+      if (!state.isWinVerificationInProgress) {
+        // Check for local win using the simplified approach - just check the display text
+        const isLocalWin = checkForLocalWin(displayText);
+
+        if (isLocalWin) {
+          console.log(
+            "Local win detected after hint! Starting verification...",
+          );
+
+          // Update state to indicate local win detection
+          dispatch({
+            type: "SET_LOCAL_WIN_DETECTED",
+            payload: {
+              isLocalWinDetected: true,
+              isWinVerificationInProgress: true,
+            },
+          });
+
+          // Verify the win with the server
+          setTimeout(() => {
+            checkWinWithServer(
+              {
+                ...state,
+                correctlyGuessed: newCorrectlyGuessed,
+                display: displayText,
+              },
+              dispatch,
+            );
+          }, 500); // Short delay to allow UI updates before API call
+        }
+      }
+
+      // Play hint sound
       return { success: true };
     } catch (error) {
       console.error("Error getting hint:", error);
@@ -308,65 +469,65 @@ export const GameStateProvider = ({ children }) => {
   }, [state.lastCorrectGuess]);
 
   // Polling for game status updates - check for wins/losses
-  useEffect(() => {
-    // Only poll if there's an active game that hasn't been won or lost yet
-    if (!state.encrypted || state.hasWon || state.hasLost) {
-      return;
-    }
+  // useEffect(() => {
+  //   // Only poll if there's an active game that hasn't been won or lost yet
+  //   if (!state.encrypted || state.hasWon || state.hasLost) {
+  //     return;
+  //   }
 
-    // Set up polling interval
-    const pollInterval = setInterval(async () => {
-      try {
-        // Check if we have auth token before making the request
-        const token = localStorage.getItem("token");
-        if (!token) {
-          return;
-        }
+  //   // Set up polling interval
+  //   const pollInterval = setInterval(async () => {
+  //     try {
+  //       // Check if we have auth token before making the request
+  //       const token = localStorage.getItem("token");
+  //       if (!token) {
+  //         return;
+  //       }
 
-        const data = await apiService.getGameStatus();
+  //       const data = await apiService.getGameStatus();
 
-        // Skip processing if there was an error or no active game
-        if (data.error || !data.hasActiveGame) {
-          return;
-        }
+  //       // Skip processing if there was an error or no active game
+  //       if (data.error || !data.hasActiveGame) {
+  //         return;
+  //       }
 
-        // Check if game is won
-        if (data.hasWon && data.winData) {
-          // Update game state with win data
-          dispatch({
-            type: "SET_GAME_WON",
-            payload: {
-              completionTime: Date.now(),
-              score: data.winData.score,
-              mistakes: data.winData.mistakes,
-              maxMistakes: data.winData.maxMistakes,
-              gameTimeSeconds: data.winData.gameTimeSeconds,
-              rating: data.winData.rating,
-              encrypted: state.encrypted,
-              display: state.display,
-              attribution: data.winData.attribution,
-              scoreStatus: {
-                recorded: true,
-                message: "Score recorded successfully!",
-              },
-            },
-          });
-        }
+  //       // Check if game is won
+  //       if (data.hasWon && data.winData) {
+  //         // Update game state with win data
+  //         dispatch({
+  //           type: "SET_GAME_WON",
+  //           payload: {
+  //             completionTime: Date.now(),
+  //             score: data.winData.score,
+  //             mistakes: data.winData.mistakes,
+  //             maxMistakes: data.winData.maxMistakes,
+  //             gameTimeSeconds: data.winData.gameTimeSeconds,
+  //             rating: data.winData.rating,
+  //             encrypted: state.encrypted,
+  //             display: state.display,
+  //             attribution: data.winData.attribution,
+  //             scoreStatus: {
+  //               recorded: true,
+  //               message: "Score recorded successfully!",
+  //             },
+  //           },
+  //         });
+  //       }
 
-        // Check if game is lost
-        if (data.gameComplete && !data.hasWon) {
-          dispatch({ type: "SET_GAME_LOST" });
-        }
-      } catch (error) {
-        console.error("Error polling game status:", error);
-      }
-    }, 3000); // Poll every 3 seconds
+  //       // Check if game is lost
+  //       if (data.gameComplete && !data.hasWon) {
+  //         dispatch({ type: "SET_GAME_LOST" });
+  //       }
+  //     } catch (error) {
+  //       console.error("Error polling game status:", error);
+  //     }
+  //   }, 3000); // Poll every 3 seconds
 
-    // Clean up interval on unmount
-    return () => {
-      clearInterval(pollInterval);
-    };
-  }, [state.encrypted, state.hasWon, state.hasLost, state.display, dispatch]);
+  //   // Clean up interval on unmount
+  //   return () => {
+  //     clearInterval(pollInterval);
+  //   };
+  // }, [state.encrypted, state.hasWon, state.hasLost, state.display, dispatch]);
 
   // Save game state to localStorage
   useEffect(() => {
@@ -423,6 +584,9 @@ export const GameStateProvider = ({ children }) => {
         hasWon: state.hasWon,
         winData: state.winData,
         hasLost: state.hasLost,
+        //Local win actions
+        isLocalWinDetected: state.isLocalWinDetected,
+        isWinVerificationInProgress: state.isWinVerificationInProgress,
 
         // Game actions
         startGame,

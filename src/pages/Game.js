@@ -23,14 +23,7 @@ import { formatAlternatingLines } from "../utils/utils";
 import HeaderControls from "../components/HeaderControls";
 import MobileLayout from "../components/layout/MobileLayout";
 import WinCelebration from "../components/modals/WinCelebration";
-
-// Click handlers
-// import {
-//   handleEncryptedClick,
-//   handleGuessClick,
-//   submitGuess,
-//   handleHint,
-// } from "../utils/ClickHandlers";
+import MatrixRain from "../components/effects/MatrixRain";
 
 // Letter cell component using memo to reduce re-renders
 const LetterCell = React.memo(
@@ -80,6 +73,7 @@ function Game() {
     getHint,
     submitGuess,
     hasWon,
+    isLocalWinDetected,
     hasLost,
     winData,
   } = useGameState();
@@ -93,7 +87,7 @@ function Game() {
   const [loading, setLoading] = useState(true);
   const [gameLoaded, setGameLoaded] = useState(false);
   const [attributionData, setAttributionData] = useState(null);
-
+  const [showMatrixTransition, setShowMatrixTransition] = useState(false);
   // Sound handling
   const { playSound, loadSounds, unlockAudioContext, soundEnabled } =
     useSound();
@@ -145,7 +139,30 @@ function Game() {
       window.removeEventListener("keydown", handleFirstInteraction);
     };
   }, [startGame, settings.longText, settings.hardcoreMode]);
+  //Add useEffect to watch for local win detection:
+  useEffect(() => {
+    // If local win is detected but full win celebration isn't shown yet
+    if (isLocalWinDetected && !hasWon) {
+      console.log("Local win detected, starting Matrix rain transition");
+      // Start Matrix rain animation
+      setShowMatrixTransition(true);
 
+      // Play win sound
+      playSound && playSound("win");
+    }
+
+    // When full win is confirmed, hide the transition
+    if (hasWon) {
+      setShowMatrixTransition(false);
+    }
+  }, [isLocalWinDetected, hasWon, playSound]);
+  //matrixrain cleanup function
+  useEffect(() => {
+    return () => {
+      // Clean up win transition if component unmounts
+      setShowMatrixTransition(false);
+    };
+  }, []);
   // Ensure theme is applied to body and document
   useEffect(() => {
     const className = "dark-theme";
@@ -457,7 +474,45 @@ function Game() {
         />
       );
     }
+    const renderMatrixTransition = () => {
+      if (!showMatrixTransition) return null;
 
+      return (
+        <MatrixRain
+          active={true}
+          color={settings.textColor === "scifi-blue" ? "#4cc9f0" : "#00ff41"}
+          density={70}
+          fadeSpeed={0.05}
+          speedFactor={1}
+          includeKatakana={true}
+        />
+      );
+    };
+    // Return the Matrix transition if a local win is detected
+    if (showMatrixTransition && !hasWon) {
+      return (
+        <div className="win-transition">
+          {renderMatrixTransition()}
+          <p
+            style={{
+              position: "fixed",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              zIndex: 1100,
+              color: settings.theme === "dark" ? "#4cc9f0" : "#007bff",
+              fontSize: "1.5rem",
+              textAlign: "center",
+              fontWeight: "bold",
+              textShadow: "0 0 10px rgba(76, 201, 240, 0.7)",
+              animation: "pulse 1.5s infinite ease-in-out",
+            }}
+          >
+            Calculating Score...
+          </p>
+        </div>
+      );
+    }
     if (hasLost) {
       return (
         <div
