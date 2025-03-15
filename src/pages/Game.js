@@ -88,6 +88,7 @@ function Game() {
     winData = null,
     difficulty = "easy",
     maxMistakes = 8,
+    continueSavedGame = async () => false,
   } = gameStateContext || {};
 
   // Get UI context safely
@@ -171,12 +172,35 @@ function Game() {
 
       setLoading(true);
       try {
+        // First check localStorage for an active game ID
+        const storedGameId = localStorage.getItem("uncrypt-game-id");
+
+        if (storedGameId && isAuthenticated) {
+          console.log("Found stored game ID:", storedGameId);
+
+          // Try to continue this game
+          console.log("Attempting to continue stored game");
+          if (typeof continueSavedGame === "function") {
+            const result = await continueSavedGame();
+            if (result) {
+              console.log("Successfully continued stored game");
+              if (mounted) {
+                setGameLoaded(true);
+                setLoading(false);
+              }
+              return; // Exit initialization - game continued successfully
+            }
+          }
+        }
+
+        // If we get here, either no stored game was found or continuation failed
+        // Proceed with starting a new game
+        console.log("Starting new game...");
+
         if (typeof startGame !== "function") {
           console.error("startGame is not a function:", startGame);
           return;
         }
-
-        console.log("Starting new game...");
 
         // Get settings safely
         const longTextSetting = settings?.longText === true;
@@ -191,7 +215,7 @@ function Game() {
           setGameLoaded(true);
         }
       } catch (err) {
-        console.error("Error starting game:", err);
+        console.error("Error initializing game:", err);
       } finally {
         if (mounted) {
           setLoading(false);
@@ -202,24 +226,31 @@ function Game() {
     // Only initialize if we don't have encrypted text and haven't tried initialization yet
     if (!encrypted && !initializationAttemptedRef.current) {
       console.log(
-        "No game loaded and no initialization attempted - starting new game",
+        "No game loaded and no initialization attempted - initializing game",
       );
       initializeGame();
+    } else if (encrypted) {
+      console.log("Game already exists - skipping initialization");
+      setLoading(false);
+      setGameLoaded(true);
     } else {
       console.log(
-        "Game already exists or initialization already attempted - skipping",
+        "Initialization already attempted but no game - something might be wrong",
       );
       setLoading(false);
     }
 
-    // Rest of your effect code (audio setup, etc.)
-    // ...
-
     return () => {
       mounted = false;
-      // Other cleanup
     };
-  }, [startGame, settings, encrypted, gameLoaded]);
+  }, [
+    startGame,
+    continueSavedGame,
+    settings,
+    encrypted,
+    gameLoaded,
+    isAuthenticated,
+  ]);
   // Watch for local win detection
   useEffect(() => {
     try {

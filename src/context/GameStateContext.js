@@ -84,6 +84,7 @@ const gameReducer = (state, action) => {
       return initialState;
 
     case "CONTINUE_GAME":
+      console.log("Handling CONTINUE_GAME action:", action.payload);
       return {
         ...initialState,
         ...action.payload,
@@ -113,21 +114,6 @@ export const GameStateProvider = ({ children }) => {
         localStorage.removeItem("uncrypt-game-id");
         const difficulty = settings?.difficulty || "easy";
 
-        // Get maxMistakes based on difficulty
-        let maxMistakes = 8; // Default to easy
-        switch (difficulty) {
-          case "hard":
-            maxMistakes = 3;
-            break;
-          case "normal":
-            maxMistakes = 5;
-            break;
-          case "easy":
-          default:
-            maxMistakes = 8;
-            break;
-        }
-
         console.log(`Making API call with difficulty=${difficulty}`);
         const data = await apiService.startGame({
           longText: useLongText,
@@ -136,57 +122,29 @@ export const GameStateProvider = ({ children }) => {
 
         // Log the response to see what we got back
         console.log("API response:", data);
-        // Pass difficulty to the API
 
+        // Check if there's an active game
+        if (data.active_game_info && data.active_game_info.has_active_game) {
+          console.log("Active game detected:", data.active_game_info);
+
+          // Emit event to show continue game modal
+          apiService.events.emit("auth:active-game-detected", {
+            hasActiveGame: true,
+            activeGameStats: data.active_game_info,
+          });
+
+          return false; // Return false to indicate we didn't start a new game
+        }
+
+        // Continue with normal game initialization
         // Store the game ID in localStorage
         if (data.game_id) {
           localStorage.setItem("uncrypt-game-id", data.game_id);
         }
 
         // Process the encrypted text
-        let encryptedText = data.encrypted_paragraph;
-        let displayText = data.display;
+        // [rest of your existing code...]
 
-        // Apply hardcore mode filtering if needed
-        if (hardcoreMode) {
-          encryptedText = encryptedText.replace(/[^A-Z]/g, "");
-          displayText = displayText.replace(/[^A-Z█]/g, "");
-        }
-
-        // Calculate letter frequencies
-        const calculatedFrequency = {};
-        for (const char of encryptedText) {
-          if (/[A-Z]/.test(char))
-            calculatedFrequency[char] = (calculatedFrequency[char] || 0) + 1;
-        }
-
-        // Ensure all letters have a frequency value (even if 0)
-        for (let i = 0; i < 26; i++) {
-          const letter = String.fromCharCode(65 + i);
-          calculatedFrequency[letter] = calculatedFrequency[letter] || 0;
-        }
-
-        // Dispatch action to start the game
-        dispatch({
-          type: "START_GAME",
-          payload: {
-            encrypted: encryptedText,
-            display: displayText,
-            mistakes: data.mistakes || 0,
-            correctlyGuessed: [],
-            selectedEncrypted: null,
-            lastCorrectGuess: null,
-            letterFrequency: calculatedFrequency,
-            guessedMappings: {},
-            originalLetters: data.original_letters || [],
-            startTime: Date.now(),
-            gameId: data.game_id,
-            hardcoreMode: hardcoreMode,
-            difficulty: difficulty,
-            maxMistakes:
-              data.max_mistakes !== undefined ? data.max_mistakes : maxMistakes,
-          },
-        });
         return true;
       } catch (error) {
         console.error("Error starting game:", error);
@@ -521,7 +479,6 @@ export const GameStateProvider = ({ children }) => {
         ? game.correctly_guessed
         : [];
       const letterFrequency = game.letter_frequency || {};
-      const guessedMappings = game.mapping || {};
       const originalLetters = Array.isArray(game.original_letters)
         ? game.original_letters
         : [];
@@ -529,6 +486,22 @@ export const GameStateProvider = ({ children }) => {
       const maxMistakes =
         typeof game.max_mistakes === "number" ? game.max_mistakes : 8;
       const hardcoreMode = game.hardcore_mode === true;
+
+      // IMPORTANT: Correctly reconstruct guessedMappings
+      const guessedMappings = {};
+
+      // For each correctly guessed letter, find its mapping
+      if (game.reverse_mapping && correctlyGuessed.length > 0) {
+        correctlyGuessed.forEach((encryptedLetter) => {
+          if (encryptedLetter in game.reverse_mapping) {
+            guessedMappings[encryptedLetter] =
+              game.reverse_mapping[encryptedLetter];
+          }
+        });
+      }
+
+      console.log("Reconstructed guessedMappings:", guessedMappings);
+      console.log("Correctly guessed letters:", correctlyGuessed);
 
       // Apply hardcore mode filtering if needed
       let processedEncrypted = encryptedText;
@@ -562,59 +535,21 @@ export const GameStateProvider = ({ children }) => {
         },
       });
 
+      // Force a UI update
+      setTimeout(() => {
+        console.log("Forcing UI update after game continuation");
+        // You could use a state update here to force re-render if needed
+      }, 100);
+
       console.log("Successfully continued saved game");
       return true;
     } catch (error) {
       console.error("Error continuing saved game:", error);
+      // Clear the stored game ID to prevent repeated attempts
+      localStorage.removeItem("uncrypt-game-id");
       return false;
     }
   }, [dispatch, settings?.hardcoreMode]);
-  // Clear last correct guess after a delay
-  useEffect(() => {
-    if (state.lastCorrectGuess) {
-      const timer = setTimeout(() => {
-        dispatch({
-          type: "SUBMIT_GUESS",
-          payload: { lastCorrectGuess: null },
-        });
-      }, 500);
-
-      return () => clearTimeout(timer);
-    }
-  }, [state.lastCorrectGuess]);
-
-  // Save game state to localStorage
-  useEffect(() => {
-    if (state.encrypted && state.display) {
-      const gameState = {
-        encrypted: state.encrypted,
-        display: state.display,
-        mistakes: state.mistakes,
-        correctlyGuessed: state.correctlyGuessed,
-        letterFrequency: state.letterFrequency,
-        guessedMappings: state.guessedMappings,
-        originalLetters: state.originalLetters,
-        startTime: state.startTime,
-        hardcoreMode: state.hardcoreMode,
-      };
-
-      // Save game state to localStorage
-      localStorage.setItem("uncrypt-game-data", JSON.stringify(gameState));
-    }
-  }, [
-    state.encrypted,
-    state.display,
-    state.mistakes,
-    state.correctlyGuessed,
-    state.letterFrequency,
-    state.guessedMappings,
-    state.originalLetters,
-    state.startTime,
-    state.maxMistakes,
-    state.difficulty,
-    state.hardcoreMode, // Added the missing dependency
-  ]);
-
   // Determine if game is active
   const isGameActive =
     Boolean(state.encrypted) && !state.hasWon && !state.hasLost;

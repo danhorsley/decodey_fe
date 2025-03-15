@@ -129,18 +129,43 @@ const ModalManager = ({ children }) => {
   }, [continueSavedGame, closeContinueGamePrompt]);
 
   const handleNewGame = useCallback(() => {
-    if (typeof startGame === "function") {
-      console.log("Starting new game instead of continuing...");
-      // Get current settings
-      const longText = settings?.longText === true;
-      const hardcoreMode = settings?.hardcoreMode === true;
+    // First, abandon the current active game
+    const abandonActiveGame = async () => {
+      try {
+        console.log("Abandoning current active game...");
+        // Call the abandon-game endpoint
+        await apiService.api.delete("/api/abandon-game");
+        console.log("Active game abandoned successfully");
 
-      // Start a new game
-      startGame(longText, hardcoreMode);
-    } else {
-      console.error("startGame is not a function");
-    }
-    closeContinueGamePrompt();
+        // Then start a new game
+        if (typeof startGame === "function") {
+          console.log("Starting new game...");
+          // Get current settings
+          const longText = settings?.longText === true;
+          const hardcoreMode = settings?.hardcoreMode === true;
+
+          // Start a new game
+          startGame(longText, hardcoreMode);
+        } else {
+          console.error("startGame is not a function");
+        }
+      } catch (error) {
+        console.error("Error abandoning active game:", error);
+        // Even if abandoning fails, try to start a new game
+        if (typeof startGame === "function") {
+          startGame(
+            settings?.longText === true,
+            settings?.hardcoreMode === true,
+          );
+        }
+      }
+
+      // Close the modal regardless
+      closeContinueGamePrompt();
+    };
+
+    // Call the function
+    abandonActiveGame();
   }, [startGame, closeContinueGamePrompt, settings]);
 
   // Listen for active game detected events
@@ -161,15 +186,19 @@ const ModalManager = ({ children }) => {
   }, [openContinueGamePrompt]);
   //debug for active game
   useEffect(() => {
-    console.log("Setting up ModalManager event listeners");
-
     const checkActiveGameSubscription = apiService.on(
       "auth:active-game-check-needed",
       async () => {
-        console.log("🔍 ModalManager: Active game check needed event received");
         try {
-          console.log("Making API call to /check-active-game");
+          console.log(
+            "🔍 ModalManager: Active game check needed event received",
+          );
+
+          // FIX: Use the correct API path - it should match the backend route
+          // Change from: "/check-active-game" to "/api/check-active-game"
+          console.log("Making API call to /api/check-active-game");
           const response = await apiService.api.get("/api/check-active-game");
+
           console.log("✅ API response received:", response.data);
 
           if (response.data && response.data.has_active_game) {

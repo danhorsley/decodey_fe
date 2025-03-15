@@ -353,6 +353,7 @@ class ApiService {
   async checkActiveGame() {
     try {
       console.log("Making API call to check for active games");
+      // Fix the path here too if needed
       const response = await this.api.get("/api/check-active-game");
       console.log("Active game check response:", response.data);
       return response.data;
