@@ -57,7 +57,7 @@ export const AuthProvider = ({ children }) => {
             })
             .catch(() => {
               // Both token and refresh failed
-              localStorage.removeItem("token");
+              localStorage.removeItem("uncrypt-token");
               setAuthState({
                 isAuthenticated: false,
                 user: null,

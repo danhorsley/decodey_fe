@@ -193,7 +193,9 @@ export const GameStateProvider = ({ children }) => {
 
     try {
       // Check if we have auth token before making the request
-      const token = localStorage.getItem("token");
+      const token =
+        localStorage.getItem("uncrypt-token") ||
+        sessionStorage.getItem("uncrypt-token");
       if (!token) {
         console.log("No auth token, skipping win verification");
         return false;

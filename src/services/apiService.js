@@ -1,6 +1,7 @@
 // src/services/apiService.js - Updated startGame method
 import axios from "axios";
 import EventEmitter from "events";
+import config from "../config";
 
 let isRefreshing = false;
 let refreshFailureTime = 0;
@@ -16,7 +17,9 @@ class ApiService {
     // Add request interceptor to consistently add auth token to all requests
     this.api.interceptors.request.use(
       (config) => {
-        const token = localStorage.getItem("token");
+        const token =
+          localStorage.getItem("uncrypt-token") ||
+          sessionStorage.getItem("uncrypt-token");
         if (token) {
           console.log(`Adding auth token to ${config.url}`);
           config.headers.Authorization = `Bearer ${token}`;
@@ -59,7 +62,7 @@ class ApiService {
     try {
       const response = await this.api.post("/login", credentials);
       if (response.data.access_token) {
-        localStorage.setItem("token", response.data.access_token);
+        localStorage.setItem("uncrypt-token", response.data.access_token);
 
         // Ensure we save the refresh token if provided
         if (response.data.refresh_token) {
@@ -85,14 +88,14 @@ class ApiService {
   async logout() {
     try {
       await this.api.post("/logout");
-      localStorage.removeItem("token");
+      localStorage.removeItem("uncrypt-token");
       localStorage.removeItem("refresh_token");
       this.events.emit("auth:logout");
       return { success: true };
     } catch (error) {
       console.error("Logout error:", error);
       // Still clear token on frontend
-      localStorage.removeItem("token");
+      localStorage.removeItem("uncrypt-token");
       localStorage.removeItem("refresh_token");
       this.events.emit("auth:logout");
       return { success: false, error };
@@ -112,7 +115,11 @@ class ApiService {
       console.warn("No refresh token available - cannot refresh");
 
       // If we also don't have an access token, we should consider the user logged out
-      if (!localStorage.getItem("token")) {
+
+      if (
+        !localStorage.getItem("uncrypt-token") ||
+        sessionStorage.getItem("uncrypt-token")
+      ) {
         console.log("No access token either, emitting auth:logout event");
         this.events.emit("auth:logout");
       } else {
@@ -142,7 +149,7 @@ class ApiService {
 
       if (response.data.access_token) {
         console.log("Successfully refreshed access token");
-        localStorage.setItem("token", response.data.access_token);
+        localStorage.setItem("uncrypt-token", response.data.access_token);
         isRefreshing = false;
         return response.data;
       } else {
@@ -159,7 +166,7 @@ class ApiService {
       if (error.response && error.response.status === 401) {
         console.warn("Refresh token is invalid or expired - logging out");
         // Clear tokens
-        localStorage.removeItem("token");
+        localStorage.removeItem("uncrypt-token");
         localStorage.removeItem("refresh_token");
         this.events.emit("auth:logout");
       }
@@ -177,7 +184,9 @@ class ApiService {
       );
 
       // Get token and verify it exists
-      const token = localStorage.getItem("token");
+      const token =
+        localStorage.getItem("uncrypt-token") ||
+        sessionStorage.getItem("uncrypt-token");
       console.log("Token from localStorage:", token ? "exists" : "missing");
 
       // Determine endpoint based on longText option
@@ -246,7 +255,10 @@ class ApiService {
       console.group("Token Debug for submitGuess");
       console.log(
         "Access Token:",
-        localStorage.getItem("token") ? "Present" : "Missing",
+        localStorage.getItem("uncrypt-token") ||
+          sessionStorage.getItem("uncrypt-token")
+          ? "Present"
+          : "Missing",
       );
       console.log("Game ID:", gameId ? "Present" : "Missing");
       console.groupEnd();
@@ -255,7 +267,9 @@ class ApiService {
       const baseUrl =
         this.api.defaults.baseURL || process.env.REACT_APP_API_URL || "";
       const url = `${baseUrl}/api/guess`;
-      const token = localStorage.getItem("token");
+      const token =
+        localStorage.getItem("uncrypt-token") ||
+        sessionStorage.getItem("uncrypt-token");
 
       console.log(`Making fetch request to ${url} with data:`, {
         encrypted_letter: encryptedLetter,
@@ -307,7 +321,10 @@ class ApiService {
       console.group("Token Debug");
       console.log(
         "Access Token:",
-        localStorage.getItem("token") ? "Present" : "Missing",
+        localStorage.getItem("uncrypt-token") ||
+          sessionStorage.getItem("uncrypt-token")
+          ? "Present"
+          : "Missing",
       );
       console.log("Game ID:", gameId ? "Present" : "Missing");
       console.groupEnd();
@@ -316,7 +333,9 @@ class ApiService {
       const baseUrl =
         this.api.defaults.baseURL || process.env.REACT_APP_API_URL || "";
       const url = `${baseUrl}/api/hint`;
-      const token = localStorage.getItem("token");
+      const token =
+        localStorage.getItem("uncrypt-token") ||
+        sessionStorage.getItem("uncrypt-token");
 
       console.log(`Making fetch request to ${url}`);
 
@@ -367,7 +386,9 @@ class ApiService {
       console.log("Fetching game status");
 
       // Get token and game ID
-      const token = localStorage.getItem("token");
+      const token =
+        localStorage.getItem("uncrypt-token") ||
+        sessionStorage.getItem("uncrypt-token");
       const gameId = localStorage.getItem("uncrypt-game-id");
 
       // Simple token debugging
