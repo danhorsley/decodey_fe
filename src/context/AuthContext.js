@@ -10,6 +10,8 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated: false,
     user: null,
     loading: true,
+    hasActiveGame: false,
+    activeGameStats: null,
   });
 
   // Initialize auth state from token
@@ -69,20 +71,29 @@ export const AuthProvider = ({ children }) => {
   // Listen for auth events from apiService
   useEffect(() => {
     const loginSubscription = apiService.on("auth:login", (data) => {
+      // Update auth state
       setAuthState({
         isAuthenticated: true,
         user: {
           id: data.user_id,
           username: data.username,
         },
+        hasActiveGame: data.has_active_game || false,
         loading: false,
       });
+
+      // If user has an active game, trigger a check for active game details
+      if (data.has_active_game) {
+        console.log("User has active game, triggering check for details");
+        apiService.events.emit("auth:active-game-check-needed");
+      }
     });
 
     const logoutSubscription = apiService.on("auth:logout", () => {
       setAuthState({
         isAuthenticated: false,
         user: null,
+        hasActiveGame: false,
         loading: false,
       });
     });
@@ -92,7 +103,6 @@ export const AuthProvider = ({ children }) => {
       logoutSubscription();
     };
   }, []);
-
   // Login function
   const login = async (credentials) => {
     try {

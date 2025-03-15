@@ -5,6 +5,7 @@ import "../Styles/Login.css";
 import { useSettings } from "../context/SettingsContext";
 import { useAuth } from "../context/AuthContext";
 import { useModalContext } from "../components/modals/ModalManager";
+import apiService from "../services/apiService";
 
 function Login({ onClose }) {
   // Get contexts directly
@@ -49,7 +50,15 @@ function Login({ onClose }) {
       if (result.success) {
         // Store remember me preference
         localStorage.setItem("uncrypt-remember-me", rememberMe.toString());
+
+        // Close the login modal immediately
         onClose();
+
+        // Explicitly emit event for checking active games if needed
+        if (result.data && result.data.has_active_game) {
+          console.log("Login successful with active game, triggering check");
+          apiService.events.emit("auth:active-game-check-needed");
+        }
       } else {
         setError(
           result.error || "Login failed. Please check your credentials.",

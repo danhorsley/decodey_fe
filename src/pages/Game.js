@@ -1,5 +1,11 @@
 // src/pages/Game.js - Complete Rewrite
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, {
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import { FaTrophy } from "react-icons/fa";
 // Direct context imports
@@ -140,12 +146,29 @@ function Game() {
     maxMistakes,
   ]);
 
-  // Initialize game when component mounts
+  // In Game.js, modify the initialization useEffect
+  const initializationAttemptedRef = useRef(false);
+
+  // Then modify the useEffect
   useEffect(() => {
-    console.log("Game mount effect - initializing game");
+    console.log("Game mount effect - checking initialization status", {
+      initAttempted: initializationAttemptedRef.current,
+      hasEncrypted: !!encrypted,
+      gameLoaded,
+    });
+
     let mounted = true; // Flag to prevent state updates after unmount
 
     const initializeGame = async () => {
+      // Don't start a new game if we've already attempted initialization
+      if (initializationAttemptedRef.current) {
+        console.log("Skipping game initialization - already attempted");
+        return;
+      }
+
+      // Mark that we've attempted initialization
+      initializationAttemptedRef.current = true;
+
       setLoading(true);
       try {
         if (typeof startGame !== "function") {
@@ -176,56 +199,27 @@ function Game() {
       }
     };
 
-    if (!encrypted || !gameLoaded) {
+    // Only initialize if we don't have encrypted text and haven't tried initialization yet
+    if (!encrypted && !initializationAttemptedRef.current) {
+      console.log(
+        "No game loaded and no initialization attempted - starting new game",
+      );
       initializeGame();
     } else {
+      console.log(
+        "Game already exists or initialization already attempted - skipping",
+      );
       setLoading(false);
-      console.log("Game already loaded:", {
-        encryptedLength: encrypted?.length || 0,
-        displayLength: display?.length || 0,
-      });
     }
 
-    // Initialize audio safely
-    try {
-      if (typeof loadSounds === "function") {
-        loadSounds();
-      }
+    // Rest of your effect code (audio setup, etc.)
+    // ...
 
-      const handleFirstInteraction = () => {
-        if (typeof unlockAudioContext === "function") {
-          unlockAudioContext();
-        }
-        if (typeof loadSounds === "function") {
-          loadSounds();
-        }
-      };
-
-      window.addEventListener("click", handleFirstInteraction, { once: true });
-      window.addEventListener("keydown", handleFirstInteraction, {
-        once: true,
-      });
-
-      return () => {
-        mounted = false;
-        window.removeEventListener("click", handleFirstInteraction);
-        window.removeEventListener("keydown", handleFirstInteraction);
-      };
-    } catch (error) {
-      console.error("Error setting up audio:", error);
-      return () => {
-        mounted = false;
-      };
-    }
-  }, [
-    startGame,
-    settings,
-    encrypted,
-    gameLoaded,
-    loadSounds,
-    unlockAudioContext,
-  ]);
-
+    return () => {
+      mounted = false;
+      // Other cleanup
+    };
+  }, [startGame, settings, encrypted, gameLoaded]);
   // Watch for local win detection
   useEffect(() => {
     try {

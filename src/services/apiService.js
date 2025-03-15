@@ -69,7 +69,11 @@ class ApiService {
           console.warn("No refresh token received from login endpoint");
         }
 
-        this.events.emit("auth:login", response.data);
+        // Include hasActiveGame in the event data
+        this.events.emit("auth:login", {
+          ...response.data,
+          hasActiveGame: response.data.has_active_game || false,
+        });
       }
       return response.data;
     } catch (error) {
@@ -346,7 +350,17 @@ class ApiService {
       return { error: error.message };
     }
   }
-
+  async checkActiveGame() {
+    try {
+      console.log("Making API call to check for active games");
+      const response = await this.api.get("/api/check-active-game");
+      console.log("Active game check response:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Error checking for active games:", error);
+      return { has_active_game: false };
+    }
+  }
   async getGameStatus() {
     try {
       console.log("Fetching game status");

@@ -83,6 +83,16 @@ const gameReducer = (state, action) => {
     case "RESET_GAME":
       return initialState;
 
+    case "CONTINUE_GAME":
+      return {
+        ...initialState,
+        ...action.payload,
+        hasGameStarted: true,
+        hasWon: false,
+        winData: null,
+        hasLost: false,
+      };
+
     default:
       return state;
   }
@@ -482,6 +492,83 @@ export const GameStateProvider = ({ children }) => {
     }
   }, [state, dispatch]);
 
+  //continues game if one found in be storage and user selects continue
+  // In continueSavedGame function in GameStateContext.js
+  const continueSavedGame = useCallback(async () => {
+    try {
+      console.log("Attempting to continue saved game");
+
+      // Call API to get the full game state
+      const response = await apiService.api.get("/api/continue-game");
+      console.log("Continue game response:", response.data);
+
+      if (!response.data || response.data.msg === "No active game found") {
+        console.warn("No active game found to continue");
+        return false;
+      }
+
+      // Store the game ID in localStorage
+      if (response.data.game_id) {
+        localStorage.setItem("uncrypt-game-id", response.data.game_id);
+      }
+
+      // Extract data from response with safe defaults
+      const game = response.data;
+      const encryptedText = game.encrypted_paragraph || "";
+      const displayText = game.display || "";
+      const mistakes = typeof game.mistakes === "number" ? game.mistakes : 0;
+      const correctlyGuessed = Array.isArray(game.correctly_guessed)
+        ? game.correctly_guessed
+        : [];
+      const letterFrequency = game.letter_frequency || {};
+      const guessedMappings = game.mapping || {};
+      const originalLetters = Array.isArray(game.original_letters)
+        ? game.original_letters
+        : [];
+      const difficulty = game.difficulty || "easy";
+      const maxMistakes =
+        typeof game.max_mistakes === "number" ? game.max_mistakes : 8;
+      const hardcoreMode = game.hardcore_mode === true;
+
+      // Apply hardcore mode filtering if needed
+      let processedEncrypted = encryptedText;
+      let processedDisplay = displayText;
+
+      if (hardcoreMode || settings?.hardcoreMode) {
+        console.log("Applying hardcore mode filtering to continued game");
+        processedEncrypted = encryptedText.replace(/[^A-Z]/g, "");
+        processedDisplay = displayText.replace(/[^A-Z█]/g, "");
+      }
+
+      // Update state with game data
+      dispatch({
+        type: "CONTINUE_GAME",
+        payload: {
+          encrypted: processedEncrypted,
+          display: processedDisplay,
+          mistakes,
+          correctlyGuessed,
+          selectedEncrypted: null,
+          lastCorrectGuess: null,
+          letterFrequency,
+          guessedMappings,
+          originalLetters,
+          startTime: Date.now() - (game.time_spent || 0) * 1000,
+          gameId: game.game_id,
+          hasGameStarted: true,
+          hardcoreMode,
+          difficulty,
+          maxMistakes,
+        },
+      });
+
+      console.log("Successfully continued saved game");
+      return true;
+    } catch (error) {
+      console.error("Error continuing saved game:", error);
+      return false;
+    }
+  }, [dispatch, settings?.hardcoreMode]);
   // Clear last correct guess after a delay
   useEffect(() => {
     if (state.lastCorrectGuess) {
@@ -495,67 +582,6 @@ export const GameStateProvider = ({ children }) => {
       return () => clearTimeout(timer);
     }
   }, [state.lastCorrectGuess]);
-
-  // Polling for game status updates - check for wins/losses
-  // useEffect(() => {
-  //   // Only poll if there's an active game that hasn't been won or lost yet
-  //   if (!state.encrypted || state.hasWon || state.hasLost) {
-  //     return;
-  //   }
-
-  //   // Set up polling interval
-  //   const pollInterval = setInterval(async () => {
-  //     try {
-  //       // Check if we have auth token before making the request
-  //       const token = localStorage.getItem("token");
-  //       if (!token) {
-  //         return;
-  //       }
-
-  //       const data = await apiService.getGameStatus();
-
-  //       // Skip processing if there was an error or no active game
-  //       if (data.error || !data.hasActiveGame) {
-  //         return;
-  //       }
-
-  //       // Check if game is won
-  //       if (data.hasWon && data.winData) {
-  //         // Update game state with win data
-  //         dispatch({
-  //           type: "SET_GAME_WON",
-  //           payload: {
-  //             completionTime: Date.now(),
-  //             score: data.winData.score,
-  //             mistakes: data.winData.mistakes,
-  //             maxMistakes: data.winData.maxMistakes,
-  //             gameTimeSeconds: data.winData.gameTimeSeconds,
-  //             rating: data.winData.rating,
-  //             encrypted: state.encrypted,
-  //             display: state.display,
-  //             attribution: data.winData.attribution,
-  //             scoreStatus: {
-  //               recorded: true,
-  //               message: "Score recorded successfully!",
-  //             },
-  //           },
-  //         });
-  //       }
-
-  //       // Check if game is lost
-  //       if (data.gameComplete && !data.hasWon) {
-  //         dispatch({ type: "SET_GAME_LOST" });
-  //       }
-  //     } catch (error) {
-  //       console.error("Error polling game status:", error);
-  //     }
-  //   }, 3000); // Poll every 3 seconds
-
-  //   // Clean up interval on unmount
-  //   return () => {
-  //     clearInterval(pollInterval);
-  //   };
-  // }, [state.encrypted, state.hasWon, state.hasLost, state.display, dispatch]);
 
   // Save game state to localStorage
   useEffect(() => {
@@ -628,6 +654,7 @@ export const GameStateProvider = ({ children }) => {
         handleEncryptedSelect,
         submitGuess,
         getHint,
+        continueSavedGame,
 
         // Reset function
         resetGame: useCallback(() => {
