@@ -49,15 +49,7 @@ function Login({ onClose }) {
       if (result.success) {
         // Store remember me preference
         localStorage.setItem("uncrypt-remember-me", rememberMe.toString());
-
-        // Signal that we want to check for active games immediately
-        localStorage.setItem("uncrypt-check-active-game", "true");
-
         onClose();
-
-        // Force a page refresh to ensure everything reloads properly
-        // This is a simple but effective solution
-        window.location.reload();
       } else {
         setError(
           result.error || "Login failed. Please check your credentials.",

@@ -17,7 +17,6 @@ import HeaderControls from "../components/HeaderControls";
 import MobileLayout from "../components/layout/MobileLayout";
 import WinCelebration from "../components/modals/WinCelebration";
 import MatrixRain from "../components/effects/MatrixRain";
-import ContinueGamePrompt from "../components/ContinueGamePrompt";
 
 // Letter cell component using memo to reduce re-renders
 const LetterCell = React.memo(
@@ -83,11 +82,6 @@ function Game() {
     winData = null,
     difficulty = "easy",
     maxMistakes = 8,
-    showContinueGamePrompt = false,
-    activeGameData = null,
-    continueActiveGame = async () => false,
-    dismissContinuePrompt = () => {},
-    checkForActiveGame = async () => false,
   } = gameStateContext || {};
 
   // Get UI context safely
@@ -147,7 +141,6 @@ function Game() {
   ]);
 
   // Initialize game when component mounts
-  // Modify the initialization effect in Game.js
   useEffect(() => {
     console.log("Game mount effect - initializing game");
     let mounted = true; // Flag to prevent state updates after unmount
@@ -155,47 +148,27 @@ function Game() {
     const initializeGame = async () => {
       setLoading(true);
       try {
-        // Check if there's a continue game prompt showing
-        if (showContinueGamePrompt) {
-          console.log("Continue game prompt is active, skipping auto-start");
-          setLoading(false);
+        if (typeof startGame !== "function") {
+          console.error("startGame is not a function:", startGame);
           return;
         }
 
-        // If no encrypted text and no prompt showing, we need a game
-        if (!encrypted) {
-          console.log(
-            "No active game loaded, active game check already happened in GameStateContext",
-          );
+        console.log("Starting new game...");
 
-          // Don't try to call checkForActiveGame directly here, it's already been called
-          // in GameStateContext through useEffect and the result is in showContinueGamePrompt
+        // Get settings safely
+        const longTextSetting = settings?.longText === true;
+        const hardcoreModeSetting = settings?.hardcoreMode === true;
 
-          // Only start a new game if we aren't showing the continue prompt
-          if (!showContinueGamePrompt) {
-            console.log("No active game prompt showing, starting new game...");
+        console.log("Game settings:", { longTextSetting, hardcoreModeSetting });
 
-            if (typeof startGame !== "function") {
-              console.error("startGame is not a function:", startGame);
-              return;
-            }
-
-            // Get settings safely
-            const longTextSetting = settings?.longText === true;
-            const hardcoreModeSetting = settings?.hardcoreMode === true;
-
-            await startGame(longTextSetting, hardcoreModeSetting);
-            console.log("Game started successfully");
-          } else {
-            console.log("Continue game prompt is showing, skipping auto-start");
-          }
-        }
+        await startGame(longTextSetting, hardcoreModeSetting);
+        console.log("Game started successfully");
 
         if (mounted) {
           setGameLoaded(true);
         }
       } catch (err) {
-        console.error("Error during game initialization:", err);
+        console.error("Error starting game:", err);
       } finally {
         if (mounted) {
           setLoading(false);
@@ -203,40 +176,56 @@ function Game() {
       }
     };
 
-    initializeGame();
+    if (!encrypted || !gameLoaded) {
+      initializeGame();
+    } else {
+      setLoading(false);
+      console.log("Game already loaded:", {
+        encryptedLength: encrypted?.length || 0,
+        displayLength: display?.length || 0,
+      });
+    }
 
-    // Rest of your effect (audio setup, etc.)
-    // ...
+    // Initialize audio safely
+    try {
+      if (typeof loadSounds === "function") {
+        loadSounds();
+      }
 
-    return () => {
-      mounted = false;
-      // Other cleanup
-    };
+      const handleFirstInteraction = () => {
+        if (typeof unlockAudioContext === "function") {
+          unlockAudioContext();
+        }
+        if (typeof loadSounds === "function") {
+          loadSounds();
+        }
+      };
+
+      window.addEventListener("click", handleFirstInteraction, { once: true });
+      window.addEventListener("keydown", handleFirstInteraction, {
+        once: true,
+      });
+
+      return () => {
+        mounted = false;
+        window.removeEventListener("click", handleFirstInteraction);
+        window.removeEventListener("keydown", handleFirstInteraction);
+      };
+    } catch (error) {
+      console.error("Error setting up audio:", error);
+      return () => {
+        mounted = false;
+      };
+    }
   }, [
-    encrypted,
     startGame,
     settings,
-    showContinueGamePrompt,
-    checkForActiveGame,
+    encrypted,
+    gameLoaded,
+    loadSounds,
+    unlockAudioContext,
   ]);
 
-  // Add to the initialization effect
-  useEffect(() => {
-    // Check if we need to check for active games after login
-    const shouldCheckActiveGame =
-      localStorage.getItem("uncrypt-check-active-game") === "true";
-
-    if (shouldCheckActiveGame) {
-      console.log("Post-login active game check triggered");
-      // Clear the flag
-      localStorage.removeItem("uncrypt-check-active-game");
-
-      // Wait a moment for auth to be fully established
-      setTimeout(() => {
-        checkForActiveGame();
-      }, 1000);
-    }
-  }, [checkForActiveGame]);
   // Watch for local win detection
   useEffect(() => {
     try {
@@ -775,19 +764,7 @@ function Game() {
         />
       );
     }
-    {
-      showContinueGamePrompt && activeGameData && (
-        <ContinueGamePrompt
-          gameData={activeGameData}
-          theme={settings?.theme}
-          onContinue={continueActiveGame}
-          onNewGame={() => {
-            dismissContinuePrompt();
-            handleStartNewGame();
-          }}
-        />
-      );
-    }
+
     // Show Matrix transition if a local win is detected
     if (showMatrixTransition === true && hasWon !== true) {
       return (
@@ -890,18 +867,6 @@ function Game() {
     <div
       className={`App-container ${settings?.theme === "dark" ? "dark-theme" : ""}`}
     >
-      {/* IMPORTANT: Render the continue prompt at the top level */}
-      {showContinueGamePrompt && activeGameData && (
-        <ContinueGamePrompt
-          gameData={activeGameData}
-          theme={settings?.theme}
-          onContinue={continueActiveGame}
-          onNewGame={() => {
-            dismissContinuePrompt();
-            handleStartNewGame();
-          }}
-        />
-      )}
       {renderGameHeader()}
       {renderTextContainer()}
       {renderGrids()}

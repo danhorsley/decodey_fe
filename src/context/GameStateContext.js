@@ -31,8 +31,6 @@ const initialState = {
   isLocalWinDetected: false,
   isWinVerificationInProgress: false,
   difficulty: "easy",
-  showContinueGamePrompt: false,
-  activeGameData: null,
 };
 
 // Reducer for state management
@@ -84,27 +82,6 @@ const gameReducer = (state, action) => {
 
     case "RESET_GAME":
       return initialState;
-
-    case "SET_ACTIVE_GAME_DATA":
-      return {
-        ...state,
-        activeGameData: action.payload,
-        showContinueGamePrompt: true,
-      };
-
-    case "CONTINUE_ACTIVE_GAME":
-      return {
-        ...initialState,
-        ...action.payload.gameState,
-        hasGameStarted: true,
-      };
-
-    case "DISMISS_CONTINUE_PROMPT":
-      return {
-        ...state,
-        showContinueGamePrompt: false,
-        activeGameData: null,
-      };
 
     default:
       return state;
@@ -519,163 +496,68 @@ export const GameStateProvider = ({ children }) => {
     }
   }, [state.lastCorrectGuess]);
 
-  const checkForActiveGame = useCallback(async () => {
-    // Only check if user is authenticated
-    const token = localStorage.getItem("token");
-    console.log("Checking for active game, token exists:", !!token);
+  // Polling for game status updates - check for wins/losses
+  // useEffect(() => {
+  //   // Only poll if there's an active game that hasn't been won or lost yet
+  //   if (!state.encrypted || state.hasWon || state.hasLost) {
+  //     return;
+  //   }
 
-    if (!token) {
-      console.log("No token, skipping active game check");
-      return;
-    }
+  //   // Set up polling interval
+  //   const pollInterval = setInterval(async () => {
+  //     try {
+  //       // Check if we have auth token before making the request
+  //       const token = localStorage.getItem("token");
+  //       if (!token) {
+  //         return;
+  //       }
 
-    try {
-      console.log("Making API call to check for active game...");
-      // Use a direct fetch with explicit URL for debugging
-      const baseUrl =
-        process.env.REACT_APP_BACKEND_URL ||
-        "https://7264097a-b4a2-42c7-988c-db8c0c9b107a-00-1lx57x7wg68m5.janeway.replit.dev";
-      const url = `${baseUrl}/api/check-active-game`;
+  //       const data = await apiService.getGameStatus();
 
-      console.log(`Fetching from URL: ${url}`);
-      const response = await fetch(url, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+  //       // Skip processing if there was an error or no active game
+  //       if (data.error || !data.hasActiveGame) {
+  //         return;
+  //       }
 
-      console.log("Response status:", response.status);
+  //       // Check if game is won
+  //       if (data.hasWon && data.winData) {
+  //         // Update game state with win data
+  //         dispatch({
+  //           type: "SET_GAME_WON",
+  //           payload: {
+  //             completionTime: Date.now(),
+  //             score: data.winData.score,
+  //             mistakes: data.winData.mistakes,
+  //             maxMistakes: data.winData.maxMistakes,
+  //             gameTimeSeconds: data.winData.gameTimeSeconds,
+  //             rating: data.winData.rating,
+  //             encrypted: state.encrypted,
+  //             display: state.display,
+  //             attribution: data.winData.attribution,
+  //             scoreStatus: {
+  //               recorded: true,
+  //               message: "Score recorded successfully!",
+  //             },
+  //           },
+  //         });
+  //       }
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log("Active game check response:", data);
+  //       // Check if game is lost
+  //       if (data.gameComplete && !data.hasWon) {
+  //         dispatch({ type: "SET_GAME_LOST" });
+  //       }
+  //     } catch (error) {
+  //       console.error("Error polling game status:", error);
+  //     }
+  //   }, 3000); // Poll every 3 seconds
 
-        if (data.has_active_game) {
-          console.log("Active game found:", data.game_stats);
-          dispatch({
-            type: "SET_ACTIVE_GAME_DATA",
-            payload: data.game_stats,
-          });
-        } else {
-          console.log("No active game found");
-        }
-      } else {
-        console.warn(`API returned status ${response.status}`);
-      }
-    } catch (error) {
-      console.error("Error checking for active game:", error);
-    }
-  }, [dispatch]);
-  const continueActiveGame = useCallback(async () => {
-    try {
-      console.log("Loading active game from server...");
+  //   // Clean up interval on unmount
+  //   return () => {
+  //     clearInterval(pollInterval);
+  //   };
+  // }, [state.encrypted, state.hasWon, state.hasLost, state.display, dispatch]);
 
-      // Make sure the API call is correct - use a direct fetch for debugging
-      const token = localStorage.getItem("token");
-      const baseUrl =
-        process.env.REACT_APP_BACKEND_URL ||
-        "https://7264097a-b4a2-42c7-988c-db8c0c9b107a-00-1lx57x7wg68m5.janeway.replit.dev";
-      const url = `${baseUrl}/api/continue-game`;
-
-      console.log(`Fetching active game from URL: ${url}`);
-      const response = await fetch(url, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      console.log("Continue game response status:", response.status);
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log("Active game data loaded:", data);
-
-        if (data) {
-          // Process the encrypted text
-          let encryptedText = data.encrypted_paragraph;
-          let displayText = data.display;
-
-          // Apply hardcore mode filtering if needed
-          if (data.hardcoreMode) {
-            encryptedText = encryptedText.replace(/[^A-Z]/g, "");
-            displayText = displayText.replace(/[^A-Z█]/g, "");
-          }
-
-          // Calculate letter frequencies
-          const calculatedFrequency = {};
-          for (const char of encryptedText) {
-            if (/[A-Z]/.test(char))
-              calculatedFrequency[char] = (calculatedFrequency[char] || 0) + 1;
-          }
-
-          // Dispatch action to load the game
-          dispatch({
-            type: "CONTINUE_ACTIVE_GAME",
-            payload: {
-              gameState: {
-                encrypted: encryptedText,
-                display: displayText,
-                mistakes: data.mistakes || 0,
-                correctlyGuessed: data.correctly_guessed || [],
-                letterFrequency: calculatedFrequency,
-                guessedMappings: data.mapping || {},
-                originalLetters: data.original_letters || [],
-                startTime: Date.now(),
-                gameId: data.game_id,
-                hardcoreMode: data.hardcoreMode || false,
-                difficulty: data.difficulty || "easy",
-                maxMistakes: data.max_mistakes || 8,
-              },
-            },
-          });
-
-          // Close the prompt
-          dispatch({ type: "DISMISS_CONTINUE_PROMPT" });
-          return true;
-        }
-      } else {
-        console.error("Failed to load active game, status:", response.status);
-      }
-      return false;
-    } catch (error) {
-      console.error("Error continuing active game:", error);
-      return false;
-    }
-  }, [dispatch]);
-  // Add this function to dismiss the continue prompt
-  const dismissContinuePrompt = useCallback(() => {
-    dispatch({ type: "DISMISS_CONTINUE_PROMPT" });
-  }, [dispatch]);
-  // an effect to listen for login completion
-  useEffect(() => {
-    const handleLoginComplete = () => {
-      console.log(
-        "Auth login complete event received, checking for active games",
-      );
-      checkForActiveGame();
-    };
-
-    document.addEventListener("auth:login:complete", handleLoginComplete);
-
-    return () => {
-      document.removeEventListener("auth:login:complete", handleLoginComplete);
-    };
-  }, [checkForActiveGame]);
-  useEffect(() => {
-    // Check for active game on mount
-    const checkOnMount = async () => {
-      // Only check if we don't already have a game loaded
-      if (!state.encrypted && !state.hasGameStarted) {
-        await checkForActiveGame();
-      }
-    };
-
-    checkOnMount();
-  }, [checkForActiveGame, state.encrypted, state.hasGameStarted]);
+  // Save game state to localStorage
   useEffect(() => {
     if (state.encrypted && state.display) {
       const gameState = {
@@ -744,14 +626,8 @@ export const GameStateProvider = ({ children }) => {
         startGame,
         difficulty: state.difficulty,
         handleEncryptedSelect,
-        checkForActiveGame,
         submitGuess,
         getHint,
-        //continue prior game
-        showContinueGamePrompt: state.showContinueGamePrompt,
-        activeGameData: state.activeGameData,
-        continueActiveGame,
-        dismissContinuePrompt,
 
         // Reset function
         resetGame: useCallback(() => {
