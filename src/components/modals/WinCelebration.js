@@ -17,7 +17,7 @@ const WinCelebration = ({
   const { openLogin } = useModalContext();
   // Get reset functions from GameStateContext
   const { resetGame, resetComplete, isResetting } = useGameState();
-
+  const [loading, setLoading] = useState(true);
   // Animation state
   const [animationStage, setAnimationStage] = useState(0);
   const [showStats, setShowStats] = useState(false);
@@ -73,6 +73,7 @@ const WinCelebration = ({
     // Prevent multiple clicks
     if (isStartingNewGame) return;
     setIsStartingNewGame(true);
+    setLoading(true);
 
     try {
       // Instead of complex state management, just close the modal and start a new game

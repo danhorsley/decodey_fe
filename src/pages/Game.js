@@ -153,118 +153,104 @@ function Game() {
 
   // Then modify the useEffect
   useEffect(() => {
-    console.log("Game mount effect - checking initialization status", {
-      initAttempted: initializationAttemptedRef.current,
-      hasEncrypted: !!encrypted,
-      gameLoaded,
-    });
+    console.log(
+      "Game mount effect with encrypted:",
+      !!encrypted,
+      "initAttempted:",
+      initializationAttemptedRef.current,
+    );
 
-    let mounted = true; // Flag to prevent state updates after unmount
+    // If we already have encrypted text, just mark the game as loaded and exit
+    if (encrypted) {
+      console.log("Game already exists - skipping initialization");
+      setLoading(false);
+      setGameLoaded(true);
+      return;
+    }
+
+    // If we've already attempted initialization, don't try again
+    if (initializationAttemptedRef.current) {
+      console.log("Initialization already attempted - not trying again");
+      setLoading(false);
+      return;
+    }
+
+    // Mark that we're attempting initialization
+    initializationAttemptedRef.current = true;
+
+    let mounted = true;
 
     const initializeGame = async () => {
-      // Don't start a new game if we've already attempted initialization
-      if (initializationAttemptedRef.current) {
-        console.log("Skipping game initialization - already attempted");
-        return;
-      }
-
-      // Mark that we've attempted initialization
-      initializationAttemptedRef.current = true;
-
       setLoading(true);
+
       try {
-        // IMPORTANT NEW CODE: Wait for auth to be ready
-        const authStatus = await authContext.waitForAuthReady();
-        console.log("Auth status resolved:", authStatus);
+        await authContext.waitForAuthReady();
 
-        // First check localStorage for an active game ID
+        // First try to continue saved game if authenticated
         const storedGameId = localStorage.getItem("uncrypt-game-id");
+        if (storedGameId && authContext.isAuthenticated) {
+          console.log("Attempting to continue stored game:", storedGameId);
 
-        if (storedGameId && authStatus.isAuthenticated) {
-          console.log(
-            "Found stored game ID and user is authenticated:",
-            storedGameId,
-          );
-
-          // Try to continue this game
-          console.log("Attempting to continue stored game");
           if (typeof continueSavedGame === "function") {
             const result = await continueSavedGame();
-            if (result) {
-              console.log("Successfully continued stored game");
-              if (mounted) {
-                setGameLoaded(true);
-                setLoading(false);
-              }
-              return; // Exit initialization - game continued successfully
+            if (result && mounted) {
+              console.log("Successfully continued saved game");
+              setGameLoaded(true);
+              setLoading(false);
+              return;
             }
           }
         }
 
-        // If we get here, either no stored game was found or continuation failed
-        // Proceed with starting a new game
-        console.log("Starting new game...");
-
+        // Start a new game
+        console.log("Starting new game (first initialization)");
         if (typeof startGame !== "function") {
-          console.error("startGame is not a function:", startGame);
-          return;
+          throw new Error("startGame is not a function");
         }
 
-        // Get settings safely
         const longTextSetting = settings?.longText === true;
         const hardcoreModeSetting = settings?.hardcoreMode === true;
 
-        console.log("Game settings:", { longTextSetting, hardcoreModeSetting });
-
-        await startGame(longTextSetting, hardcoreModeSetting);
-        console.log("Game started successfully");
+        const result = await startGame(longTextSetting, hardcoreModeSetting);
 
         if (mounted) {
-          setGameLoaded(true);
+          if (result) {
+            console.log("Game initialized successfully");
+            setGameLoaded(true);
+          } else {
+            console.warn("Game initialization returned false");
+          }
+          setLoading(false);
         }
       } catch (err) {
         console.error("Error initializing game:", err);
-      } finally {
         if (mounted) {
           setLoading(false);
         }
       }
     };
 
-    // Only initialize if we don't have encrypted text and haven't tried initialization yet
-    if (!encrypted && !initializationAttemptedRef.current) {
-      console.log(
-        "No game loaded and no initialization attempted - initializing game",
-      );
-      initializeGame();
-    } else if (encrypted) {
-      console.log("Game already exists - skipping initialization");
-      setLoading(false);
-      setGameLoaded(true);
-    } else {
-      console.log(
-        "Initialization already attempted but no game - something might be wrong",
-      );
-      setLoading(false);
-    }
+    // Start initialization process
+    initializeGame();
 
     return () => {
       mounted = false;
     };
-  }, [
-    startGame,
-    continueSavedGame,
-    settings,
-    encrypted,
-    gameLoaded,
-    authContext, // Added authContext as a dependency
-  ]);
+  }, []); // Empty dependency array - only run once on mount
   useEffect(() => {
     // If we have the game state reset but no encrypted text, start a new game
-    if (!encrypted && gameStateContext.isResetting === true) {
+    if (
+      !encrypted &&
+      gameStateContext.isResetting === true &&
+      !initializationAttemptedRef.current
+    ) {
       console.log(
         "Game reset detected without encrypted text - initializing new game",
       );
+
+      // Mark initialization as attempted to prevent loops
+      initializationAttemptedRef.current = true;
+
       const longTextSetting = settings?.longText === true;
       const hardcoreModeSetting = settings?.hardcoreMode === true;
 
@@ -297,6 +283,14 @@ function Game() {
       console.error("Error in win detection effect:", error);
     }
   }, [isLocalWinDetected, hasWon, playSound]);
+
+  // Add this at the top level of the component to track rerender causes
+  useEffect(() => {
+    console.log(
+      "Game component rendered with encrypted:",
+      encrypted ? "exists" : "none",
+    );
+  }, [encrypted]);
   // Add a useEffect to manage the loading timeout
   useEffect(() => {
     let timeoutId = null;

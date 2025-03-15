@@ -115,6 +115,17 @@ class ApiService {
       console.warn("No refresh token available - cannot refresh");
 
       // If we also don't have an access token, we should consider the user logged out
+      // BUT we shouldn't automatically log out for anonymous users
+      if (
+        !localStorage.getItem("uncrypt-token") &&
+        !sessionStorage.getItem("uncrypt-token")
+      ) {
+        console.log("No access token either, but continuing as anonymous user");
+        // Don't emit auth:logout for anonymous users
+        return Promise.reject(
+          new Error("No tokens available, continuing anonymously"),
+        );
+      }
 
       if (
         !localStorage.getItem("uncrypt-token") ||
@@ -202,11 +213,12 @@ class ApiService {
       // Create full URL with query parameters
       const url = `${endpoint}${queryParams.toString() ? "?" + queryParams.toString() : ""}`;
 
-      console.log(
-        `Making request to endpoint: ${this.api.defaults.baseURL}${url}`,
-      );
+      // Get the base URL, with a fallback to ensure it's not undefined
+      const baseUrl =
+        this.api.defaults.baseURL || process.env.REACT_APP_API_URL || "";
+      console.log(`Making request to endpoint: ${baseUrl}${url}`);
 
-      // Log request configuration
+      // Make sure we're using the correct headers for anonymous play
       const config = {
         headers: {
           Accept: "application/json",
@@ -220,7 +232,7 @@ class ApiService {
 
       console.log("Request config:", JSON.stringify(config));
 
-      // Make the request
+      // Make the request with full URL construction
       const response = await this.api.get(url, config);
 
       // Log response for debugging

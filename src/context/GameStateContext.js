@@ -125,10 +125,18 @@ export const GameStateProvider = ({ children }) => {
         localStorage.removeItem("uncrypt-game-id");
         const difficulty = settings?.difficulty || "easy";
 
+        console.log("Starting new game with settings:", {
+          longText: useLongText,
+          hardcoreMode,
+          difficulty,
+        });
+
         const data = await apiService.startGame({
           longText: useLongText,
           difficulty: difficulty,
         });
+
+        console.log("Game start response:", data);
 
         // Skip active game check if we're coming from a reset
         if (
@@ -143,6 +151,7 @@ export const GameStateProvider = ({ children }) => {
         // Store the game ID in localStorage
         if (data.game_id) {
           localStorage.setItem("uncrypt-game-id", data.game_id);
+          console.log("Game ID stored in localStorage:", data.game_id);
         }
 
         // Process the encrypted text
@@ -154,6 +163,12 @@ export const GameStateProvider = ({ children }) => {
           processedEncrypted = encryptedText.replace(/[^A-Z]/g, "");
           processedDisplay = processedDisplay.replace(/[^A-Z█]/g, "");
         }
+
+        console.log("Processed game text:", {
+          originalLength: encryptedText.length,
+          processedLength: processedEncrypted.length,
+          displayLength: processedDisplay.length,
+        });
 
         // Create a clean, fresh state with the new game data
         const payload = {
@@ -171,9 +186,13 @@ export const GameStateProvider = ({ children }) => {
           hardcoreMode,
           maxMistakes: data.max_mistakes || getMaxMistakes(difficulty),
           difficulty: data.difficulty || difficulty,
+          isAnonymous: data.is_anonymous || false,
+          tempId: data.temp_id,
         };
 
-        // Use a more aggressive approach to updating the state
+        console.log("Updating game state with new payload");
+
+        // Reset game state first
         dispatch({ type: "RESET_GAME" });
 
         // Small delay to ensure state is reset before setting new data
@@ -182,6 +201,8 @@ export const GameStateProvider = ({ children }) => {
             type: "START_GAME",
             payload,
           });
+
+          console.log("Game state updated successfully");
         }, 10);
 
         return true;
