@@ -1,5 +1,11 @@
 // src/context/AuthContext.js
-import React, { createContext, useState, useEffect, useContext } from "react";
+import React, {
+  createContext,
+  useState,
+  useEffect,
+  useContext,
+  useCallback,
+} from "react";
 import apiService from "../services/apiService";
 import config from "../config";
 
@@ -131,13 +137,36 @@ export const AuthProvider = ({ children }) => {
       };
     }
   };
+  // Add a new method to wait for auth state to be fully loaded
+  const waitForAuthReady = useCallback(() => {
+    return new Promise((resolve) => {
+      if (!authState.loading) {
+        // Auth state already loaded
+        resolve(authState.isAuthenticated);
+      } else {
+        // Set up a timer to check auth state
+        const checkInterval = setInterval(() => {
+          if (!authState.loading) {
+            clearInterval(checkInterval);
+            resolve(authState.isAuthenticated);
+          }
+        }, 100);
 
+        // Safety timeout after 5 seconds
+        setTimeout(() => {
+          clearInterval(checkInterval);
+          resolve(false); // Default to not authenticated after timeout
+        }, 5000);
+      }
+    });
+  }, [authState.loading, authState.isAuthenticated]);
   return (
     <AuthContext.Provider
       value={{
         ...authState,
         login,
         logout,
+        waitForAuthReady,
       }}
     >
       {children}
