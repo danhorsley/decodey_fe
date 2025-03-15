@@ -172,11 +172,18 @@ function Game() {
 
       setLoading(true);
       try {
+        // IMPORTANT NEW CODE: Wait for auth to be ready
+        const authStatus = await authContext.waitForAuthReady();
+        console.log("Auth status resolved:", authStatus);
+
         // First check localStorage for an active game ID
         const storedGameId = localStorage.getItem("uncrypt-game-id");
 
-        if (storedGameId && isAuthenticated) {
-          console.log("Found stored game ID:", storedGameId);
+        if (storedGameId && authStatus.isAuthenticated) {
+          console.log(
+            "Found stored game ID and user is authenticated:",
+            storedGameId,
+          );
 
           // Try to continue this game
           console.log("Attempting to continue stored game");
@@ -249,7 +256,7 @@ function Game() {
     settings,
     encrypted,
     gameLoaded,
-    isAuthenticated,
+    authContext, // Added authContext as a dependency
   ]);
   // Watch for local win detection
   useEffect(() => {

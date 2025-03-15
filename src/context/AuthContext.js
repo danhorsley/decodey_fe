@@ -22,16 +22,29 @@ export const AuthProvider = ({ children }) => {
 
   // Initialize auth state from token
   useEffect(() => {
-    // Check for token in both localStorage and sessionStorage using consistent key names
-    const token =
-      localStorage.getItem(config.AUTH_KEYS.TOKEN) ||
-      sessionStorage.getItem(config.AUTH_KEYS.TOKEN);
+    const initializeAuth = async () => {
+      // Check for token in storage using config utilities
+      const token = config.session.getAuthToken();
 
-    if (token) {
-      // Verify token with backend
-      apiService.api
-        .get("/verify_token")
-        .then((response) => {
+      if (!token) {
+        setAuthState({
+          isAuthenticated: false,
+          user: null,
+          loading: false,
+        });
+        return;
+      }
+
+      try {
+        // Configure API instance with the token
+        apiService.api.defaults.headers.common["Authorization"] =
+          `Bearer ${token}`;
+
+        // Verify token with backend
+        const response = await apiService.api.get("/verify_token");
+
+        if (response.status === 200 && response.data.valid) {
+          console.log("Token verified successfully");
           setAuthState({
             isAuthenticated: true,
             user: {
@@ -40,38 +53,53 @@ export const AuthProvider = ({ children }) => {
             },
             loading: false,
           });
-        })
-        .catch(() => {
-          // Token invalid, try to refresh
-          apiService
-            .refreshToken()
-            .then((data) => {
-              setAuthState({
-                isAuthenticated: true,
-                user: {
-                  id: data.user_id,
-                  username: data.username,
-                },
-                loading: false,
-              });
-            })
-            .catch(() => {
-              // Both token and refresh failed
-              localStorage.removeItem("uncrypt-token");
-              setAuthState({
-                isAuthenticated: false,
-                user: null,
-                loading: false,
-              });
-            });
-        });
-    } else {
+        } else {
+          // Token invalid, try to refresh or clear
+          console.warn("Token verification failed");
+          await handleInvalidToken();
+        }
+      } catch (error) {
+        console.error("Error verifying token:", error);
+        await handleInvalidToken();
+      }
+    };
+
+    const handleInvalidToken = async () => {
+      try {
+        console.log("Attempting to refresh token...");
+        const refreshResult = await apiService.refreshToken();
+
+        if (refreshResult && refreshResult.access_token) {
+          console.log("Token refreshed successfully");
+          setAuthState({
+            isAuthenticated: true,
+            user: {
+              id: refreshResult.user_id,
+              username: refreshResult.username,
+            },
+            loading: false,
+          });
+        } else {
+          clearAuthState();
+        }
+      } catch (error) {
+        console.error("Token refresh failed:", error);
+        clearAuthState();
+      }
+    };
+
+    const clearAuthState = () => {
+      // Clear tokens and set unauthenticated state
+      config.session.clearSession();
       setAuthState({
         isAuthenticated: false,
         user: null,
         loading: false,
       });
-    }
+    };
+
+    // Start authentication initialization
+    initializeAuth();
   }, []);
 
   // Listen for auth events from apiService
@@ -138,28 +166,38 @@ export const AuthProvider = ({ children }) => {
     }
   };
   // Add a new method to wait for auth state to be fully loaded
+  // In AuthContext.js, enhance the waitForAuthReady function:
   const waitForAuthReady = useCallback(() => {
     return new Promise((resolve) => {
       if (!authState.loading) {
-        // Auth state already loaded
-        resolve(authState.isAuthenticated);
+        // Auth state already loaded, return current auth status
+        resolve({
+          isAuthenticated: authState.isAuthenticated,
+          user: authState.user,
+        });
       } else {
         // Set up a timer to check auth state
         const checkInterval = setInterval(() => {
           if (!authState.loading) {
             clearInterval(checkInterval);
-            resolve(authState.isAuthenticated);
+            resolve({
+              isAuthenticated: authState.isAuthenticated,
+              user: authState.user,
+            });
           }
         }, 100);
 
         // Safety timeout after 5 seconds
         setTimeout(() => {
           clearInterval(checkInterval);
-          resolve(false); // Default to not authenticated after timeout
+          resolve({
+            isAuthenticated: false,
+            user: null,
+          });
         }, 5000);
       }
     });
-  }, [authState.loading, authState.isAuthenticated]);
+  }, [authState.loading, authState.isAuthenticated, authState.user]);
   return (
     <AuthContext.Provider
       value={{
