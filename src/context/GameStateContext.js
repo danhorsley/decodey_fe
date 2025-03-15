@@ -522,27 +522,56 @@ export const GameStateProvider = ({ children }) => {
   const checkForActiveGame = useCallback(async () => {
     // Only check if user is authenticated
     const token = localStorage.getItem("token");
-    if (!token) return;
+    console.log("Checking for active game, token exists:", !!token);
+
+    if (!token) {
+      console.log("No token, skipping active game check");
+      return;
+    }
 
     try {
-      console.log("Checking for active game from server...");
-      const response = await apiService.api.get("/check-active-game");
+      console.log("Making API call to check for active game...");
+      // Use a direct fetch with explicit URL for debugging
+      const baseUrl =
+        process.env.REACT_APP_BACKEND_URL ||
+        "https://7264097a-b4a2-42c7-988c-db8c0c9b107a-00-1lx57x7wg68m5.janeway.replit.dev";
+      const url = `${baseUrl}/api/check-active-game`;
 
-      if (response.data.has_active_game) {
-        console.log("Active game found:", response.data.game_stats);
-        dispatch({
-          type: "SET_ACTIVE_GAME_DATA",
-          payload: response.data.game_stats,
-        });
+      console.log(`Fetching from URL: ${url}`);
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      console.log("Response status:", response.status);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Active game check response:", data);
+
+        if (data.has_active_game) {
+          console.log("Active game found:", data.game_stats);
+          dispatch({
+            type: "SET_ACTIVE_GAME_DATA",
+            payload: data.game_stats,
+          });
+        } else {
+          console.log("No active game found");
+        }
+      } else {
+        console.warn(`API returned status ${response.status}`);
       }
     } catch (error) {
       console.error("Error checking for active game:", error);
     }
-  }, []);
+  }, [dispatch]);
   const continueActiveGame = useCallback(async () => {
     try {
       console.log("Loading active game from server...");
-      const response = await apiService.api.get("/continue-game");
+      const response = await apiService.api.get("/api/continue-game");
 
       if (response.data) {
         console.log("Active game data loaded:", response.data);
@@ -671,6 +700,7 @@ export const GameStateProvider = ({ children }) => {
         startGame,
         difficulty: state.difficulty,
         handleEncryptedSelect,
+        checkForActiveGame,
         submitGuess,
         getHint,
         //continue prior game

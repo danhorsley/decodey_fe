@@ -146,6 +146,7 @@ function Game() {
   ]);
 
   // Initialize game when component mounts
+  // Modify the initialization effect in Game.js
   useEffect(() => {
     console.log("Game mount effect - initializing game");
     let mounted = true; // Flag to prevent state updates after unmount
@@ -153,27 +154,47 @@ function Game() {
     const initializeGame = async () => {
       setLoading(true);
       try {
-        if (typeof startGame !== "function") {
-          console.error("startGame is not a function:", startGame);
+        // Check if there's a continue game prompt showing
+        if (showContinueGamePrompt) {
+          console.log("Continue game prompt is active, skipping auto-start");
+          setLoading(false);
           return;
         }
 
-        console.log("Starting new game...");
+        // If no encrypted text and no prompt showing, we need a game
+        if (!encrypted) {
+          console.log(
+            "No active game loaded, active game check already happened in GameStateContext",
+          );
 
-        // Get settings safely
-        const longTextSetting = settings?.longText === true;
-        const hardcoreModeSetting = settings?.hardcoreMode === true;
+          // Don't try to call checkForActiveGame directly here, it's already been called
+          // in GameStateContext through useEffect and the result is in showContinueGamePrompt
 
-        console.log("Game settings:", { longTextSetting, hardcoreModeSetting });
+          // Only start a new game if we aren't showing the continue prompt
+          if (!showContinueGamePrompt) {
+            console.log("No active game prompt showing, starting new game...");
 
-        await startGame(longTextSetting, hardcoreModeSetting);
-        console.log("Game started successfully");
+            if (typeof startGame !== "function") {
+              console.error("startGame is not a function:", startGame);
+              return;
+            }
+
+            // Get settings safely
+            const longTextSetting = settings?.longText === true;
+            const hardcoreModeSetting = settings?.hardcoreMode === true;
+
+            await startGame(longTextSetting, hardcoreModeSetting);
+            console.log("Game started successfully");
+          } else {
+            console.log("Continue game prompt is showing, skipping auto-start");
+          }
+        }
 
         if (mounted) {
           setGameLoaded(true);
         }
       } catch (err) {
-        console.error("Error starting game:", err);
+        console.error("Error during game initialization:", err);
       } finally {
         if (mounted) {
           setLoading(false);
@@ -181,56 +202,22 @@ function Game() {
       }
     };
 
-    if (!encrypted || !gameLoaded) {
-      initializeGame();
-    } else {
-      setLoading(false);
-      console.log("Game already loaded:", {
-        encryptedLength: encrypted?.length || 0,
-        displayLength: display?.length || 0,
-      });
-    }
+    initializeGame();
 
-    // Initialize audio safely
-    try {
-      if (typeof loadSounds === "function") {
-        loadSounds();
-      }
+    // Rest of your effect (audio setup, etc.)
+    // ...
 
-      const handleFirstInteraction = () => {
-        if (typeof unlockAudioContext === "function") {
-          unlockAudioContext();
-        }
-        if (typeof loadSounds === "function") {
-          loadSounds();
-        }
-      };
-
-      window.addEventListener("click", handleFirstInteraction, { once: true });
-      window.addEventListener("keydown", handleFirstInteraction, {
-        once: true,
-      });
-
-      return () => {
-        mounted = false;
-        window.removeEventListener("click", handleFirstInteraction);
-        window.removeEventListener("keydown", handleFirstInteraction);
-      };
-    } catch (error) {
-      console.error("Error setting up audio:", error);
-      return () => {
-        mounted = false;
-      };
-    }
+    return () => {
+      mounted = false;
+      // Other cleanup
+    };
   }, [
+    encrypted,
     startGame,
     settings,
-    encrypted,
-    gameLoaded,
-    loadSounds,
-    unlockAudioContext,
+    showContinueGamePrompt,
+    checkForActiveGame,
   ]);
-
   // Watch for local win detection
   useEffect(() => {
     try {

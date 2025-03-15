@@ -348,34 +348,60 @@ class ApiService {
   }
   async checkActiveGame() {
     try {
+      console.group("Active Game Check");
       console.log("Checking for active game");
+
       const token = localStorage.getItem("token");
+      console.log("Auth token exists:", !!token);
 
       if (!token) {
+        console.log("No token available, skipping active game check");
+        console.groupEnd();
         return { has_active_game: false };
       }
 
+      console.log("Making API request to check-active-game endpoint");
       const response = await this.api.get("/check-active-game");
+      console.log("Response received:", response.data);
+      console.groupEnd();
       return response.data;
     } catch (error) {
       console.error("Error checking active game:", error);
-      return { has_active_game: false };
+      if (error.response) {
+        console.error("Response status:", error.response.status);
+        console.error("Response data:", error.response.data);
+      }
+      console.groupEnd();
+      return { has_active_game: false, error: error.message };
     }
   }
 
   async continueGame() {
     try {
+      console.group("Continue Active Game");
       console.log("Fetching active game data");
+
       const token = localStorage.getItem("token");
+      console.log("Auth token exists:", !!token);
 
       if (!token) {
+        console.log("No token available, cannot continue game");
+        console.groupEnd();
         return null;
       }
 
+      console.log("Making API request to continue-game endpoint");
       const response = await this.api.get("/continue-game");
+      console.log("Response received:", response.data);
+      console.groupEnd();
       return response.data;
     } catch (error) {
       console.error("Error fetching active game:", error);
+      if (error.response) {
+        console.error("Response status:", error.response.status);
+        console.error("Response data:", error.response.data);
+      }
+      console.groupEnd();
       return null;
     }
   }
