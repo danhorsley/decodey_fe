@@ -44,6 +44,7 @@ const gameReducer = (state, action) => {
         hasWon: false,
         winData: null,
         hasLost: false,
+        isResetting: false,
       };
 
     case "SUBMIT_GUESS":
@@ -81,7 +82,16 @@ const gameReducer = (state, action) => {
       return { ...state, hasLost: true };
 
     case "RESET_GAME":
-      return initialState;
+      return {
+        ...initialState,
+        isResetting: true,
+      };
+
+    case "RESET_COMPLETE":
+      return {
+        ...state,
+        isResetting: false,
+      };
 
     case "CONTINUE_GAME":
       console.log("Handling CONTINUE_GAME action:", action.payload);
@@ -92,6 +102,7 @@ const gameReducer = (state, action) => {
         hasWon: false,
         winData: null,
         hasLost: false,
+        isResetting: false,
       };
 
     default:
@@ -110,40 +121,68 @@ export const GameStateProvider = ({ children }) => {
   const startGame = useCallback(
     async (useLongText = false, hardcoreMode = false) => {
       try {
-        // Clear any existing game state from localStorage to avoid conflicts
+        // Clear any existing game state from localStorage
         localStorage.removeItem("uncrypt-game-id");
         const difficulty = settings?.difficulty || "easy";
 
-        console.log(`Making API call with difficulty=${difficulty}`);
         const data = await apiService.startGame({
           longText: useLongText,
           difficulty: difficulty,
         });
 
-        // Log the response to see what we got back
-        console.log("API response:", data);
-
-        // Check if there's an active game
-        if (data.active_game_info && data.active_game_info.has_active_game) {
-          console.log("Active game detected:", data.active_game_info);
-
-          // Emit event to show continue game modal
-          apiService.events.emit("auth:active-game-detected", {
-            hasActiveGame: true,
-            activeGameStats: data.active_game_info,
-          });
-
-          return false; // Return false to indicate we didn't start a new game
+        // Skip active game check if we're coming from a reset
+        if (
+          data.active_game_info &&
+          data.active_game_info.has_active_game &&
+          !state.isResetting
+        ) {
+          // Handle active game detection here...
+          return false;
         }
 
-        // Continue with normal game initialization
         // Store the game ID in localStorage
         if (data.game_id) {
           localStorage.setItem("uncrypt-game-id", data.game_id);
         }
 
         // Process the encrypted text
-        // [rest of your existing code...]
+        const encryptedText = data.encrypted_paragraph || "";
+        let processedEncrypted = encryptedText;
+        let processedDisplay = data.display || "";
+
+        if (hardcoreMode) {
+          processedEncrypted = encryptedText.replace(/[^A-Z]/g, "");
+          processedDisplay = processedDisplay.replace(/[^A-Z█]/g, "");
+        }
+
+        // Create a clean, fresh state with the new game data
+        const payload = {
+          encrypted: processedEncrypted,
+          display: processedDisplay,
+          mistakes: data.mistakes || 0,
+          correctlyGuessed: data.correctly_guessed || [],
+          selectedEncrypted: null,
+          lastCorrectGuess: null,
+          letterFrequency: data.letter_frequency || {},
+          guessedMappings: {},
+          originalLetters: data.original_letters || [],
+          startTime: Date.now(),
+          gameId: data.game_id,
+          hardcoreMode,
+          maxMistakes: data.max_mistakes || getMaxMistakes(difficulty),
+          difficulty: data.difficulty || difficulty,
+        };
+
+        // Use a more aggressive approach to updating the state
+        dispatch({ type: "RESET_GAME" });
+
+        // Small delay to ensure state is reset before setting new data
+        setTimeout(() => {
+          dispatch({
+            type: "START_GAME",
+            payload,
+          });
+        }, 10);
 
         return true;
       } catch (error) {
@@ -151,9 +190,8 @@ export const GameStateProvider = ({ children }) => {
         return false;
       }
     },
-    [settings?.difficulty],
+    [settings?.difficulty, state.isResetting, dispatch],
   );
-
   // Handle encrypted letter selection
   const handleEncryptedSelect = useCallback(
     (letter) => {
@@ -581,6 +619,7 @@ export const GameStateProvider = ({ children }) => {
         //Local win actions
         isLocalWinDetected: state.isLocalWinDetected,
         isWinVerificationInProgress: state.isWinVerificationInProgress,
+        isResetting: state.isResetting,
 
         // Important: Add maxMistakes to the context
         maxMistakes: state.maxMistakes,
@@ -596,6 +635,9 @@ export const GameStateProvider = ({ children }) => {
         // Reset function
         resetGame: useCallback(() => {
           dispatch({ type: "RESET_GAME" });
+        }, []),
+        resetComplete: useCallback(() => {
+          dispatch({ type: "RESET_COMPLETE" });
         }, []),
       }}
     >

@@ -1,9 +1,10 @@
-// src/components/modals/WinCelebration.js
+// In src/components/modals/WinCelebration.js
 import React, { useState, useEffect } from "react";
 import MatrixRain from "../effects/MatrixRain";
 import "../../Styles/WinCelebration.css";
 import { useAuth } from "../../context/AuthContext";
 import { useModalContext } from "./ModalManager";
+import { useGameState } from "../../context/GameStateContext"; // Add this import
 
 const WinCelebration = ({
   startGame,
@@ -14,6 +15,8 @@ const WinCelebration = ({
 }) => {
   const { isAuthenticated } = useAuth();
   const { openLogin } = useModalContext();
+  // Get reset functions from GameStateContext
+  const { resetGame, resetComplete, isResetting } = useGameState();
 
   // Animation state
   const [animationStage, setAnimationStage] = useState(0);
@@ -21,6 +24,8 @@ const WinCelebration = ({
   const [showMatrixRain, setShowMatrixRain] = useState(true);
   const [showFireworks, setShowFireworks] = useState(false);
   const [isMatrixActive, setIsMatrixActive] = useState(true);
+  // Add a state to track if we're in the process of starting a new game
+  const [isStartingNewGame, setIsStartingNewGame] = useState(false);
 
   // Unpack win data received from backend
   const {
@@ -61,6 +66,25 @@ const WinCelebration = ({
         .replace(/([.!?]\s*\w|^\w)/g, (match) => match.toUpperCase());
     }
     return ""; // Fallback
+  };
+
+  // Improved Play Again handler
+  const handlePlayAgain = async () => {
+    // Prevent multiple clicks
+    if (isStartingNewGame) return;
+    setIsStartingNewGame(true);
+
+    try {
+      // Instead of complex state management, just close the modal and start a new game
+      resetGame();
+      if (typeof startGame === "function") {
+        startGame();
+      }
+    } catch (error) {
+      console.error("Error starting new game:", error);
+    } finally {
+      setIsStartingNewGame(false);
+    }
   };
 
   // Staged animation sequence
@@ -198,8 +222,12 @@ const WinCelebration = ({
 
         {/* Action buttons */}
         <div className="celebration-actions">
-          <button className="play-again-button" onClick={startGame}>
-            Play Again
+          <button
+            className="play-again-button"
+            onClick={handlePlayAgain}
+            disabled={isStartingNewGame || isResetting}
+          >
+            {isStartingNewGame ? "Starting..." : "Play Again"}
           </button>
 
           {/* Simplified score status message */}

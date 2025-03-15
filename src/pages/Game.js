@@ -63,6 +63,7 @@ function Game() {
   // Get auth state safely
   const authContext = useAuth();
   const isAuthenticated = authContext?.isAuthenticated || false;
+  const [loadingTimedOut, setLoadingTimedOut] = useState(false);
 
   // Get game state safely
   const gameStateContext = useGameState();
@@ -258,6 +259,21 @@ function Game() {
     gameLoaded,
     authContext, // Added authContext as a dependency
   ]);
+  useEffect(() => {
+    // If we have the game state reset but no encrypted text, start a new game
+    if (!encrypted && gameStateContext.isResetting === true) {
+      console.log(
+        "Game reset detected without encrypted text - initializing new game",
+      );
+      const longTextSetting = settings?.longText === true;
+      const hardcoreModeSetting = settings?.hardcoreMode === true;
+
+      // Short delay to ensure state is properly reset
+      setTimeout(() => {
+        startGame(longTextSetting, hardcoreModeSetting);
+      }, 20);
+    }
+  }, [encrypted, gameStateContext.isResetting]);
   // Watch for local win detection
   useEffect(() => {
     try {
@@ -281,7 +297,28 @@ function Game() {
       console.error("Error in win detection effect:", error);
     }
   }, [isLocalWinDetected, hasWon, playSound]);
+  // Add a useEffect to manage the loading timeout
+  useEffect(() => {
+    let timeoutId = null;
 
+    // If we're in a loading state, set a timeout to show the error message
+    if (loading) {
+      // Reset the timed out flag when loading starts
+      setLoadingTimedOut(false);
+
+      // Set a timeout to show the error message after a reasonable time
+      timeoutId = setTimeout(() => {
+        setLoadingTimedOut(true);
+      }, 5000); // 5 seconds is usually reasonable
+    }
+
+    // Clean up timeout if component unmounts or loading state changes
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [loading]);
   // Cleanup effect
   useEffect(() => {
     return () => {
@@ -579,6 +616,7 @@ function Game() {
   });
 
   // If loading, show simple loading screen
+  // If loading, show simple loading screen
   if (loading) {
     return (
       <div
@@ -587,12 +625,26 @@ function Game() {
         <div
           style={{
             display: "flex",
+            flexDirection: "column",
             justifyContent: "center",
             alignItems: "center",
             height: "80vh",
           }}
         >
           <h2>Loading game...</h2>
+
+          {/* Show a try again button if loading has timed out */}
+          {loadingTimedOut && (
+            <div style={{ marginTop: "20px" }}>
+              <p>This is taking longer than expected.</p>
+              <button
+                onClick={handleStartNewGame}
+                style={{ marginTop: "10px", padding: "8px 16px" }}
+              >
+                Try Again
+              </button>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -627,7 +679,6 @@ function Game() {
       </div>
     );
   }
-
   // Render UI Components
   const renderGameHeader = () => <HeaderControls title="uncrypt" />;
 
