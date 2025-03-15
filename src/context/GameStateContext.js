@@ -571,43 +571,74 @@ export const GameStateProvider = ({ children }) => {
   const continueActiveGame = useCallback(async () => {
     try {
       console.log("Loading active game from server...");
-      const response = await apiService.api.get("/api/continue-game");
 
-      if (response.data) {
-        console.log("Active game data loaded:", response.data);
+      // Make sure the API call is correct - use a direct fetch for debugging
+      const token = localStorage.getItem("token");
+      const baseUrl =
+        process.env.REACT_APP_BACKEND_URL ||
+        "https://7264097a-b4a2-42c7-988c-db8c0c9b107a-00-1lx57x7wg68m5.janeway.replit.dev";
+      const url = `${baseUrl}/api/continue-game`;
 
-        // Process the encrypted text
-        let encryptedText = response.data.encrypted_paragraph;
-        let displayText = response.data.display;
+      console.log(`Fetching active game from URL: ${url}`);
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
-        // Apply hardcore mode filtering if needed
-        if (response.data.hardcoreMode) {
-          encryptedText = encryptedText.replace(/[^A-Z]/g, "");
-          displayText = displayText.replace(/[^A-Z█]/g, "");
-        }
+      console.log("Continue game response status:", response.status);
 
-        // Dispatch action to load the game
-        dispatch({
-          type: "CONTINUE_ACTIVE_GAME",
-          payload: {
-            gameState: {
-              encrypted: encryptedText,
-              display: displayText,
-              mistakes: response.data.mistakes || 0,
-              correctlyGuessed: response.data.correctly_guessed || [],
-              letterFrequency: response.data.letter_frequency || {},
-              guessedMappings: response.data.guessedMappings || {},
-              originalLetters: response.data.original_letters || [],
-              startTime: Date.now(),
-              gameId: response.data.game_id,
-              hardcoreMode: response.data.hardcoreMode || false,
-              difficulty: response.data.difficulty || "easy",
-              maxMistakes: response.data.max_mistakes || 8,
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Active game data loaded:", data);
+
+        if (data) {
+          // Process the encrypted text
+          let encryptedText = data.encrypted_paragraph;
+          let displayText = data.display;
+
+          // Apply hardcore mode filtering if needed
+          if (data.hardcoreMode) {
+            encryptedText = encryptedText.replace(/[^A-Z]/g, "");
+            displayText = displayText.replace(/[^A-Z█]/g, "");
+          }
+
+          // Calculate letter frequencies
+          const calculatedFrequency = {};
+          for (const char of encryptedText) {
+            if (/[A-Z]/.test(char))
+              calculatedFrequency[char] = (calculatedFrequency[char] || 0) + 1;
+          }
+
+          // Dispatch action to load the game
+          dispatch({
+            type: "CONTINUE_ACTIVE_GAME",
+            payload: {
+              gameState: {
+                encrypted: encryptedText,
+                display: displayText,
+                mistakes: data.mistakes || 0,
+                correctlyGuessed: data.correctly_guessed || [],
+                letterFrequency: calculatedFrequency,
+                guessedMappings: data.mapping || {},
+                originalLetters: data.original_letters || [],
+                startTime: Date.now(),
+                gameId: data.game_id,
+                hardcoreMode: data.hardcoreMode || false,
+                difficulty: data.difficulty || "easy",
+                maxMistakes: data.max_mistakes || 8,
+              },
             },
-          },
-        });
+          });
 
-        return true;
+          // Close the prompt
+          dispatch({ type: "DISMISS_CONTINUE_PROMPT" });
+          return true;
+        }
+      } else {
+        console.error("Failed to load active game, status:", response.status);
       }
       return false;
     } catch (error) {
@@ -615,12 +646,25 @@ export const GameStateProvider = ({ children }) => {
       return false;
     }
   }, [dispatch]);
-
   // Add this function to dismiss the continue prompt
   const dismissContinuePrompt = useCallback(() => {
     dispatch({ type: "DISMISS_CONTINUE_PROMPT" });
   }, [dispatch]);
+  // an effect to listen for login completion
+  useEffect(() => {
+    const handleLoginComplete = () => {
+      console.log(
+        "Auth login complete event received, checking for active games",
+      );
+      checkForActiveGame();
+    };
 
+    document.addEventListener("auth:login:complete", handleLoginComplete);
+
+    return () => {
+      document.removeEventListener("auth:login:complete", handleLoginComplete);
+    };
+  }, [checkForActiveGame]);
   useEffect(() => {
     // Check for active game on mount
     const checkOnMount = async () => {

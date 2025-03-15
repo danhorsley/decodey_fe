@@ -87,6 +87,7 @@ function Game() {
     activeGameData = null,
     continueActiveGame = async () => false,
     dismissContinuePrompt = () => {},
+    checkForActiveGame = async () => false,
   } = gameStateContext || {};
 
   // Get UI context safely
@@ -218,6 +219,24 @@ function Game() {
     showContinueGamePrompt,
     checkForActiveGame,
   ]);
+
+  // Add to the initialization effect
+  useEffect(() => {
+    // Check if we need to check for active games after login
+    const shouldCheckActiveGame =
+      localStorage.getItem("uncrypt-check-active-game") === "true";
+
+    if (shouldCheckActiveGame) {
+      console.log("Post-login active game check triggered");
+      // Clear the flag
+      localStorage.removeItem("uncrypt-check-active-game");
+
+      // Wait a moment for auth to be fully established
+      setTimeout(() => {
+        checkForActiveGame();
+      }, 1000);
+    }
+  }, [checkForActiveGame]);
   // Watch for local win detection
   useEffect(() => {
     try {
@@ -871,6 +890,18 @@ function Game() {
     <div
       className={`App-container ${settings?.theme === "dark" ? "dark-theme" : ""}`}
     >
+      {/* IMPORTANT: Render the continue prompt at the top level */}
+      {showContinueGamePrompt && activeGameData && (
+        <ContinueGamePrompt
+          gameData={activeGameData}
+          theme={settings?.theme}
+          onContinue={continueActiveGame}
+          onNewGame={() => {
+            dismissContinuePrompt();
+            handleStartNewGame();
+          }}
+        />
+      )}
       {renderGameHeader()}
       {renderTextContainer()}
       {renderGrids()}

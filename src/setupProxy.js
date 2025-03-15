@@ -61,6 +61,6 @@ module.exports = function (app) {
   app.use("/health", apiProxy);
   app.use("/get_attribution", apiProxy);
   app.use("/save_quote", apiProxy);
-  app.use("/check-active-game", apiProxy);
-  app.use("/continue-game", apiProxy);
+  app.use("/api/check-active-game", apiProxy);
+  app.use("/api/continue-game", apiProxy);
 };

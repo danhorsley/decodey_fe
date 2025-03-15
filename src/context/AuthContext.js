@@ -96,13 +96,26 @@ export const AuthProvider = ({ children }) => {
   // Login function
   const login = async (credentials) => {
     try {
+      setAuthState((prev) => ({ ...prev, loading: true }));
       const result = await apiService.login(credentials);
+
+      // After successful login, check for active games
+      if (result.access_token) {
+        // Wait a moment for token to be saved and authentication to complete
+        setTimeout(() => {
+          // Dispatch an event that can be listened for elsewhere
+          document.dispatchEvent(new CustomEvent("auth:login:complete"));
+        }, 500);
+      }
+
       return { success: true, data: result };
     } catch (error) {
       return {
         success: false,
         error: error.response?.data?.msg || "Login failed",
       };
+    } finally {
+      setAuthState((prev) => ({ ...prev, loading: false }));
     }
   };
 
