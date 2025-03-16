@@ -246,21 +246,20 @@ export const GameStateProvider = ({ children }) => {
 
     return false;
   };
-  // Performs a one-time check with the server to verify win and get win data
+  // In GameStateContext.js - Update the checkWinWithServer function
   const checkWinWithServer = async (state, dispatch) => {
     console.log("Verifying win with server...");
 
     try {
-      // Check if we have auth token before making the request
-      const token =
-        localStorage.getItem("uncrypt-token") ||
-        sessionStorage.getItem("uncrypt-token");
-      if (!token) {
-        console.log("No auth token, skipping win verification");
+      // Check if we have game ID (required for both auth and anon users)
+      const gameId = localStorage.getItem("uncrypt-game-id");
+      if (!gameId) {
+        console.log("No game ID found, cannot verify win");
         return false;
       }
 
-      const data = await apiService.getGameStatus();
+      // Get game status from API - this should work for both auth and anon users
+      const data = await apiService.getGameStatus(gameId);
       console.log("Win verification response:", data);
 
       // Skip processing if there was an error or no active game
@@ -286,8 +285,10 @@ export const GameStateProvider = ({ children }) => {
             display: state.display,
             attribution: data.winData.attribution,
             scoreStatus: {
-              recorded: true,
-              message: "Score recorded successfully!",
+              recorded: data.winData.isAnonymous ? false : true,
+              message: data.winData.isAnonymous
+                ? "Score not recorded - anonymous game"
+                : "Score recorded successfully!",
             },
           },
         });

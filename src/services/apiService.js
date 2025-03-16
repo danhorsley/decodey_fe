@@ -393,6 +393,7 @@ class ApiService {
       return { has_active_game: false };
     }
   }
+  // In apiService.js - Updated getGameStatus function
   async getGameStatus() {
     try {
       console.log("Fetching game status");
@@ -402,17 +403,22 @@ class ApiService {
         localStorage.getItem("uncrypt-token") ||
         sessionStorage.getItem("uncrypt-token");
       const gameId = localStorage.getItem("uncrypt-game-id");
+      const isAnonymous = !token;
 
-      // Simple token debugging
+      // Debug info
       console.group("Token Debug for getGameStatus");
       console.log("Access Token:", token ? "Present" : "Missing");
       console.log("Game ID:", gameId ? "Present" : "Missing");
+      console.log("Is Anonymous:", isAnonymous);
       console.groupEnd();
 
-      // Make a direct fetch request
+      // For anonymous users, we must include the game_id as a query parameter
       const baseUrl =
         this.api.defaults.baseURL || process.env.REACT_APP_API_URL || "";
-      const url = `${baseUrl}/api/game-status`;
+      const queryParams = isAnonymous
+        ? `?game_id=${encodeURIComponent(gameId)}`
+        : "";
+      const url = `${baseUrl}/api/game-status${queryParams}`;
 
       console.log(`Making fetch request to ${url}`);
 
@@ -420,7 +426,8 @@ class ApiService {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
+          // Only include Authorization header if we have a token
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         credentials: "include",
       });
@@ -429,7 +436,7 @@ class ApiService {
 
       if (!response.ok) {
         // Handle non-200 responses
-        if (response.status === 401) {
+        if (response.status === 401 && !isAnonymous) {
           console.warn("Authentication required for game status");
           this.events.emit("auth:required");
           return { error: "Authentication required", authRequired: true };
@@ -445,7 +452,6 @@ class ApiService {
       return { error: error.message };
     }
   }
-
   // Subscribe to events
   on(event, listener) {
     this.events.on(event, listener);

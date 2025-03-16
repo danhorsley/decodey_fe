@@ -1,4 +1,4 @@
-// In src/components/modals/WinCelebration.js
+// src/components/modals/WinCelebration.js
 import React, { useState, useEffect } from "react";
 import MatrixRain from "../effects/MatrixRain";
 import "../../Styles/WinCelebration.css";
@@ -18,6 +18,11 @@ const WinCelebration = ({
   // Get reset functions from GameStateContext
   const { resetGame, resetComplete, isResetting } = useGameState();
   const [loading, setLoading] = useState(true);
+
+  // Store whether this game was originally played anonymously
+  // This ensures we maintain the correct message even after login
+  const [wasAnonymousGame, setWasAnonymousGame] = useState(true);
+
   // Animation state
   const [animationStage, setAnimationStage] = useState(0);
   const [showStats, setShowStats] = useState(false);
@@ -26,6 +31,11 @@ const WinCelebration = ({
   const [isMatrixActive, setIsMatrixActive] = useState(true);
   // Add a state to track if we're in the process of starting a new game
   const [isStartingNewGame, setIsStartingNewGame] = useState(false);
+
+  // Set wasAnonymousGame when component mounts - will not change even if user logs in later
+  useEffect(() => {
+    setWasAnonymousGame(!isAuthenticated);
+  }, []);
 
   // Unpack win data received from backend
   const {
@@ -38,8 +48,10 @@ const WinCelebration = ({
     display,
     attribution,
     scoreStatus = {
-      recorded: true,
-      message: "Score recorded successfully!",
+      recorded: !wasAnonymousGame,
+      message: wasAnonymousGame
+        ? "Score not recorded - anonymous game"
+        : "Score recorded successfully!",
     },
   } = winData || {};
 
@@ -233,13 +245,17 @@ const WinCelebration = ({
 
           {/* Simplified score status message */}
           <div className="score-section">
-            {isAuthenticated ? (
+            {!wasAnonymousGame ? (
               <p className="score-success">{scoreStatus.message}</p>
             ) : (
               <div className="login-prompt">
-                <p>Login to save your score to the leaderboard!</p>
+                <p className="anon-score-message">
+                  <span className="warning-icon">⚠️</span> Your score was not
+                  recorded. To record scores and track streaks, you must be
+                  logged in <strong>before</strong> starting a game.
+                </p>
                 <button onClick={handleLoginClick} className="login-button">
-                  Login or Create Account
+                  Login for Your Next Game
                 </button>
               </div>
             )}
