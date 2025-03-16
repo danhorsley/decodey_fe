@@ -7,8 +7,7 @@ import React, {
   useEffect,
 } from "react";
 import apiService from "../services/apiService";
-import { useSettings } from "./SettingsContext";
-import { getMaxMistakes } from "./SettingsContext";
+import { useSettings, getMaxMistakes } from "./SettingsContext";
 
 // Initial game state
 const initialState = {
@@ -117,17 +116,7 @@ const GameStateContext = createContext();
 export const GameStateProvider = ({ children }) => {
   const [state, dispatch] = useReducer(gameReducer, initialState);
   const { settings } = useSettings();
-  const getMaxMistakes = (difficulty) => {
-    switch (difficulty) {
-      case "easy":
-        return 8;
-      case "hard":
-        return 3;
-      case "normal":
-      default:
-        return 5;
-    }
-  };
+
   // Start game function
   const startGame = useCallback(
     async (useLongText = false, hardcoreMode = false, forceNewGame = false) => {
@@ -139,13 +128,13 @@ export const GameStateProvider = ({ children }) => {
         const currentDifficulty = settings?.difficulty || "easy";
 
         // Calculate maxMistakes based on current difficulty
-        const maxMistakes = getMaxMistakes(currentDifficulty);
+        const maxMistakesValue = getMaxMistakes(currentDifficulty);
 
         console.log("Starting new game with settings:", {
           longText: useLongText,
           hardcoreMode,
           difficulty: currentDifficulty,
-          maxMistakes: maxMistakes,
+          maxMistakes: maxMistakesValue,
           forceNewGame,
         });
 
@@ -204,10 +193,8 @@ export const GameStateProvider = ({ children }) => {
           startTime: Date.now(),
           gameId: data.game_id,
           hardcoreMode,
-          // Use maxMistakes from the API if present, otherwise use calculated value
-          maxMistakes: data.max_mistakes || maxMistakes,
-          // Use difficulty from the API if present, otherwise use settings value
-          difficulty: data.difficulty || currentDifficulty,
+          maxMistakes: maxMistakesValue,
+          difficulty: currentDifficulty,
           isAnonymous: data.is_anonymous || false,
           tempId: data.temp_id,
         };
@@ -504,8 +491,8 @@ export const GameStateProvider = ({ children }) => {
         const maxMistakesValue = getMaxMistakes(currentDifficulty);
 
         console.log("Using current settings for new game:", {
+          maxMistakes: getMaxMistakes(currentDifficulty),
           difficulty: currentDifficulty,
-          maxMistakes: maxMistakesValue,
           longText: useLongText,
           hardcoreMode: hardcoreMode,
         });
@@ -548,8 +535,8 @@ export const GameStateProvider = ({ children }) => {
           startTime: Date.now(),
           gameId: data.game_id,
           hardcoreMode,
-          maxMistakes: data.max_mistakes || maxMistakesValue,
-          difficulty: data.difficulty || currentDifficulty,
+          maxMistakes: maxMistakesValue,
+          difficulty: currentDifficulty,
           isAnonymous: data.is_anonymous || false,
         };
 
@@ -662,10 +649,13 @@ export const GameStateProvider = ({ children }) => {
   }, [state, dispatch]);
 
   //continues game if one found in be storage and user selects continue
-  // In continueSavedGame function in GameStateContext.js
   const continueSavedGame = useCallback(async () => {
     try {
       console.log("Attempting to continue saved game");
+
+      // Get current settings for difficulty
+      const currentDifficulty = settings?.difficulty || "easy";
+      const maxMistakesValue = getMaxMistakes(currentDifficulty);
 
       // Call API to get the full game state
       const response = await apiService.api.get("/api/continue-game");
@@ -693,9 +683,6 @@ export const GameStateProvider = ({ children }) => {
       const originalLetters = Array.isArray(game.original_letters)
         ? game.original_letters
         : [];
-      const difficulty = game.difficulty || "easy";
-      const maxMistakes =
-        typeof game.max_mistakes === "number" ? game.max_mistakes : 8;
       const hardcoreMode = game.hardcore_mode === true;
 
       // IMPORTANT: Correctly reconstruct guessedMappings
@@ -741,8 +728,8 @@ export const GameStateProvider = ({ children }) => {
           gameId: game.game_id,
           hasGameStarted: true,
           hardcoreMode,
-          difficulty,
-          maxMistakes,
+          difficulty: currentDifficulty,
+          maxMistakes: maxMistakesValue,
         },
       });
 
@@ -760,7 +747,7 @@ export const GameStateProvider = ({ children }) => {
       localStorage.removeItem("uncrypt-game-id");
       return false;
     }
-  }, [dispatch, settings?.hardcoreMode]);
+  }, [dispatch, settings?.difficulty, getMaxMistakes]);
   // Determine if game is active
   const isGameActive =
     Boolean(state.encrypted) && !state.hasWon && !state.hasLost;
