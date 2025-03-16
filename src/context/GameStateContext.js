@@ -119,7 +119,7 @@ export const GameStateProvider = ({ children }) => {
 
   // Start game function
   const startGame = useCallback(
-    async (useLongText = false, hardcoreMode = false) => {
+    async (useLongText = false, hardcoreMode = false, forceNewGame = false) => {
       try {
         // Clear any existing game state from localStorage
         localStorage.removeItem("uncrypt-game-id");
@@ -129,6 +129,7 @@ export const GameStateProvider = ({ children }) => {
           longText: useLongText,
           hardcoreMode,
           difficulty,
+          forceNewGame, // Log this new parameter
         });
 
         const data = await apiService.startGame({
@@ -137,6 +138,17 @@ export const GameStateProvider = ({ children }) => {
         });
 
         console.log("Game start response:", data);
+
+        // Skip active game check if we're forcing a new game
+        if (
+          !forceNewGame &&
+          data.active_game_info &&
+          data.active_game_info.has_active_game &&
+          !state.isResetting
+        ) {
+          // Handle active game detection here...
+          return false;
+        }
 
         // Skip active game check if we're coming from a reset
         if (
@@ -213,6 +225,35 @@ export const GameStateProvider = ({ children }) => {
     },
     [settings?.difficulty, state.isResetting, dispatch],
   );
+  //abandons game
+  const abandonGame = useCallback(async () => {
+    try {
+      console.log("Explicitly abandoning current game");
+
+      // First, remove game ID from localStorage
+      localStorage.removeItem("uncrypt-game-id");
+
+      // Call the backend to abandon the game
+      try {
+        await apiService.api.delete("/api/abandon-game");
+        console.log("Successfully abandoned game on server");
+      } catch (err) {
+        console.warn(
+          "Server abandon failed, continuing with local reset:",
+          err,
+        );
+      }
+
+      // Reset the state
+      dispatch({ type: "RESET_GAME" });
+
+      // Return success
+      return true;
+    } catch (error) {
+      console.error("Error abandoning game:", error);
+      return false;
+    }
+  }, [dispatch]);
   // Handle encrypted letter selection
   const handleEncryptedSelect = useCallback(
     (letter) => {
@@ -330,7 +371,14 @@ export const GameStateProvider = ({ children }) => {
             newGameId: data.game_id,
           };
         }
-
+        if (
+          typeof data.mistakes === "number" &&
+          typeof state.maxMistakes === "number" &&
+          data.mistakes >= state.maxMistakes
+        ) {
+          console.log("Game lost detected: mistakes reached maximum");
+          dispatch({ type: "SET_GAME_LOST" });
+        }
         // Apply hardcore mode filtering if needed
         let displayText = data.display;
         if (displayText && state.hardcoreMode) {
@@ -653,6 +701,7 @@ export const GameStateProvider = ({ children }) => {
         submitGuess,
         getHint,
         continueSavedGame,
+        abandonGame,
 
         // Reset function
         resetGame: useCallback(() => {

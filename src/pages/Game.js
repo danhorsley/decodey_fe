@@ -90,6 +90,8 @@ function Game() {
     difficulty = "easy",
     maxMistakes = 8,
     continueSavedGame = async () => false,
+    resetGame = () => {},
+    abandonGame = async () => false,
   } = gameStateContext || {};
 
   // Get UI context safely
@@ -340,23 +342,54 @@ function Game() {
   }, [settings?.theme]);
 
   // Start a new game manually
-  const handleStartNewGame = useCallback(() => {
-    try {
-      console.log("Starting new game manually");
 
-      if (typeof startGame !== "function") {
-        console.error("startGame is not a function");
-        return;
+  const handleStartNewGame = useCallback(async () => {
+    try {
+      console.log("Starting new game after loss - using context methods");
+      setLoading(true);
+
+      // First abandon the current game
+      if (typeof abandonGame === "function") {
+        await abandonGame();
+      } else {
+        console.warn("abandonGame not available, using resetGame instead");
+        if (typeof resetGame === "function") {
+          resetGame();
+        }
       }
 
-      const longTextSetting = settings?.longText === true;
-      const hardcoreModeSetting = settings?.hardcoreMode === true;
+      // Wait briefly for state to update
+      await new Promise((resolve) => setTimeout(resolve, 150));
 
-      startGame(longTextSetting, hardcoreModeSetting);
+      // Start a new game
+      if (typeof startGame === "function") {
+        const longTextSetting = settings?.longText === true;
+        const hardcoreModeSetting = settings?.hardcoreMode === true;
+
+        const result = await startGame(longTextSetting, hardcoreModeSetting);
+        console.log("New game start result:", result);
+
+        if (!result) {
+          console.warn("Game failed to start, clearing UI state and retrying");
+          // Force a UI reset by toggling loading state
+          setLoading(false);
+          setTimeout(() => {
+            setLoading(true);
+            // Try again after a moment
+            startGame(longTextSetting, hardcoreModeSetting)
+              .then(() => console.log("Retry completed"))
+              .catch((err) => console.error("Retry failed:", err));
+          }, 200);
+        }
+      } else {
+        console.error("startGame function not available");
+        setLoading(false);
+      }
     } catch (error) {
       console.error("Error starting new game:", error);
+      setLoading(false);
     }
-  }, [startGame, settings?.longText, settings?.hardcoreMode]);
+  }, [abandonGame, resetGame, startGame, settings, setLoading]);
 
   // Handle submit guess wrapper function
   const handleSubmitGuess = useCallback(

@@ -324,6 +324,35 @@ class ApiService {
     }
   }
 
+  async abandonAndResetGame() {
+    try {
+      console.log("Explicitly abandoning current game");
+
+      // First, try to explicitly abandon the game on the server
+      try {
+        await this.api.delete("/api/abandon-game");
+        console.log("Successfully abandoned game on server");
+      } catch (err) {
+        console.warn(
+          "Server abandon failed, continuing with local reset:",
+          err,
+        );
+      }
+
+      // Remove the game ID from localStorage regardless of server response
+      localStorage.removeItem("uncrypt-game-id");
+      console.log("Removed game ID from localStorage");
+
+      // Short delay to ensure changes propagate
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      return true;
+    } catch (error) {
+      console.error("Error in abandonAndResetGame:", error);
+      return false;
+    }
+  }
+
   async getHint() {
     try {
       const gameId = localStorage.getItem("uncrypt-game-id");
