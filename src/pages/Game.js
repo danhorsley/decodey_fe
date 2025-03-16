@@ -238,7 +238,7 @@ function Game() {
     return () => {
       mounted = false;
     };
-  }, []); // Empty dependency array - only run once on mount
+  }, []);
   useEffect(() => {
     // If we have the game state reset but no encrypted text, start a new game
     if (
@@ -285,6 +285,30 @@ function Game() {
       console.error("Error in win detection effect:", error);
     }
   }, [isLocalWinDetected, hasWon, playSound]);
+  //effect to detect when the game state has been reset and we need a new game
+  useEffect(() => {
+    // If we have the game state reset but no encrypted text, start a new game
+    if (
+      !encrypted &&
+      gameStateContext.isResetting === true &&
+      !initializationAttemptedRef.current
+    ) {
+      console.log(
+        "Game reset detected without encrypted text - initializing new game",
+      );
+
+      // Mark initialization as attempted to prevent loops
+      initializationAttemptedRef.current = true;
+
+      const longTextSetting = settings?.longText === true;
+      const hardcoreModeSetting = settings?.hardcoreMode === true;
+
+      // Short delay to ensure state is properly reset
+      setTimeout(() => {
+        startGame(longTextSetting, hardcoreModeSetting);
+      }, 20);
+    }
+  }, [encrypted, gameStateContext.isResetting]);
 
   // Add this at the top level of the component to track rerender causes
   useEffect(() => {
@@ -345,51 +369,33 @@ function Game() {
 
   const handleStartNewGame = useCallback(async () => {
     try {
-      console.log("Starting new game after loss - using context methods");
       setLoading(true);
 
-      // First abandon the current game
-      if (typeof abandonGame === "function") {
-        await abandonGame();
-      } else {
-        console.warn("abandonGame not available, using resetGame instead");
-        if (typeof resetGame === "function") {
-          resetGame();
-        }
-      }
-
-      // Wait briefly for state to update
-      await new Promise((resolve) => setTimeout(resolve, 150));
-
-      // Start a new game
-      if (typeof startGame === "function") {
+      // Use the new combined function
+      if (typeof gameStateContext.resetAndStartNewGame === "function") {
         const longTextSetting = settings?.longText === true;
         const hardcoreModeSetting = settings?.hardcoreMode === true;
 
-        const result = await startGame(longTextSetting, hardcoreModeSetting);
-        console.log("New game start result:", result);
+        const result = await gameStateContext.resetAndStartNewGame(
+          longTextSetting,
+          hardcoreModeSetting,
+        );
 
-        if (!result) {
-          console.warn("Game failed to start, clearing UI state and retrying");
-          // Force a UI reset by toggling loading state
-          setLoading(false);
-          setTimeout(() => {
-            setLoading(true);
-            // Try again after a moment
-            startGame(longTextSetting, hardcoreModeSetting)
-              .then(() => console.log("Retry completed"))
-              .catch((err) => console.error("Retry failed:", err));
-          }, 200);
+        if (result) {
+          console.log("Successfully reset and started new game");
+        } else {
+          console.error("Failed to reset and start new game");
         }
       } else {
-        console.error("startGame function not available");
-        setLoading(false);
+        console.error("resetAndStartNewGame not available");
       }
+
+      setLoading(false);
     } catch (error) {
       console.error("Error starting new game:", error);
       setLoading(false);
     }
-  }, [abandonGame, resetGame, startGame, settings, setLoading]);
+  }, [gameStateContext, settings, setLoading]);
 
   // Handle submit guess wrapper function
   const handleSubmitGuess = useCallback(

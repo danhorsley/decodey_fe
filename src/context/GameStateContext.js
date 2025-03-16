@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import apiService from "../services/apiService";
 import { useSettings } from "./SettingsContext";
+import { getMaxMistakes } from "./SettingsContext";
 
 // Initial game state
 const initialState = {
@@ -116,7 +117,17 @@ const GameStateContext = createContext();
 export const GameStateProvider = ({ children }) => {
   const [state, dispatch] = useReducer(gameReducer, initialState);
   const { settings } = useSettings();
-
+  const getMaxMistakes = (difficulty) => {
+    switch (difficulty) {
+      case "easy":
+        return 8;
+      case "hard":
+        return 3;
+      case "normal":
+      default:
+        return 5;
+    }
+  };
   // Start game function
   const startGame = useCallback(
     async (useLongText = false, hardcoreMode = false, forceNewGame = false) => {
@@ -466,6 +477,88 @@ export const GameStateProvider = ({ children }) => {
     [state, dispatch],
   );
   // Get hint function
+  const resetAndStartNewGame = useCallback(
+    async (useLongText = false, hardcoreMode = false) => {
+      try {
+        console.log("Resetting and starting new game");
+
+        // 1. First abandon any existing games on the server
+        try {
+          await apiService.api.delete("/api/abandon-game");
+          console.log("Successfully abandoned existing game");
+        } catch (err) {
+          console.warn("Error abandoning game, continuing with reset:", err);
+        }
+
+        // 2. Remove game ID from localStorage
+        localStorage.removeItem("uncrypt-game-id");
+
+        // 3. Reset state completely
+        dispatch({ type: "RESET_GAME" });
+
+        // 4. Wait a moment for state to stabilize
+        await new Promise((resolve) => setTimeout(resolve, 50));
+
+        // 5. Start a completely new game
+        const difficulty = settings?.difficulty || "easy";
+
+        const data = await apiService.startGame({
+          longText: useLongText,
+          difficulty: difficulty,
+        });
+
+        if (!data) {
+          throw new Error("Failed to get game data");
+        }
+
+        // 6. Store the new game ID
+        if (data.game_id) {
+          localStorage.setItem("uncrypt-game-id", data.game_id);
+        }
+
+        // 7. Process the data and update state
+        const encryptedText = data.encrypted_paragraph || "";
+        let processedEncrypted = encryptedText;
+        let processedDisplay = data.display || "";
+
+        if (hardcoreMode) {
+          processedEncrypted = encryptedText.replace(/[^A-Z]/g, "");
+          processedDisplay = processedDisplay.replace(/[^A-Z█]/g, "");
+        }
+
+        // 8. Create new game payload
+        const payload = {
+          encrypted: processedEncrypted,
+          display: processedDisplay,
+          mistakes: data.mistakes || 0,
+          correctlyGuessed: data.correctly_guessed || [],
+          selectedEncrypted: null,
+          lastCorrectGuess: null,
+          letterFrequency: data.letter_frequency || {},
+          guessedMappings: {},
+          originalLetters: data.original_letters || [],
+          startTime: Date.now(),
+          gameId: data.game_id,
+          hardcoreMode,
+          maxMistakes: data.max_mistakes || getMaxMistakes(difficulty),
+          difficulty: data.difficulty || difficulty,
+          isAnonymous: data.is_anonymous || false,
+        };
+
+        // 9. Directly update to the new game state
+        dispatch({
+          type: "START_GAME",
+          payload,
+        });
+
+        return true;
+      } catch (error) {
+        console.error("Error in resetAndStartNewGame:", error);
+        return false;
+      }
+    },
+    [settings?.difficulty, dispatch],
+  );
   const getHint = useCallback(async () => {
     try {
       const data = await apiService.getHint();
@@ -702,6 +795,7 @@ export const GameStateProvider = ({ children }) => {
         getHint,
         continueSavedGame,
         abandonGame,
+        resetAndStartNewGame,
 
         // Reset function
         resetGame: useCallback(() => {
