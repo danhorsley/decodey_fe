@@ -134,18 +134,24 @@ export const GameStateProvider = ({ children }) => {
       try {
         // Clear any existing game state from localStorage
         localStorage.removeItem("uncrypt-game-id");
-        const difficulty = settings?.difficulty || "easy";
+
+        // Always get the latest difficulty from settings
+        const currentDifficulty = settings?.difficulty || "easy";
+
+        // Calculate maxMistakes based on current difficulty
+        const maxMistakes = getMaxMistakes(currentDifficulty);
 
         console.log("Starting new game with settings:", {
           longText: useLongText,
           hardcoreMode,
-          difficulty,
-          forceNewGame, // Log this new parameter
+          difficulty: currentDifficulty,
+          maxMistakes: maxMistakes,
+          forceNewGame,
         });
 
         const data = await apiService.startGame({
           longText: useLongText,
-          difficulty: difficulty,
+          difficulty: currentDifficulty, // Use current difficulty from settings
         });
 
         console.log("Game start response:", data);
@@ -153,16 +159,6 @@ export const GameStateProvider = ({ children }) => {
         // Skip active game check if we're forcing a new game
         if (
           !forceNewGame &&
-          data.active_game_info &&
-          data.active_game_info.has_active_game &&
-          !state.isResetting
-        ) {
-          // Handle active game detection here...
-          return false;
-        }
-
-        // Skip active game check if we're coming from a reset
-        if (
           data.active_game_info &&
           data.active_game_info.has_active_game &&
           !state.isResetting
@@ -193,7 +189,8 @@ export const GameStateProvider = ({ children }) => {
           displayLength: processedDisplay.length,
         });
 
-        // Create a clean, fresh state with the new game data
+        // Always use the current settings for difficulty and maxMistakes
+        // But preserve API response values if provided
         const payload = {
           encrypted: processedEncrypted,
           display: processedDisplay,
@@ -207,13 +204,15 @@ export const GameStateProvider = ({ children }) => {
           startTime: Date.now(),
           gameId: data.game_id,
           hardcoreMode,
-          maxMistakes: data.max_mistakes || getMaxMistakes(difficulty),
-          difficulty: data.difficulty || difficulty,
+          // Use maxMistakes from the API if present, otherwise use calculated value
+          maxMistakes: data.max_mistakes || maxMistakes,
+          // Use difficulty from the API if present, otherwise use settings value
+          difficulty: data.difficulty || currentDifficulty,
           isAnonymous: data.is_anonymous || false,
           tempId: data.temp_id,
         };
 
-        console.log("Updating game state with new payload");
+        console.log("Updating game state with new payload:", payload);
 
         // Reset game state first
         dispatch({ type: "RESET_GAME" });
@@ -234,7 +233,7 @@ export const GameStateProvider = ({ children }) => {
         return false;
       }
     },
-    [settings?.difficulty, state.isResetting, dispatch],
+    [settings, getMaxMistakes, state.isResetting, dispatch],
   );
   //abandons game
   const abandonGame = useCallback(async () => {
@@ -500,11 +499,20 @@ export const GameStateProvider = ({ children }) => {
         await new Promise((resolve) => setTimeout(resolve, 50));
 
         // 5. Start a completely new game
-        const difficulty = settings?.difficulty || "easy";
+        // Always use the latest settings
+        const currentDifficulty = settings?.difficulty || "easy";
+        const maxMistakesValue = getMaxMistakes(currentDifficulty);
+
+        console.log("Using current settings for new game:", {
+          difficulty: currentDifficulty,
+          maxMistakes: maxMistakesValue,
+          longText: useLongText,
+          hardcoreMode: hardcoreMode,
+        });
 
         const data = await apiService.startGame({
           longText: useLongText,
-          difficulty: difficulty,
+          difficulty: currentDifficulty,
         });
 
         if (!data) {
@@ -526,7 +534,7 @@ export const GameStateProvider = ({ children }) => {
           processedDisplay = processedDisplay.replace(/[^A-Z█]/g, "");
         }
 
-        // 8. Create new game payload
+        // 8. Create new game payload with current settings
         const payload = {
           encrypted: processedEncrypted,
           display: processedDisplay,
@@ -540,8 +548,8 @@ export const GameStateProvider = ({ children }) => {
           startTime: Date.now(),
           gameId: data.game_id,
           hardcoreMode,
-          maxMistakes: data.max_mistakes || getMaxMistakes(difficulty),
-          difficulty: data.difficulty || difficulty,
+          maxMistakes: data.max_mistakes || maxMistakesValue,
+          difficulty: data.difficulty || currentDifficulty,
           isAnonymous: data.is_anonymous || false,
         };
 
@@ -557,7 +565,7 @@ export const GameStateProvider = ({ children }) => {
         return false;
       }
     },
-    [settings?.difficulty, dispatch],
+    [settings, getMaxMistakes, dispatch],
   );
   const getHint = useCallback(async () => {
     try {
