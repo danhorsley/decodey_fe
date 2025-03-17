@@ -16,7 +16,7 @@ function Settings({ onCancel }) {
   const [pendingDifficulty, setPendingDifficulty] = useState(null);
   const [deleteEmail, setDeleteEmail] = useState("");
   const [deleteEmailError, setDeleteEmailError] = useState("");
-  const { user, logout } = useAuth();
+  const { user, logout, useAuth } = useAuth();
   // Get settings directly from the context
   const { settings: currentSettings, updateSettings } = useSettings();
   const { hasGameStarted, correctlyGuessed } = useGameState();
