@@ -23,7 +23,7 @@ import HeaderControls from "../components/HeaderControls";
 import MobileLayout from "../components/layout/MobileLayout";
 import WinCelebration from "../components/modals/WinCelebration";
 import MatrixRain from "../components/effects/MatrixRain";
-
+import MatrixRainLoading from "../components/effects/MatrixRainLoading";
 // Letter cell component using memo to reduce re-renders
 const LetterCell = React.memo(
   ({
@@ -109,7 +109,13 @@ function Game() {
   } = modalContext || {};
 
   // Local state
-  const [loading, setLoading] = useState(true);
+  const [loadingState, setLoadingState] = useState({
+    isLoading: true,
+    hasTimedOut: false,
+    attemptCount: 0,
+    errorMessage: null,
+    lastAttemptTime: Date.now(),
+  });
   const [gameLoaded, setGameLoaded] = useState(false);
   const [showMatrixTransition, setShowMatrixTransition] = useState(false);
   const [forceUpdate, setForceUpdate] = useState(false);
@@ -155,37 +161,68 @@ function Game() {
 
   // Then modify the useEffect
   useEffect(() => {
-    console.log(
-      "Game mount effect with encrypted:",
-      !!encrypted,
-      "initAttempted:",
-      initializationAttemptedRef.current,
-    );
+    console.log("Game initialization effect running with state:", {
+      hasEncryptedText: !!encrypted,
+      loadingState: loadingState,
+      initAttempted: initializationAttemptedRef.current,
+    });
 
     // If we already have encrypted text, just mark the game as loaded and exit
     if (encrypted) {
-      console.log("Game already exists - skipping initialization");
-      setLoading(false);
+      console.log("Game already has encrypted text - skipping initialization");
+      setLoadingState((prev) => ({
+        ...prev,
+        isLoading: false,
+        errorMessage: null,
+      }));
       setGameLoaded(true);
       return;
     }
 
-    // If we've already attempted initialization, don't try again
-    if (initializationAttemptedRef.current) {
-      console.log("Initialization already attempted - not trying again");
-      setLoading(false);
+    // If we're already loading, don't start another initialization
+    if (
+      loadingState.isLoading &&
+      Date.now() - loadingState.lastAttemptTime < 5000
+    ) {
+      console.log(
+        "Already in loading state - not starting another initialization",
+      );
+      return;
+    }
+
+    // Avoid initialization attempts if we recently attempted one (unless explicitly requested)
+    const explicitlyRequested =
+      loadingState.attemptCount === 0 ||
+      initializationAttemptedRef.current === false;
+
+    if (!explicitlyRequested && loadingState.attemptCount > 0) {
+      console.log(
+        "Recent initialization attempt exists - not trying again automatically",
+      );
+      setLoadingState((prev) => ({
+        ...prev,
+        isLoading: false,
+      }));
       return;
     }
 
     // Mark that we're attempting initialization
     initializationAttemptedRef.current = true;
 
+    // Update loading state to show we're starting a new attempt
+    setLoadingState((prev) => ({
+      isLoading: true,
+      hasTimedOut: false,
+      attemptCount: prev.attemptCount + 1,
+      errorMessage: null,
+      lastAttemptTime: Date.now(),
+    }));
+
     let mounted = true;
 
     const initializeGame = async () => {
-      setLoading(true);
-
       try {
+        // Ensure auth state is ready
         await authContext.waitForAuthReady();
 
         // First try to continue saved game if authenticated
@@ -198,14 +235,22 @@ function Game() {
             if (result && mounted) {
               console.log("Successfully continued saved game");
               setGameLoaded(true);
-              setLoading(false);
+              setLoadingState((prev) => ({
+                ...prev,
+                isLoading: false,
+                errorMessage: null,
+              }));
               return;
+            } else {
+              console.warn(
+                "Failed to continue saved game, will try starting new game",
+              );
             }
           }
         }
 
         // Start a new game
-        console.log("Starting new game (first initialization)");
+        console.log("Starting new game (initialization)");
         if (typeof startGame !== "function") {
           throw new Error("startGame is not a function");
         }
@@ -219,15 +264,28 @@ function Game() {
           if (result) {
             console.log("Game initialized successfully");
             setGameLoaded(true);
+            setLoadingState((prev) => ({
+              ...prev,
+              isLoading: false,
+              errorMessage: null,
+            }));
           } else {
             console.warn("Game initialization returned false");
+            setLoadingState((prev) => ({
+              ...prev,
+              isLoading: false,
+              errorMessage: "Failed to start game. Please try again.",
+            }));
           }
-          setLoading(false);
         }
       } catch (err) {
         console.error("Error initializing game:", err);
         if (mounted) {
-          setLoading(false);
+          setLoadingState((prev) => ({
+            ...prev,
+            isLoading: false,
+            errorMessage: `Error starting game: ${err.message || "Unknown error"}`,
+          }));
         }
       }
     };
@@ -238,30 +296,16 @@ function Game() {
     return () => {
       mounted = false;
     };
-  }, []);
-  useEffect(() => {
-    // If we have the game state reset but no encrypted text, start a new game
-    if (
-      !encrypted &&
-      gameStateContext.isResetting === true &&
-      !initializationAttemptedRef.current
-    ) {
-      console.log(
-        "Game reset detected without encrypted text - initializing new game",
-      );
-
-      // Mark initialization as attempted to prevent loops
-      initializationAttemptedRef.current = true;
-
-      const longTextSetting = settings?.longText === true;
-      const hardcoreModeSetting = settings?.hardcoreMode === true;
-
-      // Short delay to ensure state is properly reset
-      setTimeout(() => {
-        startGame(longTextSetting, hardcoreModeSetting);
-      }, 20);
-    }
-  }, [encrypted, gameStateContext.isResetting]);
+  }, [
+    encrypted,
+    authContext,
+    continueSavedGame,
+    startGame,
+    settings?.longText,
+    settings?.hardcoreMode,
+    loadingState.attemptCount,
+    loadingState.lastAttemptTime,
+  ]);
   // Watch for local win detection
   useEffect(() => {
     try {
@@ -322,14 +366,20 @@ function Game() {
     let timeoutId = null;
 
     // If we're in a loading state, set a timeout to show the error message
-    if (loading) {
-      // Reset the timed out flag when loading starts
-      setLoadingTimedOut(false);
+    if (loadingState.isLoading) {
+      console.log("Setting up loading timeout");
 
       // Set a timeout to show the error message after a reasonable time
       timeoutId = setTimeout(() => {
-        setLoadingTimedOut(true);
-      }, 5000); // 5 seconds is usually reasonable
+        console.log("Loading timed out");
+        setLoadingState((prev) => ({
+          ...prev,
+          hasTimedOut: true,
+          // Keep isLoading true so users can see the retry button
+          errorMessage:
+            "Loading is taking longer than expected. Please try again.",
+        }));
+      }, 8000); // Give a bit more time (8 seconds) before showing timeout
     }
 
     // Clean up timeout if component unmounts or loading state changes
@@ -338,14 +388,7 @@ function Game() {
         clearTimeout(timeoutId);
       }
     };
-  }, [loading]);
-  // Cleanup effect
-  useEffect(() => {
-    return () => {
-      // Clean up win transition if component unmounts
-      setShowMatrixTransition(false);
-    };
-  }, []);
+  }, [loadingState.isLoading, loadingState.lastAttemptTime]);
 
   // Apply theme to body
   useEffect(() => {
@@ -369,9 +412,19 @@ function Game() {
 
   const handleStartNewGame = useCallback(async () => {
     try {
-      setLoading(true);
+      // Reset initialization flag to force a new attempt
+      initializationAttemptedRef.current = false;
 
-      // Use the new combined function
+      // Update loading state
+      setLoadingState((prev) => ({
+        isLoading: true,
+        hasTimedOut: false,
+        attemptCount: prev.attemptCount + 1,
+        errorMessage: null,
+        lastAttemptTime: Date.now(),
+      }));
+
+      // Use the resetAndStartNewGame function if available
       if (typeof gameStateContext.resetAndStartNewGame === "function") {
         const longTextSetting = settings?.longText === true;
         const hardcoreModeSetting = settings?.hardcoreMode === true;
@@ -383,21 +436,48 @@ function Game() {
 
         if (result) {
           console.log("Successfully reset and started new game");
+          setGameLoaded(true);
+          setLoadingState((prev) => ({
+            ...prev,
+            isLoading: false,
+            errorMessage: null,
+          }));
         } else {
           console.error("Failed to reset and start new game");
+          setLoadingState((prev) => ({
+            ...prev,
+            isLoading: false,
+            errorMessage: "Failed to start new game. Please try again.",
+          }));
         }
       } else {
         console.error("resetAndStartNewGame not available");
-      }
 
-      setLoading(false);
+        // Fallback to simple resetGame if combined function isn't available
+        if (typeof resetGame === "function") {
+          resetGame();
+          // Force re-initialization attempt in the main useEffect
+          setLoadingState((prev) => ({
+            ...prev,
+            attemptCount: prev.attemptCount + 1,
+          }));
+        } else {
+          setLoadingState((prev) => ({
+            ...prev,
+            isLoading: false,
+            errorMessage: "Game reset function not available.",
+          }));
+        }
+      }
     } catch (error) {
       console.error("Error starting new game:", error);
-      setLoading(false);
+      setLoadingState((prev) => ({
+        ...prev,
+        isLoading: false,
+        errorMessage: `Error starting game: ${error.message || "Unknown error"}`,
+      }));
     }
-  }, [gameStateContext, settings, setLoading]);
-
-  // Handle submit guess wrapper function
+  }, [gameStateContext, settings, resetGame]);
   const handleSubmitGuess = useCallback(
     async (guessedLetter) => {
       try {
@@ -465,7 +545,6 @@ function Game() {
       difficulty,
     ],
   );
-
   // Handle encrypted grid click
   const onEncryptedClick = useCallback(
     (letter) => {
@@ -650,30 +729,46 @@ function Game() {
 
   // If loading, show simple loading screen
   // If loading, show simple loading screen
-  if (loading) {
+  if (loadingState.isLoading) {
     return (
       <div
-        className={`App-container ${settings?.theme === "dark" ? "dark-theme" : ""}`}
+        className={`App-container ${settings?.theme === "dark" ? "dark-theme" : "light-theme"}`}
       >
+        <HeaderControls title="uncrypt" />
         <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "center",
-            height: "80vh",
-          }}
+          className={`loading-container ${settings?.theme === "dark" ? "dark-theme" : "light-theme"}`}
         >
-          <h2>Loading game...</h2>
+          <h2 className="loading-title">
+            {loadingState.hasTimedOut ? "Still working on it" : "Loading game"}
+            <span className="loading-dots"></span>
+          </h2>
+
+          {/* Matrix Rain loading animation */}
+          <div className="loading-animation">
+            <MatrixRainLoading
+              active={true}
+              color={settings?.theme === "dark" ? "#4cc9f0" : "#00ff41"}
+              message={
+                loadingState.hasTimedOut
+                  ? "Still decrypting..."
+                  : "Decrypting data..."
+              }
+              width="100%"
+              height="100%"
+              density={40} /* Higher density for more visual impact */
+            />
+          </div>
 
           {/* Show a try again button if loading has timed out */}
-          {loadingTimedOut && (
-            <div style={{ marginTop: "20px" }}>
+          {loadingState.hasTimedOut && (
+            <div
+              className={`loading-retry ${settings?.theme === "dark" ? "dark-theme" : "light-theme"}`}
+            >
               <p>This is taking longer than expected.</p>
-              <button
-                onClick={handleStartNewGame}
-                style={{ marginTop: "10px", padding: "8px 16px" }}
-              >
+              {loadingState.errorMessage && (
+                <p className="loading-error">{loadingState.errorMessage}</p>
+              )}
+              <button onClick={handleStartNewGame} className="retry-button">
                 Try Again
               </button>
             </div>
@@ -684,36 +779,63 @@ function Game() {
   }
 
   // If the game hasn't loaded properly, show error and retry button
-  if (!encrypted && !loading) {
+  if (!encrypted && !loadingState.isLoading) {
     return (
       <div
-        className={`App-container ${settings?.theme === "dark" ? "dark-theme" : ""}`}
+        className={`App-container ${settings?.theme === "dark" ? "dark-theme" : "light-theme"}`}
       >
         <HeaderControls title="uncrypt" />
+
+        {/* Small MatrixRain background for error screen */}
         <div
           style={{
-            textAlign: "center",
-            margin: "50px auto",
-            maxWidth: "400px",
-            padding: "20px",
-            backgroundColor: settings?.theme === "dark" ? "#333" : "#f0f8ff",
-            borderRadius: "8px",
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            opacity: 0.15,
+            zIndex: 0,
           }}
         >
-          <h2>Game failed to load</h2>
-          <p>There was a problem loading the game data.</p>
-          <button
-            onClick={handleStartNewGame}
-            style={{ marginTop: "20px", padding: "10px 20px" }}
-          >
+          <MatrixRain
+            active={true}
+            color={settings?.theme === "dark" ? "#4cc9f0" : "#00ff41"}
+            density={20}
+            fadeSpeed={0.1}
+            speedFactor={0.5}
+          />
+        </div>
+
+        <div
+          className={`error-container ${settings?.theme === "dark" ? "dark-theme" : "light-theme"}`}
+        >
+          <h2 className="error-title">Game Failed to Load</h2>
+
+          {loadingState.errorMessage ? (
+            <p className="error-message">{loadingState.errorMessage}</p>
+          ) : (
+            <p className="error-message">
+              There was a problem loading the game data.
+            </p>
+          )}
+
+          <button onClick={handleStartNewGame} className="try-again-button">
             Try Again
           </button>
+
+          {loadingState.attemptCount > 1 && (
+            <p className="help-text">
+              Having trouble? Check your internet connection or try refreshing
+              the page.
+            </p>
+          )}
         </div>
       </div>
     );
   }
   // Render UI Components
-  const renderGameHeader = () => <HeaderControls title="uncrypt" />;
+  const renderGameHeader = () => <HeaderControls title="decodey" />;
 
   const renderTextContainer = () => (
     <div

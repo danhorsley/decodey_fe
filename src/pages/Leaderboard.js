@@ -1,4 +1,4 @@
-// src/pages/Leaderboard.js - Fixed version
+// src/pages/Leaderboard.js - Fixed version with matrix loading animation
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import "../Styles/Leaderboard.css";
@@ -9,6 +9,76 @@ import HeaderControls from "../components/HeaderControls";
 import AccountButtonWrapper from "../components/AccountButtonWrapper";
 import { FiRefreshCw, FiArrowLeft } from "react-icons/fi";
 import leaderboardService from "../services/LeaderboardService";
+import MatrixRainLoading from "../components/effects/MatrixRainLoading";
+
+// LeaderboardLoading component
+const LeaderboardLoading = ({ type = "leaderboard" }) => {
+  const { settings } = useSettings();
+  const isDarkTheme = settings?.theme === "dark";
+
+  // Determine message based on type
+  const loadingMessage =
+    type === "personal"
+      ? "Loading your stats"
+      : type === "streaks"
+        ? "Loading streak data"
+        : "Loading leaderboard";
+
+  return (
+    <div
+      className={`leaderboard-loading ${isDarkTheme ? "dark-theme" : "light-theme"}`}
+    >
+      <h3 className="loading-title">
+        {loadingMessage}
+        <span className="loading-dots"></span>
+      </h3>
+
+      <div className="loading-animation leaderboard-loading-animation">
+        <MatrixRainLoading
+          active={true}
+          color={isDarkTheme ? "#4cc9f0" : "#00ff41"}
+          message={
+            type === "personal"
+              ? "Decrypting profile data..."
+              : "Decrypting leaderboard..."
+          }
+          width="100%"
+          height="100%"
+          density={30}
+        />
+      </div>
+    </div>
+  );
+};
+
+// LeaderboardError component
+const LeaderboardError = ({ message, retryFunction }) => {
+  const { settings } = useSettings();
+  const isDarkTheme = settings?.theme === "dark";
+
+  return (
+    <div
+      className={`leaderboard-error ${isDarkTheme ? "dark-theme" : "light-theme"}`}
+    >
+      <h3 className="error-title">Oops! Something went wrong</h3>
+
+      <p className="error-message">
+        {message || "Failed to load leaderboard data."}
+      </p>
+
+      {retryFunction && (
+        <button onClick={retryFunction} className="try-again-button">
+          Try Again
+        </button>
+      )}
+
+      <p className="help-text">
+        If the problem persists, try refreshing the page or checking your
+        internet connection.
+      </p>
+    </div>
+  );
+};
 
 const Leaderboard = ({ onClose }) => {
   const navigate = useNavigate();
@@ -538,35 +608,6 @@ const Leaderboard = ({ onClose }) => {
 
   // MOVED INSIDE: renderPersonalStats function
   const renderPersonalStats = () => {
-    // Don't show the login prompt if we're still loading auth state
-    if (!isAuthenticated && !authLoading) {
-      return (
-        <div className="personal-stats-login-required">
-          <p>Please log in to view your personal stats.</p>
-          <button className="login-button" onClick={openLogin}>
-            Login
-          </button>
-        </div>
-      );
-    }
-
-    if (isPersonalLoading) {
-      return <div className="loading-spinner">Loading your stats...</div>;
-    }
-
-    if (personalError) {
-      return (
-        <div className="error-message">
-          {personalError}
-          <button onClick={() => fetchPersonalStats()}>Try Again</button>
-        </div>
-      );
-    }
-
-    if (!personalStats) {
-      return <div className="loading-spinner">No stats available</div>;
-    }
-
     // Format date for display
     const formatDate = (dateString) => {
       if (!dateString) return "Never";
@@ -697,37 +738,12 @@ const Leaderboard = ({ onClose }) => {
 
   // MOVED INSIDE: renderPersonalLeaderboard function
   const renderPersonalLeaderboard = () => {
-    // Handle auth loading state
-    if (authLoading) {
-      return (
-        <div className="loading-spinner">Checking authentication status...</div>
-      );
-    }
-
-    // Personal tab now uses the new renderPersonalStats function
     return renderPersonalStats();
   };
 
   // MOVED INSIDE: renderStreakLeaderboard function
   const renderStreakLeaderboard = () => {
     console.log("renderStreakLeaderboard called with data:", streakData);
-
-    // Clear loading case
-    if (isStreakLoading) {
-      return <div className="loading">Loading streak data...</div>;
-    }
-
-    // Clear error case
-    if (streakError) {
-      return (
-        <div className="error">
-          {streakError}
-          <button onClick={fetchStreakData} className="retry-button">
-            Try Again
-          </button>
-        </div>
-      );
-    }
 
     // Handle missing data case
     if (!streakData) {

@@ -998,3 +998,49 @@
     padding: 10px;
   }
 }
+
+/* Leaderboard-specific loading styles */
+.leaderboard-loading {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 0;
+  text-align: center;
+}
+
+.leaderboard-loading .loading-title {
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.leaderboard-loading-animation {
+  width: 90%;
+  max-width: 700px;
+  height: 300px;
+  margin: 0 auto;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* Fix for leaderboard container */
+.leaderboard {
+  position: relative;
+  min-height: 400px;
+}
+
+/* Make sure tabs remain visible */
+.tabs-container {
+  position: relative;
+  z-index: 10;
+}
+
+/* Dark theme adjustments */
+.dark-theme .leaderboard-loading .loading-title {
+  color: #4cc9f0;
+}
+
+.light-theme .leaderboard-loading .loading-title {
+  color: #007bff;
+}

@@ -751,3 +751,189 @@ body:not(.dark-theme) .celebration-content .decrypted-quote {
   border-radius: 50%;
   border: 2px solid white;
 }
+
+/* Loading and error screen styles */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  height: 100vh;
+  padding-top: 100px; /* Position content higher on the screen */
+  position: relative;
+  z-index: 1;
+}
+
+.loading-title {
+  margin-bottom: 15px;
+  font-family: 'Courier New', Courier, monospace;
+  position: relative;
+  z-index: 2;
+  font-size: 1.4rem;
+  letter-spacing: 1px;
+}
+
+.loading-animation {
+  margin: 20px 0;
+  width: 80%;
+  max-width: 600px; /* Closer to the width of the game content */
+  height: 250px; /* Taller to match approximately where grids will be */
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  z-index: 2;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.loading-retry {
+  margin-top: 20px;
+  padding: 15px;
+  border-radius: 8px;
+  max-width: 90%;
+  width: 400px;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+}
+
+.dark-theme .loading-retry {
+  background-color: #333;
+}
+
+.light-theme .loading-retry {
+  background-color: #f8f9fa;
+}
+
+.loading-error {
+  color: #ff6b6b;
+  margin-bottom: 15px;
+  font-size: 0.9rem;
+}
+
+.light-theme .loading-error {
+  color: #dc3545;
+}
+
+.retry-button {
+  margin-top: 10px;
+  padding: 8px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+.dark-theme .retry-button {
+  background-color: #4cc9f0;
+  color: #333;
+}
+
+.dark-theme .retry-button:hover {
+  background-color: #3db8df;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(76, 201, 240, 0.3);
+}
+
+.light-theme .retry-button {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.light-theme .retry-button:hover {
+  background-color: #0069d9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+/* Error screen styles */
+.error-container {
+  text-align: center;
+  margin: 100px auto 0; /* Position it higher on the screen */
+  max-width: 450px;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  position: relative;
+  z-index: 5; /* Ensure it's above the matrix background */
+}
+
+.dark-theme .error-container {
+  background-color: #333;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+}
+
+.light-theme .error-container {
+  background-color: #f0f8ff;
+}
+
+.error-title {
+  margin-bottom: 15px;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.error-message {
+  margin-bottom: 20px;
+}
+
+.dark-theme .error-message {
+  color: #ff6b6b;
+}
+
+.light-theme .error-message {
+  color: #dc3545;
+}
+
+.try-again-button {
+  margin-top: 5px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.dark-theme .try-again-button {
+  background-color: #4cc9f0;
+  color: #333;
+}
+
+.dark-theme .try-again-button:hover {
+  background-color: #3db8df;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(76, 201, 240, 0.3);
+}
+
+.light-theme .try-again-button {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.light-theme .try-again-button:hover {
+  background-color: #0069d9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+.help-text {
+  margin-top: 25px;
+  font-size: 0.85rem;
+  opacity: 0.7;
+  font-style: italic;
+}
+
+/* Loading dots animation */
+.loading-dots:after {
+  content: '';
+  animation: loading-dots 1.5s infinite;
+}
+
+@keyframes loading-dots {
+  0% { content: ''; }
+  25% { content: '.'; }
+  50% { content: '..'; }
+  75% { content: '...'; }
+  100% { content: ''; }
+}
