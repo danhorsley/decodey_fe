@@ -88,9 +88,15 @@ const WinCelebration = ({
     setLoading(true);
 
     try {
-      // Instead of complex state management, just close the modal and start a new game
+      // First reset the game state completely
       resetGame();
+
+      // Wait for the reset to complete
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      // Then start a new game with a single call
       if (typeof startGame === "function") {
+        console.log("Starting new game after win");
         startGame();
       }
     } catch (error) {
@@ -99,7 +105,6 @@ const WinCelebration = ({
       setIsStartingNewGame(false);
     }
   };
-
   // Staged animation sequence
   useEffect(() => {
     // Initial animation

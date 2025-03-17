@@ -160,15 +160,20 @@ function Game() {
   const authReadyCheckedRef = useRef(false);
 
   // Enhanced initialization effect with better auth handling and game restoration
+  // In Game.js, modify the initialization useEffect
   useEffect(() => {
     console.log("Game initialization effect running with state:", {
       hasEncryptedText: !!encrypted,
-      isAuthenticated: authContext?.isAuthenticated,
-      authLoading: authContext?.loading,
       loadingState: loadingState,
       initAttempted: initializationAttemptedRef.current,
-      authReadyChecked: authReadyCheckedRef.current,
+      hasWon: hasWon, // Add hasWon to the logging
     });
+
+    // If we're in a win state, don't auto-initialize (let the win celebration handle it)
+    if (hasWon) {
+      console.log("Game in win state, skipping auto-initialization");
+      return;
+    }
 
     // If we already have encrypted text, just mark the game as loaded and exit
     if (encrypted) {
@@ -182,7 +187,7 @@ function Game() {
       return;
     }
 
-    // If we're already loading and it hasn't been too long, don't start another initialization
+    // If we're already loading, don't start another initialization
     if (
       loadingState.isLoading &&
       Date.now() - loadingState.lastAttemptTime < 5000
@@ -225,63 +230,18 @@ function Game() {
 
     const initializeGame = async () => {
       try {
-        // Enhanced auth state readiness check
-        console.log("Waiting for auth state to be ready...");
+        // Ensure auth state is ready
+        await authContext.waitForAuthReady();
 
-        // Get auth readiness state
-        const authState = await authContext.waitForAuthReady();
-        authReadyCheckedRef.current = true;
-
-        console.log("Auth state ready:", {
-          isAuthenticated: authState.isAuthenticated,
-          hasUser: !!authState.user,
-          userId: authState.user?.id,
-        });
-
-        // Store whether auth was checked to prevent repeated checks
+        // First try to continue saved game if authenticated
         const storedGameId = localStorage.getItem("uncrypt-game-id");
-
-        // First try to continue saved game if authenticated and we have a game ID
-        if (storedGameId && authState.isAuthenticated) {
-          console.log(
-            "Found stored game ID, attempting to continue:",
-            storedGameId,
-          );
+        if (storedGameId && authContext.isAuthenticated) {
+          console.log("Attempting to continue stored game:", storedGameId);
 
           if (typeof continueSavedGame === "function") {
-            console.log("Calling continueSavedGame function");
-
-            // Add a retry mechanism for continueSavedGame
-            let retryCount = 0;
-            let result = false;
-
-            while (retryCount < 2 && !result) {
-              try {
-                result = await continueSavedGame();
-                if (result) {
-                  console.log(
-                    `Successfully continued saved game (attempt ${retryCount + 1})`,
-                  );
-                  break;
-                } else {
-                  console.warn(
-                    `Failed to continue game on attempt ${retryCount + 1}`,
-                  );
-                  // Short pause before retry
-                  await new Promise((resolve) => setTimeout(resolve, 200));
-                  retryCount++;
-                }
-              } catch (error) {
-                console.error(
-                  `Error in continueSavedGame attempt ${retryCount + 1}:`,
-                  error,
-                );
-                retryCount++;
-              }
-            }
-
+            const result = await continueSavedGame();
             if (result && mounted) {
-              console.log("Game continuation successful, updating UI");
+              console.log("Successfully continued saved game");
               setGameLoaded(true);
               setLoadingState((prev) => ({
                 ...prev,
@@ -291,22 +251,13 @@ function Game() {
               return;
             } else {
               console.warn(
-                "Failed to continue saved game after retries, falling back to new game",
+                "Failed to continue saved game, will try starting new game",
               );
-              // Clear the game ID since it might be invalid
-              localStorage.removeItem("uncrypt-game-id");
             }
-          } else {
-            console.error("continueSavedGame is not a function");
           }
-        } else {
-          console.log(
-            "No stored game to continue:",
-            storedGameId ? "Not authenticated" : "No game ID",
-          );
         }
 
-        // Start a new game as fallback
+        // Start a new game
         console.log("Starting new game (initialization)");
         if (typeof startGame !== "function") {
           throw new Error("startGame is not a function");
@@ -362,6 +313,7 @@ function Game() {
     settings?.hardcoreMode,
     loadingState.attemptCount,
     loadingState.lastAttemptTime,
+    hasWon, // Add hasWon as a dependency
   ]);
   // Watch for local win detection
   useEffect(() => {
@@ -419,34 +371,44 @@ function Game() {
     );
   }, [encrypted]);
   // In Game.js, modify the useEffect that manages the loading timeout
+  // In Game.js, modify the useEffect that manages the loading timeout
   useEffect(() => {
     let timeoutId = null;
 
-    // If we're in a loading state, set a timeout to show the error message
     if (loadingState.isLoading) {
       console.log("Setting up loading timeout");
 
-      // Set a timeout to try continuation instead of abandonment
       timeoutId = setTimeout(() => {
-        console.log("Loading timed out - attempting to continue saved game");
-        setLoadingState((prev) => ({
-          ...prev,
-          hasTimedOut: true,
-          isLoading: true, // Keep loading state active
-          errorMessage:
-            "Loading is taking longer than expected. Attempting to continue saved game...",
-        }));
+        console.log("Loading timed out - determining course of action");
 
-        // Try to continue the saved game if authenticated
+        // Different handling for anonymous vs authenticated users
         if (
           authContext.isAuthenticated &&
           typeof continueSavedGame === "function"
         ) {
-          console.log("Attempting to continue saved game after timeout");
+          console.log("Authenticated user - attempting to continue saved game");
+          // Same continuation logic as before
           continueSavedGame()
             .then((result) => {
+              // continuation logic...
+            })
+            .catch((err) => {
+              // error handling...
+            });
+        } else {
+          // For anonymous users, directly try starting a new game
+          console.log(
+            "Anonymous user - attempting to start new game automatically",
+          );
+
+          const longTextSetting = settings?.longText === true;
+          const hardcoreModeSetting = settings?.hardcoreMode === true;
+
+          startGame(longTextSetting, hardcoreModeSetting)
+            .then((result) => {
               if (result) {
-                console.log("Successfully continued saved game after timeout");
+                console.log("Successfully started new game for anonymous user");
+                setGameLoaded(true);
                 setLoadingState((prev) => ({
                   ...prev,
                   isLoading: false,
@@ -455,36 +417,28 @@ function Game() {
                 }));
               } else {
                 console.log(
-                  "Failed to continue saved game, showing manual retry option",
+                  "Failed to auto-start game for anonymous user, showing retry option",
                 );
                 setLoadingState((prev) => ({
                   ...prev,
                   isLoading: false,
                   errorMessage:
-                    "Could not restore your game automatically. Please try again.",
+                    "Could not start game automatically. Please try again.",
                 }));
               }
             })
             .catch((err) => {
-              console.error("Error continuing saved game after timeout:", err);
+              console.error("Error starting game for anonymous user:", err);
               setLoadingState((prev) => ({
                 ...prev,
                 isLoading: false,
-                errorMessage: "Error restoring your game. Please try again.",
+                errorMessage: "Error starting game. Please try again.",
               }));
             });
-        } else {
-          // Fall back to default timeout behavior if not authenticated
-          setLoadingState((prev) => ({
-            ...prev,
-            isLoading: false,
-            errorMessage: "Loading timed out. Please try again.",
-          }));
         }
-      }, 8000); // Give 8 seconds before timeout
+      }, 8000);
     }
 
-    // Clean up timeout if component unmounts or loading state changes
     return () => {
       if (timeoutId) {
         clearTimeout(timeoutId);
@@ -495,6 +449,9 @@ function Game() {
     loadingState.lastAttemptTime,
     authContext.isAuthenticated,
     continueSavedGame,
+    startGame,
+    settings?.longText,
+    settings?.hardcoreMode,
   ]);
 
   // Apply theme to body
@@ -1119,52 +1076,53 @@ function Game() {
     );
   };
 
-  const renderGameOver = () => {
-    if (hasWon === true) {
-      const safeFn =
-        typeof startGame === "function" ? handleStartNewGame : () => {};
-      const safePlaySound =
-        typeof playSound === "function" ? playSound : () => {};
+    const renderGameOver = () => {
+      if (hasWon === true) {
+        const safeFn =
+          typeof startGame === "function" ? handleStartNewGame : () => {};
+        const safePlaySound =
+          typeof playSound === "function" ? playSound : () => {};
 
-      const safeTheme = settings?.theme || "light";
-      const safeTextColor = settings?.textColor || "default";
+        const safeTheme = settings?.theme || "light";
+        const safeTextColor = settings?.textColor || "default";
 
-      return (
-        <WinCelebration
-          startGame={safeFn}
-          playSound={safePlaySound}
-          theme={safeTheme}
-          textColor={safeTextColor}
-          winData={winData || {}} // Ensure it's not null
-        />
-      );
-    }
+        return (
+          <WinCelebration
+            startGame={safeFn}
+            playSound={safePlaySound}
+            theme={safeTheme}
+            textColor={safeTextColor}
+            winData={winData || {}} // Ensure it's not null
+          />
+        );
+      }
 
-    // Show Matrix transition if a local win is detected
-    if (showMatrixTransition === true && hasWon !== true) {
-      return (
-        <div className="win-transition">
-          {renderMatrixTransition()}
-          <p
-            style={{
-              position: "fixed",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              zIndex: 1100,
-              color: settings?.theme === "dark" ? "#4cc9f0" : "#007bff",
-              fontSize: "1.5rem",
-              textAlign: "center",
-              fontWeight: "bold",
-              textShadow: "0 0 10px rgba(76, 201, 240, 0.7)",
-              animation: "pulse 1.5s infinite ease-in-out",
-            }}
-          >
-            Calculating Score...
-          </p>
-        </div>
-      );
-    }
+      // Show Matrix transition if a local win is detected
+      if (showMatrixTransition === true && hasWon !== true) {
+        return (
+          <div className="win-transition">
+            {renderMatrixTransition()}
+            <p
+              style={{
+                position: "fixed",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                zIndex: 1100,
+                color: settings?.theme === "dark" ? "#4cc9f0" : "#007bff",
+                fontSize: "1.5rem",
+                textAlign: "center",
+                fontWeight: "bold",
+                textShadow: "0 0 10px rgba(76, 201, 240, 0.7)",
+                animation: "pulse 1.5s infinite ease-in-out",
+              }}
+            >
+              Calculating Score...
+            </p>
+          </div>
+        );
+      }
+
 
     if (hasLost === true) {
       return (
@@ -1197,7 +1155,17 @@ function Game() {
             Game Over! Too many mistakes.
           </p>
           <button
-            onClick={handleStartNewGame}
+            onClick={() => {
+              console.log("Starting new game from game over modal");
+              // First reset the game state
+              if (typeof resetGame === "function") {
+                resetGame();
+              }
+              // Use a slight delay to ensure reset completes
+              setTimeout(() => {
+                handleStartNewGame();
+              }, 50);
+            }}
             style={{
               margin: "15px auto 0",
               padding: "12px 20px",
@@ -1221,7 +1189,6 @@ function Game() {
 
     return null;
   };
-
   // Use mobile layout if needed
   if (useMobileMode === true) {
     return (
