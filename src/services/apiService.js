@@ -194,11 +194,15 @@ class ApiService {
         options,
       );
 
-      // Get token and verify it exists
+      // Get token and verify it exists - determines if user is anonymous
       const token =
         localStorage.getItem("uncrypt-token") ||
         sessionStorage.getItem("uncrypt-token");
-      console.log("Token from localStorage:", token ? "exists" : "missing");
+      const isAnonymous = !token;
+
+      console.log(
+        `Starting game for ${isAnonymous ? "anonymous" : "authenticated"} user`,
+      );
 
       // Determine endpoint based on longText option
       const endpoint = options.longText ? "api/longstart" : "/api/start";
@@ -216,9 +220,33 @@ class ApiService {
       // Get the base URL, with a fallback to ensure it's not undefined
       const baseUrl =
         this.api.defaults.baseURL || process.env.REACT_APP_API_URL || "";
+
       console.log(`Making request to endpoint: ${baseUrl}${url}`);
 
-      // Make sure we're using the correct headers for anonymous play
+      // For anonymous users, use direct fetch with minimal headers for maximum speed
+      if (isAnonymous) {
+        console.log("Using optimized fetch for anonymous user");
+
+        const directResponse = await fetch(`${baseUrl}${url}`, {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        });
+
+        if (!directResponse.ok) {
+          throw new Error(`HTTP error! Status: ${directResponse.status}`);
+        }
+
+        const data = await directResponse.json();
+
+        console.log("Anonymous game started successfully");
+        return data;
+      }
+
+      // For authenticated users, use the full Axios instance with interceptors
       const config = {
         headers: {
           Accept: "application/json",
@@ -229,8 +257,6 @@ class ApiService {
       if (token) {
         config.headers["Authorization"] = `Bearer ${token}`;
       }
-
-      console.log("Request config:", JSON.stringify(config));
 
       // Make the request with full URL construction
       const response = await this.api.get(url, config);

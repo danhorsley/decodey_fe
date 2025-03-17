@@ -239,32 +239,55 @@ export const AuthProvider = ({ children }) => {
   // In AuthContext.js, enhance the waitForAuthReady function:
   const waitForAuthReady = useCallback(() => {
     return new Promise((resolve) => {
+      // Quick check for token existence - if no token, user is anonymous
+      const hasToken =
+        localStorage.getItem("uncrypt-token") ||
+        sessionStorage.getItem("uncrypt-token");
+
+      // For anonymous users, resolve immediately without waiting
+      if (!hasToken) {
+        console.log(
+          "Fast path: Detected anonymous user in waitForAuthReady, returning immediately",
+        );
+        return resolve({
+          isAuthenticated: false,
+          user: null,
+        });
+      }
+
+      // For users with tokens, check if auth state is already loaded
       if (!authState.loading) {
-        // Auth state already loaded, return current auth status
+        console.log("Auth state already loaded, returning current status");
         resolve({
           isAuthenticated: authState.isAuthenticated,
           user: authState.user,
         });
       } else {
+        console.log("Waiting for auth state to be ready...");
+
         // Set up a timer to check auth state
         const checkInterval = setInterval(() => {
           if (!authState.loading) {
             clearInterval(checkInterval);
+            console.log("Auth state ready, resolving promise");
             resolve({
               isAuthenticated: authState.isAuthenticated,
               user: authState.user,
             });
           }
-        }, 100);
+        }, 50); // Reduced from 100ms to 50ms for faster checks
 
-        // Safety timeout after 5 seconds
+        // Safety timeout after 2 seconds (reduced from 5s)
         setTimeout(() => {
           clearInterval(checkInterval);
+          console.log(
+            "Auth ready wait timed out after 2s, assuming not authenticated",
+          );
           resolve({
             isAuthenticated: false,
             user: null,
           });
-        }, 5000);
+        }, 2000);
       }
     });
   }, [authState.loading, authState.isAuthenticated, authState.user]);
