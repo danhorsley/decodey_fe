@@ -92,6 +92,7 @@ function Game() {
     continueSavedGame = async () => false,
     resetGame = () => {},
     abandonGame = async () => false,
+    resetAndStartNewGame = async () => false,
   } = gameStateContext || {};
 
   // Get UI context safely
@@ -1076,53 +1077,52 @@ function Game() {
     );
   };
 
-    const renderGameOver = () => {
-      if (hasWon === true) {
-        const safeFn =
-          typeof startGame === "function" ? handleStartNewGame : () => {};
-        const safePlaySound =
-          typeof playSound === "function" ? playSound : () => {};
+  const renderGameOver = () => {
+    if (hasWon === true) {
+      const safeFn =
+        typeof startGame === "function" ? handleStartNewGame : () => {};
+      const safePlaySound =
+        typeof playSound === "function" ? playSound : () => {};
 
-        const safeTheme = settings?.theme || "light";
-        const safeTextColor = settings?.textColor || "default";
+      const safeTheme = settings?.theme || "light";
+      const safeTextColor = settings?.textColor || "default";
 
-        return (
-          <WinCelebration
-            startGame={safeFn}
-            playSound={safePlaySound}
-            theme={safeTheme}
-            textColor={safeTextColor}
-            winData={winData || {}} // Ensure it's not null
-          />
-        );
-      }
+      return (
+        <WinCelebration
+          startGame={safeFn}
+          playSound={safePlaySound}
+          theme={safeTheme}
+          textColor={safeTextColor}
+          winData={winData || {}} // Ensure it's not null
+        />
+      );
+    }
 
-      // Show Matrix transition if a local win is detected
-      if (showMatrixTransition === true && hasWon !== true) {
-        return (
-          <div className="win-transition">
-            {renderMatrixTransition()}
-            <p
-              style={{
-                position: "fixed",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                zIndex: 1100,
-                color: settings?.theme === "dark" ? "#4cc9f0" : "#007bff",
-                fontSize: "1.5rem",
-                textAlign: "center",
-                fontWeight: "bold",
-                textShadow: "0 0 10px rgba(76, 201, 240, 0.7)",
-                animation: "pulse 1.5s infinite ease-in-out",
-              }}
-            >
-              Calculating Score...
-            </p>
-          </div>
-        );
-      }
-
+    // Show Matrix transition if a local win is detected
+    if (showMatrixTransition === true && hasWon !== true) {
+      return (
+        <div className="win-transition">
+          {renderMatrixTransition()}
+          <p
+            style={{
+              position: "fixed",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              zIndex: 1100,
+              color: settings?.theme === "dark" ? "#4cc9f0" : "#007bff",
+              fontSize: "1.5rem",
+              textAlign: "center",
+              fontWeight: "bold",
+              textShadow: "0 0 10px rgba(76, 201, 240, 0.7)",
+              animation: "pulse 1.5s infinite ease-in-out",
+            }}
+          >
+            Calculating Score...
+          </p>
+        </div>
+      );
+    }
 
     if (hasLost === true) {
       return (
@@ -1157,14 +1157,41 @@ function Game() {
           <button
             onClick={() => {
               console.log("Starting new game from game over modal");
-              // First reset the game state
-              if (typeof resetGame === "function") {
-                resetGame();
+
+              // Use the combined reset and start function from context if available
+              if (typeof resetAndStartNewGame === "function") {
+                const longTextSetting = settings?.longText === true;
+                const hardcoreModeSetting = settings?.hardcoreMode === true;
+
+                console.log("Using resetAndStartNewGame with settings:", {
+                  longText: longTextSetting,
+                  hardcoreMode: hardcoreModeSetting,
+                });
+
+                resetAndStartNewGame(longTextSetting, hardcoreModeSetting);
+              } else {
+                // Fallback to the current approach with a longer delay
+                console.log(
+                  "resetAndStartNewGame not available, using fallback approach",
+                );
+                if (typeof resetGame === "function") {
+                  resetGame();
+                }
+                setTimeout(() => {
+                  handleStartNewGame();
+
+                  // Add a final fallback in case handleStartNewGame fails
+                  setTimeout(() => {
+                    if (!encrypted && typeof startGame === "function") {
+                      console.log("FINAL FALLBACK: Direct startGame call");
+                      startGame(
+                        settings?.longText === true,
+                        settings?.hardcoreMode === true,
+                      );
+                    }
+                  }, 300);
+                }, 200); // Increased delay
               }
-              // Use a slight delay to ensure reset completes
-              setTimeout(() => {
-                handleStartNewGame();
-              }, 50);
             }}
             style={{
               margin: "15px auto 0",
