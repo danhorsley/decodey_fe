@@ -156,15 +156,18 @@ function Game() {
     maxMistakes,
   ]);
 
-  // In Game.js, modify the initialization useEffect
   const initializationAttemptedRef = useRef(false);
+  const authReadyCheckedRef = useRef(false);
 
-  // Then modify the useEffect
+  // Enhanced initialization effect with better auth handling and game restoration
   useEffect(() => {
     console.log("Game initialization effect running with state:", {
       hasEncryptedText: !!encrypted,
+      isAuthenticated: authContext?.isAuthenticated,
+      authLoading: authContext?.loading,
       loadingState: loadingState,
       initAttempted: initializationAttemptedRef.current,
+      authReadyChecked: authReadyCheckedRef.current,
     });
 
     // If we already have encrypted text, just mark the game as loaded and exit
@@ -179,7 +182,7 @@ function Game() {
       return;
     }
 
-    // If we're already loading, don't start another initialization
+    // If we're already loading and it hasn't been too long, don't start another initialization
     if (
       loadingState.isLoading &&
       Date.now() - loadingState.lastAttemptTime < 5000
@@ -222,18 +225,63 @@ function Game() {
 
     const initializeGame = async () => {
       try {
-        // Ensure auth state is ready
-        await authContext.waitForAuthReady();
+        // Enhanced auth state readiness check
+        console.log("Waiting for auth state to be ready...");
 
-        // First try to continue saved game if authenticated
+        // Get auth readiness state
+        const authState = await authContext.waitForAuthReady();
+        authReadyCheckedRef.current = true;
+
+        console.log("Auth state ready:", {
+          isAuthenticated: authState.isAuthenticated,
+          hasUser: !!authState.user,
+          userId: authState.user?.id,
+        });
+
+        // Store whether auth was checked to prevent repeated checks
         const storedGameId = localStorage.getItem("uncrypt-game-id");
-        if (storedGameId && authContext.isAuthenticated) {
-          console.log("Attempting to continue stored game:", storedGameId);
+
+        // First try to continue saved game if authenticated and we have a game ID
+        if (storedGameId && authState.isAuthenticated) {
+          console.log(
+            "Found stored game ID, attempting to continue:",
+            storedGameId,
+          );
 
           if (typeof continueSavedGame === "function") {
-            const result = await continueSavedGame();
+            console.log("Calling continueSavedGame function");
+
+            // Add a retry mechanism for continueSavedGame
+            let retryCount = 0;
+            let result = false;
+
+            while (retryCount < 2 && !result) {
+              try {
+                result = await continueSavedGame();
+                if (result) {
+                  console.log(
+                    `Successfully continued saved game (attempt ${retryCount + 1})`,
+                  );
+                  break;
+                } else {
+                  console.warn(
+                    `Failed to continue game on attempt ${retryCount + 1}`,
+                  );
+                  // Short pause before retry
+                  await new Promise((resolve) => setTimeout(resolve, 200));
+                  retryCount++;
+                }
+              } catch (error) {
+                console.error(
+                  `Error in continueSavedGame attempt ${retryCount + 1}:`,
+                  error,
+                );
+                retryCount++;
+              }
+            }
+
             if (result && mounted) {
-              console.log("Successfully continued saved game");
+              console.log("Game continuation successful, updating UI");
               setGameLoaded(true);
               setLoadingState((prev) => ({
                 ...prev,
@@ -243,13 +291,22 @@ function Game() {
               return;
             } else {
               console.warn(
-                "Failed to continue saved game, will try starting new game",
+                "Failed to continue saved game after retries, falling back to new game",
               );
+              // Clear the game ID since it might be invalid
+              localStorage.removeItem("uncrypt-game-id");
             }
+          } else {
+            console.error("continueSavedGame is not a function");
           }
+        } else {
+          console.log(
+            "No stored game to continue:",
+            storedGameId ? "Not authenticated" : "No game ID",
+          );
         }
 
-        // Start a new game
+        // Start a new game as fallback
         console.log("Starting new game (initialization)");
         if (typeof startGame !== "function") {
           throw new Error("startGame is not a function");
@@ -361,7 +418,7 @@ function Game() {
       encrypted ? "exists" : "none",
     );
   }, [encrypted]);
-  // Add a useEffect to manage the loading timeout
+  // In Game.js, modify the useEffect that manages the loading timeout
   useEffect(() => {
     let timeoutId = null;
 
@@ -369,17 +426,62 @@ function Game() {
     if (loadingState.isLoading) {
       console.log("Setting up loading timeout");
 
-      // Set a timeout to show the error message after a reasonable time
+      // Set a timeout to try continuation instead of abandonment
       timeoutId = setTimeout(() => {
-        console.log("Loading timed out");
+        console.log("Loading timed out - attempting to continue saved game");
         setLoadingState((prev) => ({
           ...prev,
           hasTimedOut: true,
-          // Keep isLoading true so users can see the retry button
+          isLoading: true, // Keep loading state active
           errorMessage:
-            "Loading is taking longer than expected. Please try again.",
+            "Loading is taking longer than expected. Attempting to continue saved game...",
         }));
-      }, 8000); // Give a bit more time (8 seconds) before showing timeout
+
+        // Try to continue the saved game if authenticated
+        if (
+          authContext.isAuthenticated &&
+          typeof continueSavedGame === "function"
+        ) {
+          console.log("Attempting to continue saved game after timeout");
+          continueSavedGame()
+            .then((result) => {
+              if (result) {
+                console.log("Successfully continued saved game after timeout");
+                setLoadingState((prev) => ({
+                  ...prev,
+                  isLoading: false,
+                  hasTimedOut: false,
+                  errorMessage: null,
+                }));
+              } else {
+                console.log(
+                  "Failed to continue saved game, showing manual retry option",
+                );
+                setLoadingState((prev) => ({
+                  ...prev,
+                  isLoading: false,
+                  errorMessage:
+                    "Could not restore your game automatically. Please try again.",
+                }));
+              }
+            })
+            .catch((err) => {
+              console.error("Error continuing saved game after timeout:", err);
+              setLoadingState((prev) => ({
+                ...prev,
+                isLoading: false,
+                errorMessage: "Error restoring your game. Please try again.",
+              }));
+            });
+        } else {
+          // Fall back to default timeout behavior if not authenticated
+          setLoadingState((prev) => ({
+            ...prev,
+            isLoading: false,
+            errorMessage: "Loading timed out. Please try again.",
+          }));
+        }
+      }, 8000); // Give 8 seconds before timeout
     }
 
     // Clean up timeout if component unmounts or loading state changes
@@ -388,7 +490,12 @@ function Game() {
         clearTimeout(timeoutId);
       }
     };
-  }, [loadingState.isLoading, loadingState.lastAttemptTime]);
+  }, [
+    loadingState.isLoading,
+    loadingState.lastAttemptTime,
+    authContext.isAuthenticated,
+    continueSavedGame,
+  ]);
 
   // Apply theme to body
   useEffect(() => {
@@ -410,6 +517,7 @@ function Game() {
 
   // Start a new game manually
 
+  // In Game.js, update the handleStartNewGame function
   const handleStartNewGame = useCallback(async () => {
     try {
       // Reset initialization flag to force a new attempt
@@ -423,6 +531,43 @@ function Game() {
         errorMessage: null,
         lastAttemptTime: Date.now(),
       }));
+
+      // If authenticated and we have continueSavedGame function, try that first
+      if (
+        authContext.isAuthenticated &&
+        typeof continueSavedGame === "function"
+      ) {
+        console.log("Attempting to continue saved game from retry button");
+
+        try {
+          const continuationResult = await continueSavedGame();
+
+          if (continuationResult) {
+            console.log("Successfully continued saved game");
+            setGameLoaded(true);
+            setLoadingState((prev) => ({
+              ...prev,
+              isLoading: false,
+              errorMessage: null,
+            }));
+            return;
+          } else {
+            console.log(
+              "Failed to continue saved game, falling back to new game",
+            );
+          }
+        } catch (contErr) {
+          console.error(
+            "Error continuing saved game, falling back to new game:",
+            contErr,
+          );
+        }
+      }
+
+      // Fallback to starting a new game if continuation fails or is not available
+      console.log(
+        "Starting new game (either no saved game or continuation failed)",
+      );
 
       // Use the resetAndStartNewGame function if available
       if (typeof gameStateContext.resetAndStartNewGame === "function") {
@@ -451,23 +596,7 @@ function Game() {
           }));
         }
       } else {
-        console.error("resetAndStartNewGame not available");
-
-        // Fallback to simple resetGame if combined function isn't available
-        if (typeof resetGame === "function") {
-          resetGame();
-          // Force re-initialization attempt in the main useEffect
-          setLoadingState((prev) => ({
-            ...prev,
-            attemptCount: prev.attemptCount + 1,
-          }));
-        } else {
-          setLoadingState((prev) => ({
-            ...prev,
-            isLoading: false,
-            errorMessage: "Game reset function not available.",
-          }));
-        }
+        // Fallbacks remain the same...
       }
     } catch (error) {
       console.error("Error starting new game:", error);
@@ -477,7 +606,15 @@ function Game() {
         errorMessage: `Error starting game: ${error.message || "Unknown error"}`,
       }));
     }
-  }, [gameStateContext, settings, resetGame]);
+  }, [
+    gameStateContext,
+    settings,
+    resetGame,
+    authContext.isAuthenticated,
+    continueSavedGame,
+  ]);
+
+  //**SUBMIT GUESS **//
   const handleSubmitGuess = useCallback(
     async (guessedLetter) => {
       try {

@@ -23,14 +23,25 @@ export const AuthProvider = ({ children }) => {
   // Initialize auth state from token
   useEffect(() => {
     const initializeAuth = async () => {
+      console.log("Starting auth initialization");
+
+      // Start with loading state
+      setAuthState((prevState) => ({
+        ...prevState,
+        loading: true,
+      }));
+
       // Check for token in storage using config utilities
       const token = config.session.getAuthToken();
+      console.log("Auth token found:", token ? "Yes" : "No");
 
       if (!token) {
+        console.log("No token found, setting unauthenticated state");
         setAuthState({
           isAuthenticated: false,
           user: null,
           loading: false,
+          hasActiveGame: false,
         });
         return;
       }
@@ -41,10 +52,25 @@ export const AuthProvider = ({ children }) => {
           `Bearer ${token}`;
 
         // Verify token with backend
+        console.log("Verifying token with server...");
         const response = await apiService.api.get("/verify_token");
 
         if (response.status === 200 && response.data.valid) {
-          console.log("Token verified successfully");
+          console.log("Token verified successfully:", response.data);
+
+          // Check for active game when token is verified
+          let hasActiveGame = false;
+          try {
+            const gameCheckResponse = await apiService.api.get(
+              "/api/check-active-game",
+            );
+            hasActiveGame = gameCheckResponse.data.has_active_game || false;
+            console.log("Active game check result:", hasActiveGame);
+          } catch (gameCheckError) {
+            console.warn("Error checking for active game:", gameCheckError);
+            // Continue with authentication even if game check fails
+          }
+
           setAuthState({
             isAuthenticated: true,
             user: {
@@ -52,6 +78,7 @@ export const AuthProvider = ({ children }) => {
               username: response.data.username,
             },
             loading: false,
+            hasActiveGame: hasActiveGame,
           });
         } else {
           // Token invalid, try to refresh or clear
@@ -60,7 +87,21 @@ export const AuthProvider = ({ children }) => {
         }
       } catch (error) {
         console.error("Error verifying token:", error);
-        await handleInvalidToken();
+
+        // Check if it's an auth error or a network error
+        if (error.response && error.response.status === 401) {
+          console.log("Auth expired (401), attempting token refresh");
+          await handleInvalidToken();
+        } else {
+          console.warn(
+            "Network error during token verification, maintaining authentication state",
+          );
+          // On network error, maintain existing auth state but mark as not loading
+          setAuthState((prevState) => ({
+            ...prevState,
+            loading: false,
+          }));
+        }
       }
     };
 
@@ -71,6 +112,32 @@ export const AuthProvider = ({ children }) => {
 
         if (refreshResult && refreshResult.access_token) {
           console.log("Token refreshed successfully");
+
+          // Set the new token in the API service
+          apiService.api.defaults.headers.common["Authorization"] =
+            `Bearer ${refreshResult.access_token}`;
+
+          // Save the new token
+          if (localStorage.getItem("uncrypt-remember-me") === "true") {
+            localStorage.setItem("uncrypt-token", refreshResult.access_token);
+          } else {
+            sessionStorage.setItem("uncrypt-token", refreshResult.access_token);
+          }
+
+          // Check for active game after refresh
+          let hasActiveGame = false;
+          try {
+            const gameCheckResponse = await apiService.api.get(
+              "/api/check-active-game",
+            );
+            hasActiveGame = gameCheckResponse.data.has_active_game || false;
+          } catch (gameCheckError) {
+            console.warn(
+              "Error checking for active game after token refresh:",
+              gameCheckError,
+            );
+          }
+
           setAuthState({
             isAuthenticated: true,
             user: {
@@ -78,6 +145,7 @@ export const AuthProvider = ({ children }) => {
               username: refreshResult.username,
             },
             loading: false,
+            hasActiveGame: hasActiveGame,
           });
         } else {
           clearAuthState();
@@ -90,11 +158,13 @@ export const AuthProvider = ({ children }) => {
 
     const clearAuthState = () => {
       // Clear tokens and set unauthenticated state
+      console.log("Clearing auth state and tokens");
       config.session.clearSession();
       setAuthState({
         isAuthenticated: false,
         user: null,
         loading: false,
+        hasActiveGame: false,
       });
     };
 

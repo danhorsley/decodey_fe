@@ -413,12 +413,53 @@ class ApiService {
   async checkActiveGame() {
     try {
       console.log("Making API call to check for active games");
+      // Use a direct API call to ensure we have the latest auth headers
+      const token =
+        localStorage.getItem("uncrypt-token") ||
+        sessionStorage.getItem("uncrypt-token");
+
+      // Skip the check if no token is available
+      if (!token) {
+        console.log("No auth token available, skipping active game check");
+        return { has_active_game: false };
+      }
+
+      // Ensure authorization header is set
+      const headers = {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      };
+
       // Fix the path here too if needed
-      const response = await this.api.get("/api/check-active-game");
+      const response = await this.api.get("/api/check-active-game", {
+        headers,
+      });
       console.log("Active game check response:", response.data);
+
+      // Explicitly notify listeners if active game is found
+      if (response.data && response.data.has_active_game) {
+        console.log("Active game detected, emitting event with stats");
+        this.events.emit("auth:active-game-detected", {
+          hasActiveGame: true,
+          activeGameStats: response.data.game_stats,
+        });
+      }
+
       return response.data;
     } catch (error) {
+      // Enhanced error logging
       console.error("Error checking for active games:", error);
+
+      if (error.response) {
+        console.error("Response status:", error.response.status);
+
+        // For auth errors, we don't want to remove tokens
+        if (error.response.status === 401) {
+          console.warn("Authentication error in checkActiveGame");
+          return { has_active_game: false, auth_error: true };
+        }
+      }
+
       return { has_active_game: false };
     }
   }

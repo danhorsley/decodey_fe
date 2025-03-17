@@ -649,26 +649,59 @@ export const GameStateProvider = ({ children }) => {
   }, [state, dispatch]);
 
   //continues game if one found in be storage and user selects continue
+  //continues game if one found in be storage and user selects continue
   const continueSavedGame = useCallback(async () => {
+    console.log("Attempting to continue saved game");
+
     try {
-      console.log("Attempting to continue saved game");
+      // Validate token first - this ensures we're actually authenticated
+      const token =
+        localStorage.getItem("uncrypt-token") ||
+        sessionStorage.getItem("uncrypt-token");
+
+      if (!token) {
+        console.warn("Cannot continue saved game - no auth token found");
+        return false;
+      }
 
       // Get current settings for difficulty
       const currentDifficulty = settings?.difficulty || "easy";
       const maxMistakesValue = getMaxMistakes(currentDifficulty);
 
+      // Make sure API headers are properly set
+      apiService.api.defaults.headers.common["Authorization"] =
+        `Bearer ${token}`;
+
       // Call API to get the full game state
+      console.log("Making API call to continue-game endpoint");
       const response = await apiService.api.get("/api/continue-game");
       console.log("Continue game response:", response.data);
 
-      if (!response.data || response.data.msg === "No active game found") {
-        console.warn("No active game found to continue");
+      // Full validation of response
+      if (!response.data) {
+        console.warn("Empty response from continue-game endpoint");
+        return false;
+      }
+
+      if (response.data.error || response.data.msg === "No active game found") {
+        console.warn(
+          "No active game found to continue:",
+          response.data.error || response.data.msg,
+        );
+        return false;
+      }
+
+      if (!response.data.encrypted_paragraph || !response.data.display) {
+        console.warn("Incomplete game data returned:", response.data);
         return false;
       }
 
       // Store the game ID in localStorage
       if (response.data.game_id) {
+        console.log("Storing game ID in localStorage:", response.data.game_id);
         localStorage.setItem("uncrypt-game-id", response.data.game_id);
+      } else {
+        console.warn("No game ID in response");
       }
 
       // Extract data from response with safe defaults
@@ -684,6 +717,12 @@ export const GameStateProvider = ({ children }) => {
         ? game.original_letters
         : [];
       const hardcoreMode = game.hardcore_mode === true;
+
+      // Validate essential game data
+      if (encryptedText.length === 0) {
+        console.warn("Empty encrypted text in response");
+        return false;
+      }
 
       // IMPORTANT: Correctly reconstruct guessedMappings
       const guessedMappings = {};
@@ -712,6 +751,7 @@ export const GameStateProvider = ({ children }) => {
       }
 
       // Update state with game data
+      console.log("Dispatching CONTINUE_GAME action with restored game state");
       dispatch({
         type: "CONTINUE_GAME",
         payload: {
@@ -733,18 +773,32 @@ export const GameStateProvider = ({ children }) => {
         },
       });
 
-      // Force a UI update
-      setTimeout(() => {
-        console.log("Forcing UI update after game continuation");
-        // You could use a state update here to force re-render if needed
-      }, 100);
-
       console.log("Successfully continued saved game");
       return true;
     } catch (error) {
       console.error("Error continuing saved game:", error);
-      // Clear the stored game ID to prevent repeated attempts
-      localStorage.removeItem("uncrypt-game-id");
+
+      // Add specific error handling for common failures
+      if (error.response) {
+        console.error("Response status:", error.response.status);
+        console.error("Response data:", error.response.data);
+
+        // Handle unauthorized errors
+        if (error.response.status === 401) {
+          console.warn(
+            "Authentication error when continuing game - token may be expired",
+          );
+          // Don't remove the game ID here - auth context should handle token refresh
+          return false;
+        }
+      }
+
+      // Only clear the game ID if this wasn't an auth error
+      // This ensures we can retry after auth is refreshed
+      if (error.response && error.response.status !== 401) {
+        localStorage.removeItem("uncrypt-game-id");
+      }
+
       return false;
     }
   }, [dispatch, settings?.difficulty, getMaxMistakes]);
