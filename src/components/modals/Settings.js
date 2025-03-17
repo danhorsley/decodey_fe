@@ -1,131 +1,66 @@
 // src/components/modals/Settings.js
-import React, { useState, useEffect, useCallback } from "react";
-import ReactDOM from "react-dom";
-import "../../Styles/Settings.css";
-import "../../Styles/About.css";
-import { useSettings } from "../../context/SettingsContext";
-import { useGameState } from "../../context/GameStateContext";
-import useDeviceDetection from "../../hooks/useDeviceDetection";
-import { useAuth } from "../../context/AuthContext";
-import apiService from "../../services/apiService";
+import React, { useState, useEffect, useCallback } from 'react';
+import { useDeviceDetection } from '../../hooks/useDeviceDetection';
+import { useSettings } from '../../context/SettingsContext';
+import { useGameState } from '../../context/GameStateContext';
+import ReactDOM from 'react-dom';
 
 function Settings({ onCancel }) {
   const { isMobile } = useDeviceDetection();
   const [userData, setUserData] = useState(null);
   const [isLoadingUserData, setIsLoadingUserData] = useState(false);
   const [showUserDataModal, setShowUserDataModal] = useState(false);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [showWarningModal, setShowWarningModal] = useState(false);
+  const [pendingDifficulty, setPendingDifficulty] = useState(null);
+
   // Get settings directly from the context
   const { settings: currentSettings, updateSettings } = useSettings();
-
-  // Get game state to check if game has started
   const { hasGameStarted, correctlyGuessed } = useGameState();
 
   // Local state to track changes before saving
   const [settings, setSettings] = useState(currentSettings || {});
 
-  // State to track warning modal
-  const [showWarningModal, setShowWarningModal] = useState(false);
-  const [pendingDifficulty, setPendingDifficulty] = useState(null);
-
   // State to track whether gameplay has started (made at least one guess)
   const hasStartedPlaying = hasGameStarted && correctlyGuessed.length > 0;
 
-  // Add debugging to see what's happening
-  console.log(
-    "Settings component rendered with currentSettings:",
-    currentSettings,
-    "hasGameStarted:",
-    hasGameStarted,
-    "correctlyGuessed:",
-    correctlyGuessed,
-    "hasStartedPlaying:",
-    hasStartedPlaying,
-  );
-
   useEffect(() => {
-    // Update local state when context settings change
-    console.log(
-      "Settings useEffect: currentSettings changed:",
-      currentSettings,
-    );
     if (currentSettings) {
       setSettings(currentSettings);
     }
   }, [currentSettings]);
 
-  const handleChange = (setting, value) => {
-    console.log(`Setting ${setting} changing to:`, value);
-
-    // Special handling for difficulty changes if game has started playing
-    if (setting === "difficulty" && hasStartedPlaying) {
-      console.log("Game in progress, showing difficulty change warning");
+  // Move all useCallback hooks to the top level
+  const handleChange = useCallback((setting, value) => {
+    if (setting === 'difficulty' && hasStartedPlaying) {
       setPendingDifficulty(value);
       setShowWarningModal(true);
       return;
     }
+    setSettings(prev => ({ ...prev, [setting]: value }));
+  }, [hasStartedPlaying]);
 
-    // For theme changes, also update textColor accordingly
-    if (setting === "theme") {
-      setSettings((prev) => {
-        const newSettings = {
-          ...prev,
-          [setting]: value,
-          // Auto-set textColor based on theme
-          textColor: value === "dark" ? "scifi-blue" : "default",
-        };
-        console.log("New settings after theme change:", newSettings);
-        return newSettings;
-      });
-    } else {
-      setSettings((prev) => {
-        const newSettings = {
-          ...prev,
-          [setting]: value,
-        };
-        console.log("New settings after change:", newSettings);
-        return newSettings;
-      });
+  const handleConfirmDifficultyChange = useCallback(() => {
+    if (pendingDifficulty) {
+      setSettings(prev => ({ ...prev, difficulty: pendingDifficulty }));
+      setShowWarningModal(false);
+      setPendingDifficulty(null);
     }
-  };
+  }, [pendingDifficulty]);
 
-  const handleSave = () => {
-    console.log("Saving settings directly to context:", settings);
-    // Make a complete copy of the settings to ensure all properties are included
-    const settingsToSave = { ...settings };
-    updateSettings(settingsToSave);
-    if (onCancel) onCancel();
-  };
-
-  // Handle confirming difficulty change when game has started
-  const handleConfirmDifficultyChange = () => {
-    console.log("Difficulty change confirmed, updating to:", pendingDifficulty);
-
-    // Update settings with the new difficulty
-    setSettings((prev) => ({
-      ...prev,
-      difficulty: pendingDifficulty,
-    }));
-
-    // Close the warning modal
+  const handleCancelDifficultyChange = useCallback(() => {
     setShowWarningModal(false);
     setPendingDifficulty(null);
-  };
+  }, []);
 
-  // Handle canceling difficulty change
-  const handleCancelDifficultyChange = () => {
-    console.log("Difficulty change canceled");
-    setShowWarningModal(false);
-    setPendingDifficulty(null);
-  };
+  const handleSave = useCallback(() => {
+    updateSettings(settings);
+    onCancel();
+  }, [settings, updateSettings, onCancel]);
 
-  if (!currentSettings) {
-    console.log("No current settings available, returning null");
-    return null;
-  }
-  // Add a function to fetch user data
   const fetchUserData = useCallback(async () => {
+    setIsLoadingUserData(true);
     try {
-      setIsLoadingUserData(true);
       const response = await apiService.api.get("/api/user-data");
       if (response.status === 200) {
         setUserData(response.data);
@@ -139,7 +74,6 @@ function Settings({ onCancel }) {
     }
   }, []);
 
-  // Add copy to clipboard function
   const copyDataToClipboard = useCallback(() => {
     if (!userData) return;
 
@@ -162,7 +96,6 @@ function Settings({ onCancel }) {
       });
   }, [userData]);
 
-  // Add download function
   const downloadUserData = useCallback(() => {
     if (!userData) return;
 
@@ -177,7 +110,12 @@ function Settings({ onCancel }) {
     link.click();
     document.body.removeChild(link);
   }, [userData]);
-  // Create portal to render the modal at the root level of the DOM
+
+
+  if (!currentSettings) {
+    return null;
+  }
+
   return ReactDOM.createPortal(
     <div className="about-overlay">
       <div
