@@ -1,0 +1,20 @@
+
+# Return 404 for common vulnerability scanning patterns
+/wp-admin/*        /404    404
+/wordpress/*       /404    404
+/*.php             /404    404
+/*.asp             /404    404
+/.env*             /404    404
+/.git*             /404    404
+/wp-content/*      /404    404
+/wp-includes/*     /404    404
+/xmlrpc.php        /404    404
+/administrator/*   /404    404
+/admin/*           /404    404
+/shell/*           /404    404
+/phpinfo.php       /404    404
+/phpmyadmin/*      /404    404
+/mysql/*           /404    404
+
+# Handle all other routes through React
+/*                 /index.html   200
