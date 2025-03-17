@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import useDeviceDetection from "../../hooks/useDeviceDetection";
 import { useSettings } from "../../context/SettingsContext";
 import { useGameState } from "../../context/GameStateContext";
+import {useAuth} from "../../context/AuthContext";
 import apiService from "../../services/apiService";
 import ReactDOM from "react-dom";
 
@@ -16,7 +17,10 @@ function Settings({ onCancel }) {
   const [pendingDifficulty, setPendingDifficulty] = useState(null);
   const [deleteEmail, setDeleteEmail] = useState("");
   const [deleteEmailError, setDeleteEmailError] = useState("");
-  const { user, logout, useAuth } = useAuth();
+  const authContext = useAuth();
+  const user = authContext?.user || null;
+  const logout =
+    authContext?.logout || (() => console.log("No logout function available"));
   // Get settings directly from the context
   const { settings: currentSettings, updateSettings } = useSettings();
   const { hasGameStarted, correctlyGuessed } = useGameState();
@@ -122,8 +126,16 @@ function Settings({ onCancel }) {
   }
   const handleDeleteAccount = useCallback(async () => {
     try {
+      // Check if we have a user object with email
+      if (!user || !user.email) {
+        setDeleteEmailError(
+          "Cannot verify user email. Please try logging in again.",
+        );
+        return;
+      }
+
       // First validate that email matches
-      if (!deleteEmail || deleteEmail !== user?.email) {
+      if (!deleteEmail || deleteEmail !== user.email) {
         setDeleteEmailError(
           "Please enter your correct email address to confirm deletion",
         );
@@ -140,9 +152,17 @@ function Settings({ onCancel }) {
         setShowDeleteConfirmation(false);
         onCancel();
 
-        // Log the user out
-        if (typeof logout === "function") {
-          await logout();
+        // Log the user out safely
+        try {
+          if (typeof logout === "function") {
+            await logout();
+          }
+        } catch (logoutError) {
+          console.error(
+            "Error during logout after account deletion:",
+            logoutError,
+          );
+          // Continue anyway - account is deleted on the server
         }
 
         // Show a success message
@@ -157,7 +177,7 @@ function Settings({ onCancel }) {
       console.error("Error deleting account:", error);
       alert("There was a problem deleting your account. Please try again.");
     }
-  }, [deleteEmail, user?.email, onCancel, logout]);
+  }, [deleteEmail, user, onCancel, logout]);
 
   return ReactDOM.createPortal(
     <div className="about-overlay">
