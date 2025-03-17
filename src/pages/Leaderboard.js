@@ -1,4 +1,4 @@
-// src/pages/Leaderboard.js - Fixed version with matrix loading animation
+// src/pages/Leaderboard.js - Fixed version with imported MatrixRainLoading
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import "../Styles/Leaderboard.css";
@@ -9,49 +9,12 @@ import HeaderControls from "../components/HeaderControls";
 import AccountButtonWrapper from "../components/AccountButtonWrapper";
 import { FiRefreshCw, FiArrowLeft } from "react-icons/fi";
 import leaderboardService from "../services/LeaderboardService";
+// Import the dedicated loading component - using correct path
+import LeaderboardLoading from "../components/LeaderboardLoading";
+// Try direct MatrixRainLoading import as a backup
 import MatrixRainLoading from "../components/effects/MatrixRainLoading";
 
-// LeaderboardLoading component
-const LeaderboardLoading = ({ type = "leaderboard" }) => {
-  const { settings } = useSettings();
-  const isDarkTheme = settings?.theme === "dark";
-
-  // Determine message based on type
-  const loadingMessage =
-    type === "personal"
-      ? "Loading your stats"
-      : type === "streaks"
-        ? "Loading streak data"
-        : "Loading leaderboard";
-
-  return (
-    <div
-      className={`leaderboard-loading ${isDarkTheme ? "dark-theme" : "light-theme"}`}
-    >
-      <h3 className="loading-title">
-        {loadingMessage}
-        <span className="loading-dots"></span>
-      </h3>
-
-      <div className="loading-animation leaderboard-loading-animation">
-        <MatrixRainLoading
-          active={true}
-          color={isDarkTheme ? "#4cc9f0" : "#00ff41"}
-          message={
-            type === "personal"
-              ? "Decrypting profile data..."
-              : "Decrypting leaderboard..."
-          }
-          width="100%"
-          height="100%"
-          density={30}
-        />
-      </div>
-    </div>
-  );
-};
-
-// LeaderboardError component
+// Define an inline error component as fallback in case the import isn't available
 const LeaderboardError = ({ message, retryFunction }) => {
   const { settings } = useSettings();
   const isDarkTheme = settings?.theme === "dark";
@@ -76,6 +39,73 @@ const LeaderboardError = ({ message, retryFunction }) => {
         If the problem persists, try refreshing the page or checking your
         internet connection.
       </p>
+    </div>
+  );
+};
+
+// Define a fallback loading component in case the import fails
+const FallbackLoadingComponent = ({ type = "leaderboard" }) => {
+  const { settings } = useSettings();
+  const isDarkTheme = settings?.theme === "dark";
+
+  // Determine message based on type
+  const loadingMessage =
+    type === "personal"
+      ? "Loading your stats..."
+      : type === "streaks"
+        ? "Loading streak data..."
+        : "Loading leaderboard...";
+
+  return (
+    <div
+      className={`leaderboard-loading ${isDarkTheme ? "dark-theme" : "light-theme"}`}
+      style={{
+        width: "100%",
+        textAlign: "center",
+        padding: "30px 0",
+        minHeight: "200px",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      <h3
+        style={{
+          marginBottom: "20px",
+          color: isDarkTheme ? "#4cc9f0" : "#007bff",
+        }}
+      >
+        {loadingMessage}
+        <span style={{ animation: "loading-dots 1.5s infinite" }}></span>
+      </h3>
+
+      {MatrixRainLoading && (
+        <div
+          style={{
+            width: "90%",
+            maxWidth: "700px",
+            height: "200px",
+            margin: "0 auto",
+            borderRadius: "10px",
+            overflow: "hidden",
+            boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)",
+          }}
+        >
+          <MatrixRainLoading
+            active={true}
+            color={isDarkTheme ? "#4cc9f0" : "#00ff41"}
+            message={
+              type === "personal"
+                ? "Decrypting profile data..."
+                : "Decrypting leaderboard..."
+            }
+            width="100%"
+            height="100%"
+            density={30}
+          />
+        </div>
+      )}
     </div>
   );
 };
@@ -606,8 +636,20 @@ const Leaderboard = ({ onClose }) => {
     );
   };
 
-  // MOVED INSIDE: renderPersonalStats function
+  // Personal stats rendering function
   const renderPersonalStats = () => {
+    // Safety check - don't proceed if personalStats is null or undefined
+    if (!personalStats) {
+      return (
+        <div className="no-data">
+          <p>No stats data available.</p>
+          <button onClick={handleRefreshPersonalStats} className="retry-button">
+            Refresh Stats
+          </button>
+        </div>
+      );
+    }
+
     // Format date for display
     const formatDate = (dateString) => {
       if (!dateString) return "Never";
@@ -640,18 +682,39 @@ const Leaderboard = ({ onClose }) => {
           <div className="stat-card">
             <h3>Total Score</h3>
             <div className="stat-value">
-              {personalStats.cumulative_score?.toLocaleString() || 0}
+              {(personalStats.cumulative_score || 0).toLocaleString()}
             </div>
           </div>
           <div className="stat-card">
             <h3>Weekly Score</h3>
             <div className="stat-value">
-              {personalStats.weekly_stats?.score?.toLocaleString() || 0}
+              {(
+                (personalStats.weekly_stats &&
+                  personalStats.weekly_stats.score) ||
+                0
+              ).toLocaleString()}
             </div>
           </div>
           <div className="stat-card">
             <h3>Games Played</h3>
             <div className="stat-value">
+              {personalStats.total_games_played || 0}
+            </div>
+          </div>
+          <div className="stat-card">
+            <h3>Win %</h3>
+            <div className="stat-value">
+              {personalStats.total_games_played > 0
+                ? Math.round(
+                    ((personalStats.games_won || 0) /
+                      personalStats.total_games_played) *
+                      100,
+                  )
+                : 0}
+              %
+            </div>
+            <div className="stat-subtitle">
+              {personalStats.games_won || 0} /{" "}
               {personalStats.total_games_played || 0}
             </div>
           </div>
@@ -736,12 +799,12 @@ const Leaderboard = ({ onClose }) => {
     );
   };
 
-  // MOVED INSIDE: renderPersonalLeaderboard function
+  // Render personal leaderboard content
   const renderPersonalLeaderboard = () => {
     return renderPersonalStats();
   };
 
-  // MOVED INSIDE: renderStreakLeaderboard function
+  // Render streak leaderboard content
   const renderStreakLeaderboard = () => {
     console.log("renderStreakLeaderboard called with data:", streakData);
 
@@ -915,20 +978,63 @@ const Leaderboard = ({ onClose }) => {
       {/* Add HeaderControls at the top */}
       <HeaderControls hideTitle={true} hideAbout={true} hideSettings={true} />
       <h2>Leaderboard</h2>
+
       {/* New tabs container with Back button on the left and Account button on right */}
       {renderTabs()}
+
+      {/* Main content area - show loading states appropriately */}
       {activeTab === "all-time" || activeTab === "weekly" ? (
         isLoading ? (
-          <div className="loading">Loading...</div>
+          typeof LeaderboardLoading === "function" ? (
+            <LeaderboardLoading type="leaderboard" />
+          ) : (
+            <FallbackLoadingComponent type="leaderboard" />
+          )
         ) : error ? (
-          <div className="error">{error}</div>
+          <LeaderboardError
+            message={error}
+            retryFunction={fetchLeaderboardData}
+          />
         ) : (
           renderLeaderboardTable()
         )
       ) : activeTab === "personal" ? (
-        renderPersonalLeaderboard()
+        isPersonalLoading ? (
+          typeof LeaderboardLoading === "function" ? (
+            <LeaderboardLoading type="personal" />
+          ) : (
+            <FallbackLoadingComponent type="personal" />
+          )
+        ) : personalError ? (
+          <LeaderboardError
+            message={personalError}
+            retryFunction={handleRefreshPersonalStats}
+          />
+        ) : !personalStats ? (
+          <div className="personal-stats-login-required">
+            <p>Please log in to view your stats</p>
+            <button onClick={openLogin} className="login-button">
+              Login
+            </button>
+          </div>
+        ) : (
+          renderPersonalLeaderboard()
+        )
       ) : activeTab === "streaks" ? (
-        renderStreakLeaderboard()
+        isStreakLoading ? (
+          typeof LeaderboardLoading === "function" ? (
+            <LeaderboardLoading type="streaks" />
+          ) : (
+            <FallbackLoadingComponent type="streaks" />
+          )
+        ) : streakError ? (
+          <LeaderboardError
+            message={streakError}
+            retryFunction={fetchStreakData}
+          />
+        ) : (
+          renderStreakLeaderboard()
+        )
       ) : null}
     </div>
   );
