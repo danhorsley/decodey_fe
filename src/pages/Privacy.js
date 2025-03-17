@@ -117,25 +117,27 @@ const Privacy = () => {
           <h3>Your Rights</h3>
           <p>You have the right to:</p>
           <ul>
-            <li>Access your personal data</li>
-            <li>Request deletion of your account and associated data</li>
+            <li>
+              <strong>Access your personal data</strong> - You can download all
+              your data from the Settings menu
+            </li>
+            <li>
+              <strong>
+                Request deletion of your account and associated data
+              </strong>{" "}
+              - Available through the Settings menu
+            </li>
             <li>Opt out of non-essential communications</li>
           </ul>
-        </section>
-
-        <section className="privacy-section">
-          <h3>Contact Us</h3>
           <p>
-            If you have questions about this privacy policy or your data, please
-            contact us at:
-            <a href="mailto:support@uncryptgame.com" className="privacy-email">
-              support@uncryptgame.com
-            </a>
+            These options are accessible directly from your account settings,
+            allowing you to exercise your GDPR rights without needing to contact
+            us.
           </p>
         </section>
 
         <div className="privacy-footer">
-          <p>Last updated: March 10, 2025</p>
+          <p>Last updated: March 17, 2025</p>
           <button className="return-button" onClick={() => navigate("/")}>
             Return to Game
           </button>

@@ -6,9 +6,14 @@ import "../../Styles/About.css";
 import { useSettings } from "../../context/SettingsContext";
 import { useGameState } from "../../context/GameStateContext";
 import useDeviceDetection from "../../hooks/useDeviceDetection";
+import { useAuth } from "../../context/AuthContext";
+import apiService from "../../services/apiService";
 
 function Settings({ onCancel }) {
   const { isMobile } = useDeviceDetection();
+  const [userData, setUserData] = useState(null);
+  const [isLoadingUserData, setIsLoadingUserData] = useState(false);
+  const [showUserDataModal, setShowUserDataModal] = useState(false);
   // Get settings directly from the context
   const { settings: currentSettings, updateSettings } = useSettings();
 
@@ -117,7 +122,61 @@ function Settings({ onCancel }) {
     console.log("No current settings available, returning null");
     return null;
   }
+  // Add a function to fetch user data
+  const fetchUserData = useCallback(async () => {
+    try {
+      setIsLoadingUserData(true);
+      const response = await apiService.api.get("/api/user-data");
+      if (response.status === 200) {
+        setUserData(response.data);
+        setShowUserDataModal(true);
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      alert("There was a problem retrieving your data. Please try again.");
+    } finally {
+      setIsLoadingUserData(false);
+    }
+  }, []);
 
+  // Add copy to clipboard function
+  const copyDataToClipboard = useCallback(() => {
+    if (!userData) return;
+
+    const dataStr = JSON.stringify(userData, null, 2);
+    navigator.clipboard
+      .writeText(dataStr)
+      .then(() => {
+        alert("Data copied to clipboard!");
+      })
+      .catch((err) => {
+        console.error("Failed to copy data:", err);
+        // Fallback method for older browsers
+        const textArea = document.createElement("textarea");
+        textArea.value = dataStr;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+        alert("Data copied to clipboard!");
+      });
+  }, [userData]);
+
+  // Add download function
+  const downloadUserData = useCallback(() => {
+    if (!userData) return;
+
+    const dataStr = JSON.stringify(userData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(dataBlob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "my-uncrypt-data.json";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }, [userData]);
   // Create portal to render the modal at the root level of the DOM
   return ReactDOM.createPortal(
     <div className="about-overlay">
@@ -363,7 +422,100 @@ function Settings({ onCancel }) {
               )}
             </div>
           </div>
+          <div className="settings-section">
+            <h2>Account Management</h2>
+            <div className="settings-options">
+              <button
+                className="settings-button save"
+                style={{
+                  backgroundColor: "#007bff",
+                  marginBottom: "15px",
+                  width: "100%",
+                }}
+                onClick={fetchUserData}
+                disabled={isLoadingUserData}
+              >
+                {isLoadingUserData ? "Loading..." : "Download My Data"}
+              </button>
+              <p className="settings-description">
+                View and download all data associated with your account.
+              </p>
 
+              <button
+                className="settings-button cancel"
+                style={{
+                  backgroundColor: "#dc3545",
+                  color: "white",
+                  marginTop: "15px",
+                  width: "100%",
+                }}
+                onClick={() => setShowDeleteConfirmation(true)}
+              >
+                Delete My Account
+              </button>
+              <p className="settings-description warning-text">
+                This will permanently delete your account and all associated
+                data. This action cannot be undone.
+              </p>
+            </div>
+          </div>
+
+          {/* User Data Modal */}
+          {showUserDataModal && userData && (
+            <div className="about-overlay" style={{ zIndex: 10001 }}>
+              <div
+                className={`about-container ${settings.theme === "dark" ? "dark-theme" : ""}`}
+                style={{ maxWidth: "700px", maxHeight: "80vh" }}
+              >
+                <h2>Your Data</h2>
+                <p>
+                  This is all the data we store about your account. You can copy
+                  it or download it as a JSON file.
+                </p>
+
+                <div
+                  style={{
+                    maxHeight: "50vh",
+                    overflow: "auto",
+                    backgroundColor:
+                      settings.theme === "dark" ? "#222" : "#f5f5f5",
+                    padding: "10px",
+                    borderRadius: "4px",
+                    marginBottom: "15px",
+                    fontFamily: "monospace",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  <pre>{JSON.stringify(userData, null, 2)}</pre>
+                </div>
+
+                <div
+                  style={{ display: "flex", justifyContent: "space-between" }}
+                >
+                  <button
+                    className="settings-button save"
+                    onClick={copyDataToClipboard}
+                    style={{ marginRight: "10px" }}
+                  >
+                    Copy to Clipboard
+                  </button>
+                  <button
+                    className="settings-button save"
+                    onClick={downloadUserData}
+                  >
+                    Download as JSON
+                  </button>
+                  <button
+                    className="settings-button cancel"
+                    onClick={() => setShowUserDataModal(false)}
+                    style={{ marginLeft: "10px" }}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
           {/* Action Buttons */}
           <div className="settings-actions">
             <button className="settings-button cancel" onClick={onCancel}>
