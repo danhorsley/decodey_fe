@@ -14,7 +14,9 @@ function Settings({ onCancel }) {
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [showWarningModal, setShowWarningModal] = useState(false);
   const [pendingDifficulty, setPendingDifficulty] = useState(null);
-
+  const [deleteEmail, setDeleteEmail] = useState("");
+  const [deleteEmailError, setDeleteEmailError] = useState("");
+  const { user, logout, useAuth } = useAuth();
   // Get settings directly from the context
   const { settings: currentSettings, updateSettings } = useSettings();
   const { hasGameStarted, correctlyGuessed } = useGameState();
@@ -118,6 +120,44 @@ function Settings({ onCancel }) {
   if (!currentSettings) {
     return null;
   }
+  const handleDeleteAccount = useCallback(async () => {
+    try {
+      // First validate that email matches
+      if (!deleteEmail || deleteEmail !== user?.email) {
+        setDeleteEmailError(
+          "Please enter your correct email address to confirm deletion",
+        );
+        return;
+      }
+
+      setDeleteEmailError(""); // Clear any previous errors
+
+      // Call the API to delete the account
+      const response = await apiService.api.delete("/api/delete-account");
+
+      if (response.status === 200) {
+        // Close settings and confirmation
+        setShowDeleteConfirmation(false);
+        onCancel();
+
+        // Log the user out
+        if (typeof logout === "function") {
+          await logout();
+        }
+
+        // Show a success message
+        alert("Your account has been deleted successfully.");
+
+        // Redirect to home/login page
+        window.location.href = "/";
+      } else {
+        alert("There was a problem deleting your account. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      alert("There was a problem deleting your account. Please try again.");
+    }
+  }, [deleteEmail, user?.email, onCancel, logout]);
 
   return ReactDOM.createPortal(
     <div className="about-overlay">
@@ -478,7 +518,87 @@ function Settings({ onCancel }) {
           </div>
         </div>
       </div>
+      {/* Update the confirmation dialog */}
+      {showDeleteConfirmation && (
+        <div className="about-overlay" style={{ zIndex: 10001 }}>
+          <div
+            className={`about-container ${settings.theme === "dark" ? "dark-theme" : ""}`}
+            style={{ maxWidth: "400px" }}
+          >
+            <h2>Delete Account</h2>
+            <p>
+              Are you sure you want to delete your account? This will
+              permanently remove:
+            </p>
+            <ul style={{ textAlign: "left", marginBottom: "20px" }}>
+              <li>Your account information</li>
+              <li>All your game history and statistics</li>
+              <li>Your position on leaderboards</li>
+            </ul>
 
+            <div style={{ marginBottom: "20px" }}>
+              <p style={{ marginBottom: "10px" }}>
+                To confirm, please enter your email address:
+              </p>
+              <input
+                type="email"
+                value={deleteEmail}
+                onChange={(e) => setDeleteEmail(e.target.value)}
+                placeholder="Enter your email"
+                style={{
+                  width: "100%",
+                  padding: "8px",
+                  borderRadius: "4px",
+                  border: "1px solid #ccc",
+                  backgroundColor: settings.theme === "dark" ? "#333" : "#fff",
+                  color: settings.theme === "dark" ? "#fff" : "#333",
+                }}
+              />
+              {deleteEmailError && (
+                <p
+                  style={{
+                    color: "red",
+                    fontSize: "0.9rem",
+                    marginTop: "5px",
+                  }}
+                >
+                  {deleteEmailError}
+                </p>
+              )}
+            </div>
+
+            <p>
+              This action <strong>cannot be undone</strong>.
+            </p>
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginTop: "20px",
+              }}
+            >
+              <button
+                className="settings-button cancel"
+                onClick={() => {
+                  setShowDeleteConfirmation(false);
+                  setDeleteEmail("");
+                  setDeleteEmailError("");
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                className="settings-button save"
+                style={{ backgroundColor: "#dc3545" }}
+                onClick={handleDeleteAccount}
+              >
+                Delete Account
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Difficulty Change Warning Modal */}
       {showWarningModal && (
         <div className="about-overlay" style={{ zIndex: 10000 }}>
