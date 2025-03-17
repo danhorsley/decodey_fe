@@ -1,9 +1,10 @@
 // src/components/modals/Settings.js
-import React, { useState, useEffect, useCallback } from 'react';
-import { useDeviceDetection } from '../../hooks/useDeviceDetection';
-import { useSettings } from '../../context/SettingsContext';
-import { useGameState } from '../../context/GameStateContext';
-import ReactDOM from 'react-dom';
+import React, { useState, useEffect, useCallback } from "react";
+import useDeviceDetection from "../../hooks/useDeviceDetection";
+import { useSettings } from "../../context/SettingsContext";
+import { useGameState } from "../../context/GameStateContext";
+import apiService from "../../services/apiService";
+import ReactDOM from "react-dom";
 
 function Settings({ onCancel }) {
   const { isMobile } = useDeviceDetection();
@@ -31,18 +32,21 @@ function Settings({ onCancel }) {
   }, [currentSettings]);
 
   // Move all useCallback hooks to the top level
-  const handleChange = useCallback((setting, value) => {
-    if (setting === 'difficulty' && hasStartedPlaying) {
-      setPendingDifficulty(value);
-      setShowWarningModal(true);
-      return;
-    }
-    setSettings(prev => ({ ...prev, [setting]: value }));
-  }, [hasStartedPlaying]);
+  const handleChange = useCallback(
+    (setting, value) => {
+      if (setting === "difficulty" && hasStartedPlaying) {
+        setPendingDifficulty(value);
+        setShowWarningModal(true);
+        return;
+      }
+      setSettings((prev) => ({ ...prev, [setting]: value }));
+    },
+    [hasStartedPlaying],
+  );
 
   const handleConfirmDifficultyChange = useCallback(() => {
     if (pendingDifficulty) {
-      setSettings(prev => ({ ...prev, difficulty: pendingDifficulty }));
+      setSettings((prev) => ({ ...prev, difficulty: pendingDifficulty }));
       setShowWarningModal(false);
       setPendingDifficulty(null);
     }
@@ -110,7 +114,6 @@ function Settings({ onCancel }) {
     link.click();
     document.body.removeChild(link);
   }, [userData]);
-
 
   if (!currentSettings) {
     return null;
@@ -398,12 +401,16 @@ function Settings({ onCancel }) {
             </div>
           </div>
 
-          {/* User Data Modal */}
+          {/* User Data Modal - Adjusted width to fit within settings modal */}
           {showUserDataModal && userData && (
             <div className="about-overlay" style={{ zIndex: 10001 }}>
               <div
                 className={`about-container ${settings.theme === "dark" ? "dark-theme" : ""}`}
-                style={{ maxWidth: "700px", maxHeight: "80vh" }}
+                style={{
+                  maxWidth: "450px", // Reduced width to fit within settings modal
+                  maxHeight: "80vh",
+                  width: "90%", // Ensure it's responsive on smaller screens
+                }}
               >
                 <h2>Your Data</h2>
                 <p>
@@ -413,7 +420,7 @@ function Settings({ onCancel }) {
 
                 <div
                   style={{
-                    maxHeight: "50vh",
+                    maxHeight: "40vh", // Slightly smaller height
                     overflow: "auto",
                     backgroundColor:
                       settings.theme === "dark" ? "#222" : "#f5f5f5",
@@ -421,32 +428,38 @@ function Settings({ onCancel }) {
                     borderRadius: "4px",
                     marginBottom: "15px",
                     fontFamily: "monospace",
-                    fontSize: "0.9rem",
+                    fontSize: "0.85rem", // Slightly smaller font
                   }}
                 >
                   <pre>{JSON.stringify(userData, null, 2)}</pre>
                 </div>
 
                 <div
-                  style={{ display: "flex", justifyContent: "space-between" }}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    flexWrap: "wrap", // Allow buttons to wrap on narrow screens
+                    gap: "8px", // Add gap between buttons when they wrap
+                  }}
                 >
                   <button
                     className="settings-button save"
                     onClick={copyDataToClipboard}
-                    style={{ marginRight: "10px" }}
+                    style={{ flex: "1", minWidth: "120px" }}
                   >
                     Copy to Clipboard
                   </button>
                   <button
                     className="settings-button save"
                     onClick={downloadUserData}
+                    style={{ flex: "1", minWidth: "120px" }}
                   >
-                    Download as JSON
+                    Download JSON
                   </button>
                   <button
                     className="settings-button cancel"
                     onClick={() => setShowUserDataModal(false)}
-                    style={{ marginLeft: "10px" }}
+                    style={{ flex: "1", minWidth: "120px" }}
                   >
                     Close
                   </button>
