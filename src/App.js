@@ -16,6 +16,7 @@ import AccountButtonWrapper from "./components/AccountButtonWrapper";
 import ServiceWorkerUpdater from "./components/ServiceWorkerUpdater";
 import OfflineDetector from "./components/OfflineDetector";
 import ErrorBoundary from "./components/ErrorBoundary";
+import NotFound from "./pages/NotFound";
 
 // Lazy load components for code splitting
 const Game = lazy(() => import("./pages/Game"));
@@ -62,7 +63,7 @@ function App() {
             <Route path="/leaderboard" element={<Leaderboard />} />
             {/* <Route path="/wctest" element={<WinCelebrationTest />} /> */}
             <Route path="/privacy" element={<Privacy />} />
-            <Route path="*" element={<Navigate to="/" />} />
+            <Route path="*" element={<NotFound />} />
             <Route
               path="/"
               element={
