@@ -10,7 +10,11 @@ function AccountButtonWrapper() {
   const settings = useSettingsStore((state) => state.settings);
 
   // Get auth state directly from context
-  const { isAuthenticated, user, logout } = useAuthStore((state) => state.user);
+  const { isAuthenticated, user, logout } = useAuthStore((state) => ({
+    isAuthenticated: state.isAuthenticated,
+    user: state.user,
+    logout: state.logout
+  }));
 
   // Get modal functions directly from context
   const { openLogin } = useUIStore((state) => state.openLogin);
