@@ -1,323 +1,230 @@
 // src/components/modals/ModalManager.js
-import React, { useState, useCallback, useContext, useEffect } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import About from "./About";
 import Settings from "./Settings";
 import Login from "../../pages/Login";
 import Signup from "../../pages/Signup";
 import ContinueGamePrompt from "./ContinueGamePrompt";
 import apiService from "../../services/apiService";
-import { useGameState } from "../../context/GameStateContext";
-import { useSettings } from "../../context/SettingsContext";
+import useGameStore from "../../stores/gameStore";
+import useUIStore from "../../stores/uiStore";
+import useSettingsStore from "../../stores/settingsStore";
 
-// Create a modal context
-const ModalContext = React.createContext({
-  openAbout: () => {},
-  closeAbout: () => {},
-  openLogin: () => {},
-  closeLogin: () => {},
-  openSignup: () => {},
-  closeSignup: () => {},
-  openSettings: () => {},
-  closeSettings: () => {},
-  openContinueGamePrompt: () => {},
-  closeContinueGamePrompt: () => {},
-  isAboutOpen: false,
-  isLoginOpen: false,
-  isSignupOpen: false,
-  isSettingsOpen: false,
-  isContinueGameOpen: false,
-});
-
-// Export hook to use modal context
-export const useModalContext = () => {
-  const context = useContext(ModalContext);
-  if (!context) {
-    console.warn("useModalContext must be used within a ModalProvider!");
-    // Return a default object to prevent app crashes
-    return {
-      openAbout: () => console.warn("Modal context not available"),
-      closeAbout: () => console.warn("Modal context not available"),
-      openLogin: () => console.warn("Modal context not available"),
-      closeLogin: () => console.warn("Modal context not available"),
-      openSignup: () => console.warn("Modal context not available"),
-      closeSignup: () => console.warn("Modal context not available"),
-      openSettings: () => console.warn("Modal context not available"),
-      closeSettings: () => console.warn("Modal context not available"),
-      openContinueGamePrompt: () => console.warn("Modal context not available"),
-      closeContinueGamePrompt: () =>
-        console.warn("Modal context not available"),
-      isAboutOpen: false,
-      isLoginOpen: false,
-      isSignupOpen: false,
-      isSettingsOpen: false,
-      isContinueGameOpen: false,
-    };
-  }
-  return context;
-};
-
-// Modal manager component
+/**
+ * ModalManager component - handles rendering of all application modals
+ * Now using Zustand with improved error handling
+ */
 const ModalManager = ({ children }) => {
-  // Modal states
-  const [isAboutOpen, setIsAboutOpen] = useState(false);
-  const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const [isSignupOpen, setIsSignupOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isContinueGameOpen, setIsContinueGameOpen] = useState(false);
-  const [activeGameStats, setActiveGameStats] = useState(null);
+  // Use individual selectors instead of destructuring to reduce re-renders
+  // and make it easier to debug which property might be causing issues
+  const isAboutOpen = useUIStore((state) => state.isAboutOpen);
+  const isLoginOpen = useUIStore((state) => state.isLoginOpen);
+  const isSignupOpen = useUIStore((state) => state.isSignupOpen);
+  const isSettingsOpen = useUIStore((state) => state.isSettingsOpen);
+  const isContinueGameOpen = useUIStore((state) => state.isContinueGameOpen);
+  const activeGameStats = useUIStore((state) => state.activeGameStats);
 
-  // Get required functions from contexts
-  const { settings } = useSettings();
-  const { startGame, continueSavedGame } = useGameState();
+  // Get modal actions
+  const openContinueGamePrompt = useUIStore(
+    (state) => state.openContinueGamePrompt,
+  );
+  const closeContinueGamePrompt = useUIStore(
+    (state) => state.closeContinueGamePrompt,
+  );
+  const closeAbout = useUIStore((state) => state.closeAbout);
+  const closeLogin = useUIStore((state) => state.closeLogin);
+  const closeSignup = useUIStore((state) => state.closeSignup);
+  const closeSettings = useUIStore((state) => state.closeSettings);
 
-  // Modal functions
-  const openAbout = useCallback(() => {
-    setIsAboutOpen(true);
-  }, []);
+  // Get settings for game handling
+  const settings = useSettingsStore((state) => state.settings);
 
-  const closeAbout = useCallback(() => {
-    setIsAboutOpen(false);
-  }, []);
+  // Get game functions
+  const continueSavedGame = useGameStore((state) => state.continueSavedGame);
+  const resetAndStartNewGame = useGameStore(
+    (state) => state.resetAndStartNewGame,
+  );
 
-  const openLogin = useCallback(() => {
-    setIsSignupOpen(false); // Close signup if open
-    setIsLoginOpen(true);
-  }, []);
-
-  const closeLogin = useCallback(() => {
-    setIsLoginOpen(false);
-  }, []);
-
-  const openSignup = useCallback(() => {
-    setIsLoginOpen(false); // Close login if open
-    setIsSignupOpen(true);
-  }, []);
-
-  const closeSignup = useCallback(() => {
-    setIsSignupOpen(false);
-  }, []);
-
-  const openSettings = useCallback(() => {
-    setIsSettingsOpen(true);
-  }, []);
-
-  const closeSettings = useCallback(() => {
-    setIsSettingsOpen(false);
-  }, []);
-
-  // Continue game modal functions
-  const openContinueGamePrompt = useCallback((gameStats) => {
-    console.log("Opening continue game prompt with stats:", gameStats);
-    setActiveGameStats(gameStats);
-    setIsContinueGameOpen(true);
-  }, []);
-
-  const closeContinueGamePrompt = useCallback(() => {
-    setIsContinueGameOpen(false);
-    setActiveGameStats(null);
-  }, []);
-
-  // Game action handlers
+  // Handle continue game action
   const handleContinueGame = useCallback(() => {
-    if (typeof continueSavedGame === "function") {
-      console.log("Continuing saved game...");
-      continueSavedGame();
-    } else {
-      console.error("continueSavedGame is not a function");
+    console.log("Continue game clicked");
+
+    try {
+      if (typeof continueSavedGame === "function") {
+        console.log("Continuing saved game...");
+        continueSavedGame();
+      } else {
+        console.error("continueSavedGame is not a function", continueSavedGame);
+      }
+
+      // Always close the modal whether or not the action succeeded
+      if (typeof closeContinueGamePrompt === "function") {
+        closeContinueGamePrompt();
+      }
+    } catch (error) {
+      console.error("Error in handleContinueGame:", error);
+      // Still close the modal on error
+      if (typeof closeContinueGamePrompt === "function") {
+        closeContinueGamePrompt();
+      }
     }
-    closeContinueGamePrompt();
   }, [continueSavedGame, closeContinueGamePrompt]);
 
+  // Handle new game action
   const handleNewGame = useCallback(() => {
-    // First, abandon the current active game
-    const abandonActiveGame = async () => {
-      try {
-        console.log("Abandoning current active game...");
-        // Call the abandon-game endpoint
-        await apiService.api.delete("/api/abandon-game");
-        console.log("Active game abandoned successfully");
+    console.log("New game clicked");
 
-        // Then start a new game
-        if (typeof startGame === "function") {
+    const startNewGame = async () => {
+      try {
+        console.log("Abandoning current game and starting new game...");
+
+        // First try to abandon any existing game
+        try {
+          await apiService.api.delete("/api/abandon-game");
+          console.log("Active game abandoned successfully");
+        } catch (err) {
+          console.warn("Error abandoning game, continuing with new game:", err);
+        }
+
+        // Start a new game
+        if (typeof resetAndStartNewGame === "function") {
           console.log("Starting new game...");
-          // Get current settings
+
+          // Safely get settings
           const longText = settings?.longText === true;
           const hardcoreMode = settings?.hardcoreMode === true;
 
-          // Start a new game
-          startGame(longText, hardcoreMode);
+          // Start the new game
+          resetAndStartNewGame(longText, hardcoreMode);
         } else {
-          console.error("startGame is not a function");
-        }
-      } catch (error) {
-        console.error("Error abandoning active game:", error);
-        // Even if abandoning fails, try to start a new game
-        if (typeof startGame === "function") {
-          startGame(
-            settings?.longText === true,
-            settings?.hardcoreMode === true,
+          console.error(
+            "resetAndStartNewGame is not a function",
+            resetAndStartNewGame,
           );
         }
+      } catch (error) {
+        console.error("Error starting new game:", error);
+      } finally {
+        // Always close the modal
+        if (typeof closeContinueGamePrompt === "function") {
+          closeContinueGamePrompt();
+        }
       }
-
-      // Close the modal regardless
-      closeContinueGamePrompt();
     };
 
     // Call the function
-    abandonActiveGame();
-  }, [startGame, closeContinueGamePrompt, settings]);
+    startNewGame();
+  }, [resetAndStartNewGame, settings, closeContinueGamePrompt]);
 
   // Listen for active game detected events
   useEffect(() => {
-    const activeGameSubscription = apiService.on(
-      "auth:active-game-detected",
-      (data) => {
-        console.log("Active game detected event received:", data);
-        if (data.hasActiveGame) {
-          openContinueGamePrompt(data.activeGameStats);
-        }
-      },
-    );
+    let activeGameSubscription;
 
-    return () => {
-      activeGameSubscription();
-    };
-  }, [openContinueGamePrompt]);
-  //debug for active game
-  useEffect(() => {
-    const checkActiveGameSubscription = apiService.on(
-      "auth:active-game-check-needed",
-      async () => {
-        try {
-          console.log(
-            "🔍 ModalManager: Active game check needed event received",
-          );
-
-          // FIX: Use the correct API path - it should match the backend route
-          // Change from: "/check-active-game" to "/api/check-active-game"
-          console.log("Making API call to /api/check-active-game");
-          const response = await apiService.api.get("/api/check-active-game");
-
-          console.log("✅ API response received:", response.data);
-
-          if (response.data && response.data.has_active_game) {
-            console.log(
-              "📣 Emitting active-game-detected event with stats:",
-              response.data.game_stats,
-            );
-            apiService.events.emit("auth:active-game-detected", {
-              hasActiveGame: true,
-              activeGameStats: response.data.game_stats,
-            });
-          } else {
-            console.log("❌ No active game found in response:", response.data);
-          }
-        } catch (error) {
-          console.error("🔥 Error checking for active game:", error);
-        }
-      },
-    );
-
-    const activeGameSubscription = apiService.on(
-      "auth:active-game-detected",
-      (data) => {
-        console.log(
-          "🎮 ModalManager: Active game detected event received:",
-          data,
+    try {
+      if (typeof openContinueGamePrompt === "function") {
+        activeGameSubscription = apiService.on(
+          "auth:active-game-detected",
+          (data) => {
+            console.log("Active game detected event received:", data);
+            if (data && data.hasActiveGame) {
+              openContinueGamePrompt(data.activeGameStats);
+            }
+          },
         );
-        if (data.hasActiveGame) {
-          console.log(
-            "🔔 Opening continue game prompt with stats:",
-            data.activeGameStats,
-          );
-          openContinueGamePrompt(data.activeGameStats);
-        }
-      },
-    );
+      }
+    } catch (error) {
+      console.error("Error setting up active game subscription:", error);
+    }
 
     return () => {
-      console.log("Cleaning up ModalManager event listeners");
-      checkActiveGameSubscription();
-      activeGameSubscription();
+      if (activeGameSubscription) {
+        activeGameSubscription();
+      }
     };
   }, [openContinueGamePrompt]);
-  // Check for active game when needed (separate from login)
-  useEffect(() => {
-    const checkActiveGameSubscription = apiService.on(
-      "auth:active-game-check-needed",
-      async () => {
-        try {
-          console.log("Checking for active game details...");
-          const response = await apiService.api.get("/check-active-game");
 
-          if (response.data && response.data.has_active_game) {
-            console.log(
-              "Active game found with stats:",
-              response.data.game_stats,
-            );
-            apiService.events.emit("auth:active-game-detected", {
-              hasActiveGame: true,
-              activeGameStats: response.data.game_stats,
-            });
-          } else {
-            console.log(
-              "No active game found or incomplete response:",
-              response.data,
-            );
+  // Check for active game when needed
+  useEffect(() => {
+    let checkActiveGameSubscription;
+
+    try {
+      checkActiveGameSubscription = apiService.on(
+        "auth:active-game-check-needed",
+        async () => {
+          try {
+            console.log("Checking for active game details...");
+            const response = await apiService.api.get("/api/check-active-game");
+
+            if (response && response.data && response.data.has_active_game) {
+              console.log(
+                "Active game found with stats:",
+                response.data.game_stats,
+              );
+              apiService.events.emit("auth:active-game-detected", {
+                hasActiveGame: true,
+                activeGameStats: response.data.game_stats,
+              });
+            } else {
+              console.log("No active game found or incomplete response");
+            }
+          } catch (error) {
+            console.error("Error checking for active game:", error);
           }
-        } catch (error) {
-          console.error("Error checking for active game:", error);
-        }
-      },
-    );
+        },
+      );
+    } catch (error) {
+      console.error("Error setting up active game check subscription:", error);
+    }
 
     return () => {
-      checkActiveGameSubscription();
+      if (checkActiveGameSubscription) {
+        checkActiveGameSubscription();
+      }
     };
   }, []);
 
-  // Context value - include state flags for checking in components
-  const contextValue = {
-    // Functions
-    openAbout,
-    closeAbout,
-    openLogin,
-    closeLogin,
-    openSignup,
-    closeSignup,
-    openSettings,
-    closeSettings,
-    openContinueGamePrompt,
-    closeContinueGamePrompt,
-
-    // State flags
+  // Logging to help troubleshoot
+  useEffect(() => {
+    console.log("ModalManager rendered with state:", {
+      isAboutOpen,
+      isLoginOpen,
+      isSignupOpen,
+      isSettingsOpen,
+      isContinueGameOpen,
+    });
+  }, [
     isAboutOpen,
     isLoginOpen,
     isSignupOpen,
     isSettingsOpen,
     isContinueGameOpen,
+  ]);
 
-    // Also add these aliases to support both naming conventions
-    showAbout: openAbout,
-    showLogin: openLogin,
-    showSignup: openSignup,
-    showSettings: openSettings,
-    showContinueGamePrompt: openContinueGamePrompt,
-  };
-
+  // Defensively render modals only when we have both the state and the close function
   return (
-    <ModalContext.Provider value={contextValue}>
-      {/* Only render each modal when its state is true */}
-      {isAboutOpen && <About isOpen={true} onClose={closeAbout} />}
-      {isLoginOpen && <Login onClose={closeLogin} />}
-      {isSignupOpen && <Signup onClose={closeSignup} />}
-      {isSettingsOpen && <Settings onCancel={closeSettings} />}
-      {isContinueGameOpen && (
+    <>
+      {/* Only render modals when their state is true and we have a close function */}
+      {isAboutOpen && typeof closeAbout === "function" && (
+        <About isOpen={true} onClose={closeAbout} />
+      )}
+
+      {isLoginOpen && typeof closeLogin === "function" && (
+        <Login onClose={closeLogin} />
+      )}
+
+      {isSignupOpen && typeof closeSignup === "function" && (
+        <Signup onClose={closeSignup} />
+      )}
+
+      {isSettingsOpen && typeof closeSettings === "function" && (
+        <Settings onCancel={closeSettings} />
+      )}
+
+      {isContinueGameOpen && typeof closeContinueGamePrompt === "function" && (
         <ContinueGamePrompt
           isOpen={true}
           onClose={closeContinueGamePrompt}
-          gameStats={activeGameStats}
+          gameStats={activeGameStats || {}}
           onContinue={handleContinueGame}
           onNewGame={handleNewGame}
         />
@@ -325,7 +232,7 @@ const ModalManager = ({ children }) => {
 
       {/* Render children */}
       {children}
-    </ModalContext.Provider>
+    </>
   );
 };
 

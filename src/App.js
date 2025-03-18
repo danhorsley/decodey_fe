@@ -1,4 +1,4 @@
-// src/App.js - Only the imports section
+// src/App.js
 import React, { useEffect, Suspense, lazy } from "react";
 import {
   BrowserRouter as Router,
@@ -7,10 +7,11 @@ import {
   Navigate,
   useLocation,
 } from "react-router-dom";
-// CSS files are now imported at the application root level in index.js
-// import scoreService from "./services/scoreService";
-import { useAuth } from "./context/AuthContext";
-import { isOnline } from "./utils/networkUtils";
+// Import stores if needed for initialization
+// import useUIStore from "./stores/uiStore";
+// import useSettingsStore from "./stores/settingsStore";
+
+// Import ModalManager
 import ModalManager from "./components/modals/ModalManager";
 import AccountButtonWrapper from "./components/AccountButtonWrapper";
 import ServiceWorkerUpdater from "./components/ServiceWorkerUpdater";
@@ -22,7 +23,6 @@ import NotFound from "./pages/NotFound";
 const Game = lazy(() => import("./pages/Game"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const Privacy = lazy(() => import("./pages/Privacy"));
-// const WinCelebrationTest = lazy(() => import("./pages/WinCelebrationTest"));
 
 // Simple loading component
 const Loading = () => (
@@ -45,25 +45,24 @@ function GlobalUIElements() {
   // Don't render the account button on the leaderboard page
   const isLeaderboardPage = location.pathname === "/leaderboard";
 
-  // Get auth state
-  const { isAuthenticated } = useAuth();
-
   return !isLeaderboardPage ? <AccountButtonWrapper /> : null;
 }
 
 // Main App component using Router
 function App() {
+  // You can initialize stores here if needed
+  // const initializeUI = useUIStore(state => state.initialize);
+  // useEffect(() => {
+  //   initializeUI();
+  // }, [initializeUI]);
+
   return (
     <Router>
+      {/* ModalManager wraps everything to provide modal functionality */}
       <ModalManager>
         {/* Main content routes with Suspense for code splitting */}
         <Suspense fallback={<Loading />}>
           <Routes>
-            <Route path="/" element={<Game />} />
-            <Route path="/leaderboard" element={<Leaderboard />} />
-            {/* <Route path="/wctest" element={<WinCelebrationTest />} /> */}
-            <Route path="/privacy" element={<Privacy />} />
-            <Route path="*" element={<NotFound />} />
             <Route
               path="/"
               element={
@@ -78,6 +77,9 @@ function App() {
                 </ErrorBoundary>
               }
             />
+            <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
 

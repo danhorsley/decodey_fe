@@ -8,7 +8,10 @@ import apiService from "../../services/apiService";
 import ReactDOM from "react-dom";
 
 function Settings({ onCancel }) {
+  // Get device detection
   const { isMobile } = useDeviceDetection();
+
+  // Local component state
   const [userData, setUserData] = useState(null);
   const [isLoadingUserData, setIsLoadingUserData] = useState(false);
   const [showUserDataModal, setShowUserDataModal] = useState(false);
@@ -17,27 +20,33 @@ function Settings({ onCancel }) {
   const [pendingDifficulty, setPendingDifficulty] = useState(null);
   const [deleteEmail, setDeleteEmail] = useState("");
   const [deleteEmailError, setDeleteEmailError] = useState("");
-  const isAuthenticated = useAuthStore(state => state.isAuthenticated) || false;
-  const user = useAuthStore(state => state.user);
-  const logout = useAuthStore(state => state.logout);
-  // Get settings directly from the context
-  const settings = useSettingsStore(state => state.settings);
-  const { hasGameStarted, correctlyGuessed } = useGameStore();
-  const {currentSettings, setCurrentSettings, setSettings, updateSettings} = useSettingsStore();
 
-  // Local state to track changes before saving
+  // Get settings state from store
+  const settings = useSettingsStore((state) => state.settings);
+  const updateSettings = useSettingsStore((state) => state.updateSettings);
 
+  // Get game state from store
+  const hasGameStarted = useGameStore((state) => state.hasGameStarted);
+  const correctlyGuessed = useGameStore((state) => state.correctlyGuessed);
+
+  // Get auth state from store
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
+
+  // Local settings state to track changes before saving
+  const [localSettings, setLocalSettings] = useState(settings);
+
+  // Update local settings when store settings change
+  useEffect(() => {
+    setLocalSettings(settings);
+  }, [settings]);
 
   // State to track whether gameplay has started (made at least one guess)
-  const hasStartedPlaying = hasGameStarted && correctlyGuessed.length > 0;
+  const hasStartedPlaying =
+    hasGameStarted && correctlyGuessed && correctlyGuessed.length > 0;
 
-  useEffect(() => {
-    if (currentSettings) {
-      setSettings(currentSettings);
-    }
-  }, [currentSettings]);
-
-  // Move all useCallback hooks to the top level
+  // Handle setting changes
   const handleChange = useCallback(
     (setting, value) => {
       if (setting === "difficulty" && hasStartedPlaying) {
@@ -45,29 +54,33 @@ function Settings({ onCancel }) {
         setShowWarningModal(true);
         return;
       }
-      setSettings((prev) => ({ ...prev, [setting]: value }));
+      setLocalSettings((prev) => ({ ...prev, [setting]: value }));
     },
-    [hasStartedPlaying, setSettings],
+    [hasStartedPlaying],
   );
 
+  // Handle difficulty change confirmation
   const handleConfirmDifficultyChange = useCallback(() => {
     if (pendingDifficulty) {
-      setSettings((prev) => ({ ...prev, difficulty: pendingDifficulty }));
+      setLocalSettings((prev) => ({ ...prev, difficulty: pendingDifficulty }));
       setShowWarningModal(false);
       setPendingDifficulty(null);
     }
-  }, [pendingDifficulty, setSettings]);
+  }, [pendingDifficulty]);
 
+  // Handle difficulty change cancellation
   const handleCancelDifficultyChange = useCallback(() => {
     setShowWarningModal(false);
     setPendingDifficulty(null);
   }, []);
 
+  // Save settings
   const handleSave = useCallback(() => {
-    updateSettings(settings);
+    updateSettings(localSettings);
     onCancel();
-  }, [settings, updateSettings, onCancel]);
+  }, [localSettings, updateSettings, onCancel]);
 
+  // Fetch user data
   const fetchUserData = useCallback(async () => {
     setIsLoadingUserData(true);
     try {
@@ -84,6 +97,7 @@ function Settings({ onCancel }) {
     }
   }, []);
 
+  // Copy data to clipboard
   const copyDataToClipboard = useCallback(() => {
     if (!userData) return;
 
@@ -106,6 +120,7 @@ function Settings({ onCancel }) {
       });
   }, [userData]);
 
+  // Download user data
   const downloadUserData = useCallback(() => {
     if (!userData) return;
 
@@ -121,7 +136,7 @@ function Settings({ onCancel }) {
     document.body.removeChild(link);
   }, [userData]);
 
-
+  // Handle account deletion
   const handleDeleteAccount = useCallback(async () => {
     try {
       // Check if we have a user object with email
@@ -177,14 +192,10 @@ function Settings({ onCancel }) {
     }
   }, [deleteEmail, user, onCancel, logout]);
 
-  if (!currentSettings) {
-    return null;
-  }
-
   return ReactDOM.createPortal(
     <div className="about-overlay">
       <div
-        className={`about-container settings-container ${currentSettings.theme === "dark" ? "dark-theme" : ""} text-${currentSettings.textColor}`}
+        className={`about-container settings-container ${localSettings.theme === "dark" ? "dark-theme" : ""} text-${localSettings.textColor}`}
       >
         <div className="settings-content">
           <div className="settings-actions top">
@@ -205,7 +216,7 @@ function Settings({ onCancel }) {
                 <input
                   type="radio"
                   name="theme"
-                  checked={settings.theme === "light"}
+                  checked={localSettings.theme === "light"}
                   onChange={() => handleChange("theme", "light")}
                 />
                 <span className="option-label">
@@ -216,7 +227,7 @@ function Settings({ onCancel }) {
                 <input
                   type="radio"
                   name="theme"
-                  checked={settings.theme === "dark"}
+                  checked={localSettings.theme === "dark"}
                   onChange={() => handleChange("theme", "dark")}
                 />
                 <span className="option-label">Dark Mode (Sci-Fi Blue)</span>
@@ -230,9 +241,9 @@ function Settings({ onCancel }) {
               <label className="settings-option">
                 <input
                   type="checkbox"
-                  checked={settings.soundEnabled}
+                  checked={localSettings.soundEnabled}
                   onChange={() =>
-                    handleChange("soundEnabled", !settings.soundEnabled)
+                    handleChange("soundEnabled", !localSettings.soundEnabled)
                   }
                 />
                 <span className="option-label">Enable sound effects</span>
@@ -247,11 +258,11 @@ function Settings({ onCancel }) {
                   <label className="settings-option">
                     <input
                       type="checkbox"
-                      checked={settings.vibrationEnabled}
+                      checked={localSettings.vibrationEnabled}
                       onChange={() =>
                         handleChange(
                           "vibrationEnabled",
-                          !settings.vibrationEnabled,
+                          !localSettings.vibrationEnabled,
                         )
                       }
                     />
@@ -273,7 +284,7 @@ function Settings({ onCancel }) {
                 <input
                   type="radio"
                   name="difficulty"
-                  checked={settings.difficulty === "easy"}
+                  checked={localSettings.difficulty === "easy"}
                   onChange={() => handleChange("difficulty", "easy")}
                 />
                 <span className="option-label">Easy (8 mistakes)</span>
@@ -282,7 +293,7 @@ function Settings({ onCancel }) {
                 <input
                   type="radio"
                   name="difficulty"
-                  checked={settings.difficulty === "normal"}
+                  checked={localSettings.difficulty === "normal"}
                   onChange={() => handleChange("difficulty", "normal")}
                 />
                 <span className="option-label">Normal (5 mistakes)</span>
@@ -291,7 +302,7 @@ function Settings({ onCancel }) {
                 <input
                   type="radio"
                   name="difficulty"
-                  checked={settings.difficulty === "hard"}
+                  checked={localSettings.difficulty === "hard"}
                   onChange={() => handleChange("difficulty", "hard")}
                 />
                 <span className="option-label">Hard (3 mistakes)</span>
@@ -312,9 +323,9 @@ function Settings({ onCancel }) {
               <label className="settings-option">
                 <input
                   type="checkbox"
-                  checked={settings.hardcoreMode}
+                  checked={localSettings.hardcoreMode}
                   onChange={() =>
-                    handleChange("hardcoreMode", !settings.hardcoreMode)
+                    handleChange("hardcoreMode", !localSettings.hardcoreMode)
                   }
                 />
                 <span className="option-label">Hardcore Mode</span>
@@ -340,7 +351,7 @@ function Settings({ onCancel }) {
                 <input
                   type="radio"
                   name="gridSorting"
-                  checked={settings.gridSorting === "default"}
+                  checked={localSettings.gridSorting === "default"}
                   onChange={() => handleChange("gridSorting", "default")}
                 />
                 <span className="option-label">
@@ -351,7 +362,7 @@ function Settings({ onCancel }) {
                 <input
                   type="radio"
                   name="gridSorting"
-                  checked={settings.gridSorting === "alphabetical"}
+                  checked={localSettings.gridSorting === "alphabetical"}
                   onChange={() => handleChange("gridSorting", "alphabetical")}
                 />
                 <span className="option-label">Alphabetical Order</span>
@@ -367,7 +378,7 @@ function Settings({ onCancel }) {
                 <input
                   type="radio"
                   name="mobileMode"
-                  checked={settings.mobileMode === "auto"}
+                  checked={localSettings.mobileMode === "auto"}
                   onChange={() => handleChange("mobileMode", "auto")}
                 />
                 <span className="option-label">Auto Detect</span>
@@ -376,7 +387,7 @@ function Settings({ onCancel }) {
                 <input
                   type="radio"
                   name="mobileMode"
-                  checked={settings.mobileMode === "always"}
+                  checked={localSettings.mobileMode === "always"}
                   onChange={() => handleChange("mobileMode", "always")}
                 />
                 <span className="option-label">Always Use Mobile Layout</span>
@@ -385,7 +396,7 @@ function Settings({ onCancel }) {
                 <input
                   type="radio"
                   name="mobileMode"
-                  checked={settings.mobileMode === "never"}
+                  checked={localSettings.mobileMode === "never"}
                   onChange={() => handleChange("mobileMode", "never")}
                 />
                 <span className="option-label">Never Use Mobile Layout</span>
@@ -405,8 +416,10 @@ function Settings({ onCancel }) {
               <label className="settings-option">
                 <input
                   type="checkbox"
-                  checked={settings.longText}
-                  onChange={() => handleChange("longText", !settings.longText)}
+                  checked={localSettings.longText}
+                  onChange={() =>
+                    handleChange("longText", !localSettings.longText)
+                  }
                 />
                 <span className="option-label">
                   Use Longer Quotes - over 65 characters
@@ -425,110 +438,48 @@ function Settings({ onCancel }) {
               )}
             </div>
           </div>
-          <div className="settings-section">
-            <h2>Account Management</h2>
-            <div className="settings-options">
-              <button
-                className="settings-button save"
-                style={{
-                  backgroundColor: "#007bff",
-                  marginBottom: "15px",
-                  width: "100%",
-                }}
-                onClick={fetchUserData}
-                disabled={isLoadingUserData}
-              >
-                {isLoadingUserData ? "Loading..." : "Download My Data"}
-              </button>
-              <p className="settings-description">
-                View and download all data associated with your account.
-              </p>
 
-              <button
-                className="settings-button cancel"
-                style={{
-                  backgroundColor: "#dc3545",
-                  color: "white",
-                  marginTop: "15px",
-                  width: "100%",
-                }}
-                onClick={() => setShowDeleteConfirmation(true)}
-              >
-                Delete My Account
-              </button>
-              <p className="settings-description warning-text">
-                This will permanently delete your account and all associated
-                data. This action cannot be undone.
-              </p>
-            </div>
-          </div>
-
-          {/* User Data Modal - Adjusted width to fit within settings modal */}
-          {showUserDataModal && userData && (
-            <div className="about-overlay" style={{ zIndex: 10001 }}>
-              <div
-                className={`about-container ${settings.theme === "dark" ? "dark-theme" : ""}`}
-                style={{
-                  maxWidth: "450px", // Reduced width to fit within settings modal
-                  maxHeight: "80vh",
-                  width: "90%", // Ensure it's responsive on smaller screens
-                }}
-              >
-                <h2>Your Data</h2>
-                <p>
-                  This is all the data we store about your account. You can copy
-                  it or download it as a JSON file.
+          {/* Account Management Section - Only show if authenticated */}
+          {isAuthenticated && (
+            <div className="settings-section">
+              <h2>Account Management</h2>
+              <div className="settings-options">
+                <button
+                  className="settings-button save"
+                  style={{
+                    backgroundColor: "#007bff",
+                    marginBottom: "15px",
+                    width: "100%",
+                  }}
+                  onClick={fetchUserData}
+                  disabled={isLoadingUserData}
+                >
+                  {isLoadingUserData ? "Loading..." : "Download My Data"}
+                </button>
+                <p className="settings-description">
+                  View and download all data associated with your account.
                 </p>
 
-                <div
+                <button
+                  className="settings-button cancel"
                   style={{
-                    maxHeight: "40vh", // Slightly smaller height
-                    overflow: "auto",
-                    backgroundColor:
-                      settings.theme === "dark" ? "#222" : "#f5f5f5",
-                    padding: "10px",
-                    borderRadius: "4px",
-                    marginBottom: "15px",
-                    fontFamily: "monospace",
-                    fontSize: "0.85rem", // Slightly smaller font
+                    backgroundColor: "#dc3545",
+                    color: "white",
+                    marginTop: "15px",
+                    width: "100%",
                   }}
+                  onClick={() => setShowDeleteConfirmation(true)}
                 >
-                  <pre>{JSON.stringify(userData, null, 2)}</pre>
-                </div>
-
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    flexWrap: "wrap", // Allow buttons to wrap on narrow screens
-                    gap: "8px", // Add gap between buttons when they wrap
-                  }}
-                >
-                  <button
-                    className="settings-button save"
-                    onClick={copyDataToClipboard}
-                    style={{ flex: "1", minWidth: "120px" }}
-                  >
-                    Copy to Clipboard
-                  </button>
-                  <button
-                    className="settings-button save"
-                    onClick={downloadUserData}
-                    style={{ flex: "1", minWidth: "120px" }}
-                  >
-                    Download JSON
-                  </button>
-                  <button
-                    className="settings-button cancel"
-                    onClick={() => setShowUserDataModal(false)}
-                    style={{ flex: "1", minWidth: "120px" }}
-                  >
-                    Close
-                  </button>
-                </div>
+                  Delete My Account
+                </button>
+                <p className="settings-description warning-text">
+                  This will permanently delete your account and all associated
+                  data. This action cannot be undone.
+                </p>
               </div>
             </div>
           )}
+
           {/* Action Buttons */}
           <div className="settings-actions">
             <button className="settings-button cancel" onClick={onCancel}>
@@ -540,11 +491,79 @@ function Settings({ onCancel }) {
           </div>
         </div>
       </div>
-      {/* Update the confirmation dialog */}
+
+      {/* User Data Modal */}
+      {showUserDataModal && userData && (
+        <div className="about-overlay" style={{ zIndex: 10001 }}>
+          <div
+            className={`about-container ${localSettings.theme === "dark" ? "dark-theme" : ""}`}
+            style={{
+              maxWidth: "450px",
+              maxHeight: "80vh",
+              width: "90%",
+            }}
+          >
+            <h2>Your Data</h2>
+            <p>
+              This is all the data we store about your account. You can copy it
+              or download it as a JSON file.
+            </p>
+
+            <div
+              style={{
+                maxHeight: "40vh",
+                overflow: "auto",
+                backgroundColor:
+                  localSettings.theme === "dark" ? "#222" : "#f5f5f5",
+                padding: "10px",
+                borderRadius: "4px",
+                marginBottom: "15px",
+                fontFamily: "monospace",
+                fontSize: "0.85rem",
+              }}
+            >
+              <pre>{JSON.stringify(userData, null, 2)}</pre>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                gap: "8px",
+              }}
+            >
+              <button
+                className="settings-button save"
+                onClick={copyDataToClipboard}
+                style={{ flex: "1", minWidth: "120px" }}
+              >
+                Copy to Clipboard
+              </button>
+              <button
+                className="settings-button save"
+                onClick={downloadUserData}
+                style={{ flex: "1", minWidth: "120px" }}
+              >
+                Download JSON
+              </button>
+              <button
+                className="settings-button cancel"
+                onClick={() => setShowUserDataModal(false)}
+                style={{ flex: "1", minWidth: "120px" }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Account Confirmation Modal */}
       {showDeleteConfirmation && (
         <div className="about-overlay" style={{ zIndex: 10001 }}>
           <div
-            className={`about-container ${settings.theme === "dark" ? "dark-theme" : ""}`}
+            className={`about-container ${localSettings.theme === "dark" ? "dark-theme" : ""}`}
             style={{ maxWidth: "400px" }}
           >
             <h2>Delete Account</h2>
@@ -572,8 +591,9 @@ function Settings({ onCancel }) {
                   padding: "8px",
                   borderRadius: "4px",
                   border: "1px solid #ccc",
-                  backgroundColor: settings.theme === "dark" ? "#333" : "#fff",
-                  color: settings.theme === "dark" ? "#fff" : "#333",
+                  backgroundColor:
+                    localSettings.theme === "dark" ? "#333" : "#fff",
+                  color: localSettings.theme === "dark" ? "#fff" : "#333",
                 }}
               />
               {deleteEmailError && (
@@ -621,11 +641,12 @@ function Settings({ onCancel }) {
           </div>
         </div>
       )}
+
       {/* Difficulty Change Warning Modal */}
       {showWarningModal && (
         <div className="about-overlay" style={{ zIndex: 10000 }}>
           <div
-            className={`about-container ${currentSettings.theme === "dark" ? "dark-theme" : ""}`}
+            className={`about-container ${localSettings.theme === "dark" ? "dark-theme" : ""}`}
             style={{ maxWidth: "400px" }}
           >
             <h2>Change Difficulty?</h2>
@@ -634,8 +655,8 @@ function Settings({ onCancel }) {
               affect your next game.
             </p>
             <p>
-              Your current game will continue with the{" "}
-              {currentSettings.difficulty} difficulty setting.
+              Your current game will continue with the {settings.difficulty}{" "}
+              difficulty setting.
             </p>
 
             <div
@@ -662,7 +683,7 @@ function Settings({ onCancel }) {
         </div>
       )}
     </div>,
-    document.getElementById("root"), // Mount directly to root element
+    document.getElementById("root"),
   );
 }
 

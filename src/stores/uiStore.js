@@ -73,11 +73,7 @@ const useUIStore = create(
       closeSignup: () => set({ isSignupOpen: false }),
 
       openSettings: () => set({ isSettingsOpen: true }),
-      closeSettings: () =>
-        set({
-          isSettingsOpen: false,
-          currentView: "game", // Go back to game view
-        }),
+      closeSettings: () => set({ isSettingsOpen: false }),
 
       openContinueGamePrompt: (gameStats) =>
         set({

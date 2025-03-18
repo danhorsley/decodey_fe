@@ -1,4 +1,3 @@
-// src/components/AccountButtonWrapper.js
 import React, { useState } from "react";
 import { FaUserCircle } from "react-icons/fa";
 import useSettingsStore from "../stores/settingsStore";
@@ -6,18 +5,17 @@ import useAuthStore from "../stores/authStore";
 import useUIStore from "../stores/uiStore";
 
 function AccountButtonWrapper() {
-  // Get settings directly from context
+  // Get settings from store
   const settings = useSettingsStore((state) => state.settings);
 
-  // Get auth state using separate selectors to prevent unnecessary updates
+  // Get auth state using separate selectors
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
 
-  // Get modal functions directly from context
+  // Get UI actions from store
   const openLogin = useUIStore((state) => state.openLogin);
 
-  // State to manage logout confirmation
+  // State for logout confirmation
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
 
   const handleClick = () => {
@@ -29,13 +27,11 @@ function AccountButtonWrapper() {
     }
   };
 
-  // Handle logout confirmation
   const handleLogout = () => {
     logout();
     setShowLogoutConfirmation(false);
   };
 
-  // Handle cancel logout
   const handleCancelLogout = () => {
     setShowLogoutConfirmation(false);
   };

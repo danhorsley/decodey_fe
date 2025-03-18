@@ -3,10 +3,17 @@ import React from "react";
 import { Link } from "react-router-dom";
 import "../../Styles/About.css";
 import useSettingsStore from "../../stores/settingsStore";
+import useUIStore from "../../stores/uiStore";
 
 function About({ isOpen, onClose }) {
-  // Get settings directly from context
+  // Get settings directly from store
   const settings = useSettingsStore((state) => state.settings);
+
+  // Get close function from store as fallback if props don't provide it
+  const closeAbout = useUIStore((state) => state.closeAbout);
+
+  // Use the onClose prop if provided, otherwise use the store function
+  const handleClose = onClose || closeAbout;
 
   // Don't render if not open
   if (!isOpen) {
@@ -18,7 +25,7 @@ function About({ isOpen, onClose }) {
       <div
         className={`about-container ${settings.theme === "dark" ? "dark-theme" : ""} text-${settings.textColor}`}
       >
-        <button className="about-close" onClick={onClose}>
+        <button className="about-close" onClick={handleClose}>
           &times;
         </button>
         <h2>uncrypt: What's the famous quote?!?</h2>
@@ -50,7 +57,7 @@ function About({ isOpen, onClose }) {
         </div>
 
         <div className="about-footer">
-          <Link to="/privacy" className="privacy-link" onClick={onClose}>
+          <Link to="/privacy" className="privacy-link" onClick={handleClose}>
             Privacy Policy
           </Link>
 
