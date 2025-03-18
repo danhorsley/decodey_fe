@@ -65,23 +65,23 @@ function Game() {
   const isAuthenticated = authContext?.isAuthenticated || false;
   const [loadingTimedOut, setLoadingTimedOut] = useState(false);
 
-  // Get game state from Zustand store
+  // Get game state from context
   const {
-    encrypted,
-    display,
-    mistakes,
-    correctlyGuessed,
-    selectedEncrypted,
-    lastCorrectGuess,
-    letterFrequency,
-    guessedMappings,
-    originalLetters,
-    startTime,
-    completionTime,
-    startGame,
-    handleEncryptedSelect,
-    getHint,
-    submitGuess,
+    encrypted = "",
+    display = "",
+    mistakes = 0,
+    correctlyGuessed = [],
+    selectedEncrypted = null,
+    lastCorrectGuess = null,
+    letterFrequency = {},
+    guessedMappings = {},
+    originalLetters = [],
+    startTime = null,
+    completionTime = null,
+    startGame = async () => false,
+    handleEncryptedSelect = () => {},
+    isLocalWinDetected = false,
+    isResetting = false,
     hasWon,
     hasLost,
     winData,
@@ -90,7 +90,9 @@ function Game() {
     continueSavedGame,
     resetGame,
     abandonGame,
-    resetAndStartNewGame
+    resetAndStartNewGame,
+    getHint,
+    submitGuess
   } = useGameStore();
 
   // Get UI context safely
@@ -342,7 +344,7 @@ function Game() {
     // If we have the game state reset but no encrypted text, start a new game
     if (
       !encrypted &&
-      gameStateContext.isResetting === true &&
+      isResetting === true &&
       !initializationAttemptedRef.current
     ) {
       console.log(
@@ -360,7 +362,7 @@ function Game() {
         startGame(longTextSetting, hardcoreModeSetting);
       }, 20);
     }
-  }, [encrypted, gameStateContext.isResetting]);
+  }, [encrypted, isResetting]);
 
   // Add this at the top level of the component to track rerender causes
   useEffect(() => {
@@ -526,11 +528,11 @@ function Game() {
       );
 
       // Use the resetAndStartNewGame function if available
-      if (typeof gameStateContext.resetAndStartNewGame === "function") {
+      if (typeof resetAndStartNewGame === "function") {
         const longTextSetting = settings?.longText === true;
         const hardcoreModeSetting = settings?.hardcoreMode === true;
 
-        const result = await gameStateContext.resetAndStartNewGame(
+        const result = await resetAndStartNewGame(
           longTextSetting,
           hardcoreModeSetting,
         );
@@ -563,7 +565,7 @@ function Game() {
       }));
     }
   }, [
-    gameStateContext,
+    resetAndStartNewGame,
     settings,
     resetGame,
     authContext.isAuthenticated,
@@ -616,22 +618,18 @@ function Game() {
         }
 
         // Reset selected letter regardless of result
-        if (typeof contextHandleEncryptedSelect === "function") {
-          contextHandleEncryptedSelect(null);
-        }
+        handleEncryptedSelect(null);
       } catch (error) {
         console.error("Error submitting guess:", error);
 
         // Reset selected letter on error
-        if (typeof contextHandleEncryptedSelect === "function") {
-          contextHandleEncryptedSelect(null);
-        }
+        handleEncryptedSelect(null);
       }
     },
     [
       selectedEncrypted,
       submitGuess,
-      contextHandleEncryptedSelect,
+      handleEncryptedSelect,
       playSound,
       mistakes,
       maxMistakes,
@@ -647,12 +645,7 @@ function Game() {
           return;
         }
 
-        if (typeof contextHandleEncryptedSelect === "function") {
-          contextHandleEncryptedSelect(letter);
-        } else {
-          console.error("contextHandleEncryptedSelect is not a function");
-          return;
-        }
+        handleEncryptedSelect(letter);
 
         if (typeof playSound === "function") {
           playSound("keyclick");
@@ -661,7 +654,7 @@ function Game() {
         console.error("Error in encrypted click handler:", error);
       }
     },
-    [contextHandleEncryptedSelect, playSound],
+    [handleEncryptedSelect, playSound],
   );
 
   // Handle guess grid click
@@ -811,12 +804,8 @@ function Game() {
     encryptedLetters: Array.isArray(encryptedLetters) ? encryptedLetters : [],
     originalLetters: Array.isArray(originalLetters) ? originalLetters : [],
     selectedEncrypted,
-    onEncryptedSelect:
-      typeof contextHandleEncryptedSelect === "function"
-        ? contextHandleEncryptedSelect
-        : () => {},
-    onGuessSubmit:
-      typeof handleSubmitGuess === "function" ? handleSubmitGuess : () => {},
+    onEncryptedSelect: handleEncryptedSelect,
+    onGuessSubmit: handleSubmitGuess,
     playSound: typeof playSound === "function" ? playSound : undefined,
   });
 
@@ -1108,7 +1097,7 @@ function Game() {
               left: "50%",
               transform: "translate(-50%, -50%)",
               zIndex: 1100,
-              color: settings?.theme === "dark" ? "#4cc9f0" : "#007bff",
+              color: settings?.theme === "dark" ? "#4cc9f0: "#007bff",
               fontSize: "1.5rem",
               textAlign: "center",
               fontWeight: "bold",
