@@ -9,11 +9,10 @@ import React, {
 import { useNavigate } from "react-router-dom";
 import { FaTrophy } from "react-icons/fa";
 // Direct context imports
-import { useSettings } from "../context/SettingsContext";
+import useSettingsStore from "../stores/settingsStore";
 import useGameStore from "../stores/gameStore";
-import { useAuth } from "../context/AuthContext";
-import { useModalContext } from "../components/modals/ModalManager";
-import { useUI } from "../context/UIContext";
+import useAuthStore from "../stores/authStore";
+import useUIStore from "../stores/uiStore";
 // Utility imports
 import useSound from "../services/WebAudioSoundManager";
 import useKeyboardInput from "../hooks/KeyboardController";
@@ -52,8 +51,7 @@ function Game() {
   const navigate = useNavigate();
 
   // Get settings safely
-  const settingsContext = useSettings();
-  const settings = settingsContext?.settings || {
+  const settings = useSettingsStore((state) => state.settings) || {
     theme: "light",
     difficulty: "easy",
     longText: false,
@@ -61,8 +59,9 @@ function Game() {
   };
 
   // Get auth state safely
-  const authContext = useAuth();
-  const isAuthenticated = authContext?.isAuthenticated || false;
+  const isAuthenticated =
+    useAuthStore((state) => state.isAuthenticated) || false;
+  const waitForAuthReady = useAuthStore((state) => state.waitForAuthReady);
   const [loadingTimedOut, setLoadingTimedOut] = useState(false);
 
   // Get game state from context
@@ -92,22 +91,18 @@ function Game() {
     abandonGame,
     resetAndStartNewGame,
     getHint,
-    submitGuess
+    submitGuess,
   } = useGameStore();
 
   // Get UI context safely
-  const uiContext = useUI();
-  const useMobileMode = uiContext?.useMobileMode || false;
-  const isLandscape = uiContext?.isLandscape || true;
+  const useMobileMode = useUIStore((state) => state.useMobileMode) || false;
+  const isLandscape = useUIStore((state) => state.isLandscape) || true;
 
   // Get modal context safely
-  const modalContext = useModalContext();
-  const {
-    isLoginOpen = false,
-    isSignupOpen = false,
-    isSettingsOpen = false,
-    isAboutOpen = false,
-  } = modalContext || {};
+  const isLoginOpen = useUIStore((state) => state.isLoginOpen) || false;
+  const isSignupOpen = useUIStore((state) => state.isSignupOpen) || false;
+  const isSettingsOpen = useUIStore((state) => state.isSettingsOpen) || false;
+  const isAboutOpen = useUIStore((state) => state.isAboutOpen) || false;
 
   // Local state
   const [loadingState, setLoadingState] = useState({
@@ -232,11 +227,11 @@ function Game() {
     const initializeGame = async () => {
       try {
         // Ensure auth state is ready
-        await authContext.waitForAuthReady();
+        await waitForAuthReady();
 
         // First try to continue saved game if authenticated
         const storedGameId = localStorage.getItem("uncrypt-game-id");
-        if (storedGameId && authContext.isAuthenticated) {
+        if (storedGameId && isAuthenticated) {
           console.log("Attempting to continue stored game:", storedGameId);
 
           if (typeof continueSavedGame === "function") {
@@ -307,7 +302,7 @@ function Game() {
     };
   }, [
     encrypted,
-    authContext,
+    isAuthenticated,
     continueSavedGame,
     startGame,
     settings?.longText,
@@ -383,10 +378,7 @@ function Game() {
         console.log("Loading timed out - determining course of action");
 
         // Different handling for anonymous vs authenticated users
-        if (
-          authContext.isAuthenticated &&
-          typeof continueSavedGame === "function"
-        ) {
+        if (isAuthenticated && typeof continueSavedGame === "function") {
           console.log("Authenticated user - attempting to continue saved game");
           // Same continuation logic as before
           continueSavedGame()
@@ -448,7 +440,7 @@ function Game() {
   }, [
     loadingState.isLoading,
     loadingState.lastAttemptTime,
-    authContext.isAuthenticated,
+    isAuthenticated,
     continueSavedGame,
     startGame,
     settings?.longText,
@@ -491,10 +483,7 @@ function Game() {
       }));
 
       // If authenticated and we have continueSavedGame function, try that first
-      if (
-        authContext.isAuthenticated &&
-        typeof continueSavedGame === "function"
-      ) {
+      if (isAuthenticated && typeof continueSavedGame === "function") {
         console.log("Attempting to continue saved game from retry button");
 
         try {
@@ -568,7 +557,7 @@ function Game() {
     resetAndStartNewGame,
     settings,
     resetGame,
-    authContext.isAuthenticated,
+    isAuthenticated,
     continueSavedGame,
   ]);
 
@@ -1097,7 +1086,7 @@ function Game() {
               left: "50%",
               transform: "translate(-50%, -50%)",
               zIndex: 1100,
-              color: settings?.theme === "dark" ? "#4cc9f0":"#007bff",
+              color: settings?.theme === "dark" ? "#4cc9f0" : "#007bff",
               fontSize: "1.5rem",
               textAlign: "center",
               fontWeight: "bold",

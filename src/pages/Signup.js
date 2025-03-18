@@ -2,15 +2,16 @@
 import React, { useState, useCallback, useEffect } from "react";
 import "../Styles/About.css";
 import "../Styles/Login.css";
-import { useSettings } from "../context/SettingsContext";
-import { useModalContext } from "../components/modals/ModalManager";
+import useSettingsStore from "../stores/settingsStore";
+import useAuthStore from "../stores/authStore";
+import useUIStore from "../stores/uiStore";
 import apiService from "../services/apiService";
-import { useAuth } from "../context/AuthContext";
 
 function Signup({ onClose }) {
   // Get contexts directly
-  const { settings } = useSettings();
-  const { openLogin } = useModalContext();
+  const settings = useSettingsStore((state) => state.settings);
+  const openLogin = useUIStore((state) => state.openLogin);
+  const login = useAuthStore((state) => state.login);
 
   // Local state
   const [email, setEmail] = useState("");
@@ -25,9 +26,6 @@ function Signup({ onClose }) {
     available: null,
     message: "",
   });
-
-  // Update the handleSubmit function to include consent data
-  const { login } = useAuth();
 
   const handleSubmit = useCallback(
     async (e) => {

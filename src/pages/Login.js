@@ -2,16 +2,17 @@
 import React, { useState } from "react";
 import "../Styles/About.css";
 import "../Styles/Login.css";
-import { useSettings } from "../context/SettingsContext";
-import { useAuth } from "../context/AuthContext";
-import { useModalContext } from "../components/modals/ModalManager";
+import useSettingsStore from "../stores/settingsStore";
+import useAuthStore from "../stores/authStore";
+import useUIStore from "../stores/uiStore";
 import apiService from "../services/apiService";
 
 function Login({ onClose }) {
   // Get contexts directly
-  const { settings } = useSettings();
-  const { login } = useAuth();
-  const { openSignup } = useModalContext();
+  const settings = useSettingsStore((state) => state.settings);
+  const login = useAuthStore((state) => state.login);
+  const openSignup = useUIStore((state) => state.openSignup);
+  const closeLogin = useUIStore((state) => state.closeLogin);
 
   // Local state
   const [username, setUsername] = useState("");

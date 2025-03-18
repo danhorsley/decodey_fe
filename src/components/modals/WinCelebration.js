@@ -1,52 +1,49 @@
 // src/components/modals/WinCelebration.js
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import MatrixRain from "../effects/MatrixRain";
 import "../../Styles/WinCelebration.css";
-import { useAuth } from "../../context/AuthContext";
-import { useModalContext } from "./ModalManager";
-import { useGameState } from "../../context/GameStateContext"; // Add this import
+import useAuthStore from "../../stores/authStore";
+import useUIStore from "../../stores/uiStore";
+import useGameStore from "../../stores/gameStore";
+import useSettingsStore from "../../stores/settingsStore";
 
-const WinCelebration = ({
-  startGame,
-  playSound,
-  winData,
-  theme,
-  textColor,
-}) => {
-  const { isAuthenticated } = useAuth();
-  const { openLogin } = useModalContext();
-  // Get reset functions from GameStateContext
-  const { resetGame, resetComplete, isResetting } = useGameState();
-  const [loading, setLoading] = useState(true);
+const WinCelebration = ({ playSound, winData }) => {
+  // Get auth state from store
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
 
-  // Store whether this game was originally played anonymously
-  // This ensures we maintain the correct message even after login
-  const [wasAnonymousGame, setWasAnonymousGame] = useState(true);
+  // Get UI actions from store
+  const openLogin = useUIStore(state => state.openLogin);
 
-  // Animation state
+  // Get game actions from store
+  const resetAndStartNewGame = useGameStore(state => state.resetAndStartNewGame);
+  const isResetting = useGameStore(state => state.isResetting);
+
+  // Get settings from store
+  const settings = useSettingsStore(state => state.settings);
+
+  // Local state
+  const [showMatrixRain, setShowMatrixRain] = useState(true);
+  const [isMatrixActive, setIsMatrixActive] = useState(true);
   const [animationStage, setAnimationStage] = useState(0);
   const [showStats, setShowStats] = useState(false);
-  const [showMatrixRain, setShowMatrixRain] = useState(true);
-  const [showFireworks, setShowFireworks] = useState(false);
-  const [isMatrixActive, setIsMatrixActive] = useState(true);
-  // Add a state to track if we're in the process of starting a new game
   const [isStartingNewGame, setIsStartingNewGame] = useState(false);
+  const [wasAnonymousGame, setWasAnonymousGame] = useState(!isAuthenticated);
 
-  // Set wasAnonymousGame when component mounts - will not change even if user logs in later
+  // Only set wasAnonymousGame once on mount
   useEffect(() => {
     setWasAnonymousGame(!isAuthenticated);
   }, []);
 
-  // Unpack win data received from backend
+  // Unpack win data received from backend with safe defaults
   const {
-    score,
-    mistakes,
-    maxMistakes,
-    gameTimeSeconds,
-    rating,
-    encrypted,
-    display,
-    attribution,
+    score = 0,
+    mistakes = 0,
+    maxMistakes = 5,
+    gameTimeSeconds = 0,
+    rating = "Cryptanalyst",
+    encrypted = "",
+    display = "",
+    attribution = {},
     scoreStatus = {
       recorded: !wasAnonymousGame,
       message: wasAnonymousGame
@@ -62,14 +59,14 @@ const WinCelebration = ({
 
   // Get matrix color based on textColor
   const matrixColor =
-    textColor === "scifi-blue"
+    settings.textColor === "scifi-blue"
       ? "#4cc9f0"
-      : textColor === "retro-green"
+      : settings.textColor === "retro-green"
         ? "#00ff41"
         : "#00ff41";
 
   // Get the decrypted text in proper case
-  const getDecryptedText = () => {
+  const getDecryptedText = useCallback(() => {
     // If display is available, use it as a base but convert to proper case
     if (display) {
       // Convert to lowercase first then capitalize where needed
@@ -78,54 +75,54 @@ const WinCelebration = ({
         .replace(/([.!?]\s*\w|^\w)/g, (match) => match.toUpperCase());
     }
     return ""; // Fallback
-  };
+  }, [display]);
 
   // Improved Play Again handler
-  const handlePlayAgain = async () => {
+  const handlePlayAgain = useCallback(async () => {
     // Prevent multiple clicks
     if (isStartingNewGame) return;
     setIsStartingNewGame(true);
-    setLoading(true);
 
     try {
-      // First reset the game state completely
-      resetGame();
-
-      // Wait for the reset to complete
-      await new Promise((resolve) => setTimeout(resolve, 200));
-
-      // Then start a new game with a single call
-      if (typeof startGame === "function") {
+      // Start a new game with the current settings
+      if (typeof resetAndStartNewGame === "function") {
         console.log("Starting new game after win");
-        startGame();
+        await resetAndStartNewGame(
+          settings.longText === true,
+          settings.hardcoreMode === true
+        );
       }
     } catch (error) {
       console.error("Error starting new game:", error);
     } finally {
       setIsStartingNewGame(false);
     }
-  };
-  // Staged animation sequence
+  }, [isStartingNewGame, resetAndStartNewGame, settings.longText, settings.hardcoreMode]);
+
+  // Staged animation sequence - only run once on mount with fixed dependencies
   useEffect(() => {
     // Initial animation
     const timeline = [
       () => {
-        // Play win sound and start matrix rain immediately
-        playSound("win");
-        setShowFireworks(true);
+        // Play win sound and start animation immediately
+        if (typeof playSound === "function") {
+          playSound("win");
+        }
       },
       () => {
-        // Show message with animation immediately
-        document
-          .querySelector(".victory-message")
-          ?.classList.add("animate-scale-in");
+        // Show message with animation
+        const victoryMessage = document.querySelector(".victory-message");
+        if (victoryMessage) {
+          victoryMessage.classList.add("animate-scale-in");
+        }
       },
       () => {
         // Show stats with animation
         setShowStats(true);
-        document
-          .querySelector(".stats-container")
-          ?.classList.add("animate-slide-in");
+        const statsContainer = document.querySelector(".stats-container");
+        if (statsContainer) {
+          statsContainer.classList.add("animate-slide-in");
+        }
       },
       () => {
         // Gradually reduce matrix rain intensity
@@ -135,62 +132,56 @@ const WinCelebration = ({
       },
     ];
 
-    // Execute animation stages with delays
-    if (animationStage < timeline.length) {
-      timeline[animationStage]();
-      const nextStage = setTimeout(
-        () => {
-          setAnimationStage(animationStage + 1);
-        },
-        animationStage === 0 ? 100 : 300,
-      );
+    // Execute the first animation step immediately
+    timeline[0]();
 
-      return () => clearTimeout(nextStage);
-    }
-  }, [animationStage, playSound]);
+    // Set up timers for the rest of the animation sequence
+    const timers = [
+      setTimeout(() => timeline[1](), 300),
+      setTimeout(() => timeline[2](), 600),
+      setTimeout(() => timeline[3](), 1200)
+    ];
+
+    // Clean up all timers
+    return () => {
+      timers.forEach(timer => clearTimeout(timer));
+    };
+  }, []); // Empty dependency array ensures this only runs once on mount
 
   // Force show stats after a delay (backup)
   useEffect(() => {
-    const forceShowStats = setTimeout(() => {
+    const forceShowStatsTimer = setTimeout(() => {
       if (!showStats) {
         setShowStats(true);
       }
     }, 1000);
 
-    return () => clearTimeout(forceShowStats);
-  }, [showStats]);
+    return () => clearTimeout(forceShowStatsTimer);
+  }, []);
 
   // Clean up animations after some time
   useEffect(() => {
     const cleanupTimer = setTimeout(() => {
       setShowMatrixRain(false);
-      setShowFireworks(false);
     }, 10000);
 
     return () => clearTimeout(cleanupTimer);
   }, []);
 
   // Handle login button click
-  const handleLoginClick = () => {
-    openLogin();
-  };
+  const handleLoginClick = useCallback(() => {
+    if (typeof openLogin === "function") {
+      openLogin();
+    }
+  }, [openLogin]);
 
   return (
     <div
-      className={`win-celebration ${theme === "dark" ? "dark-theme" : "light-theme"} text-${textColor}`}
+      className={`win-celebration ${settings.theme === "dark" ? "dark-theme" : "light-theme"} text-${settings.textColor}`}
     >
       {/* Matrix Rain effect */}
       {showMatrixRain && (
         <MatrixRain active={isMatrixActive} color={matrixColor} density={70} />
-      )}
-
-      {/* Fireworks effect */}
-      {showFireworks && (
-        <div className="fireworks-container">
-          <div className="firework"></div>
-          <div className="firework delayed"></div>
-          <div className="firework delayed-2"></div>
-        </div>
       )}
 
       {/* Main celebration content */}
