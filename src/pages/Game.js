@@ -50,7 +50,7 @@ const LetterCell = React.memo(
 function Game() {
   // Initialize navigate
   const navigate = useNavigate();
-
+  const { subscribeToEvents, events } = useGameSession();
   // Get settings safely
   const settings = useSettingsStore((state) => state.settings) || {
     theme: "light",
@@ -108,12 +108,13 @@ function Game() {
   const { initialize, isInitializing, lastError } = useGameSession();
   // Local state
   const [loadingState, setLoadingState] = useState({
-    isLoading: true,
+    isLoading: false, // Start as false, only set to true when needed
     hasTimedOut: false,
     attemptCount: 0,
     errorMessage: null,
     lastAttemptTime: Date.now(),
   });
+
   const [gameLoaded, setGameLoaded] = useState(false);
   const [showMatrixTransition, setShowMatrixTransition] = useState(false);
   const [forceUpdate, setForceUpdate] = useState(false);
@@ -153,12 +154,30 @@ function Game() {
     difficulty,
     maxMistakes,
   ]);
+  //listen for game loaded
+  useEffect(() => {
+    const handleGameLoaded = (data) => {
+      console.log("Game loaded event received:", data);
+      setLoadingState((prev) => ({
+        ...prev,
+        isLoading: false,
+        errorMessage: null,
+      }));
+      setGameLoaded(true);
+    };
 
+    // Register the listener
+    const unsubscribe = subscribeToEvents(events.GAME_LOADED, handleGameLoaded);
+
+    return () => {
+      // Clean up
+      unsubscribe();
+    };
+  }, [subscribeToEvents, events]);
   const initializationAttemptedRef = useRef(false);
   const authReadyCheckedRef = useRef(false);
 
   // Enhanced initialization effect with better auth handling and game restoration
-  // In Game.js, modify the initialization useEffect
 
   // Game initialization effect - significantly simplified
   useEffect(() => {
@@ -178,7 +197,7 @@ function Game() {
     if (
       isInitializing ||
       (loadingState.isLoading &&
-        Date.now() - loadingState.lastAttemptTime < 5000)
+        Date.now() - loadingState.lastAttemptTime < 1000) // Reduced from 5000ms to 1000ms
     ) {
       console.log("Game initialization already in progress");
       return;
@@ -201,6 +220,7 @@ function Game() {
         if (result.success) {
           console.log("Game initialized successfully");
           setGameLoaded(true);
+          // Immediately clear loading state on success
           setLoadingState((prev) => ({
             ...prev,
             isLoading: false,
@@ -236,6 +256,113 @@ function Game() {
     initialize,
     loadingState.isLoading,
     loadingState.lastAttemptTime,
+  ]);
+
+  // Add this new effect to listen for game:loaded events
+  useEffect(() => {
+    // Skip if the game is already loaded
+    if (gameLoaded || encrypted) {
+      return;
+    }
+
+    const handleGameLoaded = (data) => {
+      console.log("Game loaded event received:", data);
+      setLoadingState((prev) => ({
+        ...prev,
+        isLoading: false,
+        errorMessage: null,
+      }));
+      setGameLoaded(true);
+    };
+
+    // Check if we have the functions from the hook
+    if (subscribeToEvents && events && events.GAME_LOADED) {
+      // Register the listener
+      const unsubscribe = subscribeToEvents(
+        events.GAME_LOADED,
+        handleGameLoaded,
+      );
+
+      return () => {
+        // Clean up
+        unsubscribe();
+      };
+    }
+  }, [subscribeToEvents, events, gameLoaded, encrypted]);
+
+  // Add this effect to reduce perceived loading time
+  useEffect(() => {
+    // Only start timeout if we're actually loading
+    if (!loadingState.isLoading) return;
+
+    const timeoutId = setTimeout(
+      () => {
+        console.log("Loading timed out - determining course of action");
+
+        // Use a shorter timeout for anonymous users
+        const isAnonymous = !isAuthenticated;
+        setLoadingState((prev) => ({
+          ...prev,
+          hasTimedOut: true,
+        }));
+
+        // For anonymous users, directly try starting a new game
+        if (isAnonymous) {
+          console.log(
+            "Anonymous user - attempting to start new game automatically",
+          );
+
+          const longTextSetting = settings?.longText === true;
+          const hardcoreModeSetting = settings?.hardcoreMode === true;
+
+          startGame(longTextSetting, hardcoreModeSetting)
+            .then((result) => {
+              if (result) {
+                console.log("Successfully started new game for anonymous user");
+                setGameLoaded(true);
+                setLoadingState((prev) => ({
+                  ...prev,
+                  isLoading: false,
+                  hasTimedOut: false,
+                  errorMessage: null,
+                }));
+              } else {
+                console.log("Failed to auto-start game, showing retry option");
+                setLoadingState((prev) => ({
+                  ...prev,
+                  isLoading: false,
+                  errorMessage:
+                    "Could not start game automatically. Please try again.",
+                }));
+              }
+            })
+            .catch((err) => {
+              console.error("Error starting game for anonymous user:", err);
+              setLoadingState((prev) => ({
+                ...prev,
+                isLoading: false,
+                errorMessage: "Error starting game. Please try again.",
+              }));
+            });
+        } else {
+          // Authenticated user logic - can try to continue saved game
+          // [Your existing authenticated user logic]
+        }
+      },
+      isAuthenticated ? 3000 : 1500,
+    ); // Shorter timeout for anonymous users
+
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [
+    loadingState.isLoading,
+    isAuthenticated,
+    startGame,
+    settings?.longText,
+    settings?.hardcoreMode,
   ]);
 
   // Handle start new game action - simplified with our service
@@ -400,7 +527,7 @@ function Game() {
               }));
             });
         }
-      }, 8000);
+      }, 3000);
     }
 
     return () => {

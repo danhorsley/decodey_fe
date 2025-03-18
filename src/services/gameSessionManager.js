@@ -7,6 +7,7 @@ import { create } from "zustand";
 import apiService from "./apiService";
 import config from "../config";
 import EventEmitter from "events";
+import useGameStore from "../stores/gameStore";
 
 // Create an event emitter for communication
 const eventEmitter = new EventEmitter();
@@ -145,20 +146,37 @@ const startAnonymousGame = async (options = {}) => {
       throw new Error("Failed to start anonymous game - no data returned");
     }
 
-    console.log("Anonymous game started successfully");
+    // OPTIMIZATION: Update game store directly to skip events/renders
+    try {
+      // This can be imported or accessed via getState()
+      const gameStore = useGameStore.getState();
+      if (typeof gameStore.startGame === "function") {
+        // Call it directly with the data
+        gameStore.startGame(
+          options.longText || false,
+          options.hardcoreMode || false,
+          true, // Force new
+        );
+      }
+    } catch (storeError) {
+      console.warn("Error updating game store directly:", storeError);
+      // Continue since we'll still emit the event
+    }
 
-    // Emit an event to notify components - do this after returning for speed
-    setTimeout(() => {
-      eventEmitter.emit("game:started", {
-        isAnonymous: true,
-        gameData,
-      });
-    }, 0);
+    // Signal loading is complete
+    eventEmitter.emit("game:loaded", { isAnonymous: true });
+
+    // Emit game started event
+    eventEmitter.emit("game:started", {
+      isAnonymous: true,
+      gameData,
+    });
 
     return {
       success: true,
       gameData,
       isAnonymous: true,
+      isLoaded: true, // Add this flag
     };
   } catch (error) {
     console.error("Error starting anonymous game:", error);
@@ -331,7 +349,7 @@ const initializeGameSession = async (options = {}) => {
     //   return result;
     // }
 
-    // CASE 2: Has access token but no refresh token
+    // CASE 1: Has access token but no refresh token
     if (authStatus.hasAccessToken && !authStatus.hasRefreshToken) {
       console.log(
         "User has access token but no refresh token - inconsistent state",
@@ -353,7 +371,7 @@ const initializeGameSession = async (options = {}) => {
       return result;
     }
 
-    // CASE 3: Has both tokens (fully authenticated)
+    // CASE 2: Has both tokens (fully authenticated)
     if (authStatus.hasAccessToken && authStatus.hasRefreshToken) {
       console.log("User is fully authenticated with refresh token");
 
@@ -387,7 +405,82 @@ const initializeGameSession = async (options = {}) => {
       sessionStore.setInitResult(result);
       return result;
     }
+    // CASE 3: Has refresh token but no access token - try to refresh
+    if (!authStatus.hasAccessToken && authStatus.hasRefreshToken) {
+      console.log(
+        "User has refresh token but no access token - attempting to refresh",
+      );
 
+      try {
+        // Try to refresh the token
+        const refreshResult = await refreshAuthToken();
+
+        if (refreshResult) {
+          console.log("Successfully refreshed token, checking for active game");
+
+          // Check for active game with new token
+          const activeGameResult = await checkForActiveGame();
+
+          if (activeGameResult?.hasActiveGame) {
+            // Has an active game, emit event and let UI decide
+            eventEmitter.emit("game:active-game-found", {
+              gameStats: activeGameResult.gameStats,
+            });
+
+            sessionStore.setInitResult({
+              success: true,
+              hasActiveGame: true,
+              requiresUserDecision: true,
+            });
+
+            return {
+              success: true,
+              hasActiveGame: true,
+              requiresUserDecision: true,
+            };
+          }
+
+          // No active game, start new
+          console.log(
+            "No active game found after token refresh, starting new game",
+          );
+          const result = await startAnonymousGame(options);
+          sessionStore.setInitResult(result);
+          return result;
+        } else {
+          // Refresh failed, purge tokens and start anonymous
+          console.log(
+            "Token refresh failed, purging tokens and starting anonymous game",
+          );
+
+          // Purge all tokens
+          localStorage.removeItem("uncrypt-token");
+          sessionStorage.removeItem("uncrypt-token");
+          localStorage.removeItem("refresh_token");
+
+          // Emit event for session clear
+          eventEmitter.emit("auth:session-cleared");
+
+          // Start anonymous game
+          const result = await startAnonymousGame(options);
+          sessionStore.setInitResult(result);
+          return result;
+        }
+      } catch (error) {
+        console.error("Error refreshing token:", error);
+
+        // Purge tokens and start anonymous game
+        localStorage.removeItem("uncrypt-token");
+        sessionStorage.removeItem("uncrypt-token");
+        localStorage.removeItem("refresh_token");
+
+        eventEmitter.emit("auth:session-cleared");
+
+        const result = await startAnonymousGame(options);
+        sessionStore.setInitResult(result);
+        return result;
+      }
+    }
     // Fallback case - should never reach here
     console.warn("Unhandled auth scenario, falling back to anonymous game");
     const result = await startAnonymousGame(options);
@@ -626,6 +719,7 @@ export const GameSessionEvents = {
   GAME_CONTINUED: "game:continued",
   GAME_ABANDONED: "game:abandoned",
   GAME_ERROR: "game:error",
+  GAME_LOADED: "game:loaded", // Add this new event
   ACTIVE_GAME_FOUND: "game:active-game-found",
   AUTH_SESSION_CLEARED: "auth:session-cleared",
 };
