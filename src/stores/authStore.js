@@ -1,8 +1,8 @@
 // src/stores/authStore.js
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import apiService from '../services/apiService';
-import config from '../config';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import apiService from "../services/apiService";
+import config from "../config";
 
 // Create the store with persistence
 const useAuthStore = create(
@@ -23,18 +23,19 @@ const useAuthStore = create(
         const token = config.session.getAuthToken();
 
         if (!token) {
-          set({ 
-            isAuthenticated: false, 
-            user: null, 
+          set({
+            isAuthenticated: false,
+            user: null,
             loading: false,
-            hasActiveGame: false 
+            hasActiveGame: false,
           });
           return;
         }
 
         try {
           // Configure API with token
-          apiService.api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+          apiService.api.defaults.headers.common["Authorization"] =
+            `Bearer ${token}`;
 
           // Verify token
           const response = await apiService.api.get("/verify_token");
@@ -43,7 +44,9 @@ const useAuthStore = create(
             // Check for active game
             let hasActiveGame = false;
             try {
-              const gameCheckResponse = await apiService.api.get("/api/check-active-game");
+              const gameCheckResponse = await apiService.api.get(
+                "/api/check-active-game",
+              );
               hasActiveGame = gameCheckResponse.data.has_active_game || false;
             } catch (gameCheckError) {
               console.warn("Error checking for active game:", gameCheckError);
@@ -78,25 +81,42 @@ const useAuthStore = create(
       },
 
       handleInvalidToken: async () => {
+        // Prevent refresh attempts if there's no refresh token
+        const refreshToken = localStorage.getItem("refresh_token");
+        if (!refreshToken) {
+          console.log(
+            "No refresh token available - continuing as anonymous user",
+          );
+          // Don't emit auth:logout for anonymous users
+          return Promise.reject(
+            new Error("No refresh token available, continuing anonymously"),
+          );
+        }
+
         try {
           const refreshResult = await apiService.refreshToken();
 
           if (refreshResult && refreshResult.access_token) {
             // Set the new token
-            apiService.api.defaults.headers.common["Authorization"] = 
+            apiService.api.defaults.headers.common["Authorization"] =
               `Bearer ${refreshResult.access_token}`;
 
             // Save the new token
             if (localStorage.getItem("uncrypt-remember-me") === "true") {
               localStorage.setItem("uncrypt-token", refreshResult.access_token);
             } else {
-              sessionStorage.setItem("uncrypt-token", refreshResult.access_token);
+              sessionStorage.setItem(
+                "uncrypt-token",
+                refreshResult.access_token,
+              );
             }
 
             // Check for active game
             let hasActiveGame = false;
             try {
-              const gameCheckResponse = await apiService.api.get("/api/check-active-game");
+              const gameCheckResponse = await apiService.api.get(
+                "/api/check-active-game",
+              );
               hasActiveGame = gameCheckResponse.data.has_active_game || false;
             } catch (gameCheckError) {
               console.warn("Error checking for active game:", gameCheckError);
@@ -215,14 +235,14 @@ const useAuthStore = create(
       },
     }),
     {
-      name: 'auth-storage', // Storage key
-      partialize: (state) => ({ 
+      name: "auth-storage", // Storage key
+      partialize: (state) => ({
         // Only persist these fields
         isAuthenticated: state.isAuthenticated,
         user: state.user,
       }),
-    }
-  )
+    },
+  ),
 );
 
 // Subscribe to API service events

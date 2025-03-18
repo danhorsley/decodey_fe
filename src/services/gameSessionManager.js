@@ -132,10 +132,10 @@ const startAnonymousGame = async (options = {}) => {
   try {
     console.log("Starting new anonymous game with options:", options);
 
-    // Clear any existing game ID
+    // Clear any existing game ID - do this first for speed
     localStorage.removeItem("uncrypt-game-id");
 
-    // Start a new game
+    // Start a new game directly
     const gameData = await apiService.startGame(options);
 
     if (!gameData) {
@@ -144,11 +144,13 @@ const startAnonymousGame = async (options = {}) => {
 
     console.log("Anonymous game started successfully");
 
-    // Emit an event to notify components
-    eventEmitter.emit("game:started", {
-      isAnonymous: true,
-      gameData,
-    });
+    // Emit an event to notify components - do this after returning for speed
+    setTimeout(() => {
+      eventEmitter.emit("game:started", {
+        isAnonymous: true,
+        gameData,
+      });
+    }, 0);
 
     return {
       success: true,
@@ -158,11 +160,13 @@ const startAnonymousGame = async (options = {}) => {
   } catch (error) {
     console.error("Error starting anonymous game:", error);
 
-    // Emit error event
-    eventEmitter.emit("game:error", {
-      action: "start-anonymous",
-      error,
-    });
+    // Emit error event asynchronously
+    setTimeout(() => {
+      eventEmitter.emit("game:error", {
+        action: "start-anonymous",
+        error,
+      });
+    }, 0);
 
     return {
       success: false,
@@ -298,6 +302,20 @@ const initializeGameSession = async (options = {}) => {
   sessionStore.markInitAttempted();
 
   try {
+    // FAST PATH: Check for anonymous user immediately
+    const accessToken = config.session.getAuthToken();
+    const refreshToken = localStorage.getItem("refresh_token");
+
+    // If we have no tokens at all, fast-track to anonymous game start
+    if (!accessToken && !refreshToken) {
+      console.log(
+        "Fast path: Anonymous user with no tokens - starting new game immediately",
+      );
+      const result = await startAnonymousGame(options);
+      sessionStore.setInitResult(result);
+      return result;
+    }
+
     // Get current auth status
     const authStatus = checkAuthStatus();
     console.log("Current auth status:", authStatus);
@@ -313,6 +331,7 @@ const initializeGameSession = async (options = {}) => {
     // CASE 2: Has access token but no refresh token
     if (authStatus.hasAccessToken && !authStatus.hasRefreshToken) {
       console.log("User has access token but no refresh token");
+
       // Try to use the access token, but fall back to anonymous if it fails
       try {
         // Check for active game first
@@ -398,10 +417,35 @@ const initializeGameSession = async (options = {}) => {
     console.error("Error initializing game session:", error);
     sessionStore.setInitError(error);
 
+    // Check if the error is related to token refresh
+    const isTokenError =
+      error.message &&
+      (error.message.includes("No refresh token available") ||
+        error.message.includes("Token refresh failed") ||
+        error.message.includes("Refresh already in progress"));
+
+    if (isTokenError) {
+      console.log("Token error detected - starting anonymous game");
+      try {
+        const result = await startAnonymousGame(options);
+        sessionStore.setInitResult(result);
+        return result;
+      } catch (fallbackError) {
+        console.error("Critical error - even fallback failed:", fallbackError);
+        return {
+          success: false,
+          error: fallbackError,
+          isCriticalError: true,
+        };
+      }
+    }
+
     // Always fall back to anonymous game on error
     try {
       console.log("Falling back to anonymous game after error");
-      return await startAnonymousGame(options);
+      const result = await startAnonymousGame(options);
+      sessionStore.setInitResult(result);
+      return result;
     } catch (fallbackError) {
       console.error("Critical error - even fallback failed:", fallbackError);
       return {

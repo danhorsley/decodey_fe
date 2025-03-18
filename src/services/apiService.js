@@ -185,7 +185,6 @@ class ApiService {
       throw error;
     }
   }
-
   // Game methods
   async startGame(options = {}) {
     try {
