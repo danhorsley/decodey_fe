@@ -41,26 +41,8 @@ class ApiService {
       (response) => response,
       async (error) => {
         const originalRequest = error.config;
-
-        // Handle 401 errors
         if (error.response?.status === 401 && !originalRequest._retry) {
           originalRequest._retry = true;
-
-          // Check if refresh token exists before attempting refresh
-          const refreshToken = localStorage.getItem("refresh_token");
-          if (!refreshToken) {
-            // No refresh token - log out and continue as anonymous
-            console.log(
-              "401 error with no refresh token - logging out and continuing as anonymous",
-            );
-            localStorage.removeItem("uncrypt-token");
-            sessionStorage.removeItem("uncrypt-token");
-            this.events.emit("auth:logout");
-
-            // Let the app continue as anonymous
-            return Promise.reject(error);
-          }
-
           try {
             await this.refreshToken();
             return this.api(originalRequest);
@@ -131,14 +113,19 @@ class ApiService {
     const refreshToken = localStorage.getItem("refresh_token");
     if (!refreshToken) {
       console.warn("No refresh token available - cannot refresh");
-       localStorage.removeItem("uncrypt-token");
-        sessionStorage.removeItem("uncrypt-token");
-      console.log("No refresh token available, logging out and continuing as anonymous");
-      this.events.emit("auth:logout");
 
-      return Promise.reject(new Error("No refresh token available"));
-    }
-
+      // If we also don't have an access token, we should consider the user logged out
+      // BUT we shouldn't automatically log out for anonymous users
+      if (
+        !localStorage.getItem("uncrypt-token") &&
+        !sessionStorage.getItem("uncrypt-token")
+      ) {
+        console.log("No access token either, but continuing as anonymous user");
+        // Don't emit auth:logout for anonymous users
+        return Promise.reject(
+          new Error("No tokens available, continuing anonymously"),
+        );
+      }
 
       if (
         !localStorage.getItem("uncrypt-token") ||
@@ -207,15 +194,11 @@ class ApiService {
         options,
       );
 
-      // Get token and verify it exists - determines if user is anonymous
+      // Get token and verify it exists
       const token =
         localStorage.getItem("uncrypt-token") ||
         sessionStorage.getItem("uncrypt-token");
-      const isAnonymous = !token;
-
-      console.log(
-        `Starting game for ${isAnonymous ? "anonymous" : "authenticated"} user`,
-      );
+      console.log("Token from localStorage:", token ? "exists" : "missing");
 
       // Determine endpoint based on longText option
       const endpoint = options.longText ? "api/longstart" : "/api/start";
@@ -233,33 +216,9 @@ class ApiService {
       // Get the base URL, with a fallback to ensure it's not undefined
       const baseUrl =
         this.api.defaults.baseURL || process.env.REACT_APP_API_URL || "";
-
       console.log(`Making request to endpoint: ${baseUrl}${url}`);
 
-      // For anonymous users, use direct fetch with minimal headers for maximum speed
-      if (isAnonymous) {
-        console.log("Using optimized fetch for anonymous user");
-
-        const directResponse = await fetch(`${baseUrl}${url}`, {
-          method: "GET",
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        });
-
-        if (!directResponse.ok) {
-          throw new Error(`HTTP error! Status: ${directResponse.status}`);
-        }
-
-        const data = await directResponse.json();
-
-        console.log("Anonymous game started successfully");
-        return data;
-      }
-
-      // For authenticated users, use the full Axios instance with interceptors
+      // Make sure we're using the correct headers for anonymous play
       const config = {
         headers: {
           Accept: "application/json",
@@ -270,6 +229,8 @@ class ApiService {
       if (token) {
         config.headers["Authorization"] = `Bearer ${token}`;
       }
+
+      console.log("Request config:", JSON.stringify(config));
 
       // Make the request with full URL construction
       const response = await this.api.get(url, config);

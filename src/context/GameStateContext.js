@@ -118,15 +118,9 @@ export const GameStateProvider = ({ children }) => {
   const { settings } = useSettings();
 
   // Start game function
-  // Start game function with optimizations for anonymous users
   const startGame = useCallback(
     async (useLongText = false, hardcoreMode = false, forceNewGame = false) => {
       try {
-        // Quick check if user is anonymous
-        const isAnonymousUser =
-          !localStorage.getItem("uncrypt-token") &&
-          !sessionStorage.getItem("uncrypt-token");
-
         // Clear any existing game state from localStorage
         localStorage.removeItem("uncrypt-game-id");
 
@@ -142,34 +136,23 @@ export const GameStateProvider = ({ children }) => {
           difficulty: currentDifficulty,
           maxMistakes: maxMistakesValue,
           forceNewGame,
-          isAnonymous: isAnonymousUser,
         });
-
-        // Start performance measurement
-        const startTime = performance.now();
 
         const data = await apiService.startGame({
           longText: useLongText,
           difficulty: currentDifficulty, // Use current difficulty from settings
         });
 
-        // End performance measurement
-        const endTime = performance.now();
-        console.log(`Game start API call took ${endTime - startTime}ms`);
-
         console.log("Game start response:", data);
 
-        // Skip active game check for anonymous users (they don't have active games)
-        // and if we're forcing a new game
+        // Skip active game check if we're forcing a new game
         if (
-          !isAnonymousUser &&
           !forceNewGame &&
           data.active_game_info &&
           data.active_game_info.has_active_game &&
           !state.isResetting
         ) {
           // Handle active game detection here...
-          console.log("Active game detected - aborting new game creation");
           return false;
         }
 
@@ -189,6 +172,12 @@ export const GameStateProvider = ({ children }) => {
           processedDisplay = processedDisplay.replace(/[^A-Z█]/g, "");
         }
 
+        console.log("Processed game text:", {
+          originalLength: encryptedText.length,
+          processedLength: processedEncrypted.length,
+          displayLength: processedDisplay.length,
+        });
+
         // Always use the current settings for difficulty and maxMistakes
         // But preserve API response values if provided
         const payload = {
@@ -206,34 +195,24 @@ export const GameStateProvider = ({ children }) => {
           hardcoreMode,
           maxMistakes: maxMistakesValue,
           difficulty: currentDifficulty,
-          isAnonymous: data.is_anonymous || isAnonymousUser,
+          isAnonymous: data.is_anonymous || false,
           tempId: data.temp_id,
         };
 
         console.log("Updating game state with new payload:", payload);
 
-        // For anonymous users, skip the RESET_GAME and setTimeout to speed up initialization
-        if (isAnonymousUser) {
-          console.log(
-            "Fast path: directly updating game state for anonymous user",
-          );
+        // Reset game state first
+        dispatch({ type: "RESET_GAME" });
+
+        // Small delay to ensure state is reset before setting new data
+        setTimeout(() => {
           dispatch({
             type: "START_GAME",
             payload,
           });
-        } else {
-          // For authenticated users, use the more cautious approach with reset
-          dispatch({ type: "RESET_GAME" });
 
-          // Small delay to ensure state is reset before setting new data
-          setTimeout(() => {
-            dispatch({
-              type: "START_GAME",
-              payload,
-            });
-            console.log("Game state updated successfully with delay");
-          }, 10);
-        }
+          console.log("Game state updated successfully");
+        }, 10);
 
         return true;
       } catch (error) {

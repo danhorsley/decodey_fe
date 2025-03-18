@@ -159,20 +159,15 @@ function Game() {
 
   const initializationAttemptedRef = useRef(false);
   const authReadyCheckedRef = useRef(false);
-  const isAnonymousUser =
-    !localStorage.getItem("uncrypt-token") &&
-    !sessionStorage.getItem("uncrypt-token");
 
   // Enhanced initialization effect with better auth handling and game restoration
   // In Game.js, modify the initialization useEffect
-  // Enhanced initialization effect with fast path for anonymous users
   useEffect(() => {
     console.log("Game initialization effect running with state:", {
       hasEncryptedText: !!encrypted,
       loadingState: loadingState,
       initAttempted: initializationAttemptedRef.current,
-      hasWon: hasWon,
-      isAuthenticated: authContext?.isAuthenticated,
+      hasWon: hasWon, // Add hasWon to the logging
     });
 
     // If we're in a win state, don't auto-initialize (let the win celebration handle it)
@@ -234,137 +229,78 @@ function Game() {
 
     let mounted = true;
 
-    // Quick check for authentication token - this lets us know immediately if user is anonymous
-    const isAnonymousUser =
-      !localStorage.getItem("uncrypt-token") &&
-      !sessionStorage.getItem("uncrypt-token");
+    const initializeGame = async () => {
+      try {
+        // Ensure auth state is ready
+        await authContext.waitForAuthReady();
 
-    // Fast path for anonymous users
-    if (isAnonymousUser) {
-      console.log("FAST PATH: Anonymous user detected, skipping auth checks");
+        // First try to continue saved game if authenticated
+        const storedGameId = localStorage.getItem("uncrypt-game-id");
+        if (storedGameId && authContext.isAuthenticated) {
+          console.log("Attempting to continue stored game:", storedGameId);
 
-      const startAnonymousGame = async () => {
-        try {
-          // Start a new game without waiting for auth
-          console.log("Starting new game for anonymous user");
-          if (typeof startGame !== "function") {
-            throw new Error("startGame is not a function");
-          }
-
-          const longTextSetting = settings?.longText === true;
-          const hardcoreModeSetting = settings?.hardcoreMode === true;
-
-          const result = await startGame(longTextSetting, hardcoreModeSetting);
-
-          if (mounted) {
-            if (result) {
-              console.log("Game initialized successfully for anonymous user");
+          if (typeof continueSavedGame === "function") {
+            const result = await continueSavedGame();
+            if (result && mounted) {
+              console.log("Successfully continued saved game");
               setGameLoaded(true);
               setLoadingState((prev) => ({
                 ...prev,
                 isLoading: false,
                 errorMessage: null,
               }));
+              return;
             } else {
               console.warn(
-                "Game initialization returned false for anonymous user",
+                "Failed to continue saved game, will try starting new game",
               );
-              setLoadingState((prev) => ({
-                ...prev,
-                isLoading: false,
-                errorMessage: "Failed to start game. Please try again.",
-              }));
             }
           }
-        } catch (err) {
-          console.error("Error initializing game for anonymous user:", err);
-          if (mounted) {
+        }
+
+        // Start a new game
+        console.log("Starting new game (initialization)");
+        if (typeof startGame !== "function") {
+          throw new Error("startGame is not a function");
+        }
+
+        const longTextSetting = settings?.longText === true;
+        const hardcoreModeSetting = settings?.hardcoreMode === true;
+
+        const result = await startGame(longTextSetting, hardcoreModeSetting);
+
+        if (mounted) {
+          if (result) {
+            console.log("Game initialized successfully");
+            setGameLoaded(true);
             setLoadingState((prev) => ({
               ...prev,
               isLoading: false,
-              errorMessage: `Error starting game: ${err.message || "Unknown error"}`,
+              errorMessage: null,
             }));
-          }
-        }
-      };
-
-      // Start anonymous game immediately
-      startAnonymousGame();
-    } else {
-      // Standard path for authenticated users
-      const initializeAuthenticatedGame = async () => {
-        try {
-          // Ensure auth state is ready
-          await authContext.waitForAuthReady();
-
-          // First try to continue saved game if authenticated
-          const storedGameId = localStorage.getItem("uncrypt-game-id");
-          if (storedGameId && authContext.isAuthenticated) {
-            console.log("Attempting to continue stored game:", storedGameId);
-
-            if (typeof continueSavedGame === "function") {
-              const result = await continueSavedGame();
-              if (result && mounted) {
-                console.log("Successfully continued saved game");
-                setGameLoaded(true);
-                setLoadingState((prev) => ({
-                  ...prev,
-                  isLoading: false,
-                  errorMessage: null,
-                }));
-                return;
-              } else {
-                console.warn(
-                  "Failed to continue saved game, will try starting new game",
-                );
-              }
-            }
-          }
-
-          // Start a new game
-          console.log("Starting new game for authenticated user");
-          if (typeof startGame !== "function") {
-            throw new Error("startGame is not a function");
-          }
-
-          const longTextSetting = settings?.longText === true;
-          const hardcoreModeSetting = settings?.hardcoreMode === true;
-
-          const result = await startGame(longTextSetting, hardcoreModeSetting);
-
-          if (mounted) {
-            if (result) {
-              console.log("Game initialized successfully");
-              setGameLoaded(true);
-              setLoadingState((prev) => ({
-                ...prev,
-                isLoading: false,
-                errorMessage: null,
-              }));
-            } else {
-              console.warn("Game initialization returned false");
-              setLoadingState((prev) => ({
-                ...prev,
-                isLoading: false,
-                errorMessage: "Failed to start game. Please try again.",
-              }));
-            }
-          }
-        } catch (err) {
-          console.error("Error initializing game:", err);
-          if (mounted) {
+          } else {
+            console.warn("Game initialization returned false");
             setLoadingState((prev) => ({
               ...prev,
               isLoading: false,
-              errorMessage: `Error starting game: ${err.message || "Unknown error"}`,
+              errorMessage: "Failed to start game. Please try again.",
             }));
           }
         }
-      };
+      } catch (err) {
+        console.error("Error initializing game:", err);
+        if (mounted) {
+          setLoadingState((prev) => ({
+            ...prev,
+            isLoading: false,
+            errorMessage: `Error starting game: ${err.message || "Unknown error"}`,
+          }));
+        }
+      }
+    };
 
-      // Start authenticated game initialization process
-      initializeAuthenticatedGame();
-    }
+    // Start initialization process
+    initializeGame();
 
     return () => {
       mounted = false;
@@ -378,7 +314,7 @@ function Game() {
     settings?.hardcoreMode,
     loadingState.attemptCount,
     loadingState.lastAttemptTime,
-    hasWon,
+    hasWon, // Add hasWon as a dependency
   ]);
   // Watch for local win detection
   useEffect(() => {
@@ -437,220 +373,86 @@ function Game() {
   }, [encrypted]);
   // In Game.js, modify the useEffect that manages the loading timeout
   // In Game.js, modify the useEffect that manages the loading timeout
-  // Enhanced initialization effect with fast path for anonymous users
   useEffect(() => {
-    console.log("Game initialization effect running with state:", {
-      hasEncryptedText: !!encrypted,
-      loadingState: loadingState,
-      initAttempted: initializationAttemptedRef.current,
-      hasWon: hasWon,
-      isAuthenticated: authContext?.isAuthenticated,
-    });
+    let timeoutId = null;
 
-    // If we're in a win state, don't auto-initialize (let the win celebration handle it)
-    if (hasWon) {
-      console.log("Game in win state, skipping auto-initialization");
-      return;
-    }
+    if (loadingState.isLoading) {
+      console.log("Setting up loading timeout");
 
-    // If we already have encrypted text, just mark the game as loaded and exit
-    if (encrypted) {
-      console.log("Game already has encrypted text - skipping initialization");
-      setLoadingState((prev) => ({
-        ...prev,
-        isLoading: false,
-        errorMessage: null,
-      }));
-      setGameLoaded(true);
-      return;
-    }
+      timeoutId = setTimeout(() => {
+        console.log("Loading timed out - determining course of action");
 
-    // If we're already loading, don't start another initialization
-    if (
-      loadingState.isLoading &&
-      Date.now() - loadingState.lastAttemptTime < 5000
-    ) {
-      console.log(
-        "Already in loading state - not starting another initialization",
-      );
-      return;
-    }
-
-    // Avoid initialization attempts if we recently attempted one (unless explicitly requested)
-    const explicitlyRequested =
-      loadingState.attemptCount === 0 ||
-      initializationAttemptedRef.current === false;
-
-    if (!explicitlyRequested && loadingState.attemptCount > 0) {
-      console.log(
-        "Recent initialization attempt exists - not trying again automatically",
-      );
-      setLoadingState((prev) => ({
-        ...prev,
-        isLoading: false,
-      }));
-      return;
-    }
-
-    // Mark that we're attempting initialization
-    initializationAttemptedRef.current = true;
-
-    // Update loading state to show we're starting a new attempt
-    setLoadingState((prev) => ({
-      isLoading: true,
-      hasTimedOut: false,
-      attemptCount: prev.attemptCount + 1,
-      errorMessage: null,
-      lastAttemptTime: Date.now(),
-    }));
-
-    let mounted = true;
-
-    // Quick check for authentication token - this lets us know immediately if user is anonymous
-    const isAnonymousUser =
-      !localStorage.getItem("uncrypt-token") &&
-      !sessionStorage.getItem("uncrypt-token");
-
-    // Fast path for anonymous users
-    if (isAnonymousUser) {
-      console.log("FAST PATH: Anonymous user detected, skipping auth checks");
-
-      const startAnonymousGame = async () => {
-        try {
-          // Start a new game without waiting for auth
-          console.log("Starting new game for anonymous user");
-          if (typeof startGame !== "function") {
-            throw new Error("startGame is not a function");
-          }
+        // Different handling for anonymous vs authenticated users
+        if (
+          authContext.isAuthenticated &&
+          typeof continueSavedGame === "function"
+        ) {
+          console.log("Authenticated user - attempting to continue saved game");
+          // Same continuation logic as before
+          continueSavedGame()
+            .then((result) => {
+              // continuation logic...
+            })
+            .catch((err) => {
+              // error handling...
+            });
+        } else {
+          // For anonymous users, directly try starting a new game
+          console.log(
+            "Anonymous user - attempting to start new game automatically",
+          );
 
           const longTextSetting = settings?.longText === true;
           const hardcoreModeSetting = settings?.hardcoreMode === true;
 
-          const result = await startGame(longTextSetting, hardcoreModeSetting);
-
-          if (mounted) {
-            if (result) {
-              console.log("Game initialized successfully for anonymous user");
-              setGameLoaded(true);
-              setLoadingState((prev) => ({
-                ...prev,
-                isLoading: false,
-                errorMessage: null,
-              }));
-            } else {
-              console.warn(
-                "Game initialization returned false for anonymous user",
-              );
-              setLoadingState((prev) => ({
-                ...prev,
-                isLoading: false,
-                errorMessage: "Failed to start game. Please try again.",
-              }));
-            }
-          }
-        } catch (err) {
-          console.error("Error initializing game for anonymous user:", err);
-          if (mounted) {
-            setLoadingState((prev) => ({
-              ...prev,
-              isLoading: false,
-              errorMessage: `Error starting game: ${err.message || "Unknown error"}`,
-            }));
-          }
-        }
-      };
-
-      // Start anonymous game immediately
-      startAnonymousGame();
-    } else {
-      // Standard path for authenticated users
-      const initializeAuthenticatedGame = async () => {
-        try {
-          // Ensure auth state is ready
-          await authContext.waitForAuthReady();
-
-          // First try to continue saved game if authenticated
-          const storedGameId = localStorage.getItem("uncrypt-game-id");
-          if (storedGameId && authContext.isAuthenticated) {
-            console.log("Attempting to continue stored game:", storedGameId);
-
-            if (typeof continueSavedGame === "function") {
-              const result = await continueSavedGame();
-              if (result && mounted) {
-                console.log("Successfully continued saved game");
+          startGame(longTextSetting, hardcoreModeSetting)
+            .then((result) => {
+              if (result) {
+                console.log("Successfully started new game for anonymous user");
                 setGameLoaded(true);
                 setLoadingState((prev) => ({
                   ...prev,
                   isLoading: false,
+                  hasTimedOut: false,
                   errorMessage: null,
                 }));
-                return;
               } else {
-                console.warn(
-                  "Failed to continue saved game, will try starting new game",
+                console.log(
+                  "Failed to auto-start game for anonymous user, showing retry option",
                 );
+                setLoadingState((prev) => ({
+                  ...prev,
+                  isLoading: false,
+                  errorMessage:
+                    "Could not start game automatically. Please try again.",
+                }));
               }
-            }
-          }
-
-          // Start a new game
-          console.log("Starting new game for authenticated user");
-          if (typeof startGame !== "function") {
-            throw new Error("startGame is not a function");
-          }
-
-          const longTextSetting = settings?.longText === true;
-          const hardcoreModeSetting = settings?.hardcoreMode === true;
-
-          const result = await startGame(longTextSetting, hardcoreModeSetting);
-
-          if (mounted) {
-            if (result) {
-              console.log("Game initialized successfully");
-              setGameLoaded(true);
+            })
+            .catch((err) => {
+              console.error("Error starting game for anonymous user:", err);
               setLoadingState((prev) => ({
                 ...prev,
                 isLoading: false,
-                errorMessage: null,
+                errorMessage: "Error starting game. Please try again.",
               }));
-            } else {
-              console.warn("Game initialization returned false");
-              setLoadingState((prev) => ({
-                ...prev,
-                isLoading: false,
-                errorMessage: "Failed to start game. Please try again.",
-              }));
-            }
-          }
-        } catch (err) {
-          console.error("Error initializing game:", err);
-          if (mounted) {
-            setLoadingState((prev) => ({
-              ...prev,
-              isLoading: false,
-              errorMessage: `Error starting game: ${err.message || "Unknown error"}`,
-            }));
-          }
+            });
         }
-      };
-
-      // Start authenticated game initialization process
-      initializeAuthenticatedGame();
+      }, 8000);
     }
 
     return () => {
-      mounted = false;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
     };
   }, [
-    encrypted,
-    authContext,
+    loadingState.isLoading,
+    loadingState.lastAttemptTime,
+    authContext.isAuthenticated,
     continueSavedGame,
     startGame,
     settings?.longText,
     settings?.hardcoreMode,
-    loadingState.attemptCount,
-    loadingState.lastAttemptTime,
-    hasWon,
   ]);
 
   // Apply theme to body
@@ -670,52 +472,7 @@ function Game() {
       console.error("Error applying theme:", error);
     }
   }, [settings?.theme]);
-  //debug for quick load
-  useEffect(() => {
-    console.log("DETAILED LOADING STATE:", {
-      isLoading: loadingState.isLoading,
-      hasTimedOut: loadingState.hasTimedOut,
-      attemptCount: loadingState.attemptCount,
-      lastAttemptTime: loadingState.lastAttemptTime,
-      initializationAttempted: initializationAttemptedRef.current,
-    });
-  }, [loadingState]);
 
-  useEffect(() => {
-    // Force first attempt to always run regardless of other checks
-    if (loadingState.attemptCount === 0 && !encrypted) {
-      console.log("FIRST LOAD: Forcing first initialization attempt");
-
-      // Mark that we're attempting initialization
-      initializationAttemptedRef.current = true;
-
-      // Update loading state to show we're starting a new attempt
-      setLoadingState({
-        isLoading: true,
-        hasTimedOut: false,
-        attemptCount: 1, // Set to 1 to indicate this is the first attempt
-        errorMessage: null,
-        lastAttemptTime: Date.now(),
-      });
-
-      // Detect anonymous users for fast path
-      const isAnonymousUser =
-        !localStorage.getItem("uncrypt-token") &&
-        !sessionStorage.getItem("uncrypt-token");
-
-      if (isAnonymousUser) {
-        console.log("FAST PATH: First load for anonymous user");
-        const longTextSetting = settings?.longText === true;
-        const hardcoreModeSetting = settings?.hardcoreMode === true;
-
-        // Direct call to startGame for anonymous users
-        startGame(longTextSetting, hardcoreModeSetting);
-      } else {
-        // Call regular initialization for authenticated users
-        handleStartNewGame();
-      }
-    }
-  }, []);
   // Start a new game manually
 
   // In Game.js, update the handleStartNewGame function
@@ -1068,45 +825,6 @@ function Game() {
   // If loading, show simple loading screen
   // If loading, show simple loading screen
   if (loadingState.isLoading) {
-    // Simpler, faster loading screen for anonymous users
-    if (isAnonymousUser && !loadingState.hasTimedOut) {
-      return (
-        <div
-          className={`App-container ${settings?.theme === "dark" ? "dark-theme" : "light-theme"}`}
-        >
-          <HeaderControls title="uncrypt" />
-          <div
-            className={`loading-container ${settings?.theme === "dark" ? "dark-theme" : "light-theme"}`}
-            style={{ textAlign: "center" }}
-          >
-            <h2 className="loading-title">
-              Starting game
-              <span className="loading-dots"></span>
-            </h2>
-            {/* Simpler loading indicator for anonymous users */}
-            <div
-              style={{
-                margin: "0 auto",
-                width: "40px",
-                height: "40px",
-                border: `4px solid ${settings?.theme === "dark" ? "#333" : "#f3f3f3"}`,
-                borderTop: `4px solid ${settings?.theme === "dark" ? "#4cc9f0" : "#3498db"}`,
-                borderRadius: "50%",
-                animation: "spin 1s linear infinite",
-              }}
-            />
-            <style>{`
-              @keyframes spin {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
-              }
-            `}</style>
-          </div>
-        </div>
-      );
-    }
-
-    // More elaborate loading screen for authenticated users or timeout scenarios
     return (
       <div
         className={`App-container ${settings?.theme === "dark" ? "dark-theme" : "light-theme"}`}
