@@ -10,7 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { FaTrophy } from "react-icons/fa";
 // Direct context imports
 import { useSettings } from "../context/SettingsContext";
-import { useGameState } from "../context/GameStateContext";
+import useGameStore from "../stores/gameStore";
 import { useAuth } from "../context/AuthContext";
 import { useModalContext } from "../components/modals/ModalManager";
 import { useUI } from "../context/UIContext";
@@ -65,35 +65,33 @@ function Game() {
   const isAuthenticated = authContext?.isAuthenticated || false;
   const [loadingTimedOut, setLoadingTimedOut] = useState(false);
 
-  // Get game state safely
-  const gameStateContext = useGameState();
+  // Get game state from Zustand store
   const {
-    encrypted = "",
-    display = "",
-    mistakes = 0,
-    correctlyGuessed = [],
-    selectedEncrypted = null,
-    lastCorrectGuess = null,
-    letterFrequency = {},
-    guessedMappings = {},
-    originalLetters = [],
-    startTime = null,
-    completionTime = null,
-    startGame = async () => false,
-    handleEncryptedSelect: contextHandleEncryptedSelect = () => {},
-    getHint = async () => ({ success: false }),
-    submitGuess = async () => ({ success: false }),
-    hasWon = false,
-    isLocalWinDetected = false,
-    hasLost = false,
-    winData = null,
-    difficulty = "easy",
-    maxMistakes = 8,
-    continueSavedGame = async () => false,
-    resetGame = () => {},
-    abandonGame = async () => false,
-    resetAndStartNewGame = async () => false,
-  } = gameStateContext || {};
+    encrypted,
+    display,
+    mistakes,
+    correctlyGuessed,
+    selectedEncrypted,
+    lastCorrectGuess,
+    letterFrequency,
+    guessedMappings,
+    originalLetters,
+    startTime,
+    completionTime,
+    startGame,
+    handleEncryptedSelect,
+    getHint,
+    submitGuess,
+    hasWon,
+    hasLost,
+    winData,
+    difficulty,
+    maxMistakes,
+    continueSavedGame,
+    resetGame,
+    abandonGame,
+    resetAndStartNewGame
+  } = useGameStore();
 
   // Get UI context safely
   const uiContext = useUI();
