@@ -41,8 +41,26 @@ class ApiService {
       (response) => response,
       async (error) => {
         const originalRequest = error.config;
+
+        // Handle 401 errors
         if (error.response?.status === 401 && !originalRequest._retry) {
           originalRequest._retry = true;
+
+          // Check if refresh token exists before attempting refresh
+          const refreshToken = localStorage.getItem("refresh_token");
+          if (!refreshToken) {
+            // No refresh token - log out and continue as anonymous
+            console.log(
+              "401 error with no refresh token - logging out and continuing as anonymous",
+            );
+            localStorage.removeItem("uncrypt-token");
+            sessionStorage.removeItem("uncrypt-token");
+            this.events.emit("auth:logout");
+
+            // Let the app continue as anonymous
+            return Promise.reject(error);
+          }
+
           try {
             await this.refreshToken();
             return this.api(originalRequest);
@@ -113,19 +131,14 @@ class ApiService {
     const refreshToken = localStorage.getItem("refresh_token");
     if (!refreshToken) {
       console.warn("No refresh token available - cannot refresh");
+       localStorage.removeItem("uncrypt-token");
+        sessionStorage.removeItem("uncrypt-token");
+      console.log("No refresh token available, logging out and continuing as anonymous");
+      this.events.emit("auth:logout");
 
-      // If we also don't have an access token, we should consider the user logged out
-      // BUT we shouldn't automatically log out for anonymous users
-      if (
-        !localStorage.getItem("uncrypt-token") &&
-        !sessionStorage.getItem("uncrypt-token")
-      ) {
-        console.log("No access token either, but continuing as anonymous user");
-        // Don't emit auth:logout for anonymous users
-        return Promise.reject(
-          new Error("No tokens available, continuing anonymously"),
-        );
-      }
+      return Promise.reject(new Error("No refresh token available"));
+    }
+
 
       if (
         !localStorage.getItem("uncrypt-token") ||
