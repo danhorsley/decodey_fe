@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import apiService from "../services/apiService";
+import config from "../config";
 
 // Define max mistakes map to avoid dependency on context
 const MAX_MISTAKES_MAP = {
@@ -110,24 +111,18 @@ const useGameStore = create((set, get) => ({
   // Continue a saved game
   continueSavedGame: async () => {
     try {
-      console.log("Attempting to continue saved game");
+      console.log("Attempting to continue saved game in store");
 
       // Check for auth token
-      const token =
-        localStorage.getItem("uncrypt-token") ||
-        sessionStorage.getItem("uncrypt-token");
+      const token = config.session.getAuthToken();
       if (!token) {
         console.warn("Cannot continue saved game - no auth token found");
         return false;
       }
 
-      // Set API headers
-      apiService.api.defaults.headers.common["Authorization"] =
-        `Bearer ${token}`;
-
       // Get game state from API
       const response = await apiService.api.get("/api/continue-game");
-      console.log("Continue game response:", response.data);
+      console.log("Continue game store response:", response.data);
 
       if (!response.data || response.data.error) {
         console.warn("Error or empty response from continue-game endpoint");
@@ -146,20 +141,32 @@ const useGameStore = create((set, get) => ({
         processedDisplay = processedDisplay.replace(/[^A-Z█]/g, "");
       }
 
-      // Reconstruct guessedMappings
-      const guessedMappings = {};
-      const correctlyGuessed = Array.isArray(game.correctly_guessed)
-        ? game.correctly_guessed
-        : [];
+      // IMPORTANT: Directly use the mappings from the API response if available
+      // otherwise reconstruct them as a backup
+      let guessedMappings = {};
 
-      if (game.reverse_mapping && correctlyGuessed.length > 0) {
-        correctlyGuessed.forEach((encryptedLetter) => {
-          if (encryptedLetter in game.reverse_mapping) {
-            guessedMappings[encryptedLetter] =
-              game.reverse_mapping[encryptedLetter];
-          }
-        });
+      // If game.guessedMappings exists, use that (from our enhanced gameSessionManager)
+      if (game.guessedMappings && typeof game.guessedMappings === "object") {
+        console.log("Using pre-calculated guessedMappings");
+        guessedMappings = game.guessedMappings;
+      } else {
+        // Otherwise reconstruct from correctly_guessed + reverse_mapping
+        console.log("Reconstructing guessedMappings from correctly_guessed");
+        const correctlyGuessed = Array.isArray(game.correctly_guessed)
+          ? game.correctly_guessed
+          : [];
+
+        if (game.reverse_mapping && correctlyGuessed.length > 0) {
+          correctlyGuessed.forEach((encryptedLetter) => {
+            if (encryptedLetter in game.reverse_mapping) {
+              guessedMappings[encryptedLetter] =
+                game.reverse_mapping[encryptedLetter];
+            }
+          });
+        }
       }
+
+      console.log("Final guessedMappings:", guessedMappings);
 
       // Store game ID
       if (game.game_id) {
@@ -175,7 +182,9 @@ const useGameStore = create((set, get) => ({
         encrypted: processedEncrypted,
         display: processedDisplay,
         mistakes: game.mistakes || 0,
-        correctlyGuessed: correctlyGuessed,
+        correctlyGuessed: Array.isArray(game.correctly_guessed)
+          ? game.correctly_guessed
+          : [],
         selectedEncrypted: null,
         lastCorrectGuess: null,
         letterFrequency: game.letter_frequency || {},
