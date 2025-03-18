@@ -98,11 +98,14 @@ const refreshAuthToken = async () => {
 const checkForActiveGame = async () => {
   try {
     console.log("Checking for active game");
-    const { hasAccessToken } = checkAuthStatus();
+    const { hasAccessToken, hasRefreshToken } = checkAuthStatus();
 
-    if (!hasAccessToken) {
-      console.log("No auth token available, skipping active game check");
-      return null;
+    // Skip for anonymous users OR users without refresh tokens
+    if (!hasAccessToken || !hasRefreshToken) {
+      console.log(
+        "No auth token or no refresh token, skipping active game check",
+      );
+      return { hasActiveGame: false };
     }
 
     const response = await apiService.api.get("/api/check-active-game");
@@ -321,56 +324,33 @@ const initializeGameSession = async (options = {}) => {
     console.log("Current auth status:", authStatus);
 
     // CASE 1: Anonymous user (no tokens)
-    if (!authStatus.hasAccessToken) {
-      console.log("Anonymous user flow - starting new game");
-      const result = await startAnonymousGame(options);
-      sessionStore.setInitResult(result);
-      return result;
-    }
+    // if (!authStatus.hasAccessToken) {
+    //   console.log("Anonymous user flow - starting new game");
+    //   const result = await startAnonymousGame(options);
+    //   sessionStore.setInitResult(result);
+    //   return result;
+    // }
 
     // CASE 2: Has access token but no refresh token
     if (authStatus.hasAccessToken && !authStatus.hasRefreshToken) {
-      console.log("User has access token but no refresh token");
+      console.log(
+        "User has access token but no refresh token - inconsistent state",
+      );
 
-      // Try to use the access token, but fall back to anonymous if it fails
-      try {
-        // Check for active game first
-        const activeGameResult = await checkForActiveGame();
+      // Purge all tokens to ensure clean state
+      localStorage.removeItem("uncrypt-token");
+      sessionStorage.removeItem("uncrypt-token");
+      localStorage.removeItem("refresh_token");
 
-        if (activeGameResult?.hasActiveGame) {
-          // Has an active game, emit event and let UI decide
-          eventEmitter.emit("game:active-game-found", {
-            gameStats: activeGameResult.gameStats,
-          });
+      // Emit event to notify components that session is cleared
+      eventEmitter.emit("auth:session-cleared");
 
-          sessionStore.setInitResult({
-            success: true,
-            hasActiveGame: true,
-            requiresUserDecision: true,
-          });
+      console.log("Tokens purged, starting anonymous game");
 
-          return {
-            success: true,
-            hasActiveGame: true,
-            requiresUserDecision: true,
-          };
-        }
-
-        // No active game, start new
-        console.log("No active game found, starting new game");
-        const result = await startAnonymousGame(options);
-        sessionStore.setInitResult(result);
-        return result;
-      } catch (error) {
-        // Token likely invalid, start anonymous game
-        console.warn(
-          "Error with access token, falling back to anonymous:",
-          error,
-        );
-        const result = await startAnonymousGame(options);
-        sessionStore.setInitResult(result);
-        return result;
-      }
+      // Start anonymous game with clean state
+      const result = await startAnonymousGame(options);
+      sessionStore.setInitResult(result);
+      return result;
     }
 
     // CASE 3: Has both tokens (fully authenticated)
