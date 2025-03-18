@@ -1097,7 +1097,7 @@ function Game() {
               left: "50%",
               transform: "translate(-50%, -50%)",
               zIndex: 1100,
-              color: settings?.theme === "dark" ? "#4cc9f0: "#007bff",
+              color: settings?.theme === "dark" ? "#4cc9f0":"#007bff",
               fontSize: "1.5rem",
               textAlign: "center",
               fontWeight: "bold",
