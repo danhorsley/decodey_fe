@@ -47,7 +47,7 @@ function Settings({ onCancel }) {
       }
       setSettings((prev) => ({ ...prev, [setting]: value }));
     },
-    [hasStartedPlaying],
+    [hasStartedPlaying, setSettings],
   );
 
   const handleConfirmDifficultyChange = useCallback(() => {
@@ -56,7 +56,7 @@ function Settings({ onCancel }) {
       setShowWarningModal(false);
       setPendingDifficulty(null);
     }
-  }, [pendingDifficulty]);
+  }, [pendingDifficulty, setSettings]);
 
   const handleCancelDifficultyChange = useCallback(() => {
     setShowWarningModal(false);
@@ -121,9 +121,7 @@ function Settings({ onCancel }) {
     document.body.removeChild(link);
   }, [userData]);
 
-  if (!currentSettings) {
-    return null;
-  }
+
   const handleDeleteAccount = useCallback(async () => {
     try {
       // Check if we have a user object with email
@@ -178,6 +176,10 @@ function Settings({ onCancel }) {
       alert("There was a problem deleting your account. Please try again.");
     }
   }, [deleteEmail, user, onCancel, logout]);
+
+  if (!currentSettings) {
+    return null;
+  }
 
   return ReactDOM.createPortal(
     <div className="about-overlay">
