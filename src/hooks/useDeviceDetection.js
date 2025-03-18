@@ -1,4 +1,6 @@
+// src/hooks/useDeviceDetection.js
 import { useState, useEffect, useCallback, useRef } from "react";
+import useUIStore from "../stores/uiStore";
 
 /**
  * Custom hook to detect device type and orientation
@@ -24,6 +26,9 @@ const useDeviceDetection = () => {
 
   // Add a ref to store whether we've identified device as mobile - this won't change during orientation shifts
   const detectedAsMobileRef = useRef(false);
+
+  // Get the updateDeviceInfo function from our UI store
+  const updateDeviceInfo = useUIStore((state) => state.updateDeviceInfo);
 
   // Extract the detection logic so it can be called from outside the hook
   // Make sure to memoize with useCallback to prevent recreation on renders
@@ -68,6 +73,10 @@ const useDeviceDetection = () => {
 
       deviceInfoRef.current = newInfo;
       setDeviceInfo(newInfo);
+
+      // Update the UI store
+      updateDeviceInfo(newInfo);
+
       return;
     }
 
@@ -129,8 +138,11 @@ const useDeviceDetection = () => {
 
       // Then update state
       setDeviceInfo(newInfo);
+
+      // Update the UI store
+      updateDeviceInfo(newInfo);
     }
-  }, []); // Empty dependency array ensures this function doesn't change
+  }, [updateDeviceInfo]); // Include updateDeviceInfo in dependencies
 
   // Set up event listeners and initial detection
   useEffect(() => {
