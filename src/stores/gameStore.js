@@ -89,6 +89,46 @@ const useGameStore = create((set, get) => ({
 
   handleEncryptedSelect: (letter) => {
     set({ selectedEncrypted: letter });
+  },
+
+  abandonGame: async () => {
+    try {
+      await apiService.abandonAndResetGame();
+      set(initialState);
+      return true;
+    } catch (error) {
+      console.error("Error abandoning game:", error);
+      return false;
+    }
+  },
+
+  resetAndStartNewGame: async (useLongText = false, hardcoreMode = false) => {
+    try {
+      await apiService.abandonAndResetGame();
+      set(initialState);
+      return await get().startGame(useLongText, hardcoreMode, true);
+    } catch (error) {
+      console.error("Error resetting and starting new game:", error);
+      return false;
+    }
+  },
+
+  continueSavedGame: async () => {
+    try {
+      const response = await apiService.getGameStatus();
+      if (response.success) {
+        set({
+          ...response,
+          hasGameStarted: true,
+          startTime: Date.now()
+        });
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Error continuing saved game:", error);
+      return false;
+    }
   }
 }));
 
