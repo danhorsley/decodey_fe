@@ -1,19 +1,19 @@
 // src/components/AccountButtonWrapper.js
 import React, { useState } from "react";
 import { FaUserCircle } from "react-icons/fa";
-import { useSettings } from "../context/SettingsContext";
-import { useAuth } from "../context/AuthContext";
-import { useModalContext } from "./modals/ModalManager";
+import useSettingsStore from "../stores/settingsStore";
+import useAuthStore from "../stores/authStore";
+import useUIStore from "../stores/uiStore";
 
 function AccountButtonWrapper() {
   // Get settings directly from context
-  const { settings } = useSettings();
+  const settings = useSettingsStore((state) => state.settings);
 
   // Get auth state directly from context
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, user, logout } = useAuthStore((state) => state.user);
 
   // Get modal functions directly from context
-  const { openLogin } = useModalContext();
+  const { openLogin } = useUIStore((state) => state.openLogin);
 
   // State to manage logout confirmation
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);

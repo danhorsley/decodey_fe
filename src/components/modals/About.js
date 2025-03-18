@@ -2,11 +2,11 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import "../../Styles/About.css";
-import { useSettings } from "../../context/SettingsContext";
+import useSettingsStore from "../../stores/settingsStore";
 
 function About({ isOpen, onClose }) {
   // Get settings directly from context
-  const { settings } = useSettings();
+  const settings = useSettingsStore((state) => state.settings);
 
   // Don't render if not open
   if (!isOpen) {

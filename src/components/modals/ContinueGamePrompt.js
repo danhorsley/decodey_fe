@@ -2,8 +2,8 @@
 import React from "react";
 import "../../Styles/About.css";
 import "../../Styles/Modal.css";
-import { useSettings } from "../../context/SettingsContext";
-import { useGameState } from "../../context/GameStateContext";
+import useSettingsStore from "../../stores/settingsStore";
+import useGameStore from "../../stores/gameStore";
 
 /**
  * Modal that prompts user to continue an existing game or start a new one
@@ -16,7 +16,7 @@ function ContinueGamePrompt({
   onNewGame,
 }) {
   // Get theme from settings
-  const { settings } = useSettings();
+  const settings = useSettingsStore((state) => state.settings);
 
   // Don't render if not open
   if (!isOpen) {

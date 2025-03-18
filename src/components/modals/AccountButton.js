@@ -1,11 +1,12 @@
 
 import React from "react";
 import { FaUserCircle } from "react-icons/fa";
-import { useSettings, useUI } from "../../context";
+import useSettingsStore from "../stores/settingsStore
+import useUIStore from "../stores/uiStore";
 
 function AccountButton() {
-  const { settings } = useSettings();
-  const { openLogin } = useUI();
+  const settings = useSettingsStore(state => state.settings);
+  const openLogin = useAuthStore(state => state.openLogin);
 
   return (
     <button
