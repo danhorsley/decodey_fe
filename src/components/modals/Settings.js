@@ -1,9 +1,9 @@
 // src/components/modals/Settings.js
 import React, { useState, useEffect, useCallback } from "react";
 import useDeviceDetection from "../../hooks/useDeviceDetection";
-import { useSettings } from "../../context/SettingsContext";
-import { useGameState } from "../../context/GameStateContext";
-import {useAuth} from "../../context/AuthContext";
+import useSettingsStore from "../../stores/settingsStore";
+import useGameStore from "../../stores/gameStore";
+import useAuthStore from "../../stores/authStore";
 import apiService from "../../services/apiService";
 import ReactDOM from "react-dom";
 
@@ -17,16 +17,16 @@ function Settings({ onCancel }) {
   const [pendingDifficulty, setPendingDifficulty] = useState(null);
   const [deleteEmail, setDeleteEmail] = useState("");
   const [deleteEmailError, setDeleteEmailError] = useState("");
-  const authContext = useAuth();
-  const user = authContext?.user || null;
-  const logout =
-    authContext?.logout || (() => console.log("No logout function available"));
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated) || false;
+  const user = useAuthStore(state => state.user);
+  const logout = useAuthStore(state => state.logout);
   // Get settings directly from the context
-  const { settings: currentSettings, updateSettings } = useSettings();
-  const { hasGameStarted, correctlyGuessed } = useGameState();
+  const settings = useSettingsStore(state => state.settings);
+  const { hasGameStarted, correctlyGuessed } = useGameStore();
+  const {currentSettings, setCurrentSettings, setSettings, updateSettings} = useSettingsStore();
 
   // Local state to track changes before saving
-  const [settings, setSettings] = useState(currentSettings || {});
+
 
   // State to track whether gameplay has started (made at least one guess)
   const hasStartedPlaying = hasGameStarted && correctlyGuessed.length > 0;
