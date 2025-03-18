@@ -168,6 +168,18 @@ const useGameStore = create((set, get) => ({
 
       console.log("Final guessedMappings:", guessedMappings);
 
+      // Before state update, log the actual data to verify
+      console.log("Before state update, actual data:", {
+        encrypted: processedEncrypted.substring(0, 20) + "...",
+        display: processedDisplay.substring(0, 20) + "...",
+        encryptedLength: processedEncrypted.length,
+        displayLength: processedDisplay.length,
+        correctlyGuessedCount: Array.isArray(game.correctly_guessed)
+          ? game.correctly_guessed.length
+          : 0,
+        guessedMappingsCount: Object.keys(guessedMappings).length,
+      });
+
       // Store game ID
       if (game.game_id) {
         localStorage.setItem("uncrypt-game-id", game.game_id);
@@ -177,7 +189,7 @@ const useGameStore = create((set, get) => ({
       const difficulty = game.difficulty || "easy";
       const maxMistakesValue = MAX_MISTAKES_MAP[difficulty] || 8;
 
-      // Update state
+      // Update state - completely replace state to ensure clean update
       set({
         encrypted: processedEncrypted,
         display: processedDisplay,
@@ -201,6 +213,14 @@ const useGameStore = create((set, get) => ({
         winData: null,
         isResetting: false,
       });
+
+      // Force a rerender to ensure the UI updates after a short delay
+      setTimeout(() => {
+        // Get current state
+        const currentState = get();
+        // Set the exact same state to trigger a rerender
+        set({ ...currentState });
+      }, 50);
 
       return true;
     } catch (error) {

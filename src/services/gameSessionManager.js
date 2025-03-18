@@ -555,6 +555,8 @@ const initializeGameSession = async (options = {}) => {
  * @returns {Promise<Object>} Login result
  */
 // In gameSessionManager.js - update handleLogin function
+// In gameSessionManager.js - Update the handleLogin function
+
 const handleLogin = async (credentials) => {
   try {
     console.log("Handling login flow");
@@ -567,55 +569,91 @@ const handleLogin = async (credentials) => {
       return { success: false, reason: "login-failed" };
     }
 
-    console.log("Login successful, checking game state");
+    // CRITICAL FIX: Manually ensure token is properly stored
+    // This addresses race conditions where token might not be saved yet
+    if (credentials.rememberMe) {
+      localStorage.setItem("uncrypt-token", loginResult.access_token);
+    } else {
+      sessionStorage.setItem("uncrypt-token", loginResult.access_token);
+    }
 
-    // Add a small delay before checking for active game
-    // This gives the backend a moment to register the login fully
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    // Store refresh token if provided
+    if (loginResult.refresh_token) {
+      localStorage.setItem("refresh_token", loginResult.refresh_token);
+    }
 
-    // Check for active game in account - directly call API instead of using checkGameStateOnLogin
+    console.log(
+      "Manually saved auth tokens, waiting before checking game state",
+    );
+
+    // Add a longer delay to ensure tokens are properly saved and recognized
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    console.log(
+      "Login successful, checking game state. Token exists:",
+      !!config.session.getAuthToken(),
+    );
+
+    // Check for active game in account - use a try-catch to isolate this step
     try {
-      console.log("Making direct API call to check-active-game after login");
-      const response = await apiService.api.get("/api/check-active-game");
+      // Make the request with an explicitly provided token
+      console.log("Making API call with explicit auth token");
+      const response = await apiService.api.get("/api/check-active-game", {
+        headers: {
+          Authorization: `Bearer ${loginResult.access_token}`,
+        },
+      });
+
+      console.log("Active game check response:", response.data);
 
       const hasActiveGame = response?.data?.has_active_game || false;
       const gameStats = response?.data?.game_stats || null;
 
-      console.log("Active game check after login:", {
-        hasActiveGame,
-        gameStats,
-      });
-
       if (hasActiveGame && gameStats) {
-        // Explicitly emit the event for UI components to catch
-        console.log("Emitting active-game-found event with stats:", gameStats);
+        console.log(
+          "✅ Active game found! Emitting event with stats:",
+          gameStats,
+        );
+
+        // Emit events for UI components to catch
         eventEmitter.emit("game:active-game-found", {
           gameStats: gameStats,
         });
 
-        // Also emit through the apiService for backward compatibility
-        apiService.events.emit("auth:active-game-detected", {
-          hasActiveGame: true,
-          activeGameStats: gameStats,
-        });
+        // Also emit through apiService
+        if (apiService.events && typeof apiService.events.emit === "function") {
+          apiService.events.emit("auth:active-game-detected", {
+            hasActiveGame: true,
+            activeGameStats: gameStats,
+          });
+        }
+
+        // Return with game state information
+        return {
+          success: true,
+          loginData: loginResult,
+          gameState: {
+            hasActiveGame: true,
+            showContinuationDialog: true,
+            gameStats,
+          },
+        };
       }
 
+      // No active game found
+      console.log("No active game found for user");
       return {
         success: true,
         loginData: loginResult,
         gameState: {
-          hasActiveGame,
-          showContinuationDialog: hasActiveGame,
-          gameStats,
+          hasActiveGame: false,
+          showContinuationDialog: false,
         },
       };
     } catch (gameCheckError) {
-      console.error(
-        "Error checking for active game after login:",
-        gameCheckError,
-      );
+      console.error("Error checking for active game:", gameCheckError);
 
-      // Continue with login success even if game check fails
+      // Continue with successful login even if game check fails
       return {
         success: true,
         loginData: loginResult,

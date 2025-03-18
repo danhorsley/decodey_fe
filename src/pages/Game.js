@@ -264,6 +264,30 @@ function Game() {
       });
   }, [encrypted, isInitializing, initialize]); // Keep dependencies minimal
 
+  //encrypted/display text consistenc
+  useEffect(() => {
+    // Only run if we have both encrypted and display text
+    if (encrypted && display) {
+      console.log("Validating encrypted/display text:", {
+        encryptedLength: encrypted.length,
+        displayLength: display.length,
+        encryptedSample: encrypted.substring(0, 20) + "...",
+        displaySample: display.substring(0, 20) + "...",
+      });
+
+      // Check for mismatch
+      if (encrypted.length !== display.length) {
+        console.error(
+          "⚠️ MISMATCH: Encrypted and display text lengths don't match!",
+        );
+
+        // Force update after a short delay
+        setTimeout(() => {
+          setForceUpdate((prev) => !prev);
+        }, 100);
+      }
+    }
+  }, [encrypted, display]);
   // Add this new effect to listen for game:loaded events
   useEffect(() => {
     // Skip if the game is already loaded or initialization is in progress

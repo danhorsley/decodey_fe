@@ -34,6 +34,8 @@ function Login({ onClose }) {
   };
 
   // Handle form submission - now using our centralized service
+  // In Login.js - Update the handleSubmit function
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -52,7 +54,32 @@ function Login({ onClose }) {
         // Store remember me preference
         localStorage.setItem("uncrypt-remember-me", rememberMe.toString());
 
-        // Close the login modal immediately
+        // IMPORTANT: Check if login returned active game data directly
+        if (
+          result.gameState &&
+          result.gameState.hasActiveGame &&
+          result.gameState.gameStats
+        ) {
+          console.log(
+            "✅ Active game found during login. Opening continue prompt directly.",
+          );
+          // Get the openContinueGamePrompt function directly from the store
+          const openContinueGamePrompt =
+            useUIStore.getState().openContinueGamePrompt;
+
+          if (typeof openContinueGamePrompt === "function") {
+            // First close the login modal
+            onClose();
+
+            // Short delay to ensure login modal is closed first
+            setTimeout(() => {
+              openContinueGamePrompt(result.gameState.gameStats);
+            }, 100);
+            return;
+          }
+        }
+
+        // No active game or couldn't show prompt - just close login
         onClose();
       } else {
         setError(
