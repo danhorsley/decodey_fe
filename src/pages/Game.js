@@ -16,6 +16,7 @@ import { formatAlternatingLines } from "../utils/utils";
 import HeaderControls from "../components/HeaderControls";
 import MobileLayout from "../components/layout/MobileLayout";
 import WinCelebration from "../components/modals/WinCelebration";
+import MatrixRain from "../components/effects/MatrixRain";
 import MatrixRainLoading from "../components/effects/MatrixRainLoading";
 
 // Letter cell component using memo to reduce re-renders
@@ -101,12 +102,13 @@ function Game() {
     if (!encrypted && !isInitializing && !loadingState.isLoading) {
       console.log("Game component triggering initialization");
 
-      // Show loading state
-      setLoadingState({
+      // Show loading state - create a new state object for proper immutability
+      setLoadingState((prevState) => ({
+        ...prevState,
         isLoading: true,
         errorMessage: null,
-        attemptCount: loadingState.attemptCount + 1,
-      });
+        attemptCount: prevState.attemptCount + 1,
+      }));
 
       // Initialize via gameSession - the single source of truth for game init
       initialize()
@@ -114,8 +116,8 @@ function Game() {
           console.log("Game initialization completed with result:", result);
 
           if (result.success) {
-            setLoadingState((prev) => ({
-              ...prev,
+            setLoadingState((prevState) => ({
+              ...prevState,
               isLoading: false,
               errorMessage: null,
             }));
@@ -124,8 +126,8 @@ function Game() {
               "Game initialization failed:",
               result.error || "Unknown error",
             );
-            setLoadingState((prev) => ({
-              ...prev,
+            setLoadingState((prevState) => ({
+              ...prevState,
               isLoading: false,
               errorMessage:
                 result.error?.message ||
@@ -135,8 +137,8 @@ function Game() {
         })
         .catch((error) => {
           console.error("Error in game initialization:", error);
-          setLoadingState((prev) => ({
-            ...prev,
+          setLoadingState((prevState) => ({
+            ...prevState,
             isLoading: false,
             errorMessage: `Error starting game: ${error.message || "Unknown error"}`,
           }));

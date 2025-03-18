@@ -60,7 +60,7 @@ export const useGameSessionStore = create((set, get) => ({
 }));
 
 /**
- * Check authentication status
+ * Check authentication status with more flexible authentication criteria
  * @returns {Object} Auth status including token availability
  */
 const checkAuthStatus = () => {
@@ -69,11 +69,39 @@ const checkAuthStatus = () => {
   const refreshToken = localStorage.getItem("refresh_token");
   const userId = config.session.getAuthUserId();
 
+  // Also check for direct localStorage values as fallback
+  const directTokenCheck =
+    localStorage.getItem("uncrypt-token") ||
+    sessionStorage.getItem("uncrypt-token");
+  const directUserIdCheck = localStorage.getItem("uncrypt-user-id");
+
+  // Use the most reliable token and user ID available
+  const finalAccessToken = accessToken || directTokenCheck;
+  const finalUserId = userId || directUserIdCheck;
+
   return {
-    hasAccessToken: !!accessToken,
+    hasAccessToken: !!finalAccessToken,
     hasRefreshToken: !!refreshToken,
-    hasUserId: !!userId,
-    isAuthenticated: !!accessToken && !!userId,
+    hasUserId: !!finalUserId,
+    // CRITICAL CHANGE: Consider authenticated if we at least have a token
+    // This allows continuation even if user ID is temporarily missing
+    isAuthenticated: !!finalAccessToken,
+
+    // Include the actual values for debugging (without exposing sensitive data)
+    _debug: {
+      tokenExists: !!finalAccessToken,
+      tokenSource: accessToken
+        ? "config.session"
+        : directTokenCheck
+          ? "direct storage"
+          : "none",
+      userIdExists: !!finalUserId,
+      userIdSource: userId
+        ? "config.session"
+        : directUserIdCheck
+          ? "direct storage"
+          : "none",
+    },
   };
 };
 
@@ -225,35 +253,102 @@ const startAnonymousGame = async (options = {}) => {
 };
 
 /**
- * Continue an existing saved game for authenticated user
+ * Continue an existing saved game for authenticated user with enhanced auth checking
  * @returns {Promise<Object>} Result of continuation attempt
  */
 const continueSavedGame = async () => {
   try {
     console.log("Attempting to continue saved game");
 
-    const { isAuthenticated } = checkAuthStatus();
-    if (!isAuthenticated) {
-      console.warn("Cannot continue game - user not authenticated");
-      return { success: false, reason: "not-authenticated" };
+    // Enhanced auth checking with full details for debugging
+    const authStatus = checkAuthStatus();
+    console.log("Auth status for continue game:", {
+      hasAccessToken: authStatus.hasAccessToken,
+      hasRefreshToken: authStatus.hasRefreshToken,
+      hasUserId: authStatus.hasUserId,
+      isAuthenticated: authStatus.isAuthenticated,
+      debug: authStatus._debug,
+    });
+
+    // If no token available at all, we can't continue
+    if (!authStatus.hasAccessToken) {
+      console.warn("Cannot continue game - no access token available");
+      return { success: false, reason: "no-access-token" };
     }
 
-    // Try to continue the game using the API
-    const response = await apiService.continueGame();
+    // Even without user ID, try to continue if we have a token
+    console.log("Proceeding with game continuation using available token");
 
-    if (!response) {
-      console.warn("Continue game API returned no data or error");
-      return { success: false, reason: "api-error" };
+    // Get the token directly for the API call
+    const token =
+      config.session.getAuthToken() ||
+      localStorage.getItem("uncrypt-token") ||
+      sessionStorage.getItem("uncrypt-token");
+
+    // Try to continue the game using the API with explicit token
+    const headers = { Authorization: `Bearer ${token}` };
+    console.log("Making continue game API call with explicit token");
+
+    const response = await apiService.api.get("/api/continue-game", {
+      headers,
+    });
+
+    if (!response || !response.data) {
+      console.warn("Continue game API returned no data");
+      return { success: false, reason: "api-error-no-data" };
     }
 
-    // Emit event to update game state
+    console.log("Successfully received game data from API:", {
+      hasEncrypted: !!response.data.encrypted_paragraph,
+      hasDisplay: !!response.data.display,
+      gameId: response.data.game_id,
+    });
+
+    // Store game ID if available
+    if (response.data.game_id) {
+      localStorage.setItem("uncrypt-game-id", response.data.game_id);
+      console.log("Stored game ID in localStorage:", response.data.game_id);
+    }
+
+    // Add validation to ensure proper game data
+    if (!response.data.encrypted_paragraph || !response.data.display) {
+      console.error("Invalid game data - missing required fields");
+      return { success: false, reason: "invalid-game-data" };
+    }
+
+    // Validate data integrity - critical for proper display
+    if (
+      response.data.encrypted_paragraph.length !== response.data.display.length
+    ) {
+      console.error(
+        "Data integrity error: Encrypted and display text lengths don't match!",
+        {
+          encryptedLength: response.data.encrypted_paragraph.length,
+          displayLength: response.data.display.length,
+        },
+      );
+    }
+
+    // Create comprehensive game data with guessedMappings pre-calculated
+    const gameData = {
+      ...response.data,
+
+      // Add pre-calculated mappings to avoid reconstruction in the store
+      guessedMappings: buildGuessedMappings(
+        response.data.correctly_guessed || [],
+        response.data.reverse_mapping || {},
+      ),
+    };
+
+    // Emit event to update game state with complete data
     eventEmitter.emit("game:continued", {
-      gameData: response,
+      gameData: gameData,
+      validated: true, // Flag to indicate this data has been validated
     });
 
     return {
       success: true,
-      gameData: response,
+      gameData: gameData,
     };
   } catch (error) {
     console.error("Error continuing saved game:", error);
@@ -261,7 +356,8 @@ const continueSavedGame = async () => {
     // Check if error was due to no active game
     const isNoGameError =
       error?.response?.status === 404 ||
-      error?.response?.data?.error?.includes("No active game");
+      (error?.response?.data?.error &&
+        error.response.data.error.includes("No active game"));
 
     if (isNoGameError) {
       console.log("No active game to continue - starting new game");
@@ -270,6 +366,18 @@ const continueSavedGame = async () => {
         success: false,
         reason: "no-active-game",
         shouldStartNew: true,
+      };
+    }
+
+    // Check for auth errors
+    if (error?.response?.status === 401) {
+      console.warn(
+        "Authentication error when continuing game - token may be invalid",
+      );
+      return {
+        success: false,
+        reason: "authentication-error",
+        authError: true,
       };
     }
 
@@ -285,6 +393,32 @@ const continueSavedGame = async () => {
     };
   }
 };
+
+/**
+ * Helper function to build guessedMappings from correctly guessed letters and reverse mapping
+ * @param {Array} correctlyGuessed Array of correctly guessed letters
+ * @param {Object} reverseMapping Mapping from encrypted to original letters
+ * @returns {Object} Constructed guessedMappings object
+ */
+function buildGuessedMappings(correctlyGuessed, reverseMapping) {
+  const mappings = {};
+
+  if (
+    !Array.isArray(correctlyGuessed) ||
+    !reverseMapping ||
+    typeof reverseMapping !== "object"
+  ) {
+    return mappings;
+  }
+
+  correctlyGuessed.forEach((letter) => {
+    if (letter in reverseMapping) {
+      mappings[letter] = reverseMapping[letter];
+    }
+  });
+
+  return mappings;
+}
 
 /**
  * Check for active game and decide whether to show continuation dialog
@@ -554,7 +688,6 @@ const initializeGameSession = async (options = {}) => {
  * @param {Object} credentials User credentials
  * @returns {Promise<Object>} Login result
  */
-// In gameSessionManager.js - update handleLogin function
 // In gameSessionManager.js - Update the handleLogin function
 
 const handleLogin = async (credentials) => {
@@ -569,8 +702,8 @@ const handleLogin = async (credentials) => {
       return { success: false, reason: "login-failed" };
     }
 
-    // CRITICAL FIX: Manually ensure token is properly stored
-    // This addresses race conditions where token might not be saved yet
+    // CRITICAL FIX: Manually ensure token and USER ID are properly stored
+    // This addresses race conditions where token/user might not be saved yet
     if (credentials.rememberMe) {
       localStorage.setItem("uncrypt-token", loginResult.access_token);
     } else {
@@ -582,8 +715,21 @@ const handleLogin = async (credentials) => {
       localStorage.setItem("refresh_token", loginResult.refresh_token);
     }
 
+    // CRITICAL ADDITION: Also store the user ID
+    if (loginResult.user_id) {
+      localStorage.setItem("uncrypt-user-id", loginResult.user_id);
+    } else if (loginResult.userId) {
+      // Some APIs might use userId instead of user_id
+      localStorage.setItem("uncrypt-user-id", loginResult.userId);
+    }
+
+    // If we have a username, store that too
+    if (loginResult.username) {
+      localStorage.setItem("uncrypt-username", loginResult.username);
+    }
+
     console.log(
-      "Manually saved auth tokens, waiting before checking game state",
+      "Manually saved auth tokens and user data, waiting before checking game state",
     );
 
     // Add a longer delay to ensure tokens are properly saved and recognized
@@ -593,6 +739,7 @@ const handleLogin = async (credentials) => {
       "Login successful, checking game state. Token exists:",
       !!config.session.getAuthToken(),
     );
+    console.log("User ID exists:", !!localStorage.getItem("uncrypt-user-id"));
 
     // Check for active game in account - use a try-catch to isolate this step
     try {

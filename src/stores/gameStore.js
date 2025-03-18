@@ -109,6 +109,7 @@ const useGameStore = create((set, get) => ({
   },
 
   // Continue a saved game
+  // Modified continueSavedGame function for gameStore.js with proper immutability
   continueSavedGame: async () => {
     try {
       console.log("Attempting to continue saved game in store");
@@ -122,7 +123,7 @@ const useGameStore = create((set, get) => ({
 
       // Get game state from API
       const response = await apiService.api.get("/api/continue-game");
-      console.log("Continue game store response:", response.data);
+      console.log("Continue game API response:", response.data);
 
       if (!response.data || response.data.error) {
         console.warn("Error or empty response from continue-game endpoint");
@@ -141,87 +142,127 @@ const useGameStore = create((set, get) => ({
         processedDisplay = processedDisplay.replace(/[^A-Z█]/g, "");
       }
 
-      // IMPORTANT: Directly use the mappings from the API response if available
-      // otherwise reconstruct them as a backup
-      let guessedMappings = {};
+      // Validate encrypted/display data
+      if (!processedEncrypted || !processedDisplay) {
+        console.error("Invalid game data - missing encrypted or display text");
+        return false;
+      }
 
-      // If game.guessedMappings exists, use that (from our enhanced gameSessionManager)
-      if (game.guessedMappings && typeof game.guessedMappings === "object") {
-        console.log("Using pre-calculated guessedMappings");
-        guessedMappings = game.guessedMappings;
-      } else {
-        // Otherwise reconstruct from correctly_guessed + reverse_mapping
-        console.log("Reconstructing guessedMappings from correctly_guessed");
-        const correctlyGuessed = Array.isArray(game.correctly_guessed)
-          ? game.correctly_guessed
-          : [];
+      // Validate that lengths match - critical for proper display
+      if (processedEncrypted.length !== processedDisplay.length) {
+        console.error("Data integrity error: Encrypted and display text lengths don't match!", {
+          encryptedLength: processedEncrypted.length,
+          displayLength: processedDisplay.length
+        });
 
-        if (game.reverse_mapping && correctlyGuessed.length > 0) {
-          correctlyGuessed.forEach((encryptedLetter) => {
-            if (encryptedLetter in game.reverse_mapping) {
-              guessedMappings[encryptedLetter] =
-                game.reverse_mapping[encryptedLetter];
-            }
-          });
+        // Try to fix if possible
+        if (game.encrypted_paragraph && game.display) {
+          console.log("Attempting to fix length mismatch");
+          // Re-process from original data
+          processedEncrypted = currentHardcoreMode 
+            ? game.encrypted_paragraph.replace(/[^A-Z]/g, "") 
+            : game.encrypted_paragraph;
+
+          processedDisplay = currentHardcoreMode 
+            ? game.display.replace(/[^A-Z█]/g, "") 
+            : game.display;
+        }
+
+        // Verify fix worked
+        if (processedEncrypted.length !== processedDisplay.length) {
+          console.error("Failed to fix length mismatch, returning failure");
+          return false;
         }
       }
 
-      console.log("Final guessedMappings:", guessedMappings);
+      // Construct proper guessedMappings with immutability
+      const correctlyGuessed = Array.isArray(game.correctly_guessed) 
+        ? [...game.correctly_guessed] 
+        : [];
 
-      // Before state update, log the actual data to verify
-      console.log("Before state update, actual data:", {
-        encrypted: processedEncrypted.substring(0, 20) + "...",
-        display: processedDisplay.substring(0, 20) + "...",
-        encryptedLength: processedEncrypted.length,
-        displayLength: processedDisplay.length,
-        correctlyGuessedCount: Array.isArray(game.correctly_guessed)
-          ? game.correctly_guessed.length
-          : 0,
-        guessedMappingsCount: Object.keys(guessedMappings).length,
-      });
+      const guessedMappings = {};
+
+      // If game has guessedMappings, use that
+      if (game.guessedMappings && typeof game.guessedMappings === "object") {
+        // Create a fresh copy for immutability
+        Object.entries(game.guessedMappings).forEach(([key, value]) => {
+          guessedMappings[key] = value;
+        });
+      } 
+      // Otherwise reconstruct from correctly_guessed and reverse_mapping
+      else if (game.reverse_mapping && correctlyGuessed.length > 0) {
+        correctlyGuessed.forEach((encryptedLetter) => {
+          if (encryptedLetter in game.reverse_mapping) {
+            guessedMappings[encryptedLetter] = game.reverse_mapping[encryptedLetter];
+          }
+        });
+      }
+
+      // Create a new letterFrequency object with immutability
+      const letterFrequency = {};
+      if (game.letter_frequency && typeof game.letter_frequency === "object") {
+        Object.entries(game.letter_frequency).forEach(([key, value]) => {
+          letterFrequency[key] = value;
+        });
+      } else {
+        // Calculate frequency if not provided
+        const matches = processedEncrypted.match(/[A-Z]/g) || [];
+        matches.forEach(letter => {
+          letterFrequency[letter] = (letterFrequency[letter] || 0) + 1;
+        });
+      }
 
       // Store game ID
       if (game.game_id) {
         localStorage.setItem("uncrypt-game-id", game.game_id);
       }
 
-      // Determine max mistakes based on difficulty
+      // Determine difficulty and max mistakes
       const difficulty = game.difficulty || "easy";
       const maxMistakesValue = MAX_MISTAKES_MAP[difficulty] || 8;
 
-      // Update state - completely replace state to ensure clean update
-      set({
+      // Create a complete new state object for immutability
+      const newGameState = {
+        // Core game data
         encrypted: processedEncrypted,
         display: processedDisplay,
         mistakes: game.mistakes || 0,
-        correctlyGuessed: Array.isArray(game.correctly_guessed)
-          ? game.correctly_guessed
-          : [],
-        selectedEncrypted: null,
-        lastCorrectGuess: null,
-        letterFrequency: game.letter_frequency || {},
+
+        // Derived/processed data with proper immutability
+        correctlyGuessed: correctlyGuessed,
         guessedMappings: guessedMappings,
-        originalLetters: game.original_letters || [],
-        startTime: Date.now() - (game.time_spent || 0) * 1000,
+        letterFrequency: letterFrequency,
+        originalLetters: Array.isArray(game.original_letters) 
+          ? [...game.original_letters] 
+          : [],
+
+        // Game metadata
         gameId: game.game_id,
-        hasGameStarted: true,
+        startTime: Date.now() - (game.time_spent || 0) * 1000,
+
+        // Game configuration
         hardcoreMode: currentHardcoreMode,
         difficulty: difficulty,
         maxMistakes: maxMistakesValue,
+
+        // Reset UI state
+        selectedEncrypted: null,
+        lastCorrectGuess: null,
+
+        // Game status flags
+        hasGameStarted: true,
         hasWon: false,
         hasLost: false,
         winData: null,
         isResetting: false,
-      });
+        stateInitialized: true  // Flag to indicate state is properly initialized
+      };
 
-      // Force a rerender to ensure the UI updates after a short delay
-      setTimeout(() => {
-        // Get current state
-        const currentState = get();
-        // Set the exact same state to trigger a rerender
-        set({ ...currentState });
-      }, 50);
+      // Replace entire game state at once for clean update
+      set(newGameState);
 
+      // Log success and return
+      console.log("Game state successfully continued with proper immutability");
       return true;
     } catch (error) {
       console.error("Error continuing saved game:", error);
