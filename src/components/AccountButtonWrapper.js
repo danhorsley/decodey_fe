@@ -3,7 +3,7 @@ import { FaUserCircle } from "react-icons/fa";
 import useSettingsStore from "../stores/settingsStore";
 import useAuthStore from "../stores/authStore";
 import useUIStore from "../stores/uiStore";
-import useGameSession from "../hooks/useGameSession"; // Add this import
+import useGameSession from "../hooks/useGameSession"; // Import the hook
 
 function AccountButtonWrapper() {
   // Get settings from store

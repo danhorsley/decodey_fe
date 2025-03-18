@@ -103,9 +103,6 @@ const ModalManager = ({ children }) => {
 
   // Set up event listeners from game session manager
   useEffect(() => {
-    // No need to set up apiService event listeners anymore
-    // Instead, use our centralized events
-
     // Subscribe to active game found events
     const unsubscribeActiveGame = subscribeToEvents(
       events.ACTIVE_GAME_FOUND,

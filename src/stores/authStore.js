@@ -33,21 +33,15 @@ const useAuthStore = create(
         }
 
         try {
-          // Configure API with token
-          apiService.api.defaults.headers.common["Authorization"] =
-            `Bearer ${token}`;
+          // Verify token through apiService
+          const response = await apiService.verifyToken();
 
-          // Verify token
-          const response = await apiService.api.get("/verify_token");
-
-          if (response.status === 200 && response.data.valid) {
-            // Check for active game
+          if (response && response.valid) {
+            // Check for active game through apiService
             let hasActiveGame = false;
             try {
-              const gameCheckResponse = await apiService.api.get(
-                "/api/check-active-game",
-              );
-              hasActiveGame = gameCheckResponse.data.has_active_game || false;
+              const gameCheckResponse = await apiService.checkActiveGame();
+              hasActiveGame = gameCheckResponse.has_active_game || false;
             } catch (gameCheckError) {
               console.warn("Error checking for active game:", gameCheckError);
             }
@@ -55,8 +49,8 @@ const useAuthStore = create(
             set({
               isAuthenticated: true,
               user: {
-                id: response.data.user_id,
-                username: response.data.username,
+                id: response.user_id,
+                username: response.username,
               },
               loading: false,
               hasActiveGame: hasActiveGame,
@@ -81,43 +75,15 @@ const useAuthStore = create(
       },
 
       handleInvalidToken: async () => {
-        // Prevent refresh attempts if there's no refresh token
-        const refreshToken = localStorage.getItem("refresh_token");
-        if (!refreshToken) {
-          console.log(
-            "No refresh token available - continuing as anonymous user",
-          );
-          // Don't emit auth:logout for anonymous users
-          return Promise.reject(
-            new Error("No refresh token available, continuing anonymously"),
-          );
-        }
-
         try {
           const refreshResult = await apiService.refreshToken();
 
           if (refreshResult && refreshResult.access_token) {
-            // Set the new token
-            apiService.api.defaults.headers.common["Authorization"] =
-              `Bearer ${refreshResult.access_token}`;
-
-            // Save the new token
-            if (localStorage.getItem("uncrypt-remember-me") === "true") {
-              localStorage.setItem("uncrypt-token", refreshResult.access_token);
-            } else {
-              sessionStorage.setItem(
-                "uncrypt-token",
-                refreshResult.access_token,
-              );
-            }
-
             // Check for active game
             let hasActiveGame = false;
             try {
-              const gameCheckResponse = await apiService.api.get(
-                "/api/check-active-game",
-              );
-              hasActiveGame = gameCheckResponse.data.has_active_game || false;
+              const gameCheckResponse = await apiService.checkActiveGame();
+              hasActiveGame = gameCheckResponse.has_active_game || false;
             } catch (gameCheckError) {
               console.warn("Error checking for active game:", gameCheckError);
             }

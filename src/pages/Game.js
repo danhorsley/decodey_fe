@@ -178,12 +178,17 @@ function Game() {
   const authReadyCheckedRef = useRef(false);
 
   // Enhanced initialization effect with better auth handling and game restoration
+  // Add a more robust initialization tracking mechanism
+  const initializationInProgressRef = useRef(false);
+  const successfullyInitializedRef = useRef(false);
 
-  // Game initialization effect - significantly simplified
+  // Game Initiailization
   useEffect(() => {
-    // Skip if we have encrypted text already
-    if (encrypted) {
-      console.log("Game already has encrypted text - skipping initialization");
+    // Skip if we already have game content or have successfully initialized
+    if (encrypted || successfullyInitializedRef.current) {
+      console.log(
+        "Game already initialized or has content - skipping initialization",
+      );
       setLoadingState((prev) => ({
         ...prev,
         isLoading: false,
@@ -193,15 +198,18 @@ function Game() {
       return;
     }
 
-    // Skip if initialization is already in progress
-    if (
-      isInitializing ||
-      (loadingState.isLoading &&
-        Date.now() - loadingState.lastAttemptTime < 1000) // Reduced from 5000ms to 1000ms
-    ) {
-      console.log("Game initialization already in progress");
+    // Skip if initialization is already in progress using our ref
+    if (initializationInProgressRef.current || isInitializing) {
+      console.log("Game initialization already in progress (ref check)");
       return;
     }
+
+    // Set our ref BEFORE any async operations
+    initializationInProgressRef.current = true;
+
+    console.log(
+      "Starting game initialization - setting initializationInProgressRef",
+    );
 
     // Update loading state
     setLoadingState((prev) => ({
@@ -212,15 +220,18 @@ function Game() {
       lastAttemptTime: Date.now(),
     }));
 
-    // Initialize game session
-    const initGame = async () => {
-      try {
-        const result = await initialize();
+    // Initialize the game with our hook
+    initialize()
+      .then((result) => {
+        console.log("Game initialization completed with result:", result);
+
+        // Mark initialization as complete regardless of result
+        initializationInProgressRef.current = false;
 
         if (result.success) {
-          console.log("Game initialized successfully");
+          // Mark as successfully initialized
+          successfullyInitializedRef.current = true;
           setGameLoaded(true);
-          // Immediately clear loading state on success
           setLoadingState((prev) => ({
             ...prev,
             isLoading: false,
@@ -239,24 +250,19 @@ function Game() {
               "Failed to start game. Please try again.",
           }));
         }
-      } catch (error) {
+      })
+      .catch((error) => {
+        // Reset initialization flag on error
+        initializationInProgressRef.current = false;
+
         console.error("Error in game initialization:", error);
         setLoadingState((prev) => ({
           ...prev,
           isLoading: false,
           errorMessage: `Error starting game: ${error.message || "Unknown error"}`,
         }));
-      }
-    };
-
-    initGame();
-  }, [
-    encrypted,
-    isInitializing,
-    initialize,
-    loadingState.isLoading,
-    loadingState.lastAttemptTime,
-  ]);
+      });
+  }, [encrypted, isInitializing, initialize]); // Keep dependencies minimal
 
   // Add this new effect to listen for game:loaded events
   useEffect(() => {

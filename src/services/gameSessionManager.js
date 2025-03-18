@@ -109,13 +109,13 @@ const checkForActiveGame = async () => {
       return { hasActiveGame: false };
     }
 
-    const response = await apiService.api.get("/api/check-active-game");
+    const response = await apiService.checkActiveGame();
 
-    if (response?.data?.has_active_game) {
-      console.log("Active game found:", response.data);
+    if (response?.has_active_game) {
+      console.log("Active game found:", response);
       return {
         hasActiveGame: true,
-        gameStats: response.data.game_stats,
+        gameStats: response.game_stats,
       };
     }
 
@@ -212,21 +212,21 @@ const continueSavedGame = async () => {
     }
 
     // Try to continue the game using the API
-    const response = await apiService.api.get("/api/continue-game");
+    const response = await apiService.continueGame();
 
-    if (response?.status !== 200 || !response?.data) {
+    if (!response) {
       console.warn("Continue game API returned no data or error");
-      return { success: false, reason: "api-error", status: response?.status };
+      return { success: false, reason: "api-error" };
     }
 
     // Emit event to update game state
     eventEmitter.emit("game:continued", {
-      gameData: response.data,
+      gameData: response,
     });
 
     return {
       success: true,
-      gameData: response.data,
+      gameData: response,
     };
   } catch (error) {
     console.error("Error continuing saved game:", error);
@@ -340,14 +340,6 @@ const initializeGameSession = async (options = {}) => {
     // Get current auth status
     const authStatus = checkAuthStatus();
     console.log("Current auth status:", authStatus);
-
-    // CASE 1: Anonymous user (no tokens)
-    // if (!authStatus.hasAccessToken) {
-    //   console.log("Anonymous user flow - starting new game");
-    //   const result = await startAnonymousGame(options);
-    //   sessionStore.setInitResult(result);
-    //   return result;
-    // }
 
     // CASE 1: Has access token but no refresh token
     if (authStatus.hasAccessToken && !authStatus.hasRefreshToken) {

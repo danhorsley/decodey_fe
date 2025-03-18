@@ -4,7 +4,7 @@ import "../Styles/About.css";
 import "../Styles/Login.css";
 import useSettingsStore from "../stores/settingsStore";
 import useUIStore from "../stores/uiStore";
-import useGameSession from "../hooks/useGameSession"; // Add this import
+import useGameSession from "../hooks/useGameSession"; // Import the hook
 
 function Login({ onClose }) {
   // Get contexts directly

@@ -5,13 +5,15 @@ import "../Styles/Login.css";
 import useSettingsStore from "../stores/settingsStore";
 import useAuthStore from "../stores/authStore";
 import useUIStore from "../stores/uiStore";
-import apiService from "../services/apiService";
+import useGameSession from "../hooks/useGameSession"; // Add this import
+import apiService from "../services/apiService"; // Using apiService directly for signup
 
 function Signup({ onClose }) {
   // Get contexts directly
   const settings = useSettingsStore((state) => state.settings);
   const openLogin = useUIStore((state) => state.openLogin);
-  const login = useAuthStore((state) => state.login);
+  // Use the game session hook for login after signup
+  const { handleUserLogin } = useGameSession();
 
   // Local state
   const [email, setEmail] = useState("");
@@ -42,19 +44,19 @@ function Signup({ onClose }) {
 
       try {
         // Make signup request using apiService
-        const result = await apiService.api.post("/signup", {
+        const result = await apiService.signup({
           email,
           username,
           password,
           emailConsent, // Add consent data to the request
         });
 
-        if (result.status === 201 || result.status === 200) {
+        if (result && result.msg === "User created successfully") {
           console.log("Account created successfully! Attempting auto-login");
 
           // Auto-login with the credentials just used for signup
           try {
-            const loginResult = await login({
+            const loginResult = await handleUserLogin({
               username, // Use the username from signup
               password, // Use the password from signup
               rememberMe: true, // Default to remember me for better UX
@@ -102,7 +104,7 @@ function Signup({ onClose }) {
             openLogin();
           }
         } else {
-          throw new Error(result.data?.message || "Signup failed");
+          throw new Error(result?.message || "Signup failed");
         }
       } catch (err) {
         console.error("Signup error:", err);
@@ -123,7 +125,8 @@ function Signup({ onClose }) {
       emailConsent,
       openLogin,
       onClose,
-      login, // Add login function to dependencies
+      handleUserLogin,
+      settings.theme,
     ],
   );
 
@@ -138,7 +141,7 @@ function Signup({ onClose }) {
     };
   };
 
-  // Username availability check
+  // Username availability check - using apiService
   const checkUsername = useCallback(
     debounce(async (value) => {
       if (value.length < 3) {
@@ -153,14 +156,12 @@ function Signup({ onClose }) {
       setUsernameStatus((prev) => ({ ...prev, checking: true }));
 
       try {
-        const response = await apiService.api.post("/check-username", {
-          username: value,
-        });
+        const response = await apiService.checkUsernameAvailability(value);
 
         setUsernameStatus({
           checking: false,
-          available: response.data.available,
-          message: response.data.available
+          available: response.available,
+          message: response.available
             ? "Username available!"
             : "Username already taken",
         });
@@ -293,5 +294,3 @@ function Signup({ onClose }) {
     </div>
   );
 }
-
-export default Signup;
