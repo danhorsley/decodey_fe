@@ -3,6 +3,7 @@ import { FaUserCircle } from "react-icons/fa";
 import useSettingsStore from "../stores/settingsStore";
 import useAuthStore from "../stores/authStore";
 import useUIStore from "../stores/uiStore";
+import useGameSession from "../hooks/useGameSession"; // Add this import
 
 function AccountButtonWrapper() {
   // Get settings from store
@@ -10,10 +11,12 @@ function AccountButtonWrapper() {
 
   // Get auth state using separate selectors
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const logout = useAuthStore((state) => state.logout);
 
   // Get UI actions from store
   const openLogin = useUIStore((state) => state.openLogin);
+
+  // Use our game session hook for logout
+  const { handleUserLogout, isInitializing: isLoggingOut } = useGameSession();
 
   // State for logout confirmation
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
@@ -27,8 +30,21 @@ function AccountButtonWrapper() {
     }
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    // Use our centralized logout function
+    try {
+      const result = await handleUserLogout(true);
+
+      if (result.success) {
+        console.log("Logout successful, started new anonymous game");
+      } else {
+        console.warn("Logout had issues:", result.error || "Unknown error");
+      }
+    } catch (error) {
+      console.error("Error during logout:", error);
+    }
+
+    // Close the confirmation dialog
     setShowLogoutConfirmation(false);
   };
 
@@ -77,8 +93,9 @@ function AccountButtonWrapper() {
                 className="login-button"
                 onClick={handleLogout}
                 style={{ flex: "1", marginLeft: "10px" }}
+                disabled={isLoggingOut}
               >
-                Logout
+                {isLoggingOut ? "Logging out..." : "Logout"}
               </button>
             </div>
           </div>

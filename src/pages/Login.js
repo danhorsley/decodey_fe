@@ -3,16 +3,17 @@ import React, { useState } from "react";
 import "../Styles/About.css";
 import "../Styles/Login.css";
 import useSettingsStore from "../stores/settingsStore";
-import useAuthStore from "../stores/authStore";
 import useUIStore from "../stores/uiStore";
-import apiService from "../services/apiService";
+import useGameSession from "../hooks/useGameSession"; // Add this import
 
 function Login({ onClose }) {
   // Get contexts directly
   const settings = useSettingsStore((state) => state.settings);
-  const login = useAuthStore((state) => state.login);
   const openSignup = useUIStore((state) => state.openSignup);
   const closeLogin = useUIStore((state) => state.closeLogin);
+
+  // Use our game session hook instead of direct auth store
+  const { handleUserLogin, isInitializing: isLoggingIn } = useGameSession();
 
   // Local state
   const [username, setUsername] = useState("");
@@ -20,7 +21,6 @@ function Login({ onClose }) {
   const [rememberMe, setRememberMe] = useState(() => {
     return localStorage.getItem("uncrypt-remember-me") === "true";
   });
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
   // Handle forgotten password
@@ -33,10 +33,9 @@ function Login({ onClose }) {
     openSignup();
   };
 
-  // Handle form submission
+  // Handle form submission - now using our centralized service
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
     setError("");
 
     const credentials = {
@@ -46,7 +45,8 @@ function Login({ onClose }) {
     };
 
     try {
-      const result = await login(credentials);
+      // Use our centralized login function
+      const result = await handleUserLogin(credentials);
 
       if (result.success) {
         // Store remember me preference
@@ -54,22 +54,15 @@ function Login({ onClose }) {
 
         // Close the login modal immediately
         onClose();
-
-        // Explicitly emit event for checking active games if needed
-        if (result.data && result.data.has_active_game) {
-          console.log("Login successful with active game, triggering check");
-          apiService.events.emit("auth:active-game-check-needed");
-        }
       } else {
         setError(
-          result.error || "Login failed. Please check your credentials.",
+          result.error?.message ||
+            "Login failed. Please check your credentials.",
         );
       }
     } catch (err) {
       console.error("Login error:", err);
       setError("Login failed. Please check your credentials.");
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -115,8 +108,8 @@ function Login({ onClose }) {
               <span>Remember me</span>
             </label>
           </div>
-          <button type="submit" className="login-button" disabled={isLoading}>
-            {isLoading ? "Logging in..." : "Login"}
+          <button type="submit" className="login-button" disabled={isLoggingIn}>
+            {isLoggingIn ? "Logging in..." : "Login"}
           </button>
 
           <div className="login-actions">

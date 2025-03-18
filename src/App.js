@@ -4,12 +4,8 @@ import {
   BrowserRouter as Router,
   Routes,
   Route,
-  Navigate,
   useLocation,
 } from "react-router-dom";
-// Import stores if needed for initialization
-// import useUIStore from "./stores/uiStore";
-// import useSettingsStore from "./stores/settingsStore";
 
 // Import ModalManager
 import ModalManager from "./components/modals/ModalManager";
@@ -50,11 +46,9 @@ function GlobalUIElements() {
 
 // Main App component using Router
 function App() {
-  // You can initialize stores here if needed
-  // const initializeUI = useUIStore(state => state.initialize);
-  // useEffect(() => {
-  //   initializeUI();
-  // }, [initializeUI]);
+  // No need to initialize any stores manually
+  // The game session manager is used by the components that need it
+  // and it initializes itself on first use
 
   return (
     <Router>

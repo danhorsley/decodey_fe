@@ -23,6 +23,7 @@ import MobileLayout from "../components/layout/MobileLayout";
 import WinCelebration from "../components/modals/WinCelebration";
 import MatrixRain from "../components/effects/MatrixRain";
 import MatrixRainLoading from "../components/effects/MatrixRainLoading";
+import useGameSession from "../hooks/useGameSession";
 // Letter cell component using memo to reduce re-renders
 const LetterCell = React.memo(
   ({
@@ -103,7 +104,8 @@ function Game() {
   const isSignupOpen = useUIStore((state) => state.isSignupOpen) || false;
   const isSettingsOpen = useUIStore((state) => state.isSettingsOpen) || false;
   const isAboutOpen = useUIStore((state) => state.isAboutOpen) || false;
-
+  //Game Session management
+  const { initialize, isInitializing, lastError } = useGameSession();
   // Local state
   const [loadingState, setLoadingState] = useState({
     isLoading: true,
@@ -157,21 +159,10 @@ function Game() {
 
   // Enhanced initialization effect with better auth handling and game restoration
   // In Game.js, modify the initialization useEffect
+
+  // Game initialization effect - significantly simplified
   useEffect(() => {
-    console.log("Game initialization effect running with state:", {
-      hasEncryptedText: !!encrypted,
-      loadingState: loadingState,
-      initAttempted: initializationAttemptedRef.current,
-      hasWon: hasWon, // Add hasWon to the logging
-    });
-
-    // If we're in a win state, don't auto-initialize (let the win celebration handle it)
-    if (hasWon) {
-      console.log("Game in win state, skipping auto-initialization");
-      return;
-    }
-
-    // If we already have encrypted text, just mark the game as loaded and exit
+    // Skip if we have encrypted text already
     if (encrypted) {
       console.log("Game already has encrypted text - skipping initialization");
       setLoadingState((prev) => ({
@@ -183,37 +174,17 @@ function Game() {
       return;
     }
 
-    // If we're already loading, don't start another initialization
+    // Skip if initialization is already in progress
     if (
-      loadingState.isLoading &&
-      Date.now() - loadingState.lastAttemptTime < 5000
+      isInitializing ||
+      (loadingState.isLoading &&
+        Date.now() - loadingState.lastAttemptTime < 5000)
     ) {
-      console.log(
-        "Already in loading state - not starting another initialization",
-      );
+      console.log("Game initialization already in progress");
       return;
     }
 
-    // Avoid initialization attempts if we recently attempted one (unless explicitly requested)
-    const explicitlyRequested =
-      loadingState.attemptCount === 0 ||
-      initializationAttemptedRef.current === false;
-
-    if (!explicitlyRequested && loadingState.attemptCount > 0) {
-      console.log(
-        "Recent initialization attempt exists - not trying again automatically",
-      );
-      setLoadingState((prev) => ({
-        ...prev,
-        isLoading: false,
-      }));
-      return;
-    }
-
-    // Mark that we're attempting initialization
-    initializationAttemptedRef.current = true;
-
-    // Update loading state to show we're starting a new attempt
+    // Update loading state
     setLoadingState((prev) => ({
       isLoading: true,
       hasTimedOut: false,
@@ -222,95 +193,95 @@ function Game() {
       lastAttemptTime: Date.now(),
     }));
 
-    let mounted = true;
-
-    const initializeGame = async () => {
+    // Initialize game session
+    const initGame = async () => {
       try {
-        // Ensure auth state is ready
-        await waitForAuthReady();
+        const result = await initialize();
 
-        // First try to continue saved game if authenticated
-        const storedGameId = localStorage.getItem("uncrypt-game-id");
-        if (storedGameId && isAuthenticated) {
-          console.log("Attempting to continue stored game:", storedGameId);
-
-          if (typeof continueSavedGame === "function") {
-            const result = await continueSavedGame();
-            if (result && mounted) {
-              console.log("Successfully continued saved game");
-              setGameLoaded(true);
-              setLoadingState((prev) => ({
-                ...prev,
-                isLoading: false,
-                errorMessage: null,
-              }));
-              return;
-            } else {
-              console.warn(
-                "Failed to continue saved game, will try starting new game",
-              );
-            }
-          }
-        }
-
-        // Start a new game
-        console.log("Starting new game (initialization)");
-        if (typeof startGame !== "function") {
-          throw new Error("startGame is not a function");
-        }
-
-        const longTextSetting = settings?.longText === true;
-        const hardcoreModeSetting = settings?.hardcoreMode === true;
-
-        const result = await startGame(longTextSetting, hardcoreModeSetting);
-
-        if (mounted) {
-          if (result) {
-            console.log("Game initialized successfully");
-            setGameLoaded(true);
-            setLoadingState((prev) => ({
-              ...prev,
-              isLoading: false,
-              errorMessage: null,
-            }));
-          } else {
-            console.warn("Game initialization returned false");
-            setLoadingState((prev) => ({
-              ...prev,
-              isLoading: false,
-              errorMessage: "Failed to start game. Please try again.",
-            }));
-          }
-        }
-      } catch (err) {
-        console.error("Error initializing game:", err);
-        if (mounted) {
+        if (result.success) {
+          console.log("Game initialized successfully");
+          setGameLoaded(true);
           setLoadingState((prev) => ({
             ...prev,
             isLoading: false,
-            errorMessage: `Error starting game: ${err.message || "Unknown error"}`,
+            errorMessage: null,
+          }));
+        } else {
+          console.warn(
+            "Game initialization failed:",
+            result.error || "Unknown error",
+          );
+          setLoadingState((prev) => ({
+            ...prev,
+            isLoading: false,
+            errorMessage:
+              result.error?.message ||
+              "Failed to start game. Please try again.",
           }));
         }
+      } catch (error) {
+        console.error("Error in game initialization:", error);
+        setLoadingState((prev) => ({
+          ...prev,
+          isLoading: false,
+          errorMessage: `Error starting game: ${error.message || "Unknown error"}`,
+        }));
       }
     };
 
-    // Start initialization process
-    initializeGame();
-
-    return () => {
-      mounted = false;
-    };
+    initGame();
   }, [
     encrypted,
-    isAuthenticated,
-    continueSavedGame,
-    startGame,
-    settings?.longText,
-    settings?.hardcoreMode,
-    loadingState.attemptCount,
+    isInitializing,
+    initialize,
+    loadingState.isLoading,
     loadingState.lastAttemptTime,
-    hasWon, // Add hasWon as a dependency
   ]);
+
+  // Handle start new game action - simplified with our service
+  const handleStartNewGame = useCallback(async () => {
+    try {
+      setLoadingState((prev) => ({
+        isLoading: true,
+        hasTimedOut: false,
+        attemptCount: prev.attemptCount + 1,
+        errorMessage: null,
+        lastAttemptTime: Date.now(),
+      }));
+
+      // Force a new game initialization
+      const result = await initialize(true);
+
+      if (result.success) {
+        console.log("New game started successfully");
+        setGameLoaded(true);
+        setLoadingState((prev) => ({
+          ...prev,
+          isLoading: false,
+          errorMessage: null,
+        }));
+      } else {
+        console.warn(
+          "Failed to start new game:",
+          result.error || "Unknown error",
+        );
+        setLoadingState((prev) => ({
+          ...prev,
+          isLoading: false,
+          errorMessage:
+            result.error?.message ||
+            "Failed to start new game. Please try again.",
+        }));
+      }
+    } catch (error) {
+      console.error("Error starting new game:", error);
+      setLoadingState((prev) => ({
+        ...prev,
+        isLoading: false,
+        errorMessage: `Error starting game: ${error.message || "Unknown error"}`,
+      }));
+    }
+  }, [initialize]);
   // Watch for local win detection
   useEffect(() => {
     try {
@@ -468,98 +439,6 @@ function Game() {
   // Start a new game manually
 
   // In Game.js, update the handleStartNewGame function
-  const handleStartNewGame = useCallback(async () => {
-    try {
-      // Reset initialization flag to force a new attempt
-      initializationAttemptedRef.current = false;
-
-      // Update loading state
-      setLoadingState((prev) => ({
-        isLoading: true,
-        hasTimedOut: false,
-        attemptCount: prev.attemptCount + 1,
-        errorMessage: null,
-        lastAttemptTime: Date.now(),
-      }));
-
-      // If authenticated and we have continueSavedGame function, try that first
-      if (isAuthenticated && typeof continueSavedGame === "function") {
-        console.log("Attempting to continue saved game from retry button");
-
-        try {
-          const continuationResult = await continueSavedGame();
-
-          if (continuationResult) {
-            console.log("Successfully continued saved game");
-            setGameLoaded(true);
-            setLoadingState((prev) => ({
-              ...prev,
-              isLoading: false,
-              errorMessage: null,
-            }));
-            return;
-          } else {
-            console.log(
-              "Failed to continue saved game, falling back to new game",
-            );
-          }
-        } catch (contErr) {
-          console.error(
-            "Error continuing saved game, falling back to new game:",
-            contErr,
-          );
-        }
-      }
-
-      // Fallback to starting a new game if continuation fails or is not available
-      console.log(
-        "Starting new game (either no saved game or continuation failed)",
-      );
-
-      // Use the resetAndStartNewGame function if available
-      if (typeof resetAndStartNewGame === "function") {
-        const longTextSetting = settings?.longText === true;
-        const hardcoreModeSetting = settings?.hardcoreMode === true;
-
-        const result = await resetAndStartNewGame(
-          longTextSetting,
-          hardcoreModeSetting,
-        );
-
-        if (result) {
-          console.log("Successfully reset and started new game");
-          setGameLoaded(true);
-          setLoadingState((prev) => ({
-            ...prev,
-            isLoading: false,
-            errorMessage: null,
-          }));
-        } else {
-          console.error("Failed to reset and start new game");
-          setLoadingState((prev) => ({
-            ...prev,
-            isLoading: false,
-            errorMessage: "Failed to start new game. Please try again.",
-          }));
-        }
-      } else {
-        // Fallbacks remain the same...
-      }
-    } catch (error) {
-      console.error("Error starting new game:", error);
-      setLoadingState((prev) => ({
-        ...prev,
-        isLoading: false,
-        errorMessage: `Error starting game: ${error.message || "Unknown error"}`,
-      }));
-    }
-  }, [
-    resetAndStartNewGame,
-    settings,
-    resetGame,
-    isAuthenticated,
-    continueSavedGame,
-  ]);
 
   //**SUBMIT GUESS **//
   const handleSubmitGuess = useCallback(
