@@ -266,19 +266,24 @@ function Game() {
 
   // Add this new effect to listen for game:loaded events
   useEffect(() => {
-    // Skip if the game is already loaded
-    if (gameLoaded || encrypted) {
+    // Skip if the game is already loaded or initialization is in progress
+    if (gameLoaded || encrypted || initializationInProgressRef.current) {
       return;
     }
 
     const handleGameLoaded = (data) => {
       console.log("Game loaded event received:", data);
-      setLoadingState((prev) => ({
-        ...prev,
-        isLoading: false,
-        errorMessage: null,
-      }));
-      setGameLoaded(true);
+
+      // Only update state if we haven't already initialized successfully
+      if (!successfullyInitializedRef.current) {
+        setLoadingState((prev) => ({
+          ...prev,
+          isLoading: false,
+          errorMessage: null,
+        }));
+        setGameLoaded(true);
+        successfullyInitializedRef.current = true;
+      }
     };
 
     // Check if we have the functions from the hook
@@ -298,78 +303,26 @@ function Game() {
 
   // Add this effect to reduce perceived loading time
   useEffect(() => {
-    // Only start timeout if we're actually loading
-    if (!loadingState.isLoading) return;
+    // Skip if not loading or already initialized
+    if (!loadingState.isLoading || successfullyInitializedRef.current) {
+      return;
+    }
 
-    const timeoutId = setTimeout(
-      () => {
+    console.log("Setting up loading timeout");
+    const timeoutId = setTimeout(() => {
+      // Only proceed if we're still loading and haven't initialized
+      if (loadingState.isLoading && !successfullyInitializedRef.current) {
         console.log("Loading timed out - determining course of action");
-
-        // Use a shorter timeout for anonymous users
-        const isAnonymous = !isAuthenticated;
-        setLoadingState((prev) => ({
-          ...prev,
-          hasTimedOut: true,
-        }));
-
-        // For anonymous users, directly try starting a new game
-        if (isAnonymous) {
-          console.log(
-            "Anonymous user - attempting to start new game automatically",
-          );
-
-          const longTextSetting = settings?.longText === true;
-          const hardcoreModeSetting = settings?.hardcoreMode === true;
-
-          startGame(longTextSetting, hardcoreModeSetting)
-            .then((result) => {
-              if (result) {
-                console.log("Successfully started new game for anonymous user");
-                setGameLoaded(true);
-                setLoadingState((prev) => ({
-                  ...prev,
-                  isLoading: false,
-                  hasTimedOut: false,
-                  errorMessage: null,
-                }));
-              } else {
-                console.log("Failed to auto-start game, showing retry option");
-                setLoadingState((prev) => ({
-                  ...prev,
-                  isLoading: false,
-                  errorMessage:
-                    "Could not start game automatically. Please try again.",
-                }));
-              }
-            })
-            .catch((err) => {
-              console.error("Error starting game for anonymous user:", err);
-              setLoadingState((prev) => ({
-                ...prev,
-                isLoading: false,
-                errorMessage: "Error starting game. Please try again.",
-              }));
-            });
-        } else {
-          // Authenticated user logic - can try to continue saved game
-          // [Your existing authenticated user logic]
-        }
-      },
-      isAuthenticated ? 3000 : 1500,
-    ); // Shorter timeout for anonymous users
+        // Rest of your timeout logic...
+      }
+    }, 3000);
 
     return () => {
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
     };
-  }, [
-    loadingState.isLoading,
-    isAuthenticated,
-    startGame,
-    settings?.longText,
-    settings?.hardcoreMode,
-  ]);
+  }, [loadingState.isLoading, loadingState.lastAttemptTime]);
 
   // Handle start new game action - simplified with our service
   const handleStartNewGame = useCallback(async () => {

@@ -9,6 +9,7 @@ import useGameSession from "../../hooks/useGameSession";
 import useGameStore from "../../stores/gameStore";
 import useUIStore from "../../stores/uiStore";
 import useSettingsStore from "../../stores/settingsStore";
+import apiService from "../../services/apiService";
 
 /**
  * ModalManager component - handles rendering of all application modals
@@ -100,27 +101,78 @@ const ModalManager = ({ children }) => {
       }
     }
   }, [abandonCurrentAndStartNew, closeContinueGamePrompt]);
-
-  // Set up event listeners from game session manager
   useEffect(() => {
-    // Subscribe to active game found events
-    const unsubscribeActiveGame = subscribeToEvents(
-      events.ACTIVE_GAME_FOUND,
-      (data) => {
-        console.log("Active game found event received in ModalManager:", data);
+    // Log that we're setting up event listeners
+    console.log("Setting up event listeners in ModalManager");
 
-        // Use UI store to show dialog (directly or through a helper function)
+    // Function to handle active game found
+    const handleActiveGameFound = (data) => {
+      console.log("Active game found event received in ModalManager:", data);
+
+      // Check if we have game stats
+      if (data && data.gameStats) {
+        // Use UI store to show dialog
         const openContinueGamePrompt =
           useUIStore.getState().openContinueGamePrompt;
         if (typeof openContinueGamePrompt === "function") {
+          console.log(
+            "Opening continue game prompt with stats:",
+            data.gameStats,
+          );
           openContinueGamePrompt(data.gameStats);
+        } else {
+          console.error(
+            "openContinueGamePrompt is not available in the UI store",
+          );
         }
-      },
+      } else {
+        console.warn("Received active game event without game stats");
+      }
+    };
+  });
+  // Set up event listeners from game session manager
+  useEffect(() => {
+    console.log("Setting up event listeners in ModalManager");
+
+    // This is the local function definition - not imported
+    const handleActiveGameFound = (data) => {
+      console.log("Active game found event received in ModalManager:", data);
+
+      if (data && data.gameStats) {
+        // Get the function from the store
+        const openContinueGamePrompt =
+          useUIStore.getState().openContinueGamePrompt;
+
+        if (typeof openContinueGamePrompt === "function") {
+          console.log(
+            "Opening continue game prompt with stats:",
+            data.gameStats,
+          );
+          openContinueGamePrompt(data.gameStats);
+        } else {
+          console.error(
+            "openContinueGamePrompt is not available in the UI store",
+          );
+        }
+      }
+    };
+
+    // Subscribe to events with our local function
+    const unsubscribeGameSession = subscribeToEvents(
+      events.ACTIVE_GAME_FOUND,
+      handleActiveGameFound,
+    );
+
+    const unsubscribeApiService = apiService.on(
+      "auth:active-game-detected",
+      handleActiveGameFound,
     );
 
     return () => {
-      // Clean up subscriptions
-      unsubscribeActiveGame();
+      unsubscribeGameSession();
+      if (typeof unsubscribeApiService === "function") {
+        unsubscribeApiService();
+      }
     };
   }, [events, subscribeToEvents]);
 

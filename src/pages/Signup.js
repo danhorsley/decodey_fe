@@ -294,3 +294,5 @@ function Signup({ onClose }) {
     </div>
   );
 }
+
+export default Signup;

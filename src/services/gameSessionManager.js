@@ -109,13 +109,40 @@ const checkForActiveGame = async () => {
       return { hasActiveGame: false };
     }
 
-    const response = await apiService.checkActiveGame();
+    // Make a direct API call with full logging
+    console.log("Making API call to check-active-game with headers:", {
+      Authorization: "Bearer token exists: " + !!config.session.getAuthToken(),
+    });
 
-    if (response?.has_active_game) {
-      console.log("Active game found:", response);
+    const response = await apiService.api.get("/api/check-active-game");
+    console.log("check-active-game response:", response.data);
+
+    if (response?.data?.has_active_game) {
+      console.log("✅ Active game found:", response.data);
+
+      // Log event emission for debugging
+      console.log(
+        "Emitting active-game-found event with stats:",
+        response.data.game_stats,
+      );
+
+      // Emit event in multiple ways to ensure it's caught
+      eventEmitter.emit("game:active-game-found", {
+        gameStats: response.data.game_stats,
+      });
+
+      // Also emit through apiService for redundancy
+      if (apiService.events && typeof apiService.events.emit === "function") {
+        console.log("Also emitting through apiService");
+        apiService.events.emit("auth:active-game-detected", {
+          hasActiveGame: true,
+          activeGameStats: response.data.game_stats,
+        });
+      }
+
       return {
         hasActiveGame: true,
-        gameStats: response.game_stats,
+        gameStats: response.data.game_stats,
       };
     }
 
@@ -527,6 +554,7 @@ const initializeGameSession = async (options = {}) => {
  * @param {Object} credentials User credentials
  * @returns {Promise<Object>} Login result
  */
+// In gameSessionManager.js - update handleLogin function
 const handleLogin = async (credentials) => {
   try {
     console.log("Handling login flow");
@@ -541,14 +569,63 @@ const handleLogin = async (credentials) => {
 
     console.log("Login successful, checking game state");
 
-    // Check for active game in account
-    const gameStateCheck = await checkGameStateOnLogin();
+    // Add a small delay before checking for active game
+    // This gives the backend a moment to register the login fully
+    await new Promise((resolve) => setTimeout(resolve, 300));
 
-    return {
-      success: true,
-      loginData: loginResult,
-      gameState: gameStateCheck,
-    };
+    // Check for active game in account - directly call API instead of using checkGameStateOnLogin
+    try {
+      console.log("Making direct API call to check-active-game after login");
+      const response = await apiService.api.get("/api/check-active-game");
+
+      const hasActiveGame = response?.data?.has_active_game || false;
+      const gameStats = response?.data?.game_stats || null;
+
+      console.log("Active game check after login:", {
+        hasActiveGame,
+        gameStats,
+      });
+
+      if (hasActiveGame && gameStats) {
+        // Explicitly emit the event for UI components to catch
+        console.log("Emitting active-game-found event with stats:", gameStats);
+        eventEmitter.emit("game:active-game-found", {
+          gameStats: gameStats,
+        });
+
+        // Also emit through the apiService for backward compatibility
+        apiService.events.emit("auth:active-game-detected", {
+          hasActiveGame: true,
+          activeGameStats: gameStats,
+        });
+      }
+
+      return {
+        success: true,
+        loginData: loginResult,
+        gameState: {
+          hasActiveGame,
+          showContinuationDialog: hasActiveGame,
+          gameStats,
+        },
+      };
+    } catch (gameCheckError) {
+      console.error(
+        "Error checking for active game after login:",
+        gameCheckError,
+      );
+
+      // Continue with login success even if game check fails
+      return {
+        success: true,
+        loginData: loginResult,
+        gameState: {
+          hasActiveGame: false,
+          showContinuationDialog: false,
+          error: gameCheckError,
+        },
+      };
+    }
   } catch (error) {
     console.error("Error in login flow:", error);
     return {
