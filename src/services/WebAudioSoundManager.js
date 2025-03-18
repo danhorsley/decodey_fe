@@ -1,15 +1,15 @@
 // src/services/WebAudioSoundManager.js
 import { useState, useCallback, useRef, useEffect } from "react";
 import { vibrate, isVibrationEnabled } from "../utils/hapticUtils";
-import { useSettings } from "../context/SettingsContext"; // Import useSettings hook
-
+import useSettingsStore from "../stores/settingsStore";
 /**
  * Custom hook for sound management using Web Audio API
  * Generates sounds on-the-fly instead of loading MP3 files
  */
 const useSound = () => {
   // Use settings context for sound state
-  const { settings, updateSettings } = useSettings();
+  const settings = useSettingsStore((state) => state.settings);
+  const updateSettings = useSettingsStore((state) => state.updateSettings);
   const [soundEnabled, setSoundEnabled] = useState(
     settings?.soundEnabled !== undefined ? settings.soundEnabled : true,
   );

@@ -1,10 +1,10 @@
 // src/pages/NotFound.js
 import React, { useEffect } from "react";
-import { useSettings } from "../context/SettingsContext";
+import useSettingsStore from "../stores/settingsStore";
 import HeaderControls from "../components/HeaderControls";
 
 function NotFound() {
-  const { settings } = useSettings();
+  const settings = useSettingsStore((state) => state.settings);
 
   // Set the HTTP status code to 404
   useEffect(() => {

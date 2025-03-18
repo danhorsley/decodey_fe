@@ -16,7 +16,6 @@ import "./Styles/Modal.css";
 
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
-import { AppProviders } from "./context"; // Import the new AppProviders
 import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
 
 // Add data-theme attribute to HTML element for Samsung Browser
@@ -46,14 +45,10 @@ const isProduction = process.env.NODE_ENV === "production";
 // Important: Use the new AppProviders component here, not the old AppProvider
 root.render(
   isProduction ? (
-    <AppProviders>
-      <App />
-    </AppProviders>
+    <App />
   ) : (
     <React.StrictMode>
-      <AppProviders>
-        <App />
-      </AppProviders>
+      <App />
     </React.StrictMode>
   ),
 );

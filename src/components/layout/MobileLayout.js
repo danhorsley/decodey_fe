@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useAppContext } from "../../context/AppContext";
+import useSettingsStore from "../../stores/settingsStore";
+import useUIStore from "../../stores/uiStore";
 // No need to import multiple CSS files - using consolidated files instead
 
 /**
@@ -8,7 +9,8 @@ import { useAppContext } from "../../context/AppContext";
  */
 const MobileLayout = ({ children, isLandscape }) => {
   // Get theme settings from context
-  const { settings } = useAppContext();
+  const settings = useSettingsStore((state) => state.settings);
+  const updateMobileMode = useUIStore((state) => state.updateMobileMode);
   const { theme, textColor } = settings;
   const [dismissedWarning, setDismissedWarning] = useState(false);
 
