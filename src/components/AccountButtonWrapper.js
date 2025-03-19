@@ -3,26 +3,24 @@ import { FaUserCircle } from "react-icons/fa";
 import useSettingsStore from "../stores/settingsStore";
 import useAuthStore from "../stores/authStore";
 import useUIStore from "../stores/uiStore";
-import useGameSession from "../hooks/useGameSession"; // Import the hook
+import useGameSession from "../hooks/useGameSession";
 
 function AccountButtonWrapper() {
-  // Get settings from store
+  // Get settings and auth state
   const settings = useSettingsStore((state) => state.settings);
-
-  // Get auth state using separate selectors
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
-  // Get UI actions from store
+  // Get UI actions
   const openLogin = useUIStore((state) => state.openLogin);
 
-  // Use our game session hook for logout
-  const { handleUserLogout, isInitializing: isLoggingOut } = useGameSession();
+  // Use simplified game session hook for logout
+  const { userLogout, isInitializing } = useGameSession();
 
   // State for logout confirmation
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
 
+  // Handle account icon click
   const handleClick = () => {
-    // If authenticated, show logout confirmation, otherwise open login modal
     if (isAuthenticated) {
       setShowLogoutConfirmation(true);
     } else {
@@ -30,24 +28,14 @@ function AccountButtonWrapper() {
     }
   };
 
+  // Handle logout
   const handleLogout = async () => {
-    // Use our centralized logout function
-    try {
-      const result = await handleUserLogout(true);
-
-      if (result.success) {
-        console.log("Logout successful, started new anonymous game");
-      } else {
-        console.warn("Logout had issues:", result.error || "Unknown error");
-      }
-    } catch (error) {
-      console.error("Error during logout:", error);
-    }
-
-    // Close the confirmation dialog
+    // Use simplified logout function from hook
+    await userLogout(true);
     setShowLogoutConfirmation(false);
   };
 
+  // Handle cancel logout
   const handleCancelLogout = () => {
     setShowLogoutConfirmation(false);
   };
@@ -93,9 +81,9 @@ function AccountButtonWrapper() {
                 className="login-button"
                 onClick={handleLogout}
                 style={{ flex: "1", marginLeft: "10px" }}
-                disabled={isLoggingOut}
+                disabled={isInitializing}
               >
-                {isLoggingOut ? "Logging out..." : "Logout"}
+                {isInitializing ? "Logging out..." : "Logout"}
               </button>
             </div>
           </div>

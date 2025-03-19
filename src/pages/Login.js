@@ -1,19 +1,18 @@
-// src/pages/Login.js
+// src/pages/Login.js - Simplified with gameSession hook
 import React, { useState } from "react";
 import "../Styles/About.css";
 import "../Styles/Login.css";
 import useSettingsStore from "../stores/settingsStore";
 import useUIStore from "../stores/uiStore";
-import useGameSession from "../hooks/useGameSession"; // Import the hook
+import useGameSession from "../hooks/useGameSession";
 
 function Login({ onClose }) {
-  // Get contexts directly
+  // Get settings and UI actions
   const settings = useSettingsStore((state) => state.settings);
   const openSignup = useUIStore((state) => state.openSignup);
-  const closeLogin = useUIStore((state) => state.closeLogin);
 
-  // Use our game session hook instead of direct auth store
-  const { handleUserLogin, isInitializing: isLoggingIn } = useGameSession();
+  // Use streamlined game session hook for login
+  const { loginAndInitGame, isInitializing } = useGameSession();
 
   // Local state
   const [username, setUsername] = useState("");
@@ -23,19 +22,7 @@ function Login({ onClose }) {
   });
   const [error, setError] = useState("");
 
-  // Handle forgotten password
-  const handleForgotPassword = () => {
-    alert("Password reset functionality will be available soon!");
-  };
-
-  // Handle account creation
-  const handleCreateAccount = () => {
-    openSignup();
-  };
-
-  // Handle form submission - now using our centralized service
-  // In Login.js - Update the handleSubmit function
-
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -47,39 +34,14 @@ function Login({ onClose }) {
     };
 
     try {
-      // Use our centralized login function
-      const result = await handleUserLogin(credentials);
+      // Use the combined login and start game function
+      const result = await loginAndInitGame(credentials);
 
       if (result.success) {
         // Store remember me preference
         localStorage.setItem("uncrypt-remember-me", rememberMe.toString());
 
-        // IMPORTANT: Check if login returned active game data directly
-        if (
-          result.gameState &&
-          result.gameState.hasActiveGame &&
-          result.gameState.gameStats
-        ) {
-          console.log(
-            "✅ Active game found during login. Opening continue prompt directly.",
-          );
-          // Get the openContinueGamePrompt function directly from the store
-          const openContinueGamePrompt =
-            useUIStore.getState().openContinueGamePrompt;
-
-          if (typeof openContinueGamePrompt === "function") {
-            // First close the login modal
-            onClose();
-
-            // Short delay to ensure login modal is closed first
-            setTimeout(() => {
-              openContinueGamePrompt(result.gameState.gameStats);
-            }, 100);
-            return;
-          }
-        }
-
-        // No active game or couldn't show prompt - just close login
+        // Close login form
         onClose();
       } else {
         setError(
@@ -91,6 +53,16 @@ function Login({ onClose }) {
       console.error("Login error:", err);
       setError("Login failed. Please check your credentials.");
     }
+  };
+
+  // Handle forgotten password
+  const handleForgotPassword = () => {
+    alert("Password reset functionality will be available soon!");
+  };
+
+  // Handle account creation
+  const handleCreateAccount = () => {
+    openSignup();
   };
 
   return (
@@ -135,8 +107,12 @@ function Login({ onClose }) {
               <span>Remember me</span>
             </label>
           </div>
-          <button type="submit" className="login-button" disabled={isLoggingIn}>
-            {isLoggingIn ? "Logging in..." : "Login"}
+          <button
+            type="submit"
+            className="login-button"
+            disabled={isInitializing}
+          >
+            {isInitializing ? "Logging in..." : "Login"}
           </button>
 
           <div className="login-actions">

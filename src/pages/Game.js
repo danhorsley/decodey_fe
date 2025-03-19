@@ -1,9 +1,9 @@
-// src/pages/Game.js - Complete Rewrite with Clean Architecture
-import React, { useEffect, useState, useCallback } from "react";
+// src/pages/Game.js - Simplified with initialization delegation
+import React, { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaTrophy } from "react-icons/fa";
 
-// Simplified imports - only what we need
+// Simplified imports
 import useGameStore from "../stores/gameStore";
 import useGameSession from "../hooks/useGameSession";
 import useSettingsStore from "../stores/settingsStore";
@@ -16,7 +16,6 @@ import { formatAlternatingLines } from "../utils/utils";
 import HeaderControls from "../components/HeaderControls";
 import MobileLayout from "../components/layout/MobileLayout";
 import WinCelebration from "../components/modals/WinCelebration";
-import MatrixRain from "../components/effects/MatrixRain";
 import MatrixRainLoading from "../components/effects/MatrixRainLoading";
 
 // Letter cell component using memo to reduce re-renders
@@ -46,15 +45,8 @@ function Game() {
   // Navigation hook
   const navigate = useNavigate();
 
-  // Core game session management - single source of truth for game initialization
-  const { initialize, isInitializing, lastError } = useGameSession();
-
-  // UI state
-  const [loadingState, setLoadingState] = useState({
-    isLoading: false,
-    errorMessage: null,
-    attemptCount: 0,
-  });
+  // Get initialization status from gameSession hook
+  const { isInitializing, initializeGame, lastError } = useGameSession();
 
   // Settings
   const settings = useSettingsStore((state) => state.settings);
@@ -87,7 +79,6 @@ function Game() {
     hasWon,
     hasLost,
     winData,
-    isLocalWinDetected,
 
     // Actions
     submitGuess,
@@ -95,62 +86,13 @@ function Game() {
     getHint,
   } = useGameStore();
 
-  // ===== INITIALIZATION =====
-  // Simple initialization effect - delegate all complexity to gameSession
-  useEffect(() => {
-    // Only initialize if we don't have game content and aren't already initializing
-    if (!encrypted && !isInitializing && !loadingState.isLoading) {
-      console.log("Game component triggering initialization");
-
-      // Show loading state - create a new state object for proper immutability
-      setLoadingState((prevState) => ({
-        ...prevState,
-        isLoading: true,
-        errorMessage: null,
-        attemptCount: prevState.attemptCount + 1,
-      }));
-
-      // Initialize via gameSession - the single source of truth for game init
-      initialize()
-        .then((result) => {
-          console.log("Game initialization completed with result:", result);
-
-          if (result.success) {
-            setLoadingState((prevState) => ({
-              ...prevState,
-              isLoading: false,
-              errorMessage: null,
-            }));
-          } else {
-            console.warn(
-              "Game initialization failed:",
-              result.error || "Unknown error",
-            );
-            setLoadingState((prevState) => ({
-              ...prevState,
-              isLoading: false,
-              errorMessage:
-                result.error?.message ||
-                "Failed to start game. Please try again.",
-            }));
-          }
-        })
-        .catch((error) => {
-          console.error("Error in game initialization:", error);
-          setLoadingState((prevState) => ({
-            ...prevState,
-            isLoading: false,
-            errorMessage: `Error starting game: ${error.message || "Unknown error"}`,
-          }));
-        });
-    }
-  }, [
-    encrypted,
-    isInitializing,
-    loadingState.isLoading,
-    loadingState.attemptCount,
-    initialize,
-  ]);
+  // Auto-initialize on first render - the component calls initializeGame
+  // once on mount via React.useEffect()
+  React.useEffect(() => {
+    // Immediately invoke the initialization, assuming the hook takes care of
+    // preventing duplicate initializations
+    initializeGame();
+  }, [initializeGame]);
 
   // ===== GAME INTERACTION HANDLERS =====
   // Handle encrypted letter selection
@@ -183,30 +125,9 @@ function Game() {
 
   // Handle retry/restart game
   const handleStartNewGame = useCallback(() => {
-    setLoadingState({
-      isLoading: true,
-      errorMessage: null,
-      attemptCount: loadingState.attemptCount + 1,
-    });
-
     // Force a new game initialization
-    initialize(true)
-      .then((result) => {
-        setLoadingState((prev) => ({
-          ...prev,
-          isLoading: false,
-          errorMessage: result.success ? null : "Failed to start new game",
-        }));
-      })
-      .catch((error) => {
-        console.error("Error starting new game:", error);
-        setLoadingState((prev) => ({
-          ...prev,
-          isLoading: false,
-          errorMessage: `Error starting game: ${error.message}`,
-        }));
-      });
-  }, [initialize, loadingState.attemptCount]);
+    initializeGame(true);
+  }, [initializeGame]);
 
   // ===== DERIVED STATE =====
   // Determine if game is active - computed value
@@ -253,7 +174,7 @@ function Game() {
 
   // ===== RENDER HELPERS =====
   // If loading, show loading screen
-  if (loadingState.isLoading) {
+  if (isInitializing) {
     return (
       <div
         className={`App-container ${settings?.theme === "dark" ? "dark-theme" : "light-theme"}`}
@@ -283,7 +204,7 @@ function Game() {
   }
 
   // If error or no game loaded, show error screen
-  if (!encrypted && !loadingState.isLoading) {
+  if (!encrypted && !isInitializing) {
     return (
       <div
         className={`App-container ${settings?.theme === "dark" ? "dark-theme" : "light-theme"}`}
@@ -295,8 +216,7 @@ function Game() {
           <h2 className="error-title">Game Failed to Load</h2>
 
           <p className="error-message">
-            {loadingState.errorMessage ||
-              "There was a problem loading the game data."}
+            {lastError?.message || "There was a problem loading the game data."}
           </p>
 
           <button onClick={handleStartNewGame} className="try-again-button">

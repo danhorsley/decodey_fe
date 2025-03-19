@@ -10,9 +10,6 @@ import {
 // Import ModalManager
 import ModalManager from "./components/modals/ModalManager";
 import AccountButtonWrapper from "./components/AccountButtonWrapper";
-import ServiceWorkerUpdater from "./components/ServiceWorkerUpdater";
-import OfflineDetector from "./components/OfflineDetector";
-import ErrorBoundary from "./components/ErrorBoundary";
 import NotFound from "./pages/NotFound";
 
 // Lazy load components for code splitting
@@ -57,20 +54,7 @@ function App() {
         {/* Main content routes with Suspense for code splitting */}
         <Suspense fallback={<Loading />}>
           <Routes>
-            <Route
-              path="/"
-              element={
-                <ErrorBoundary
-                  fallback={
-                    <button onClick={() => window.location.reload()}>
-                      Reload Game
-                    </button>
-                  }
-                >
-                  <Game />
-                </ErrorBoundary>
-              }
-            />
+            <Route path="/" element={<Game />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="*" element={<NotFound />} />
@@ -79,12 +63,6 @@ function App() {
 
         {/* Global fixed UI elements with conditional rendering */}
         <GlobalUIElements />
-
-        {/* Service worker update notification */}
-        <ServiceWorkerUpdater />
-
-        {/* Offline detection notification */}
-        <OfflineDetector />
       </ModalManager>
     </Router>
   );

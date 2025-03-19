@@ -1,392 +1,76 @@
-// src/services/gameSessionManager.js
-/**
- * Centralized service to manage game sessions, authentication flows, and game state
- * This service coordinates between authentication state and game initialization
- */
+// src/services/gameSessionManager.js - Streamlined to remove redundancy
 import { create } from "zustand";
 import apiService from "./apiService";
 import config from "../config";
 import EventEmitter from "events";
 import useGameStore from "../stores/gameStore";
 
-// Create an event emitter for communication
+// Centralized event emitter for internal communication
 const eventEmitter = new EventEmitter();
 
 /**
- * Game Session Store
- * Manages the current session state including initialization status
+ * Game Session Store - For tracking initialization and session state
  */
-export const useGameSessionStore = create((set, get) => ({
-  // Initialize with loading state
+export const useGameSessionStore = create((set) => ({
+  // State
   isInitializing: false,
-  initializationAttempted: false,
-  lastInitAttempt: null,
   initError: null,
-  lastInitResult: null,
 
-  // Set initializing state
+  // Actions
   setInitializing: (isInitializing) => set({ isInitializing }),
-
-  // Mark initialization as attempted
-  markInitAttempted: () =>
-    set({
-      initializationAttempted: true,
-      lastInitAttempt: Date.now(),
-    }),
-
-  // Set initialization error
   setInitError: (error) =>
     set({
       initError: error,
       isInitializing: false,
     }),
-
-  // Set initialization result
-  setInitResult: (result) =>
-    set({
-      lastInitResult: result,
-      isInitializing: false,
-    }),
-
-  // Reset initialization state
-  resetInitState: () =>
-    set({
-      isInitializing: false,
-      initializationAttempted: false,
-      lastInitAttempt: null,
-      initError: null,
-      lastInitResult: null,
-    }),
+  clearError: () => set({ initError: null }),
 }));
 
 /**
- * Check authentication status with more flexible authentication criteria
- * @returns {Object} Auth status including token availability
+ * Simplified auth status check
+ * @returns {Object} Auth status
  */
 const checkAuthStatus = () => {
-  // Check for tokens in storage
-  const accessToken = config.session.getAuthToken();
-  const refreshToken = localStorage.getItem("refresh_token");
-  const userId = config.session.getAuthUserId();
-
-  // Also check for direct localStorage values as fallback
-  const directTokenCheck =
-    localStorage.getItem("uncrypt-token") ||
-    sessionStorage.getItem("uncrypt-token");
-  const directUserIdCheck = localStorage.getItem("uncrypt-user-id");
-
-  // Use the most reliable token and user ID available
-  const finalAccessToken = accessToken || directTokenCheck;
-  const finalUserId = userId || directUserIdCheck;
-
+  const token = config.session.getAuthToken();
   return {
-    hasAccessToken: !!finalAccessToken,
-    hasRefreshToken: !!refreshToken,
-    hasUserId: !!finalUserId,
-    // CRITICAL CHANGE: Consider authenticated if we at least have a token
-    // This allows continuation even if user ID is temporarily missing
-    isAuthenticated: !!finalAccessToken,
-
-    // Include the actual values for debugging (without exposing sensitive data)
-    _debug: {
-      tokenExists: !!finalAccessToken,
-      tokenSource: accessToken
-        ? "config.session"
-        : directTokenCheck
-          ? "direct storage"
-          : "none",
-      userIdExists: !!finalUserId,
-      userIdSource: userId
-        ? "config.session"
-        : directUserIdCheck
-          ? "direct storage"
-          : "none",
-    },
+    isAuthenticated: !!token,
   };
 };
 
 /**
- * Attempt to refresh authentication token
- * @returns {Promise<boolean>} True if refresh succeeded
+ * Start a new game with specified options
+ * @param {Object} options Game options
+ * @returns {Promise<Object>} Result
  */
-const refreshAuthToken = async () => {
+const startGame = async (options = {}) => {
   try {
-    console.log("Attempting to refresh authentication token");
-    const result = await apiService.refreshToken();
-    return !!result && !!result.access_token;
-  } catch (error) {
-    console.error("Token refresh failed:", error);
-    return false;
-  }
-};
-
-/**
- * Check for active game from API
- * @returns {Promise<Object>} Active game data or null
- */
-const checkForActiveGame = async () => {
-  try {
-    console.log("Checking for active game");
-    const { hasAccessToken, hasRefreshToken } = checkAuthStatus();
-
-    // Skip for anonymous users OR users without refresh tokens
-    if (!hasAccessToken || !hasRefreshToken) {
-      console.log(
-        "No auth token or no refresh token, skipping active game check",
-      );
-      return { hasActiveGame: false };
-    }
-
-    // Make a direct API call with full logging
-    console.log("Making API call to check-active-game with headers:", {
-      Authorization: "Bearer token exists: " + !!config.session.getAuthToken(),
-    });
-
-    const response = await apiService.api.get("/api/check-active-game");
-    console.log("check-active-game response:", response.data);
-
-    if (response?.data?.has_active_game) {
-      console.log("✅ Active game found:", response.data);
-
-      // Log event emission for debugging
-      console.log(
-        "Emitting active-game-found event with stats:",
-        response.data.game_stats,
-      );
-
-      // Emit event in multiple ways to ensure it's caught
-      eventEmitter.emit("game:active-game-found", {
-        gameStats: response.data.game_stats,
-      });
-
-      // Also emit through apiService for redundancy
-      if (apiService.events && typeof apiService.events.emit === "function") {
-        console.log("Also emitting through apiService");
-        apiService.events.emit("auth:active-game-detected", {
-          hasActiveGame: true,
-          activeGameStats: response.data.game_stats,
-        });
-      }
-
-      return {
-        hasActiveGame: true,
-        gameStats: response.data.game_stats,
-      };
-    }
-
-    console.log("No active game found");
-    return { hasActiveGame: false };
-  } catch (error) {
-    console.error("Error checking for active game:", error);
-    return { hasActiveGame: false, error };
-  }
-};
-
-/**
- * Start a new anonymous game
- * @param {Object} options Game options (longText, hardcoreMode, etc)
- * @returns {Promise<Object>} Game initialization result
- */
-const startAnonymousGame = async (options = {}) => {
-  try {
-    console.log("Starting new anonymous game with options:", options);
-
-    // Clear any existing game ID - do this first for speed
+    // Clear any previous game ID
     localStorage.removeItem("uncrypt-game-id");
 
-    // Start a new game directly
+    // Start a new game via API
     const gameData = await apiService.startGame(options);
 
-    if (!gameData) {
-      throw new Error("Failed to start anonymous game - no data returned");
-    }
-
-    // OPTIMIZATION: Update game store directly to skip events/renders
-    try {
-      // This can be imported or accessed via getState()
-      const gameStore = useGameStore.getState();
-      if (typeof gameStore.startGame === "function") {
-        // Call it directly with the data
-        gameStore.startGame(
-          options.longText || false,
-          options.hardcoreMode || false,
-          true, // Force new
-        );
-      }
-    } catch (storeError) {
-      console.warn("Error updating game store directly:", storeError);
-      // Continue since we'll still emit the event
-    }
-
-    // Signal loading is complete
-    eventEmitter.emit("game:loaded", { isAnonymous: true });
-
-    // Emit game started event
-    eventEmitter.emit("game:started", {
-      isAnonymous: true,
-      gameData,
-    });
-
-    return {
-      success: true,
-      gameData,
-      isAnonymous: true,
-      isLoaded: true, // Add this flag
-    };
-  } catch (error) {
-    console.error("Error starting anonymous game:", error);
-
-    // Emit error event asynchronously
-    setTimeout(() => {
-      eventEmitter.emit("game:error", {
-        action: "start-anonymous",
-        error,
-      });
-    }, 0);
-
-    return {
-      success: false,
-      error,
-      isAnonymous: true,
-    };
-  }
-};
-
-/**
- * Continue an existing saved game for authenticated user with enhanced auth checking
- * @returns {Promise<Object>} Result of continuation attempt
- */
-const continueSavedGame = async () => {
-  try {
-    console.log("Attempting to continue saved game");
-
-    // Enhanced auth checking with full details for debugging
-    const authStatus = checkAuthStatus();
-    console.log("Auth status for continue game:", {
-      hasAccessToken: authStatus.hasAccessToken,
-      hasRefreshToken: authStatus.hasRefreshToken,
-      hasUserId: authStatus.hasUserId,
-      isAuthenticated: authStatus.isAuthenticated,
-      debug: authStatus._debug,
-    });
-
-    // If no token available at all, we can't continue
-    if (!authStatus.hasAccessToken) {
-      console.warn("Cannot continue game - no access token available");
-      return { success: false, reason: "no-access-token" };
-    }
-
-    // Even without user ID, try to continue if we have a token
-    console.log("Proceeding with game continuation using available token");
-
-    // Get the token directly for the API call
-    const token =
-      config.session.getAuthToken() ||
-      localStorage.getItem("uncrypt-token") ||
-      sessionStorage.getItem("uncrypt-token");
-
-    // Try to continue the game using the API with explicit token
-    const headers = { Authorization: `Bearer ${token}` };
-    console.log("Making continue game API call with explicit token");
-
-    const response = await apiService.api.get("/api/continue-game", {
-      headers,
-    });
-
-    if (!response || !response.data) {
-      console.warn("Continue game API returned no data");
-      return { success: false, reason: "api-error-no-data" };
-    }
-
-    console.log("Successfully received game data from API:", {
-      hasEncrypted: !!response.data.encrypted_paragraph,
-      hasDisplay: !!response.data.display,
-      gameId: response.data.game_id,
-    });
-
     // Store game ID if available
-    if (response.data.game_id) {
-      localStorage.setItem("uncrypt-game-id", response.data.game_id);
-      console.log("Stored game ID in localStorage:", response.data.game_id);
+    if (gameData?.game_id) {
+      localStorage.setItem("uncrypt-game-id", gameData.game_id);
     }
 
-    // Add validation to ensure proper game data
-    if (!response.data.encrypted_paragraph || !response.data.display) {
-      console.error("Invalid game data - missing required fields");
-      return { success: false, reason: "invalid-game-data" };
-    }
-
-    // Validate data integrity - critical for proper display
-    if (
-      response.data.encrypted_paragraph.length !== response.data.display.length
-    ) {
-      console.error(
-        "Data integrity error: Encrypted and display text lengths don't match!",
-        {
-          encryptedLength: response.data.encrypted_paragraph.length,
-          displayLength: response.data.display.length,
-        },
+    // Update game store directly for efficiency
+    const gameStore = useGameStore.getState();
+    if (typeof gameStore.startGame === "function") {
+      await gameStore.startGame(
+        options.longText || false,
+        options.hardcoreMode || false,
+        true, // Force new
       );
     }
-
-    // Create comprehensive game data with guessedMappings pre-calculated
-    const gameData = {
-      ...response.data,
-
-      // Add pre-calculated mappings to avoid reconstruction in the store
-      guessedMappings: buildGuessedMappings(
-        response.data.correctly_guessed || [],
-        response.data.reverse_mapping || {},
-      ),
-    };
-
-    // Emit event to update game state with complete data
-    eventEmitter.emit("game:continued", {
-      gameData: gameData,
-      validated: true, // Flag to indicate this data has been validated
-    });
 
     return {
       success: true,
-      gameData: gameData,
+      gameData,
     };
   } catch (error) {
-    console.error("Error continuing saved game:", error);
-
-    // Check if error was due to no active game
-    const isNoGameError =
-      error?.response?.status === 404 ||
-      (error?.response?.data?.error &&
-        error.response.data.error.includes("No active game"));
-
-    if (isNoGameError) {
-      console.log("No active game to continue - starting new game");
-      // Return a specific reason
-      return {
-        success: false,
-        reason: "no-active-game",
-        shouldStartNew: true,
-      };
-    }
-
-    // Check for auth errors
-    if (error?.response?.status === 401) {
-      console.warn(
-        "Authentication error when continuing game - token may be invalid",
-      );
-      return {
-        success: false,
-        reason: "authentication-error",
-        authError: true,
-      };
-    }
-
-    // Emit error event
-    eventEmitter.emit("game:error", {
-      action: "continue-saved",
-      error,
-    });
-
+    console.error("Error starting game:", error);
     return {
       success: false,
       error,
@@ -395,424 +79,38 @@ const continueSavedGame = async () => {
 };
 
 /**
- * Helper function to build guessedMappings from correctly guessed letters and reverse mapping
- * @param {Array} correctlyGuessed Array of correctly guessed letters
- * @param {Object} reverseMapping Mapping from encrypted to original letters
- * @returns {Object} Constructed guessedMappings object
- */
-function buildGuessedMappings(correctlyGuessed, reverseMapping) {
-  const mappings = {};
-
-  if (
-    !Array.isArray(correctlyGuessed) ||
-    !reverseMapping ||
-    typeof reverseMapping !== "object"
-  ) {
-    return mappings;
-  }
-
-  correctlyGuessed.forEach((letter) => {
-    if (letter in reverseMapping) {
-      mappings[letter] = reverseMapping[letter];
-    }
-  });
-
-  return mappings;
-}
-
-/**
- * Check for active game and decide whether to show continuation dialog
- * @returns {Promise<Object>} Decision about how to proceed
- */
-const checkGameStateOnLogin = async () => {
-  try {
-    console.log("Checking game state after login");
-
-    // Check for active game
-    const activeGameResult = await checkForActiveGame();
-
-    if (activeGameResult?.hasActiveGame) {
-      console.log("Active game found, should show continuation dialog");
-
-      // Emit event for UI to show dialog
-      eventEmitter.emit("game:active-game-found", {
-        gameStats: activeGameResult.gameStats,
-      });
-
-      return {
-        hasActiveGame: true,
-        showContinuationDialog: true,
-        gameStats: activeGameResult.gameStats,
-      };
-    }
-
-    // No active game, just start a new one
-    console.log("No active game found after login, should start new game");
-    return {
-      hasActiveGame: false,
-      showContinuationDialog: false,
-    };
-  } catch (error) {
-    console.error("Error checking game state on login:", error);
-    return {
-      hasActiveGame: false,
-      showContinuationDialog: false,
-      error,
-    };
-  }
-};
-
-/**
- * Initialize game session based on current auth state
- * Handles anonymous users, token refresh, and continuation
- *
- * @param {Object} options Game options (longText, hardcoreMode, etc)
+ * Initialize a new game session
+ * Single entry point for game initialization
+ * @param {Object} options Game options
  * @returns {Promise<Object>} Initialization result
  */
 const initializeGameSession = async (options = {}) => {
-  // Get current store state
+  // Get session store state
   const sessionStore = useGameSessionStore.getState();
 
-  // Only initialize once at a time
+  // Prevent multiple simultaneous initialization attempts
   if (sessionStore.isInitializing) {
-    console.log("Game session initialization already in progress");
     return { success: false, reason: "already-initializing" };
   }
 
   // Mark as initializing
   sessionStore.setInitializing(true);
-  sessionStore.markInitAttempted();
 
   try {
-    // FAST PATH: Check for anonymous user immediately
-    const accessToken = config.session.getAuthToken();
-    const refreshToken = localStorage.getItem("refresh_token");
+    // Start a new game with the provided options
+    const result = await startGame(options);
 
-    // If we have no tokens at all, fast-track to anonymous game start
-    if (!accessToken && !refreshToken) {
-      console.log(
-        "Fast path: Anonymous user with no tokens - starting new game immediately",
-      );
-      const result = await startAnonymousGame(options);
-      sessionStore.setInitResult(result);
-      return result;
+    // Update initialization status
+    if (!result.success) {
+      sessionStore.setInitError(result.error);
+    } else {
+      sessionStore.setInitializing(false);
     }
 
-    // Get current auth status
-    const authStatus = checkAuthStatus();
-    console.log("Current auth status:", authStatus);
-
-    // CASE 1: Has access token but no refresh token
-    if (authStatus.hasAccessToken && !authStatus.hasRefreshToken) {
-      console.log(
-        "User has access token but no refresh token - inconsistent state",
-      );
-
-      // Purge all tokens to ensure clean state
-      localStorage.removeItem("uncrypt-token");
-      sessionStorage.removeItem("uncrypt-token");
-      localStorage.removeItem("refresh_token");
-
-      // Emit event to notify components that session is cleared
-      eventEmitter.emit("auth:session-cleared");
-
-      console.log("Tokens purged, starting anonymous game");
-
-      // Start anonymous game with clean state
-      const result = await startAnonymousGame(options);
-      sessionStore.setInitResult(result);
-      return result;
-    }
-
-    // CASE 2: Has both tokens (fully authenticated)
-    if (authStatus.hasAccessToken && authStatus.hasRefreshToken) {
-      console.log("User is fully authenticated with refresh token");
-
-      // Check for active game
-      const activeGameResult = await checkForActiveGame();
-
-      if (activeGameResult?.hasActiveGame) {
-        // Has an active game, emit event and let UI decide
-        eventEmitter.emit("game:active-game-found", {
-          gameStats: activeGameResult.gameStats,
-        });
-
-        sessionStore.setInitResult({
-          success: true,
-          hasActiveGame: true,
-          requiresUserDecision: true,
-        });
-
-        return {
-          success: true,
-          hasActiveGame: true,
-          requiresUserDecision: true,
-        };
-      }
-
-      // No active game, start new
-      console.log(
-        "No active game found for authenticated user, starting new game",
-      );
-      const result = await startAnonymousGame(options);
-      sessionStore.setInitResult(result);
-      return result;
-    }
-    // CASE 3: Has refresh token but no access token - try to refresh
-    if (!authStatus.hasAccessToken && authStatus.hasRefreshToken) {
-      console.log(
-        "User has refresh token but no access token - attempting to refresh",
-      );
-
-      try {
-        // Try to refresh the token
-        const refreshResult = await refreshAuthToken();
-
-        if (refreshResult) {
-          console.log("Successfully refreshed token, checking for active game");
-
-          // Check for active game with new token
-          const activeGameResult = await checkForActiveGame();
-
-          if (activeGameResult?.hasActiveGame) {
-            // Has an active game, emit event and let UI decide
-            eventEmitter.emit("game:active-game-found", {
-              gameStats: activeGameResult.gameStats,
-            });
-
-            sessionStore.setInitResult({
-              success: true,
-              hasActiveGame: true,
-              requiresUserDecision: true,
-            });
-
-            return {
-              success: true,
-              hasActiveGame: true,
-              requiresUserDecision: true,
-            };
-          }
-
-          // No active game, start new
-          console.log(
-            "No active game found after token refresh, starting new game",
-          );
-          const result = await startAnonymousGame(options);
-          sessionStore.setInitResult(result);
-          return result;
-        } else {
-          // Refresh failed, purge tokens and start anonymous
-          console.log(
-            "Token refresh failed, purging tokens and starting anonymous game",
-          );
-
-          // Purge all tokens
-          localStorage.removeItem("uncrypt-token");
-          sessionStorage.removeItem("uncrypt-token");
-          localStorage.removeItem("refresh_token");
-
-          // Emit event for session clear
-          eventEmitter.emit("auth:session-cleared");
-
-          // Start anonymous game
-          const result = await startAnonymousGame(options);
-          sessionStore.setInitResult(result);
-          return result;
-        }
-      } catch (error) {
-        console.error("Error refreshing token:", error);
-
-        // Purge tokens and start anonymous game
-        localStorage.removeItem("uncrypt-token");
-        sessionStorage.removeItem("uncrypt-token");
-        localStorage.removeItem("refresh_token");
-
-        eventEmitter.emit("auth:session-cleared");
-
-        const result = await startAnonymousGame(options);
-        sessionStore.setInitResult(result);
-        return result;
-      }
-    }
-    // Fallback case - should never reach here
-    console.warn("Unhandled auth scenario, falling back to anonymous game");
-    const result = await startAnonymousGame(options);
-    sessionStore.setInitResult(result);
     return result;
   } catch (error) {
-    console.error("Error initializing game session:", error);
+    console.error("Error in game initialization:", error);
     sessionStore.setInitError(error);
-
-    // Check if the error is related to token refresh
-    const isTokenError =
-      error.message &&
-      (error.message.includes("No refresh token available") ||
-        error.message.includes("Token refresh failed") ||
-        error.message.includes("Refresh already in progress"));
-
-    if (isTokenError) {
-      console.log("Token error detected - starting anonymous game");
-      try {
-        const result = await startAnonymousGame(options);
-        sessionStore.setInitResult(result);
-        return result;
-      } catch (fallbackError) {
-        console.error("Critical error - even fallback failed:", fallbackError);
-        return {
-          success: false,
-          error: fallbackError,
-          isCriticalError: true,
-        };
-      }
-    }
-
-    // Always fall back to anonymous game on error
-    try {
-      console.log("Falling back to anonymous game after error");
-      const result = await startAnonymousGame(options);
-      sessionStore.setInitResult(result);
-      return result;
-    } catch (fallbackError) {
-      console.error("Critical error - even fallback failed:", fallbackError);
-      return {
-        success: false,
-        error: fallbackError,
-        isCriticalError: true,
-      };
-    }
-  }
-};
-
-/**
- * Handle user login and game state resolution
- * @param {Object} credentials User credentials
- * @returns {Promise<Object>} Login result
- */
-// In gameSessionManager.js - Update the handleLogin function
-
-const handleLogin = async (credentials) => {
-  try {
-    console.log("Handling login flow");
-
-    // Attempt login
-    const loginResult = await apiService.login(credentials);
-
-    if (!loginResult || !loginResult.access_token) {
-      console.warn("Login failed - no token received");
-      return { success: false, reason: "login-failed" };
-    }
-
-    // CRITICAL FIX: Manually ensure token and USER ID are properly stored
-    // This addresses race conditions where token/user might not be saved yet
-    if (credentials.rememberMe) {
-      localStorage.setItem("uncrypt-token", loginResult.access_token);
-    } else {
-      sessionStorage.setItem("uncrypt-token", loginResult.access_token);
-    }
-
-    // Store refresh token if provided
-    if (loginResult.refresh_token) {
-      localStorage.setItem("refresh_token", loginResult.refresh_token);
-    }
-
-    // CRITICAL ADDITION: Also store the user ID
-    if (loginResult.user_id) {
-      localStorage.setItem("uncrypt-user-id", loginResult.user_id);
-    } else if (loginResult.userId) {
-      // Some APIs might use userId instead of user_id
-      localStorage.setItem("uncrypt-user-id", loginResult.userId);
-    }
-
-    // If we have a username, store that too
-    if (loginResult.username) {
-      localStorage.setItem("uncrypt-username", loginResult.username);
-    }
-
-    console.log(
-      "Manually saved auth tokens and user data, waiting before checking game state",
-    );
-
-    // Add a longer delay to ensure tokens are properly saved and recognized
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    console.log(
-      "Login successful, checking game state. Token exists:",
-      !!config.session.getAuthToken(),
-    );
-    console.log("User ID exists:", !!localStorage.getItem("uncrypt-user-id"));
-
-    // Check for active game in account - use a try-catch to isolate this step
-    try {
-      // Make the request with an explicitly provided token
-      console.log("Making API call with explicit auth token");
-      const response = await apiService.api.get("/api/check-active-game", {
-        headers: {
-          Authorization: `Bearer ${loginResult.access_token}`,
-        },
-      });
-
-      console.log("Active game check response:", response.data);
-
-      const hasActiveGame = response?.data?.has_active_game || false;
-      const gameStats = response?.data?.game_stats || null;
-
-      if (hasActiveGame && gameStats) {
-        console.log(
-          "✅ Active game found! Emitting event with stats:",
-          gameStats,
-        );
-
-        // Emit events for UI components to catch
-        eventEmitter.emit("game:active-game-found", {
-          gameStats: gameStats,
-        });
-
-        // Also emit through apiService
-        if (apiService.events && typeof apiService.events.emit === "function") {
-          apiService.events.emit("auth:active-game-detected", {
-            hasActiveGame: true,
-            activeGameStats: gameStats,
-          });
-        }
-
-        // Return with game state information
-        return {
-          success: true,
-          loginData: loginResult,
-          gameState: {
-            hasActiveGame: true,
-            showContinuationDialog: true,
-            gameStats,
-          },
-        };
-      }
-
-      // No active game found
-      console.log("No active game found for user");
-      return {
-        success: true,
-        loginData: loginResult,
-        gameState: {
-          hasActiveGame: false,
-          showContinuationDialog: false,
-        },
-      };
-    } catch (gameCheckError) {
-      console.error("Error checking for active game:", gameCheckError);
-
-      // Continue with successful login even if game check fails
-      return {
-        success: true,
-        loginData: loginResult,
-        gameState: {
-          hasActiveGame: false,
-          showContinuationDialog: false,
-          error: gameCheckError,
-        },
-      };
-    }
-  } catch (error) {
-    console.error("Error in login flow:", error);
     return {
       success: false,
       error,
@@ -821,125 +119,196 @@ const handleLogin = async (credentials) => {
 };
 
 /**
- * Handle user logout and clean up game state
- * @param {Object} options Options for post-logout behavior
+ * Continue a saved game (for authenticated users)
+ * @returns {Promise<Object>} Result
+ */
+const continueSavedGame = async () => {
+  try {
+    // Check if user is authenticated
+    const { isAuthenticated } = checkAuthStatus();
+    if (!isAuthenticated) {
+      return { success: false, reason: "not-authenticated" };
+    }
+
+    // Get existing game from API
+    const gameData = await apiService.continueGame();
+
+    // Update game store directly
+    const gameStore = useGameStore.getState();
+    if (typeof gameStore.continueSavedGame === "function") {
+      await gameStore.continueSavedGame(gameData);
+    }
+
+    return {
+      success: true,
+      gameData,
+    };
+  } catch (error) {
+    console.error("Error continuing saved game:", error);
+    return {
+      success: false,
+      error,
+    };
+  }
+};
+
+/**
+ * Handle user login and check for existing games
+ * @param {Object} credentials User credentials
+ * @returns {Promise<Object>} Login result
+ */
+const handleLogin = async (credentials) => {
+  try {
+    // Attempt login via API service
+    const loginResult = await apiService.login(credentials);
+
+    // Check for existing game after successful login
+    if (loginResult && loginResult.access_token) {
+      try {
+        const activeGameCheck = await apiService.checkActiveGame();
+
+        if (activeGameCheck.has_active_game) {
+          // Notify UI about active game
+          eventEmitter.emit("game:active-game-found", {
+            gameStats: activeGameCheck.game_stats,
+          });
+
+          return {
+            success: true,
+            hasActiveGame: true,
+            activeGameStats: activeGameCheck.game_stats,
+          };
+        }
+      } catch (checkError) {
+        console.warn("Error checking for active game:", checkError);
+      }
+    }
+
+    return {
+      success: !!loginResult && !!loginResult.access_token,
+      hasActiveGame: false,
+      loginData: loginResult,
+    };
+  } catch (error) {
+    console.error("Error in login:", error);
+    return {
+      success: false,
+      error,
+    };
+  }
+};
+
+/**
+ * Login and start a new game if no active game exists
+ * @param {Object} credentials User credentials
+ * @param {Object} gameOptions Game options (optional)
+ * @returns {Promise<Object>} Combined login and game result
+ */
+const loginAndStartGame = async (credentials, gameOptions = {}) => {
+  try {
+    // First attempt to login
+    const loginResult = await handleLogin(credentials);
+
+    // If login failed, return the error
+    if (!loginResult.success) {
+      return loginResult;
+    }
+
+    // If user has an active game, return that result (UI will show continue prompt)
+    if (loginResult.hasActiveGame) {
+      return loginResult;
+    }
+
+    // No active game found, start a new one
+    console.log("Login successful, no active game found - starting new game");
+    const gameResult = await startGame(gameOptions);
+
+    // Return combined result
+    return {
+      success: true,
+      loginSuccess: true,
+      gameStarted: gameResult.success,
+      gameData: gameResult.gameData,
+      loginData: loginResult.loginData,
+    };
+  } catch (error) {
+    console.error("Error in loginAndStartGame:", error);
+    return {
+      success: false,
+      error,
+    };
+  }
+};
+
+/**
+ * Handle user logout and cleanup
+ * @param {Object} options Logout options
  * @returns {Promise<Object>} Logout result
  */
 const handleLogout = async (options = { startAnonymousGame: true }) => {
   try {
-    console.log("Handling logout flow");
-
-    // Attempt logout API call
+    // Attempt logout
     await apiService.logout();
 
-    // Clear all session data regardless of API result
+    // Clear session data
     config.session.clearSession();
 
-    // Emit a session cleared event
-    eventEmitter.emit("auth:session-cleared");
-
-    // Start anonymous game if requested
+    // Start a new anonymous game if requested
     if (options.startAnonymousGame) {
-      console.log("Starting anonymous game after logout");
-      return await startAnonymousGame(options.gameOptions || {});
+      return await startGame(options.gameOptions || {});
     }
 
     return { success: true };
   } catch (error) {
-    console.error("Error in logout flow:", error);
+    console.error("Error during logout:", error);
 
     // Still clear session on error
     config.session.clearSession();
-    eventEmitter.emit("auth:session-cleared");
 
-    // Start anonymous game if requested, even on error
+    // Try to start a new game if requested
     if (options.startAnonymousGame) {
       try {
-        console.log("Starting anonymous game after failed logout");
-        return await startAnonymousGame(options.gameOptions || {});
+        return await startGame(options.gameOptions || {});
       } catch (gameError) {
-        console.error("Error starting game after logout:", gameError);
-        return {
-          success: false,
-          error: gameError,
-        };
+        console.error("Failed to start game after logout:", gameError);
       }
     }
 
     return {
       success: false,
       error,
-      sessionCleared: true,
     };
   }
 };
 
 /**
  * Abandon current game and start a new one
- * @param {Object} options Game options for new game
- * @returns {Promise<Object>} Result of operation
+ * @param {Object} options Game options
+ * @returns {Promise<Object>} Result
  */
 const abandonAndStartNew = async (options = {}) => {
   try {
-    console.log("Abandoning current game and starting new");
-
-    // Try to abandon the game via API
+    // Try to abandon via API
     try {
       await apiService.abandonAndResetGame();
     } catch (abandonError) {
-      console.warn(
-        "Error abandoning game via API, continuing anyway:",
-        abandonError,
-      );
+      console.warn("Error abandoning game:", abandonError);
     }
 
-    // Clear game ID from local storage
-    localStorage.removeItem("uncrypt-game-id");
-
-    // Emit event to notify components
-    eventEmitter.emit("game:abandoned");
-
-    // Start a new game
-    console.log("Starting new game after abandoning old one");
-    const result = await startAnonymousGame(options);
-
-    return {
-      success: true,
-      abandonSuccess: true,
-      newGameResult: result,
-    };
+    // Start new game
+    return await startGame(options);
   } catch (error) {
-    console.error("Error in abandon and start new flow:", error);
-
-    // Still try to start a new game
-    try {
-      console.log("Attempting to start new game despite abandon error");
-      const result = await startAnonymousGame(options);
-
-      return {
-        success: true,
-        abandonSuccess: false,
-        abandonError: error,
-        newGameResult: result,
-      };
-    } catch (startError) {
-      console.error(
-        "Critical error - failed to start new game after abandon:",
-        startError,
-      );
-      return {
-        success: false,
-        abandonSuccess: false,
-        abandonError: error,
-        startError,
-      };
-    }
+    console.error("Error in abandon and start new:", error);
+    return {
+      success: false,
+      error,
+    };
   }
 };
 
 /**
- * Register for events from the game session manager
- * @param {string} event Event name to subscribe to
+ * Register for game session events
+ * @param {string} event Event name
  * @param {Function} callback Callback function
  * @returns {Function} Unsubscribe function
  */
@@ -953,27 +322,18 @@ const onGameSessionEvent = (event, callback) => {
   return () => eventEmitter.off(event, callback);
 };
 
-// Export all the functions
+// Export key functions
 export {
   initializeGameSession,
-  checkAuthStatus,
-  handleLogin,
-  handleLogout,
   continueSavedGame,
-  startAnonymousGame,
+  handleLogin,
+  loginAndStartGame,
+  handleLogout,
   abandonAndStartNew,
   onGameSessionEvent,
-  checkForActiveGame,
-  refreshAuthToken,
 };
 
-// Export key events as constants for better developer experience
+// Event constants
 export const GameSessionEvents = {
-  GAME_STARTED: "game:started",
-  GAME_CONTINUED: "game:continued",
-  GAME_ABANDONED: "game:abandoned",
-  GAME_ERROR: "game:error",
-  GAME_LOADED: "game:loaded", // Add this new event
   ACTIVE_GAME_FOUND: "game:active-game-found",
-  AUTH_SESSION_CLEARED: "auth:session-cleared",
 };

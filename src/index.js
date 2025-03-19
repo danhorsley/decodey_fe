@@ -15,8 +15,6 @@ import "./Styles/Privacy.css";
 import "./Styles/Modal.css";
 
 import App from "./App";
-import reportWebVitals from "./reportWebVitals";
-import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
 
 // Add data-theme attribute to HTML element for Samsung Browser
 const applyHtmlDataTheme = () => {
@@ -53,34 +51,6 @@ root.render(
   ),
 );
 
-// Register service worker for production
-// Register the service worker with custom callbacks for handling updates
-serviceWorkerRegistration.register({
-  onUpdate: (registration) => {
-    // When a new version is available, show a notification
-    const shouldRefresh = window.confirm(
-      "A new version of the app is available. Load the latest version?",
-    );
 
-    if (shouldRefresh) {
-      // Send skip waiting message to the service worker
-      const waitingServiceWorker = registration.waiting;
-      if (waitingServiceWorker) {
-        waitingServiceWorker.postMessage({ type: "SKIP_WAITING" });
 
-        // Reload once the new service worker becomes active
-        waitingServiceWorker.addEventListener("statechange", (event) => {
-          if (event.target.state === "activated") {
-            window.location.reload();
-          }
-        });
-      }
-    }
-  },
-  onSuccess: (registration) => {
-    console.log("App is now available offline!");
-    // Could show a toast notification here
-  },
-});
 
-reportWebVitals();
