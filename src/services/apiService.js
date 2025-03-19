@@ -290,14 +290,8 @@ class ApiService {
    */
   async startGame(options = {}) {
     try {
-      // Normalize difficulty value - ensure valid format for backend
+      // Ensure difficulty is valid
       let difficulty = options.difficulty || "medium";
-
-      // For backward compatibility, handle any 'normal' values
-      if (difficulty === "normal") {
-        difficulty = "medium";
-        console.log("Converting legacy 'normal' to 'medium' in API request");
-      }
 
       // Ensure difficulty is valid
       if (!["easy", "medium", "hard"].includes(difficulty)) {

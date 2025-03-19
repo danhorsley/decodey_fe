@@ -45,31 +45,21 @@ const useGameStore = create((set, get) => ({
   initializeFromSettings: () => {
     // Get current settings
     const settings = useSettingsStore.getState().settings || {};
-    // Normalize difficulty value to ensure it's valid
-    let difficulty = settings.difficulty || "medium";
-
-    // For backward compatibility, convert any "normal" to "medium"
-    if (difficulty === "normal") {
-      difficulty = "medium";
-      console.log("Converting legacy 'normal' difficulty to 'medium'");
-    }
 
     // Ensure difficulty is a valid value
-    if (!["easy", "medium", "hard"].includes(difficulty)) {
-      console.warn(
-        `Invalid difficulty value: ${difficulty}, defaulting to medium`,
-      );
-      difficulty = "medium";
-    }
+    const difficulty = ["easy", "medium", "hard"].includes(settings.difficulty)
+      ? settings.difficulty
+      : "medium";
+
     // Update game state with settings
     set({
-      difficulty: settings.difficulty || "easy",
-      maxMistakes: MAX_MISTAKES_MAP[settings.difficulty] || 8,
+      difficulty: difficulty,
+      maxMistakes: MAX_MISTAKES_MAP[difficulty] || 5,
       hardcoreMode: settings.hardcoreMode || false,
       settingsInitialized: true,
     });
 
-    // Set up subscription to settings changes
+    // Set up subscription to settings changes - difficulty
     const unsubscribe = useSettingsStore.subscribe(
       (state) => state.settings?.difficulty, // Select difficulty from settings
       (newDifficulty, previousDifficulty) => {
@@ -82,14 +72,6 @@ const useGameStore = create((set, get) => ({
             `Invalid difficulty in settings: ${newDifficulty}, ignoring`,
           );
           return;
-        }
-
-        // Convert legacy value if needed
-        if (newDifficulty === "normal") {
-          newDifficulty = "medium";
-          console.log(
-            "Converting legacy 'normal' difficulty to 'medium' in subscription",
-          );
         }
 
         // Only update if difficulty actually changed
