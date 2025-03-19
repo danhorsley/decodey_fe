@@ -17,7 +17,7 @@ function Settings({ onCancel }) {
   const [showUserDataModal, setShowUserDataModal] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [showWarningModal, setShowWarningModal] = useState(false);
-  const [pendingDifficulty, setPendingDifficulty] = useState(null);
+  const [pendingSettings, setPendingSettings] = useState({});
   const [deleteEmail, setDeleteEmail] = useState("");
   const [deleteEmailError, setDeleteEmailError] = useState("");
 
@@ -49,29 +49,41 @@ function Settings({ onCancel }) {
   // Handle setting changes
   const handleChange = useCallback(
     (setting, value) => {
-      if (setting === "difficulty" && hasStartedPlaying) {
-        setPendingDifficulty(value);
+      // Always show warning for gameplay-affecting settings
+      const gamePlaySettings = ["difficulty", "hardcoreMode", "longText"];
+
+      if (gamePlaySettings.includes(setting)) {
+        // Store pending setting change and show warning
+        setPendingSettings({ type: setting, value });
         setShowWarningModal(true);
         return;
       }
+
+      // Otherwise apply change immediately
       setLocalSettings((prev) => ({ ...prev, [setting]: value }));
     },
-    [hasStartedPlaying],
+    [], // No dependency on hasStartedPlaying anymore
   );
 
-  // Handle difficulty change confirmation
-  const handleConfirmDifficultyChange = useCallback(() => {
-    if (pendingDifficulty) {
-      setLocalSettings((prev) => ({ ...prev, difficulty: pendingDifficulty }));
-      setShowWarningModal(false);
-      setPendingDifficulty(null);
-    }
-  }, [pendingDifficulty]);
+  // Handle setting change confirmation
+  const handleConfirmSettingChange = useCallback(() => {
+    if (pendingSettings.type) {
+      // Apply the pending setting change
+      setLocalSettings((prev) => ({
+        ...prev,
+        [pendingSettings.type]: pendingSettings.value,
+      }));
 
-  // Handle difficulty change cancellation
-  const handleCancelDifficultyChange = useCallback(() => {
+      // Reset UI state
+      setShowWarningModal(false);
+      setPendingSettings({});
+    }
+  }, [pendingSettings]);
+
+  // Handle setting change cancellation
+  const handleCancelSettingChange = useCallback(() => {
     setShowWarningModal(false);
-    setPendingDifficulty(null);
+    setPendingSettings({});
   }, []);
 
   // Save settings
@@ -301,9 +313,7 @@ function Settings({ onCancel }) {
               </label>
 
               {hasStartedPlaying && (
-                <p className="settings-description warning-text">
-                  Note: Changing difficulty will only affect your next game.
-                </p>
+                <p className="settings-description warning-text"></p>
               )}
             </div>
           </div>
@@ -328,9 +338,7 @@ function Settings({ onCancel }) {
               </p>
 
               {hasStartedPlaying && (
-                <p className="settings-description warning-text">
-                  Note: Hardcore mode changes will only affect your next game.
-                </p>
+                <p className="settings-description warning-text"></p>
               )}
             </div>
           </div>
@@ -424,9 +432,7 @@ function Settings({ onCancel }) {
               </p>
 
               {hasStartedPlaying && (
-                <p className="settings-description warning-text">
-                  Note: Quote length changes will only affect your next game.
-                </p>
+                <p className="settings-description warning-text"></p>
               )}
             </div>
           </div>
@@ -643,14 +649,22 @@ function Settings({ onCancel }) {
             className={`about-container ${localSettings.theme === "dark" ? "dark-theme" : ""}`}
             style={{ maxWidth: "400px" }}
           >
-            <h2>Change Difficulty?</h2>
+            <h2>
+              Change{" "}
+              {pendingSettings.type === "difficulty"
+                ? "Difficulty"
+                : pendingSettings.type === "hardcoreMode"
+                  ? "Gameplay Mode"
+                  : "Quote Length"}
+              ?
+            </h2>
+            <p>This change will only affect your next game.</p>
             <p>
-              You've already started a game. Changing difficulty will only
-              affect your next game.
-            </p>
-            <p>
-              Your current game will continue with the {settings.difficulty}{" "}
-              difficulty setting.
+              {pendingSettings.type === "difficulty"
+                ? "Difficulty affects how many mistakes you can make before losing."
+                : pendingSettings.type === "hardcoreMode"
+                  ? "Hardcore mode removes spaces and punctuation for a greater challenge."
+                  : "Quote length determines whether you'll see shorter or longer quotes."}
             </p>
 
             <div
@@ -662,15 +676,15 @@ function Settings({ onCancel }) {
             >
               <button
                 className="settings-button cancel"
-                onClick={handleCancelDifficultyChange}
+                onClick={handleCancelSettingChange}
               >
                 Cancel
               </button>
               <button
                 className="settings-button save"
-                onClick={handleConfirmDifficultyChange}
+                onClick={handleConfirmSettingChange}
               >
-                Change Difficulty
+                Change Setting
               </button>
             </div>
           </div>

@@ -55,14 +55,14 @@ const Scoring = () => {
           </p>
           <ul>
             <li>
-              <strong>Easy:</strong> 8 mistakes allowed, 1.0× multiplier
+              <strong>Easy:</strong> 7 mistakes allowed, 1.0× multiplier
               (baseline)
             </li>
             <li>
-              <strong>Medium:</strong> 5 mistakes allowed, 2.5× multiplier
+              <strong>Medium:</strong> 4 mistakes allowed, 2.5× multiplier
             </li>
             <li>
-              <strong>Hard:</strong> 3 mistakes allowed, 6.25× multiplier
+              <strong>Hard:</strong> 2 mistakes allowed, 6.25× multiplier
             </li>
           </ul>
           <p>
