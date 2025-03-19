@@ -250,21 +250,12 @@ function Game() {
         <div
           className={`loading-container ${settings?.theme === "dark" ? "dark-theme" : "light-theme"}`}
         >
-          <h2 className="loading-title">
-            {isResetting ? "Starting new game" : "Loading game"}
-            <span className="loading-dots"></span>
-          </h2>
-
           {/* Matrix Rain loading animation */}
           <div className="loading-animation">
             <MatrixRainLoading
               active={true}
               color={settings?.theme === "dark" ? "#4cc9f0" : "#00ff41"}
-              message={
-                isResetting
-                  ? "Initializing new cipher..."
-                  : "Decrypting data..."
-              }
+              message={isResetting ? "Starting new game..." : "Loading game..."}
               width="100%"
               height="100%"
               density={40}
@@ -274,7 +265,6 @@ function Game() {
       </div>
     );
   }
-
   // If error or no game loaded, show error screen
   if (!encrypted && !isInitializing) {
     return (

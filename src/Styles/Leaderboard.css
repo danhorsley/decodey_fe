@@ -80,7 +80,7 @@
 
 /* Back button styles */
 .back-button {
-  background-color: #000;
+  background-color: #007bff;
   color: #fff;
   border: none;
   border-radius: 50%;
@@ -100,10 +100,9 @@
 }
 
 .back-button svg {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   display: block;
-  fill: currentColor;
 }
 
 .dark-theme .back-button {
@@ -126,6 +125,15 @@
   flex-direction: column;
   gap: 10px;
   width: 100%;
+}
+/* New horizontal layout */
+.streak-selectors-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 20px;
+  width: 100%;
+  flex-wrap: wrap;
 }
 
 .streak-type-selector,

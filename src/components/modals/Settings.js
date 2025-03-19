@@ -139,18 +139,10 @@ function Settings({ onCancel }) {
   // Handle account deletion
   const handleDeleteAccount = useCallback(async () => {
     try {
-      // Check if we have a user object with email
-      if (!user || !user.email) {
+      // Skip email verification - just confirm deletion by checking if the text is "DELETE"
+      if (!deleteEmail || deleteEmail.toUpperCase() !== "DELETE") {
         setDeleteEmailError(
-          "Cannot verify user email. Please try logging in again.",
-        );
-        return;
-      }
-
-      // First validate that email matches
-      if (!deleteEmail || deleteEmail !== user.email) {
-        setDeleteEmailError(
-          "Please enter your correct email address to confirm deletion",
+          'Please type "DELETE" (all caps) to confirm account deletion',
         );
         return;
       }
@@ -190,7 +182,7 @@ function Settings({ onCancel }) {
       console.error("Error deleting account:", error);
       alert("There was a problem deleting your account. Please try again.");
     }
-  }, [deleteEmail, user, onCancel, logout]);
+  }, [deleteEmail, onCancel, logout]);
 
   return ReactDOM.createPortal(
     <div className="about-overlay">
@@ -579,13 +571,13 @@ function Settings({ onCancel }) {
 
             <div style={{ marginBottom: "20px" }}>
               <p style={{ marginBottom: "10px" }}>
-                To confirm, please enter your email address:
+                To confirm, please type "DELETE" in the box below:
               </p>
               <input
-                type="email"
+                type="text"
                 value={deleteEmail}
                 onChange={(e) => setDeleteEmail(e.target.value)}
-                placeholder="Enter your email"
+                placeholder='Type "DELETE" here'
                 style={{
                   width: "100%",
                   padding: "8px",
@@ -594,6 +586,8 @@ function Settings({ onCancel }) {
                   backgroundColor:
                     localSettings.theme === "dark" ? "#333" : "#fff",
                   color: localSettings.theme === "dark" ? "#fff" : "#333",
+                  textAlign: "center",
+                  fontWeight: "bold",
                 }}
               />
               {deleteEmailError && (

@@ -1,6 +1,6 @@
 // src/components/HeaderControls.js (or wherever the file is located)
 import React from "react";
-import { FaCog, FaQuestion } from "react-icons/fa";
+import { FaCog, FaInfoCircle } from "react-icons/fa";
 import useUIStore from "../stores/uiStore";
 
 function HeaderControls({ title }) {
@@ -34,7 +34,7 @@ function HeaderControls({ title }) {
         onClick={handleAboutClick}
         aria-label="About"
       >
-        <FaQuestion />
+        <FaInfoCircle />
       </button>
 
       <h1 className="retro-title">{title}</h1>

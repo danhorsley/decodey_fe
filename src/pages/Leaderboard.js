@@ -380,37 +380,39 @@ function Leaderboard() {
 
         {/* No streak type tabs here - they've been moved to main navigation */}
 
-        {/* Streak controls - add a heading to make it clearer now that tabs are gone */}
+        {/* Streak controls - horizontal layout */}
         <div className="streak-controls">
           <h2 className="streak-heading">Streak Leaderboards</h2>
-          <div className="streak-type-selector">
-            <button
-              className={`streak-type-button ${streakType === "win" ? "active" : ""}`}
-              onClick={() => handleStreakTypeChange("win")}
-            >
-              Win Streaks
-            </button>
-            <button
-              className={`streak-type-button ${streakType === "noloss" ? "active" : ""}`}
-              onClick={() => handleStreakTypeChange("noloss")}
-            >
-              No-Loss Streaks
-            </button>
-          </div>
+          <div className="streak-selectors-row">
+            <div className="streak-type-selector">
+              <button
+                className={`streak-type-button ${streakType === "win" ? "active" : ""}`}
+                onClick={() => handleStreakTypeChange("win")}
+              >
+                Win Streaks
+              </button>
+              <button
+                className={`streak-type-button ${streakType === "noloss" ? "active" : ""}`}
+                onClick={() => handleStreakTypeChange("noloss")}
+              >
+                No-Loss Streaks
+              </button>
+            </div>
 
-          <div className="streak-period-selector">
-            <button
-              className={`streak-period-button ${streakPeriod === "current" ? "active" : ""}`}
-              onClick={() => handleStreakPeriodChange("current")}
-            >
-              Current Streaks
-            </button>
-            <button
-              className={`streak-period-button ${streakPeriod === "best" ? "active" : ""}`}
-              onClick={() => handleStreakPeriodChange("best")}
-            >
-              All-Time Best
-            </button>
+            <div className="streak-period-selector">
+              <button
+                className={`streak-period-button ${streakPeriod === "current" ? "active" : ""}`}
+                onClick={() => handleStreakPeriodChange("current")}
+              >
+                Current Streaks
+              </button>
+              <button
+                className={`streak-period-button ${streakPeriod === "best" ? "active" : ""}`}
+                onClick={() => handleStreakPeriodChange("best")}
+              >
+                All-Time Best
+              </button>
+            </div>
           </div>
         </div>
 
