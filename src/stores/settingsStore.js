@@ -43,36 +43,16 @@ const useSettingsStore = create(
           const currentDifficulty =
             state.settings?.difficulty || defaultSettings.difficulty;
 
-          // Normalize any difficulty value
-          let validatedDifficulty = newSettings.difficulty;
-
-          // Convert legacy "normal" to "medium" if present
-          if (validatedDifficulty === "normal") {
-            console.log("Converting legacy 'normal' difficulty to 'medium'");
-            validatedDifficulty = "medium";
-          }
-
-          // Validate difficulty is in allowed list
-          if (
-            validatedDifficulty &&
-            !["easy", "medium", "hard"].includes(validatedDifficulty)
-          ) {
-            console.warn(
-              `Invalid difficulty value: ${validatedDifficulty}, defaulting to medium`,
-            );
-            validatedDifficulty = "medium";
-          }
-
-          // Create complete settings object
           const completeSettings = {
             ...defaultSettings,
             ...state.settings,
             ...newSettings,
+            // Ensure difficulty is one of the allowed values
             difficulty:
-              validatedDifficulty ||
-              newSettings.difficulty ||
-              state.settings?.difficulty ||
-              defaultSettings.difficulty,
+              newSettings.difficulty &&
+              ["easy", "medium", "hard"].includes(newSettings.difficulty)
+                ? newSettings.difficulty
+                : state.settings?.difficulty || defaultSettings.difficulty,
             speedMode: true, // Always ensure speed mode is on
           };
 
