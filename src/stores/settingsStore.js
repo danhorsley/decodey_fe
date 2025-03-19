@@ -2,10 +2,9 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-// Default settings
 const defaultSettings = {
   theme: "light",
-  difficulty: "medium", // Changed from "easy" to match backend terminology
+  difficulty: "medium", // Using "medium" to match backend terminology
   longText: false,
   speedMode: true, // Always on - cannot be changed
   gridSorting: "default",
@@ -40,16 +39,28 @@ const useSettingsStore = create(
         set((state) => {
           console.log("Updating settings with:", newSettings);
 
-          // Validate difficulty
+          // Get current difficulty for comparison
+          const currentDifficulty =
+            state.settings?.difficulty || defaultSettings.difficulty;
+
+          // Normalize any difficulty value
           let validatedDifficulty = newSettings.difficulty;
+
+          // Convert legacy "normal" to "medium" if present
+          if (validatedDifficulty === "normal") {
+            console.log("Converting legacy 'normal' difficulty to 'medium'");
+            validatedDifficulty = "medium";
+          }
+
+          // Validate difficulty is in allowed list
           if (
             validatedDifficulty &&
-            !["easy", "normal", "hard"].includes(validatedDifficulty)
+            !["easy", "medium", "hard"].includes(validatedDifficulty)
           ) {
             console.warn(
-              `Invalid difficulty value: ${validatedDifficulty}, defaulting to easy`,
+              `Invalid difficulty value: ${validatedDifficulty}, defaulting to medium`,
             );
-            validatedDifficulty = "easy";
+            validatedDifficulty = "medium";
           }
 
           // Create complete settings object
@@ -60,7 +71,8 @@ const useSettingsStore = create(
             difficulty:
               validatedDifficulty ||
               newSettings.difficulty ||
-              state.settings.difficulty,
+              state.settings?.difficulty ||
+              defaultSettings.difficulty,
             speedMode: true, // Always ensure speed mode is on
           };
 
@@ -70,6 +82,13 @@ const useSettingsStore = create(
             completeSettings.textColor === "default"
           ) {
             completeSettings.textColor = "scifi-blue";
+          }
+
+          // If difficulty changed, log it
+          if (completeSettings.difficulty !== currentDifficulty) {
+            console.log(
+              `Settings difficulty changed from ${currentDifficulty} to ${completeSettings.difficulty}`,
+            );
           }
 
           return { settings: completeSettings };

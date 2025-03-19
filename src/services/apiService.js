@@ -290,17 +290,35 @@ class ApiService {
    */
   async startGame(options = {}) {
     try {
+      // Normalize difficulty value - ensure valid format for backend
+      let difficulty = options.difficulty || "medium";
+
+      // For backward compatibility, handle any 'normal' values
+      if (difficulty === "normal") {
+        difficulty = "medium";
+        console.log("Converting legacy 'normal' to 'medium' in API request");
+      }
+
+      // Ensure difficulty is valid
+      if (!["easy", "medium", "hard"].includes(difficulty)) {
+        console.warn(
+          `Invalid difficulty value: ${difficulty}, defaulting to medium`,
+        );
+        difficulty = "medium";
+      }
+
       // Determine endpoint based on longText option
       const endpoint = options.longText ? "/api/longstart" : "/api/start";
 
       // Build query parameters
       const queryParams = new URLSearchParams();
-      if (options.difficulty) {
-        queryParams.append("difficulty", options.difficulty);
-      }
+      queryParams.append("difficulty", difficulty);
 
       // Construct full URL
       const url = `${endpoint}${queryParams.toString() ? "?" + queryParams.toString() : ""}`;
+
+      // Log the request for debugging
+      console.log(`Starting game with URL: ${url}, difficulty: ${difficulty}`);
 
       // Make the request
       const response = await this.api.get(url);
@@ -308,6 +326,7 @@ class ApiService {
       // If there's a game ID in the response, store it
       if (response.data.game_id) {
         localStorage.setItem("uncrypt-game-id", response.data.game_id);
+        console.log(`Game started with ID: ${response.data.game_id}`);
       }
 
       return response.data;
@@ -316,7 +335,6 @@ class ApiService {
       throw error;
     }
   }
-
   /**
    * Submit a guess for the current game
    * @param {string} encryptedLetter The encrypted letter

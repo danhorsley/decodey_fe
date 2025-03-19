@@ -33,7 +33,29 @@ const applyHtmlDataTheme = () => {
     document.documentElement.setAttribute("data-theme", "light");
   }
 };
+const clearPersistentStores = () => {
+  try {
+    // Check for version flag to only do this once
+    const clearedFlag = localStorage.getItem("uncrypt-stores-cleared-v2");
 
+    if (!clearedFlag) {
+      console.log(
+        "Clearing persisted stores for clean initialization with updated terminology",
+      );
+
+      // Clear the settings store
+      localStorage.removeItem("uncrypt-settings");
+
+      // Set flag to prevent clearing on every reload
+      localStorage.setItem("uncrypt-stores-cleared-v2", "true");
+
+      console.log("Persisted stores cleared successfully");
+    }
+  } catch (e) {
+    console.warn("Error clearing persistent stores:", e);
+  }
+};
+clearPersistentStores();
 // Apply data-theme right away
 applyHtmlDataTheme();
 
