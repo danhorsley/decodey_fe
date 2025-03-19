@@ -109,24 +109,34 @@ class LeaderboardService {
    * @returns {Object} - Standardized leaderboard data
    */
   transformLeaderboardResponse(data) {
-    return {
-      // For entries, check all possible field names
-      topEntries: data.topEntries || data.entries || [],
+    // Log the data structure to debug
+    console.log("Raw leaderboard data:", data);
 
-      // For user entry, either use the dedicated field or look for the user in entries
-      currentUserEntry:
-        data.currentUserEntry ||
-        (data.entries && data.entries.find((entry) => entry.is_current_user)) ||
-        null,
+    // Check if data has an entries array
+    const entries = data?.entries || [];
 
-      // For pagination, create a consistent format
-      pagination: data.pagination || {
-        current_page: data.page || 1,
-        total_pages: data.total_pages || 1,
-        total_entries:
-          data.total_users || (data.entries ? data.entries.length : 0),
-      },
+    // Look for current user in entries if not provided separately
+    let currentUserEntry = data.currentUserEntry;
+    if (!currentUserEntry) {
+      currentUserEntry = entries.find((entry) => entry.is_current_user) || null;
+    }
+
+    // Create a consistent pagination structure
+    const pagination = data.pagination || {
+      current_page: data.page || 1,
+      total_pages: data.total_pages || 1,
+      total_entries: data.total_users || entries.length || 0,
     };
+
+    // Return the transformed data with the expected structure
+    const result = {
+      topEntries: entries,
+      currentUserEntry: currentUserEntry,
+      pagination: pagination,
+    };
+
+    console.log("Transformed leaderboard data:", result);
+    return result;
   }
 
   /**
@@ -137,28 +147,36 @@ class LeaderboardService {
    * @returns {Object} - Standardized streak leaderboard data
    */
   transformStreakResponse(data, streakType, period) {
-    return {
-      // For entries, check all possible field names
-      entries: data.entries || data.topEntries || [],
+    // Log the data structure to debug
+    console.log("Raw streak data:", data);
 
-      // For user entry, either use the dedicated field or look for the user in entries
-      currentUserEntry:
-        data.currentUserEntry ||
-        (data.entries && data.entries.find((entry) => entry.is_current_user)) ||
-        null,
+    // Extract entries - ensure it's always an array
+    const entries = data?.entries || [];
 
-      // For pagination, create a consistent format
-      pagination: data.pagination || {
-        current_page: data.page || 1,
-        total_pages: data.total_pages || 1,
-        total_entries:
-          data.total_users || (data.entries ? data.entries.length : 0),
-      },
+    // Look for current user in entries if not provided separately
+    let currentUserEntry = data.currentUserEntry;
+    if (!currentUserEntry) {
+      currentUserEntry = entries.find((entry) => entry.is_current_user) || null;
+    }
 
-      // Keep other fields
+    // Create a consistent pagination structure
+    const pagination = data.pagination || {
+      current_page: data.page || 1,
+      total_pages: data.total_pages || 1,
+      total_entries: data.total_users || entries.length || 0,
+    };
+
+    // Return the transformed data with the expected structure
+    const result = {
+      entries: entries,
+      currentUserEntry: currentUserEntry,
+      pagination: pagination,
       streak_type: data.streak_type || streakType,
       period: data.period || period,
     };
+
+    console.log("Transformed streak data:", result);
+    return result;
   }
 }
 

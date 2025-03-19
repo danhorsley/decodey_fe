@@ -142,85 +142,159 @@ function Leaderboard() {
           </div>
         )}
 
-        {/* Table header */}
+        {/* Table header and data - using a traditional table-like approach */}
         <div className="table-container">
-          <div className="table-grid">
-            <div className="table-header">Rank</div>
-            <div className="table-header">Player</div>
-            <div className="table-header">Score</div>
-            <div className="table-header">Games</div>
-            <div className="table-header">Avg</div>
-          </div>
+          <div
+            className="table-grid"
+            style={{
+              display: "table",
+              width: "100%",
+              borderCollapse: "collapse",
+            }}
+          >
+            <div style={{ display: "table-row" }}>
+              <div
+                className="table-header"
+                style={{ display: "table-cell", width: "15%" }}
+              >
+                Rank
+              </div>
+              <div
+                className="table-header"
+                style={{ display: "table-cell", width: "40%" }}
+              >
+                Player
+              </div>
+              <div
+                className="table-header"
+                style={{ display: "table-cell", width: "15%" }}
+              >
+                Score
+              </div>
+              <div
+                className="table-header"
+                style={{ display: "table-cell", width: "15%" }}
+              >
+                Games
+              </div>
+              <div
+                className="table-header"
+                style={{ display: "table-cell", width: "15%" }}
+              >
+                Avg
+              </div>
+            </div>
 
-          {/* No data message */}
-          {topEntries.length === 0 && (
-            <p className="no-data">No leaderboard data available.</p>
-          )}
-
-          {/* Table rows - flattened for grid layout */}
-          {topEntries.flatMap((entry, index) => [
-            <div
-              key={`${entry.user_id || index}-rank`}
-              className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
-            >
-              {entry.rank}
-            </div>,
-            <div
-              key={`${entry.user_id || index}-name`}
-              className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
-            >
-              {entry.username}
-              {entry.is_current_user && <span className="you-badge">YOU</span>}
-            </div>,
-            <div
-              key={`${entry.user_id || index}-score`}
-              className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
-            >
-              {entry.score.toLocaleString()}
-            </div>,
-            <div
-              key={`${entry.user_id || index}-games`}
-              className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
-            >
-              {entry.games_played}
-            </div>,
-            <div
-              key={`${entry.user_id || index}-avg`}
-              className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
-            >
-              {entry.avg_score}
-            </div>,
-          ])}
-
-          {/* User position if not in top entries */}
-          {currentUserEntry &&
-            !topEntries.some((entry) => entry.is_current_user) && (
-              <>
+            {/* No data message */}
+            {topEntries.length === 0 && (
+              <div style={{ display: "table-row" }}>
                 <div
-                  key="separator"
-                  className="table-cell separator"
-                  style={{ gridColumn: "span 5" }}
+                  style={{
+                    display: "table-cell",
+                    padding: "30px",
+                    textAlign: "center",
+                    colspan: "5",
+                  }}
                 >
-                  . . .
+                  No leaderboard data available.
                 </div>
-                <div key="current-rank" className="table-cell user-highlight">
-                  {currentUserEntry.rank || "?"}
-                </div>
-                <div key="current-name" className="table-cell user-highlight">
-                  {currentUserEntry.username}
-                  <span className="you-badge">YOU</span>
-                </div>
-                <div key="current-score" className="table-cell user-highlight">
-                  {currentUserEntry.score?.toLocaleString() || 0}
-                </div>
-                <div key="current-games" className="table-cell user-highlight">
-                  {currentUserEntry.games_played || 0}
-                </div>
-                <div key="current-avg" className="table-cell user-highlight">
-                  {currentUserEntry.avg_score || 0}
-                </div>
-              </>
+              </div>
             )}
+
+            {/* Table rows using table-row structure */}
+            {topEntries.map((entry, index) => (
+              <div
+                key={entry.user_id || index}
+                style={{ display: "table-row" }}
+              >
+                <div
+                  className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
+                  style={{ display: "table-cell" }}
+                >
+                  {entry.rank}
+                </div>
+                <div
+                  className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
+                  style={{ display: "table-cell" }}
+                >
+                  {entry.username}
+                  {entry.is_current_user && (
+                    <span className="you-badge">YOU</span>
+                  )}
+                </div>
+                <div
+                  className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
+                  style={{ display: "table-cell" }}
+                >
+                  {entry.score.toLocaleString()}
+                </div>
+                <div
+                  className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
+                  style={{ display: "table-cell" }}
+                >
+                  {entry.games_played}
+                </div>
+                <div
+                  className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
+                  style={{ display: "table-cell" }}
+                >
+                  {entry.avg_score}
+                </div>
+              </div>
+            ))}
+
+            {/* User position if not in top entries */}
+            {currentUserEntry &&
+              !topEntries.some((entry) => entry.is_current_user) && (
+                <>
+                  <div style={{ display: "table-row" }}>
+                    <div
+                      className="table-cell separator"
+                      style={{
+                        display: "table-cell",
+                        textAlign: "center",
+                        colspan: "5",
+                      }}
+                    >
+                      . . .
+                    </div>
+                  </div>
+                  <div style={{ display: "table-row" }}>
+                    <div
+                      className="table-cell user-highlight"
+                      style={{ display: "table-cell" }}
+                    >
+                      {currentUserEntry.rank || "?"}
+                    </div>
+                    <div
+                      className="table-cell user-highlight"
+                      style={{ display: "table-cell" }}
+                    >
+                      {currentUserEntry.username}
+                      <span className="you-badge">YOU</span>
+                    </div>
+                    <div
+                      className="table-cell user-highlight"
+                      style={{ display: "table-cell" }}
+                    >
+                      {currentUserEntry.score?.toLocaleString() || 0}
+                    </div>
+                    <div
+                      className="table-cell user-highlight"
+                      style={{ display: "table-cell" }}
+                    >
+                      {currentUserEntry.games_played || 0}
+                    </div>
+                    <div
+                      className="table-cell user-highlight"
+                      style={{ display: "table-cell" }}
+                    >
+                      {currentUserEntry.avg_score || 0}
+                    </div>
+                  </div>
+                </>
+              )}
+          </div>
         </div>
 
         {/* Pagination */}
@@ -340,121 +414,177 @@ function Leaderboard() {
           </div>
         </div>
 
-        {/* Table header */}
+        {/* Table header and data - using a traditional table-like approach */}
         <div className="table-container">
-          <div className={`streak-table ${showDates ? "with-date" : ""}`}>
-            <div className="table-header">Rank</div>
-            <div className="table-header">Player</div>
-            <div className="table-header">Streak</div>
-            {showDates && <div className="table-header">Last Active</div>}
-          </div>
-
-          {/* No data message */}
-          {entries.length === 0 && (
-            <p className="no-data">No streak data available.</p>
-          )}
-
-          {/* Table rows - flattened for grid layout */}
-          {entries.flatMap((entry, index) => {
-            const cells = [
+          <div
+            className={`streak-table ${showDates ? "with-date" : ""}`}
+            style={{
+              display: "table",
+              width: "100%",
+              borderCollapse: "collapse",
+            }}
+          >
+            <div style={{ display: "table-row" }}>
               <div
-                key={`${entry.user_id || index}-rank`}
-                className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
+                className="table-header"
+                style={{
+                  display: "table-cell",
+                  width: showDates ? "15%" : "20%",
+                }}
               >
-                {entry.rank}
-                {entry.rank <= 3 && (
-                  <span
-                    className={`streak-badge ${
-                      entry.rank === 1
-                        ? "gold"
-                        : entry.rank === 2
-                          ? "silver"
-                          : "bronze"
-                    }`}
-                  >
-                    {entry.rank === 1
-                      ? "1st"
-                      : entry.rank === 2
-                        ? "2nd"
-                        : "3rd"}
-                  </span>
-                )}
-              </div>,
+                Rank
+              </div>
               <div
-                key={`${entry.user_id || index}-name`}
-                className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
+                className="table-header"
+                style={{
+                  display: "table-cell",
+                  width: showDates ? "40%" : "60%",
+                }}
               >
-                {entry.username}
-                {entry.is_current_user && (
-                  <span className="you-badge">YOU</span>
-                )}
-              </div>,
+                Player
+              </div>
               <div
-                key={`${entry.user_id || index}-streak`}
-                className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
+                className="table-header"
+                style={{
+                  display: "table-cell",
+                  width: showDates ? "15%" : "20%",
+                }}
               >
-                {entry.streak_length}
-              </div>,
-            ];
-
-            if (showDates) {
-              cells.push(
+                Streak
+              </div>
+              {showDates && (
                 <div
-                  key={`${entry.user_id || index}-date`}
+                  className="table-header"
+                  style={{ display: "table-cell", width: "30%" }}
+                >
+                  Last Active
+                </div>
+              )}
+            </div>
+
+            {/* No data message */}
+            {entries.length === 0 && (
+              <div style={{ display: "table-row" }}>
+                <div
+                  style={{
+                    display: "table-cell",
+                    padding: "30px",
+                    textAlign: "center",
+                    colspan: showDates ? "4" : "3",
+                  }}
+                >
+                  No streak data available.
+                </div>
+              </div>
+            )}
+
+            {/* Table rows using table-row structure */}
+            {entries.map((entry, index) => (
+              <div
+                key={entry.user_id || index}
+                style={{ display: "table-row" }}
+              >
+                <div
                   className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
+                  style={{ display: "table-cell" }}
                 >
-                  {new Date(entry.last_active).toLocaleDateString()}
-                </div>,
-              );
-            }
-
-            return cells;
-          })}
-
-          {/* User position if not in top entries */}
-          {currentUserEntry &&
-            !entries.some((entry) => entry.is_current_user) && (
-              <>
-                <div
-                  key="streak-separator"
-                  className="table-cell separator"
-                  style={{ gridColumn: showDates ? "span 4" : "span 3" }}
-                >
-                  . . .
+                  {entry.rank}
+                  {entry.rank <= 3 && (
+                    <span
+                      className={`streak-badge ${
+                        entry.rank === 1
+                          ? "gold"
+                          : entry.rank === 2
+                            ? "silver"
+                            : "bronze"
+                      }`}
+                    >
+                      {entry.rank === 1
+                        ? "1st"
+                        : entry.rank === 2
+                          ? "2nd"
+                          : "3rd"}
+                    </span>
+                  )}
                 </div>
                 <div
-                  key="current-streak-rank"
-                  className="table-cell user-highlight"
+                  className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
+                  style={{ display: "table-cell" }}
                 >
-                  {currentUserEntry.rank || "?"}
+                  {entry.username}
+                  {entry.is_current_user && (
+                    <span className="you-badge">YOU</span>
+                  )}
                 </div>
                 <div
-                  key="current-streak-name"
-                  className="table-cell user-highlight"
+                  className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
+                  style={{ display: "table-cell" }}
                 >
-                  {currentUserEntry.username}
-                  <span className="you-badge">YOU</span>
-                </div>
-                <div
-                  key="current-streak-length"
-                  className="table-cell user-highlight"
-                >
-                  {currentUserEntry.streak_length || 0}
+                  {entry.streak_length}
                 </div>
                 {showDates && (
                   <div
-                    key="current-streak-date"
-                    className="table-cell user-highlight"
+                    className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
+                    style={{ display: "table-cell" }}
                   >
-                    {currentUserEntry.last_active
-                      ? new Date(
-                          currentUserEntry.last_active,
-                        ).toLocaleDateString()
-                      : "N/A"}
+                    {new Date(entry.last_active).toLocaleDateString()}
                   </div>
                 )}
-              </>
-            )}
+              </div>
+            ))}
+
+            {/* User position if not in top entries */}
+            {currentUserEntry &&
+              !entries.some((entry) => entry.is_current_user) && (
+                <>
+                  <div style={{ display: "table-row" }}>
+                    <div
+                      className="table-cell separator"
+                      style={{
+                        display: "table-cell",
+                        textAlign: "center",
+                        colspan: showDates ? "4" : "3",
+                      }}
+                    >
+                      . . .
+                    </div>
+                  </div>
+                  <div style={{ display: "table-row" }}>
+                    <div
+                      className="table-cell user-highlight"
+                      style={{ display: "table-cell" }}
+                    >
+                      {currentUserEntry.rank || "?"}
+                    </div>
+                    <div
+                      className="table-cell user-highlight"
+                      style={{ display: "table-cell" }}
+                    >
+                      {currentUserEntry.username}
+                      <span className="you-badge">YOU</span>
+                    </div>
+                    <div
+                      className="table-cell user-highlight"
+                      style={{ display: "table-cell" }}
+                    >
+                      {currentUserEntry.streak_length || 0}
+                    </div>
+                    {showDates && (
+                      <div
+                        className="table-cell user-highlight"
+                        style={{ display: "table-cell" }}
+                      >
+                        {currentUserEntry.last_active
+                          ? new Date(
+                              currentUserEntry.last_active,
+                            ).toLocaleDateString()
+                          : "N/A"}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+          </div>
         </div>
 
         {/* Pagination */}

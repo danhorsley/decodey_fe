@@ -1,16 +1,5 @@
 /* 
-  Leaderboard.css - Styles for the leaderboard component
-
-  TABLE OF CONTENTS:
-  1. CONTAINER STYLES
-  2. NAVIGATION & CONTROLS
-  3. TABLE STYLES
-  4. PAGINATION
-  5. USER HIGHLIGHT STYLES
-  6. PERSONAL STATS
-  7. STREAK LEADERBOARD
-  8. STATUS MESSAGES
-  9. RESPONSIVE STYLES
+  Leaderboard.css - Clean rewrite with optimized styles
 */
 
 /* ===== 1. CONTAINER STYLES ===== */
@@ -19,7 +8,6 @@
   margin: 0 auto;
   padding: 20px;
   font-family: "Courier New", Courier, monospace;
-  position: relative;
   background: #fff;
   color: #333;
 }
@@ -41,7 +29,6 @@
 }
 
 /* ===== 2. NAVIGATION & CONTROLS ===== */
-/* Tabs container with navigation */
 .tabs-container {
   display: flex;
   justify-content: space-between;
@@ -64,6 +51,7 @@
   cursor: pointer;
   font-family: inherit;
   color: rgb(0, 66, 170);
+  transition: color 0.2s ease;
 }
 
 .tab:hover {
@@ -96,21 +84,14 @@
   color: #fff;
   border: none;
   border-radius: 50%;
-  /* Keep 50% for perfect circle */
   cursor: pointer;
   width: 32px;
-  /* Slightly larger for better proportions */
   height: 32px;
-  /* Keep equal width and height for circle */
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-left: 14px;
+  margin-right: 10px;
   transition: all 0.2s ease;
-  /* Ensure no padding interferes with the circle shape */
-  padding: 0;
-  /* Improve icon centering */
-  overflow: visible;
 }
 
 .back-button:hover {
@@ -118,24 +99,11 @@
   transform: scale(1.05);
 }
 
-/* Fix SVG icon display */
 .back-button svg {
-  margin: 0;
-  padding: 0;
   width: 20px;
-  /* Explicit width */
   height: 20px;
-  /* Explicit height */
   display: block;
-  /* Ensures proper display */
-  /* Fix for some browsers that might hide the icon */
   fill: currentColor;
-  color: white;
-}
-
-/* Fix for Safari */
-.back-button:focus {
-  outline: none;
 }
 
 .dark-theme .back-button {
@@ -151,54 +119,6 @@
   box-shadow: 0 0 10px rgba(0, 225, 152, 0.3);
 }
 
-/* Account icon container */
-.account-icon-container {
-  width: 24px;
-  height: 24px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 18px;
-}
-
-.account-icon-container .account-icon {
-  position: static;
-  transform: none;
-  right: auto;
-  bottom: auto;
-}
-
-/* Leaderboard button fixed position */
-/* .leaderboard-button-fixed {
-  position: absolute;
-  bottom: 30px;
-  left: 10px;
-  padding: 8px;
-  background-color: #000;
-  color: #E5B80B;
-  border: 1px solid #D4A017;
-  border-radius: 57%;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(230, 185, 30, 0.5);
-  transform: translateY(50%);
-  display: flex;
-}
-
-.leaderboard-button-fixed:hover {
-  background: linear-gradient(to bottom, #FFDF4F, #FDBC40);
-  box-shadow: 0 3px 10px rgba(230, 185, 30, 0.65);
-  color: #000;
-}
-
-.dark-theme .leaderboard-button-fixed {
-  color: #E5B80B;
-  background-color: #000;
-}
-
-.dark-theme .leaderboard-button-fixed:hover {
-  background-color: rgb(0, 225, 152);
-}
- */
 /* Streak controls */
 .streak-controls {
   margin: 15px 0;
@@ -271,35 +191,19 @@
 .table-container {
   width: 100%;
   overflow-x: auto;
+  margin-bottom: 20px;
 }
 
-/* Standard table grid */
-.table-grid {
-  display: grid;
-  grid-template-columns: 1fr 2fr 1fr 1fr 1fr;
-  gap: 0;
+/* Use a traditional table layout for maximum browser compatibility */
+.table-grid, .streak-table {
+  display: table;
   width: 100%;
+  border-collapse: collapse;
 }
 
-/* Personal table grid with different column sizes */
-.table-grid.personal {
-  grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr;
-}
-
-/* Streak tables */
-.streak-table {
-  display: grid;
-  grid-template-columns: 1fr 2fr 1fr;
-  gap: 0;
-  width: 100%;
-}
-
-.streak-table.with-date {
-  grid-template-columns: 1fr 2fr 1fr 1fr;
-}
-
-/* Table headers */
-.table-header {
+/* Table headers - first row */
+.table-grid .table-header, .streak-table .table-header {
+  display: table-cell;
   padding: 10px;
   background: #f5f5f5;
   font-weight: bold;
@@ -307,50 +211,60 @@
   border-bottom: 1px solid #ddd;
 }
 
-.dark-theme .table-header {
+.dark-theme .table-grid .table-header,
+.dark-theme .streak-table .table-header {
   background: #333;
   border-bottom: 1px solid #444;
 }
 
 /* Table cells */
-.table-cell {
+.table-grid .table-cell, .streak-table .table-cell {
+  display: table-cell;
   padding: 10px;
   border-bottom: 1px solid #eee;
 }
 
+/* Separator row */
+.table-cell.separator {
+  display: table-cell;
+  text-align: center;
+  border-top: 2px dotted #ddd;
+  border-bottom: 2px dotted #ddd;
+  color: #999;
+  font-weight: bold;
+  padding: 8px 5px;
+  height: 30px;
+  /* Make sure it spans all columns */
+  table-layout: fixed;
+  white-space: nowrap;
+}
+
+.dark-theme .table-cell.separator {
+  border-top-color: #444;
+  border-bottom-color: #444;
+  color: #777;
+}
+
 /* Alternating row colors for light theme */
-.table-grid>.table-cell:nth-child(5n+1),
-.table-grid>.table-cell:nth-child(5n+2),
-.table-grid>.table-cell:nth-child(5n+3),
-.table-grid>.table-cell:nth-child(5n+4),
-.table-grid>.table-cell:nth-child(5n+5) {
+.table-grid tr:nth-child(odd) td,
+.streak-table tr:nth-child(odd) td {
   color: rgb(0, 66, 170);
 }
 
-.table-grid>.table-cell:nth-child(10n+6),
-.table-grid>.table-cell:nth-child(10n+7),
-.table-grid>.table-cell:nth-child(10n+8),
-.table-grid>.table-cell:nth-child(10n+9),
-.table-grid>.table-cell:nth-child(10n+10) {
+.table-grid tr:nth-child(even) td,
+.streak-table tr:nth-child(even) td {
   color: #000;
 }
 
 /* Alternating row colors for dark theme */
-.dark-theme .table-grid>.table-cell:nth-child(5n+1),
-.dark-theme .table-grid>.table-cell:nth-child(5n+2),
-.dark-theme .table-grid>.table-cell:nth-child(5n+3),
-.dark-theme .table-grid>.table-cell:nth-child(5n+4),
-.dark-theme .table-grid>.table-cell:nth-child(5n+5) {
+.dark-theme .table-grid tr:nth-child(odd) td,
+.dark-theme .streak-table tr:nth-child(odd) td {
   color: #4cc9f0;
 }
 
-.dark-theme .table-grid>.table-cell:nth-child(10n+6),
-.dark-theme .table-grid>.table-cell:nth-child(10n+7),
-.dark-theme .table-grid>.table-cell:nth-child(10n+8),
-.dark-theme .table-grid>.table-cell:nth-child(10n+9),
-.dark-theme .table-grid>.table-cell:nth-child(10n+10) {
+.dark-theme .table-grid tr:nth-child(even) td,
+.dark-theme .streak-table tr:nth-child(even) td {
   color: rgb(0, 225, 152);
-  text-shadow: 0 0 8px rgba(0, 225, 152, 0.5);
 }
 
 /* ===== 4. PAGINATION ===== */
@@ -390,32 +304,14 @@
 
 .dark-theme .pagination-button:disabled {
   background: #444;
+  color: #aaa;
 }
 
 .dark-theme .pagination-button:hover:not(:disabled) {
-  background: rgb(0, 225, 152);
-  text-shadow: 0 0 8px rgba(0, 225, 152, 0.5);
+  background: #00c896;
 }
 
 /* ===== 5. USER HIGHLIGHT STYLES ===== */
-/* Separator row styling */
-.table-cell.separator {
-  border-top: 2px dotted #ddd;
-  border-bottom: 2px dotted #ddd;
-  color: #999;
-  font-weight: bold;
-  text-align: center;
-  padding: 8px 5px;
-  height: 30px;
-}
-
-.dark-theme .table-cell.separator {
-  border-top-color: #444;
-  border-bottom-color: #444;
-  color: #777;
-}
-
-/* User highlight styling - gold theme */
 .table-cell.user-highlight {
   background-color: rgba(229, 184, 11, 0.15);
   color: #E5B80B !important;
@@ -428,7 +324,6 @@
   text-shadow: 0 0 5px rgba(229, 184, 11, 0.3);
 }
 
-/* "YOU" badge styling */
 .you-badge {
   background-color: #E5B80B;
   color: #000;
@@ -447,7 +342,6 @@
 }
 
 /* ===== 6. PERSONAL STATS ===== */
-/* Login Required Message */
 .personal-stats-login-required {
   text-align: center;
   padding: 30px;
@@ -456,33 +350,16 @@
   margin: 20px 0;
 }
 
-.personal-stats-login-required .login-button {
-  margin-top: 15px;
-  padding: 8px 20px;
-  background-color: #007bff;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: bold;
-}
-
 .dark-theme .personal-stats-login-required {
   background-color: rgba(255, 255, 255, 0.05);
 }
 
-.dark-theme .personal-stats-login-required .login-button {
-  background-color: #4cc9f0;
-}
-
-/* Personal stats container */
 .personal-stats-container {
   padding: 15px;
   max-width: 800px;
   margin: 0 auto;
 }
 
-/* Summary Stats Cards */
 .stats-summary {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -529,7 +406,6 @@
   color: #4cc9f0;
 }
 
-/* Streaks Section */
 .streaks-section {
   background-color: #f8f9fa;
   border-radius: 8px;
@@ -628,10 +504,6 @@
   border-bottom: 2px solid #adb5bd;
 }
 
-.top-scores-table tbody tr:last-child td {
-  border-bottom: none;
-}
-
 .top-scores-table tbody tr:hover {
   background-color: rgba(0, 0, 0, 0.05);
 }
@@ -652,14 +524,12 @@
 
 .dark-theme .top-scores-table td {
   border-bottom-color: #495057;
-  color: #f8f9fa;
 }
 
 .dark-theme .top-scores-table tbody tr:hover {
   background-color: rgba(255, 255, 255, 0.05);
 }
 
-/* Last played date */
 .last-played {
   text-align: right;
   font-style: italic;
@@ -672,38 +542,7 @@
   color: #adb5bd;
 }
 
-/* Refresh button */
-.refresh-button {
-  background: none;
-  border: none;
-  font-size: 1.2rem;
-  color: #6c757d;
-  cursor: pointer;
-  padding: 0 10px;
-  transition: transform 0.2s ease;
-  margin-left: auto;
-}
-
-.refresh-button:hover {
-  transform: rotate(180deg);
-  color: #007bff;
-}
-
-.refresh-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.dark-theme .refresh-button {
-  color: #adb5bd;
-}
-
-.dark-theme .refresh-button:hover {
-  color: #4cc9f0;
-}
-
-/* ===== 7. STREAK LEADERBOARD ===== */
-/* Streak badges */
+/* ===== 7. STREAK BADGES ===== */
 .streak-badge {
   display: inline-block;
   margin-left: 10px;
@@ -727,33 +566,26 @@
   color: #fff;
 }
 
-.dark-theme .streak-badge {
-  opacity: 0.9;
-}
-
 /* ===== 8. STATUS MESSAGES ===== */
-/* Loading and Error States */
-.loading,
-.loading-spinner {
+.loading, .error {
   text-align: center;
   padding: 20px;
+}
+
+.loading {
   color: rgb(0, 66, 170);
 }
 
-.loading-spinner {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 200px;
-  font-size: 1rem;
-  color: #6c757d;
+.error {
+  color: rgb(170, 0, 0);
 }
 
-.error,
-.error-message {
-  text-align: center;
-  padding: 20px;
-  color: rgb(170, 0, 0);
+.dark-theme .loading {
+  color: #4cc9f0;
+}
+
+.dark-theme .error {
+  color: rgb(255, 102, 102);
 }
 
 .error-message {
@@ -762,6 +594,7 @@
   padding: 15px;
   border-radius: 8px;
   margin: 20px 0;
+  text-align: center;
 }
 
 .error-message button {
@@ -774,29 +607,11 @@
   cursor: pointer;
 }
 
-.dark-theme .loading,
-.dark-theme .loading-spinner {
-  color: #4cc9f0;
-}
-
-.dark-theme .loading-spinner {
-  color: #adb5bd;
-}
-
-.dark-theme .error {
-  color: rgb(255, 102, 102);
-}
-
 .dark-theme .error-message {
   background-color: rgba(220, 53, 69, 0.2);
   color: #f8d7da;
 }
 
-.dark-theme .error-message button {
-  background-color: #dc3545;
-}
-
-/* Empty states */
 .no-data {
   text-align: center;
   padding: 30px;
@@ -808,18 +623,6 @@
   color: #999;
 }
 
-/* User position notice */
-.user-position {
-  text-align: center;
-  padding: 10px;
-  color: rgb(0, 66, 170);
-}
-
-.dark-theme .user-position {
-  color: #4cc9f0;
-}
-
-/* Login button */
 .login-button {
   padding: 8px 16px;
   background: rgb(0, 66, 170);
@@ -827,6 +630,8 @@
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  font-weight: bold;
+  transition: all 0.2s ease;
 }
 
 .login-button:hover {
@@ -834,177 +639,15 @@
 }
 
 .dark-theme .login-button {
-  background: rgb(0, 225, 152);
-  text-shadow: 0 0 8px rgba(0, 225, 152, 0.5);
+  background: #4cc9f0;
+  color: #222;
 }
 
 .dark-theme .login-button:hover {
   background: rgb(0, 225, 152);
-  text-shadow: 0 0 8px rgba(0, 225, 152, 0.5);
 }
 
-/* ===== 9. RESPONSIVE STYLES ===== */
-/* Extra space after rows */
-.table-grid .table-cell:nth-last-child(6),
-.table-grid .table-cell:nth-last-child(7),
-.table-grid .table-cell:nth-last-child(8),
-.table-grid .table-cell:nth-last-child(9),
-.table-grid .table-cell:nth-last-child(10) {
-  padding-bottom: 12px;
-}
-
-.table-cell.separator:first-child {
-  padding-top: 10px;
-}
-
-/* Medium screens */
-@media (max-width: 768px) {
-  .tabs {
-    gap: 5px;
-  }
-
-  .tab {
-    padding: 6px 10px;
-    font-size: 0.9rem;
-  }
-
-  .round-button,
-  .account-icon-container {
-    width: 36px;
-    height: 36px;
-  }
-
-  .table-cell.user-highlight {
-    font-size: 0.95em;
-  }
-
-  .you-badge {
-    font-size: 0.6rem;
-    padding: 0 4px;
-    margin-left: 5px;
-  }
-
-  .stats-summary,
-  .streaks-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .top-scores-table {
-    font-size: 0.8rem;
-  }
-
-  .top-scores-table th,
-  .top-scores-table td {
-    padding: 6px 8px;
-  }
-
-  .refresh-button {
-    font-size: 1rem;
-    padding: 0 5px;
-  }
-}
-
-/* Small screens */
-@media (max-width: 600px) {
-  .table-grid {
-    grid-template-columns: 1fr 2fr 1fr;
-  }
-
-  .table-grid.personal {
-    grid-template-columns: 1.5fr 1fr 1fr;
-  }
-
-  .table-header:nth-child(n+4),
-  .table-cell:nth-child(5n+4),
-  .table-cell:nth-child(5n) {
-    display: none;
-  }
-
-  .streak-type-selector,
-  .streak-period-selector {
-    flex-direction: column;
-    gap: 5px;
-    align-items: center;
-  }
-
-  .streak-type-button,
-  .streak-period-button {
-    width: 80%;
-    max-width: 200px;
-  }
-
-  .streak-table {
-    grid-template-columns: 1fr 2fr 1fr;
-  }
-
-  .streak-table.with-date {
-    grid-template-columns: 1fr 1.5fr 1fr 1fr;
-  }
-
-  .streak-table .table-cell {
-    font-size: 0.9em;
-    padding: 8px 5px;
-  }
-}
-
-/* Very small screens */
-@media (max-width: 480px) {
-  .tabs-container {
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px;
-  }
-
-  .tabs {
-    order: 2;
-    width: 100%;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-
-  .round-button {
-    order: 1;
-  }
-
-  .account-spacer {
-    display: none;
-  }
-
-  .table-cell.separator {
-    text-align: center;
-    grid-column: 1 / -1; /* Span all columns */
-    border-top: 2px dotted #ddd;
-    border-bottom: 2px dotted #ddd;
-    color: #999;
-    font-weight: bold;
-    padding: 8px 5px;
-    height: 30px;
-  }
-
-  .you-badge {
-    display: block;
-    margin: 2px auto 0;
-    width: fit-content;
-  }
-
-  .stats-summary {
-    grid-template-columns: 1fr;
-  }
-
-  .streaks-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .top-performances {
-    overflow-x: auto;
-  }
-
-  .personal-stats-container {
-    padding: 10px;
-  }
-}
-
-/* Leaderboard-specific loading styles */
+/* ===== 9. LOADING ANIMATIONS ===== */
 .leaderboard-loading {
   width: 100%;
   display: flex;
@@ -1029,23 +672,80 @@
   overflow: hidden;
 }
 
-/* Fix for leaderboard container */
-.leaderboard {
-  position: relative;
-  min-height: 400px;
+.loading-dots:after {
+  content: '';
+  animation: loading-dots 1.5s infinite;
 }
 
-/* Make sure tabs remain visible */
-.tabs-container {
-  position: relative;
-  z-index: 10;
+@keyframes loading-dots {
+  0% { content: ''; }
+  25% { content: '.'; }
+  50% { content: '..'; }
+  75% { content: '...'; }
+  100% { content: ''; }
 }
 
-/* Dark theme adjustments */
-.dark-theme .leaderboard-loading .loading-title {
-  color: #4cc9f0;
+/* ===== 10. RESPONSIVE STYLES ===== */
+@media (max-width: 768px) {
+  .leaderboard {
+    padding: 15px;
+  }
+
+  .tabs {
+    gap: 5px;
+  }
+
+  .tab {
+    padding: 6px 10px;
+    font-size: 0.9rem;
+  }
+
+  .you-badge {
+    font-size: 0.6rem;
+    padding: 0 4px;
+    margin-left: 5px;
+  }
+
+  .stats-summary,
+  .streaks-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .streak-type-selector,
+  .streak-period-selector {
+    flex-wrap: wrap;
+  }
 }
 
-.light-theme .leaderboard-loading .loading-title {
-  color: #007bff;
+@media (max-width: 600px) {
+  .tabs-container {
+    flex-wrap: wrap;
+  }
+
+  .tabs {
+    order: 2;
+    width: 100%;
+    justify-content: center;
+    margin-top: 10px;
+  }
+
+  .back-button {
+    order: 1;
+  }
+
+  .streak-type-selector,
+  .streak-period-selector {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .streak-type-button,
+  .streak-period-button {
+    width: 100%;
+    max-width: 200px;
+  }
+
+  .stats-summary {
+    grid-template-columns: 1fr;
+  }
 }
