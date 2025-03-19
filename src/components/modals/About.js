@@ -57,6 +57,11 @@ function About({ isOpen, onClose }) {
         </div>
 
         <div className="about-footer">
+          {/* Add Scoring link */}
+          <Link to="/scoring" className="privacy-link" onClick={handleClose}>
+            Scoring System
+          </Link>
+
           <Link to="/privacy" className="privacy-link" onClick={handleClose}>
             Privacy Policy
           </Link>

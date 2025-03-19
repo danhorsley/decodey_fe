@@ -1,0 +1,87 @@
+/* Scoring.css - Styles for the scoring explanation page */
+
+.code-block {
+  font-family: 'Courier New', Courier, monospace;
+  background-color: #f5f5f5;
+  padding: 12px 16px;
+  border-radius: 4px;
+  margin: 15px 0;
+  font-weight: bold;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.dark-theme .code-block {
+  background-color: #333;
+  color: #4cc9f0;
+}
+
+.example-calculation {
+  background-color: rgba(0, 100, 255, 0.05);
+  border-left: 4px solid rgba(0, 100, 255, 0.4);
+  padding: 15px;
+  margin: 15px 0;
+  border-radius: 0 4px 4px 0;
+}
+
+.dark-theme .example-calculation {
+  background-color: rgba(76, 201, 240, 0.05);
+  border-left-color: rgba(76, 201, 240, 0.4);
+}
+
+.example-calculation p {
+  margin: 10px 0;
+}
+
+.example-calculation ul {
+  margin: 8px 0;
+}
+
+h4 {
+  color: #333;
+  margin-top: 20px;
+  margin-bottom: 5px;
+}
+
+.dark-theme h4 {
+  color: #4cc9f0;
+}
+
+.privacy-section ul li {
+  margin-bottom: 8px;
+}
+
+/* Score formula highlight */
+.code-block {
+  text-align: center;
+  font-size: 1.1em;
+  line-height: 1.5;
+}
+
+/* Make superscript text more visible */
+sup {
+  font-size: 0.7em;
+  vertical-align: super;
+  line-height: 0;
+}
+
+/* Bold important multipliers */
+.example-calculation strong {
+  color: rgb(0, 66, 170);
+}
+
+.dark-theme .example-calculation strong {
+  color: #4cc9f0;
+}
+
+/* Final score highlight */
+.example-calculation p:last-child {
+  font-weight: bold;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  padding-top: 10px;
+  margin-top: 15px;
+}
+
+.dark-theme .example-calculation p:last-child {
+  border-top-color: rgba(255, 255, 255, 0.1);
+}

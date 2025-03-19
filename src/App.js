@@ -16,6 +16,7 @@ import NotFound from "./pages/NotFound";
 const Game = lazy(() => import("./pages/Game"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const Privacy = lazy(() => import("./pages/Privacy"));
+const Scoring = lazy(() => import("./pages/Scoring")); // Add Scoring page
 
 // Simple loading component
 const Loading = () => (
@@ -57,6 +58,8 @@ function App() {
             <Route path="/" element={<Game />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/privacy" element={<Privacy />} />
+            <Route path="/scoring" element={<Scoring />} />{" "}
+            {/* Add Scoring route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
