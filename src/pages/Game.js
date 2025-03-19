@@ -60,6 +60,7 @@ function Game() {
   const isSignupOpen = useUIStore((state) => state.isSignupOpen);
   const isSettingsOpen = useUIStore((state) => state.isSettingsOpen);
   const isAboutOpen = useUIStore((state) => state.isAboutOpen);
+  const isContinueGameOpen = useUIStore((state) => state.isContinueGameOpen);
 
   // Sound
   const { playSound } = useSound();
@@ -86,7 +87,7 @@ function Game() {
     getHint,
   } = useGameStore();
 
-  // Auto-initialize on first render - the component calls initializeGame
+  // Auto-initialize on first render - the component calls initializeGame 
   // once on mount via React.useEffect()
   React.useEffect(() => {
     // Immediately invoke the initialization, assuming the hook takes care of
@@ -136,22 +137,10 @@ function Game() {
 
   // Any modal open check for keyboard handling
   const anyModalOpen =
-    isLoginOpen || isSignupOpen || isSettingsOpen || isAboutOpen;
+    isLoginOpen || isSignupOpen || isSettingsOpen || isAboutOpen || isContinueGameOpen || hasWon || hasLost;
 
-  // Enable keyboard input only when appropriate
-  const keyboardEnabled = isGameActive && !anyModalOpen;
-
-  // Setup keyboard input
-  useKeyboardInput({
-    enabled: keyboardEnabled,
-    speedMode: true,
-    encryptedLetters: Array.isArray(correctlyGuessed) ? correctlyGuessed : [],
-    originalLetters: Array.isArray(originalLetters) ? originalLetters : [],
-    selectedEncrypted,
-    onEncryptedSelect: handleEncryptedSelect,
-    onGuessSubmit: onGuessClick,
-    playSound,
-  });
+  // Enable keyboard input only when appropriate - a game is active, no modals are open, and we're not initializing
+  const keyboardEnabled = isGameActive && !anyModalOpen && !isInitializing;
 
   // Get sorted encrypted letters for display
   const sortedEncryptedLetters = React.useMemo(() => {
@@ -165,6 +154,27 @@ function Game() {
       ? [...encryptedLetters].sort()
       : encryptedLetters;
   }, [encrypted, settings?.gridSorting]);
+
+  // Setup keyboard input with more explicit callbacks
+  useKeyboardInput({
+    enabled: keyboardEnabled,
+    speedMode: true,
+    encryptedLetters: Array.isArray(sortedEncryptedLetters) ? sortedEncryptedLetters : [],
+    originalLetters: Array.isArray(originalLetters) ? originalLetters : [],
+    selectedEncrypted,
+    onEncryptedSelect: (letter) => {
+      if (keyboardEnabled && typeof handleEncryptedSelect === 'function') {
+        handleEncryptedSelect(letter);
+        playSound?.("keyclick");
+      }
+    },
+    onGuessSubmit: (guessedLetter) => {
+      if (keyboardEnabled && selectedEncrypted && typeof submitGuess === 'function') {
+        submitGuess(selectedEncrypted, guessedLetter);
+      }
+    },
+    playSound,
+  });
 
   // Format the display text
   const formattedText = React.useMemo(() => {
@@ -300,10 +310,8 @@ function Game() {
 
   // Win/lose states
   const renderGameOver = () => {
-    if (hasWon) {
-      return <WinCelebration playSound={playSound} winData={winData || {}} />;
-    }
-
+    // Check for loss first, then win. This ensures that if somehow both flags are true,
+    // loss takes precedence (logical since you can't win after losing)
     if (hasLost) {
       return (
         <div className="game-message">
@@ -311,6 +319,10 @@ function Game() {
           <button onClick={handleStartNewGame}>Try Again</button>
         </div>
       );
+    }
+
+    if (hasWon) {
+      return <WinCelebration playSound={playSound} winData={winData || {}} />;
     }
 
     return null;

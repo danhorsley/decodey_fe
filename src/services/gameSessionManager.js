@@ -97,7 +97,36 @@ const initializeGameSession = async (options = {}) => {
   sessionStore.setInitializing(true);
 
   try {
-    // Start a new game with the provided options
+    // Check if user is authenticated
+    const { isAuthenticated } = checkAuthStatus();
+
+    // If user is authenticated, check for active game first
+    if (isAuthenticated) {
+      try {
+        const activeGameCheck = await apiService.checkActiveGame();
+
+        if (activeGameCheck.has_active_game) {
+          console.log("Active game found, continuing instead of starting new");
+
+          // Continue the active game instead of starting a new one
+          const continueResult = await continueSavedGame();
+
+          // Update initialization status
+          sessionStore.setInitializing(false);
+
+          return {
+            success: continueResult.success,
+            continued: true,
+            gameData: continueResult.gameData,
+          };
+        }
+      } catch (checkError) {
+        console.warn("Error checking for active game:", checkError);
+        // Continue with new game initialization on error
+      }
+    }
+
+    // No active game found or not authenticated, start a new game
     const result = await startGame(options);
 
     // Update initialization status

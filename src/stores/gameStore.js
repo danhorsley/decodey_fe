@@ -109,7 +109,6 @@ const useGameStore = create((set, get) => ({
   },
 
   // Continue a saved game
-  // Modified continueSavedGame function for gameStore.js with proper immutability
   continueSavedGame: async () => {
     try {
       console.log("Attempting to continue saved game in store");
@@ -150,21 +149,24 @@ const useGameStore = create((set, get) => ({
 
       // Validate that lengths match - critical for proper display
       if (processedEncrypted.length !== processedDisplay.length) {
-        console.error("Data integrity error: Encrypted and display text lengths don't match!", {
-          encryptedLength: processedEncrypted.length,
-          displayLength: processedDisplay.length
-        });
+        console.error(
+          "Data integrity error: Encrypted and display text lengths don't match!",
+          {
+            encryptedLength: processedEncrypted.length,
+            displayLength: processedDisplay.length,
+          },
+        );
 
         // Try to fix if possible
         if (game.encrypted_paragraph && game.display) {
           console.log("Attempting to fix length mismatch");
           // Re-process from original data
-          processedEncrypted = currentHardcoreMode 
-            ? game.encrypted_paragraph.replace(/[^A-Z]/g, "") 
+          processedEncrypted = currentHardcoreMode
+            ? game.encrypted_paragraph.replace(/[^A-Z]/g, "")
             : game.encrypted_paragraph;
 
-          processedDisplay = currentHardcoreMode 
-            ? game.display.replace(/[^A-Z█]/g, "") 
+          processedDisplay = currentHardcoreMode
+            ? game.display.replace(/[^A-Z█]/g, "")
             : game.display;
         }
 
@@ -176,8 +178,8 @@ const useGameStore = create((set, get) => ({
       }
 
       // Construct proper guessedMappings with immutability
-      const correctlyGuessed = Array.isArray(game.correctly_guessed) 
-        ? [...game.correctly_guessed] 
+      const correctlyGuessed = Array.isArray(game.correctly_guessed)
+        ? [...game.correctly_guessed]
         : [];
 
       const guessedMappings = {};
@@ -188,12 +190,13 @@ const useGameStore = create((set, get) => ({
         Object.entries(game.guessedMappings).forEach(([key, value]) => {
           guessedMappings[key] = value;
         });
-      } 
+      }
       // Otherwise reconstruct from correctly_guessed and reverse_mapping
       else if (game.reverse_mapping && correctlyGuessed.length > 0) {
         correctlyGuessed.forEach((encryptedLetter) => {
           if (encryptedLetter in game.reverse_mapping) {
-            guessedMappings[encryptedLetter] = game.reverse_mapping[encryptedLetter];
+            guessedMappings[encryptedLetter] =
+              game.reverse_mapping[encryptedLetter];
           }
         });
       }
@@ -207,7 +210,7 @@ const useGameStore = create((set, get) => ({
       } else {
         // Calculate frequency if not provided
         const matches = processedEncrypted.match(/[A-Z]/g) || [];
-        matches.forEach(letter => {
+        matches.forEach((letter) => {
           letterFrequency[letter] = (letterFrequency[letter] || 0) + 1;
         });
       }
@@ -221,6 +224,10 @@ const useGameStore = create((set, get) => ({
       const difficulty = game.difficulty || "easy";
       const maxMistakesValue = MAX_MISTAKES_MAP[difficulty] || 8;
 
+      // Determine game state (won/lost)
+      const hasWon = game.hasWon || game.hasWon === true;
+      const hasLost = game.mistakes >= maxMistakesValue;
+
       // Create a complete new state object for immutability
       const newGameState = {
         // Core game data
@@ -232,8 +239,8 @@ const useGameStore = create((set, get) => ({
         correctlyGuessed: correctlyGuessed,
         guessedMappings: guessedMappings,
         letterFrequency: letterFrequency,
-        originalLetters: Array.isArray(game.original_letters) 
-          ? [...game.original_letters] 
+        originalLetters: Array.isArray(game.original_letters)
+          ? [...game.original_letters]
           : [],
 
         // Game metadata
@@ -249,13 +256,13 @@ const useGameStore = create((set, get) => ({
         selectedEncrypted: null,
         lastCorrectGuess: null,
 
-        // Game status flags
+        // Game status flags - explicitly set both for consistency
         hasGameStarted: true,
-        hasWon: false,
-        hasLost: false,
-        winData: null,
+        hasWon: hasWon,
+        hasLost: hasLost,
+        winData: game.winData || null,
         isResetting: false,
-        stateInitialized: true  // Flag to indicate state is properly initialized
+        stateInitialized: true, // Flag to indicate state is properly initialized
       };
 
       // Replace entire game state at once for clean update
@@ -284,29 +291,34 @@ const useGameStore = create((set, get) => ({
         return { success: false, sessionExpired: true };
       }
 
-      // Check for game lost
-      const state = get();
-      if (
-        typeof data.mistakes === "number" &&
-        typeof state.maxMistakes === "number" &&
-        data.mistakes >= state.maxMistakes
-      ) {
-        set({ hasLost: true });
-      }
-
       // Process display text for hardcore mode
+      const state = get();
       let displayText = data.display;
       if (displayText && state.hardcoreMode) {
         displayText = displayText.replace(/[^A-Z█]/g, "");
       }
 
-      // Update state
+      // Prepare state updates
       const updates = {
         display: displayText || state.display,
         mistakes:
           typeof data.mistakes === "number" ? data.mistakes : state.mistakes,
         selectedEncrypted: null,
       };
+
+      // Check for game lost - this must be checked FIRST
+      if (updates.mistakes >= state.maxMistakes) {
+        updates.hasLost = true;
+        updates.hasWon = false; // Explicitly set hasWon to false to avoid conflicts
+        updates.completionTime = Date.now();
+      }
+      // Only check for win if the game hasn't been lost
+      else if (data.hasWon || data.game_complete) {
+        updates.hasWon = true;
+        updates.hasLost = false; // Explicitly set hasLost to false to avoid conflicts
+        updates.completionTime = Date.now();
+        updates.winData = data.winData || null;
+      }
 
       // Handle correctly guessed letters
       let isCorrectGuess = false;
@@ -327,13 +339,7 @@ const useGameStore = create((set, get) => ({
         }
       }
 
-      // Check for game win
-      if (data.hasWon || data.game_complete) {
-        updates.hasWon = true;
-        updates.completionTime = Date.now();
-        updates.winData = data.winData || null;
-      }
-
+      // Update state with all changes at once
       set(updates);
 
       return {
@@ -382,12 +388,27 @@ const useGameStore = create((set, get) => ({
         }
       });
 
+      // Check for game lost after hint
+      const newMistakes = data.mistakes;
+      let hasLost = false;
+      let hasWon = false;
+
+      if (newMistakes >= state.maxMistakes) {
+        hasLost = true;
+      } else if (data.hasWon || data.game_complete) {
+        hasWon = true;
+      }
+
       // Update state
       set({
         display: displayText,
-        mistakes: data.mistakes,
+        mistakes: newMistakes,
         correctlyGuessed: newCorrectlyGuessed,
         guessedMappings: newMappings,
+        hasLost: hasLost,
+        hasWon: hasWon,
+        // Only set completion time if game is over
+        ...(hasLost || hasWon ? { completionTime: Date.now() } : {}),
       });
 
       return { success: true };
