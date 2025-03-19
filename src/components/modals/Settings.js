@@ -293,10 +293,10 @@ function Settings({ onCancel }) {
                 <input
                   type="radio"
                   name="difficulty"
-                  checked={localSettings.difficulty === "normal"}
-                  onChange={() => handleChange("difficulty", "normal")}
+                  checked={localSettings.difficulty === "medium"}
+                  onChange={() => handleChange("difficulty", "medium")}
                 />
-                <span className="option-label">Normal (5 mistakes)</span>
+                <span className="option-label">Medium (5 mistakes)</span>
               </label>
               <label className="settings-option">
                 <input

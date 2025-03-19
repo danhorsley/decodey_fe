@@ -3,10 +3,10 @@ import apiService from "../services/apiService";
 import config from "../config";
 import useSettingsStore from "./settingsStore";
 
-// Define max mistakes map to avoid dependency on context
+// Define max mistakes map using same terminology as backend
 const MAX_MISTAKES_MAP = {
   easy: 8,
-  normal: 5,
+  medium: 5, // Using 'medium' instead of 'normal' to match backend
   hard: 3,
 };
 
@@ -136,10 +136,12 @@ const useGameStore = create((set, get) => ({
         maxMistakes: maxMistakesValue,
       });
 
-      // Request new game from API
+      // Request new game from API - no translation needed now
+      console.log(`Starting game with difficulty: ${difficulty}`);
+
       const data = await apiService.startGame({
         longText: useLongText,
-        difficulty, // Always use current store difficulty here
+        difficulty: difficulty, // Both frontend and backend use the same terminology
       });
 
       console.log("Game start response received");
@@ -193,6 +195,19 @@ const useGameStore = create((set, get) => ({
       // Store game ID if present
       if (data.game_id) {
         localStorage.setItem("uncrypt-game-id", data.game_id);
+
+        // If game_id contains difficulty info, log it for debugging
+        // Game IDs have format: "{difficulty}-{uuid}"
+        try {
+          const gameDifficultyPrefix = data.game_id.split("-")[0];
+          if (gameDifficultyPrefix) {
+            console.log(
+              `Game returned with difficulty: ${gameDifficultyPrefix}`,
+            );
+          }
+        } catch (e) {
+          console.warn("Could not parse difficulty from game_id:", e);
+        }
       }
 
       // Create a clean, complete new state object
@@ -353,7 +368,13 @@ const useGameStore = create((set, get) => ({
       // Determine difficulty and max mistakes
       // Note: Saved games have their own difficulty, which may differ from current settings
       const difficulty = game.difficulty || "easy";
+
+      // Get max mistakes - now terminology is aligned
       const maxMistakesValue = MAX_MISTAKES_MAP[difficulty] || 8;
+
+      console.log(
+        `Continuing game with difficulty: ${difficulty}, maxMistakes: ${maxMistakesValue}`,
+      );
 
       // Determine game state (won/lost)
       const hasWon = game.hasWon || game.hasWon === true;
@@ -380,7 +401,7 @@ const useGameStore = create((set, get) => ({
 
         // Game configuration
         hardcoreMode: currentHardcoreMode,
-        difficulty: difficulty,
+        difficulty: difficulty, // Now using consistent terminology
         maxMistakes: maxMistakesValue,
 
         // Reset UI state

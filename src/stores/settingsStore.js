@@ -5,7 +5,7 @@ import { persist } from "zustand/middleware";
 // Default settings
 const defaultSettings = {
   theme: "light",
-  difficulty: "easy",
+  difficulty: "medium", // Changed from "easy" to match backend terminology
   longText: false,
   speedMode: true, // Always on - cannot be changed
   gridSorting: "default",
@@ -19,7 +19,7 @@ const defaultSettings = {
 // Map for max mistakes based on difficulty
 const MAX_MISTAKES_MAP = {
   easy: 8,
-  normal: 5,
+  medium: 5, // Changed from normal to medium
   hard: 3,
 };
 
