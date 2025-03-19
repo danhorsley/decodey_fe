@@ -270,14 +270,15 @@
 /* ===== 3. TABLE STYLES ===== */
 .table-container {
   width: 100%;
+  overflow-x: auto;
 }
 
 /* Standard table grid */
 .table-grid {
   display: grid;
   grid-template-columns: 1fr 2fr 1fr 1fr 1fr;
+  gap: 0;
   width: 100%;
-  border-bottom: 1px solid #eee;
 }
 
 /* Personal table grid with different column sizes */
@@ -289,8 +290,8 @@
 .streak-table {
   display: grid;
   grid-template-columns: 1fr 2fr 1fr;
+  gap: 0;
   width: 100%;
-  border-bottom: 1px solid #eee;
 }
 
 .streak-table.with-date {
@@ -304,13 +305,11 @@
   font-weight: bold;
   text-align: left;
   border-bottom: 1px solid #ddd;
-  color: #000;
 }
 
 .dark-theme .table-header {
   background: #333;
   border-bottom: 1px solid #444;
-  color: #4cc9f0;
 }
 
 /* Table cells */
@@ -972,8 +971,14 @@
   }
 
   .table-cell.separator {
-    font-size: 0.9em;
-    padding: 6px 3px;
+    text-align: center;
+    grid-column: 1 / -1; /* Span all columns */
+    border-top: 2px dotted #ddd;
+    border-bottom: 2px dotted #ddd;
+    color: #999;
+    font-weight: bold;
+    padding: 8px 5px;
+    height: 30px;
   }
 
   .you-badge {

@@ -8,14 +8,28 @@ import useSettingsStore from "../stores/settingsStore";
 import "../Styles/Leaderboard.css";
 
 // Component for when data is loading
-const LeaderboardLoading = ({ theme }) => (
-  <div className="leaderboard-loading">
-    <h2 className="loading-title">Loading leaderboard data...</h2>
-    <div className="leaderboard-loading-animation">
-      {/* Could add a nice loading animation here */}
+const LeaderboardLoading = ({ theme, type }) => {
+  // Customize loading message based on the type of data being loaded
+  let message = "Loading leaderboard data...";
+
+  if (type === "streaks") {
+    message = "Loading streak data...";
+  } else if (type === "personal") {
+    message = "Loading your stats...";
+  }
+
+  return (
+    <div className="leaderboard-loading">
+      <h2 className="loading-title">{message}</h2>
+      <div className="leaderboard-loading-animation">
+        {/* Use MatrixRainLoading for a consistent look with the rest of the app */}
+        <div style={{ height: "300px", width: "100%" }}>
+          {/* Could use MatrixRainLoading here if imported */}
+        </div>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 // Component for error state
 const LeaderboardError = ({ error, onRetry, theme }) => (
@@ -70,38 +84,63 @@ function Leaderboard() {
 
     return (
       <>
-        {/* Leaderboard period tabs */}
+        {/* Main navigation tabs */}
         <div className="tabs-container">
-          <button className="back-button" onClick={handleBack} aria-label="Back">
+          <button
+            className="back-button"
+            onClick={handleBack}
+            aria-label="Back"
+          >
             <FaArrowLeft />
           </button>
 
           <div className="tabs">
             <button
-              className={`tab ${period === "all-time" ? "active" : ""}`}
-              onClick={() => handlePeriodChange("all-time")}
+              className={`tab ${leaderboardType === "scores" ? "active" : ""}`}
+              onClick={() => handleTypeChange("scores")}
             >
-              All Time
+              <FaTrophy style={{ marginRight: "5px" }} /> Scores
             </button>
             <button
-              className={`tab ${period === "weekly" ? "active" : ""}`}
-              onClick={() => handlePeriodChange("weekly")}
+              className={`tab ${leaderboardType === "streaks" ? "active" : ""}`}
+              onClick={() => handleTypeChange("streaks")}
             >
-              Weekly
+              <FaFire style={{ marginRight: "5px" }} /> Streaks
             </button>
-          </div>
-
-          <div className="account-icon-container">
             <button
               className={`tab ${leaderboardType === "personal" ? "active" : ""}`}
               onClick={() => handleTypeChange("personal")}
               disabled={!isAuthenticated}
-              title={isAuthenticated ? "Your Stats" : "Login to view your stats"}
+              title={
+                isAuthenticated ? "Your Stats" : "Login to view your stats"
+              }
             >
-              <FaUser />
+              <FaUser style={{ marginRight: "5px" }} /> My Stats
             </button>
           </div>
         </div>
+
+        {/* Period tabs - only shown for scores view */}
+        {leaderboardType === "scores" && (
+          <div className="tabs-container" style={{ marginTop: "10px" }}>
+            <div style={{ width: "40px" }}></div> {/* Spacer for alignment */}
+            <div className="tabs">
+              <button
+                className={`tab ${period === "all-time" ? "active" : ""}`}
+                onClick={() => handlePeriodChange("all-time")}
+              >
+                All Time
+              </button>
+              <button
+                className={`tab ${period === "weekly" ? "active" : ""}`}
+                onClick={() => handlePeriodChange("weekly")}
+              >
+                Weekly
+              </button>
+            </div>
+            <div style={{ width: "40px" }}></div> {/* Spacer for alignment */}
+          </div>
+        )}
 
         {/* Table header */}
         <div className="table-container">
@@ -118,48 +157,70 @@ function Leaderboard() {
             <p className="no-data">No leaderboard data available.</p>
           )}
 
-          {/* Table rows */}
-          {topEntries.map((entry, index) => (
-            <React.Fragment key={entry.user_id || index}>
-              <div className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}>
-                {entry.rank}
-              </div>
-              <div className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}>
-                {entry.username}
-                {entry.is_current_user && <span className="you-badge">YOU</span>}
-              </div>
-              <div className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}>
-                {entry.score.toLocaleString()}
-              </div>
-              <div className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}>
-                {entry.games_played}
-              </div>
-              <div className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}>
-                {entry.avg_score}
-              </div>
-            </React.Fragment>
-          ))}
+          {/* Table rows - flattened for grid layout */}
+          {topEntries.flatMap((entry, index) => [
+            <div
+              key={`${entry.user_id || index}-rank`}
+              className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
+            >
+              {entry.rank}
+            </div>,
+            <div
+              key={`${entry.user_id || index}-name`}
+              className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
+            >
+              {entry.username}
+              {entry.is_current_user && <span className="you-badge">YOU</span>}
+            </div>,
+            <div
+              key={`${entry.user_id || index}-score`}
+              className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
+            >
+              {entry.score.toLocaleString()}
+            </div>,
+            <div
+              key={`${entry.user_id || index}-games`}
+              className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
+            >
+              {entry.games_played}
+            </div>,
+            <div
+              key={`${entry.user_id || index}-avg`}
+              className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
+            >
+              {entry.avg_score}
+            </div>,
+          ])}
 
           {/* User position if not in top entries */}
-          {currentUserEntry && !topEntries.some(entry => entry.is_current_user) && (
-            <>
-              <div className="table-cell separator" colSpan="5">. . .</div>
-              <div className="table-cell user-highlight">{currentUserEntry.rank || "?"}</div>
-              <div className="table-cell user-highlight">
-                {currentUserEntry.username}
-                <span className="you-badge">YOU</span>
-              </div>
-              <div className="table-cell user-highlight">
-                {currentUserEntry.score?.toLocaleString() || 0}
-              </div>
-              <div className="table-cell user-highlight">
-                {currentUserEntry.games_played || 0}
-              </div>
-              <div className="table-cell user-highlight">
-                {currentUserEntry.avg_score || 0}
-              </div>
-            </>
-          )}
+          {currentUserEntry &&
+            !topEntries.some((entry) => entry.is_current_user) && (
+              <>
+                <div
+                  key="separator"
+                  className="table-cell separator"
+                  style={{ gridColumn: "span 5" }}
+                >
+                  . . .
+                </div>
+                <div key="current-rank" className="table-cell user-highlight">
+                  {currentUserEntry.rank || "?"}
+                </div>
+                <div key="current-name" className="table-cell user-highlight">
+                  {currentUserEntry.username}
+                  <span className="you-badge">YOU</span>
+                </div>
+                <div key="current-score" className="table-cell user-highlight">
+                  {currentUserEntry.score?.toLocaleString() || 0}
+                </div>
+                <div key="current-games" className="table-cell user-highlight">
+                  {currentUserEntry.games_played || 0}
+                </div>
+                <div key="current-avg" className="table-cell user-highlight">
+                  {currentUserEntry.avg_score || 0}
+                </div>
+              </>
+            )}
         </div>
 
         {/* Pagination */}
@@ -186,7 +247,17 @@ function Leaderboard() {
         )}
       </>
     );
-  }, [leaderboardData, period, leaderboardType, page, isAuthenticated, handleBack, handlePeriodChange, handleTypeChange, handlePageChange]);
+  }, [
+    leaderboardData,
+    period,
+    leaderboardType,
+    page,
+    isAuthenticated,
+    handleBack,
+    handlePeriodChange,
+    handleTypeChange,
+    handlePageChange,
+  ]);
 
   // Render the streak leaderboard
   const renderStreakLeaderboard = useCallback(() => {
@@ -197,9 +268,13 @@ function Leaderboard() {
 
     return (
       <>
-        {/* Streak type tabs */}
+        {/* Main navigation tabs */}
         <div className="tabs-container">
-          <button className="back-button" onClick={handleBack} aria-label="Back">
+          <button
+            className="back-button"
+            onClick={handleBack}
+            aria-label="Back"
+          >
             <FaArrowLeft />
           </button>
 
@@ -208,30 +283,32 @@ function Leaderboard() {
               className={`tab ${leaderboardType === "scores" ? "active" : ""}`}
               onClick={() => handleTypeChange("scores")}
             >
-              Score
+              <FaTrophy style={{ marginRight: "5px" }} /> Scores
             </button>
             <button
               className={`tab ${leaderboardType === "streaks" ? "active" : ""}`}
               onClick={() => handleTypeChange("streaks")}
             >
-              Streaks
+              <FaFire style={{ marginRight: "5px" }} /> Streaks
             </button>
-          </div>
-
-          <div className="account-icon-container">
             <button
               className={`tab ${leaderboardType === "personal" ? "active" : ""}`}
               onClick={() => handleTypeChange("personal")}
               disabled={!isAuthenticated}
-              title={isAuthenticated ? "Your Stats" : "Login to view your stats"}
+              title={
+                isAuthenticated ? "Your Stats" : "Login to view your stats"
+              }
             >
-              <FaUser />
+              <FaUser style={{ marginRight: "5px" }} /> My Stats
             </button>
           </div>
         </div>
 
-        {/* Streak controls */}
+        {/* No streak type tabs here - they've been moved to main navigation */}
+
+        {/* Streak controls - add a heading to make it clearer now that tabs are gone */}
         <div className="streak-controls">
+          <h2 className="streak-heading">Streak Leaderboards</h2>
           <div className="streak-type-selector">
             <button
               className={`streak-type-button ${streakType === "win" ? "active" : ""}`}
@@ -277,56 +354,107 @@ function Leaderboard() {
             <p className="no-data">No streak data available.</p>
           )}
 
-          {/* Table rows */}
-          {entries.map((entry, index) => (
-            <React.Fragment key={entry.user_id || index}>
-              <div className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}>
+          {/* Table rows - flattened for grid layout */}
+          {entries.flatMap((entry, index) => {
+            const cells = [
+              <div
+                key={`${entry.user_id || index}-rank`}
+                className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
+              >
                 {entry.rank}
                 {entry.rank <= 3 && (
-                  <span className={`streak-badge ${
-                    entry.rank === 1 ? "gold" : entry.rank === 2 ? "silver" : "bronze"
-                  }`}>
-                    {entry.rank === 1 ? "1st" : entry.rank === 2 ? "2nd" : "3rd"}
+                  <span
+                    className={`streak-badge ${
+                      entry.rank === 1
+                        ? "gold"
+                        : entry.rank === 2
+                          ? "silver"
+                          : "bronze"
+                    }`}
+                  >
+                    {entry.rank === 1
+                      ? "1st"
+                      : entry.rank === 2
+                        ? "2nd"
+                        : "3rd"}
                   </span>
                 )}
-              </div>
-              <div className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}>
+              </div>,
+              <div
+                key={`${entry.user_id || index}-name`}
+                className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
+              >
                 {entry.username}
-                {entry.is_current_user && <span className="you-badge">YOU</span>}
-              </div>
-              <div className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}>
+                {entry.is_current_user && (
+                  <span className="you-badge">YOU</span>
+                )}
+              </div>,
+              <div
+                key={`${entry.user_id || index}-streak`}
+                className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
+              >
                 {entry.streak_length}
-              </div>
-              {showDates && (
-                <div className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}>
+              </div>,
+            ];
+
+            if (showDates) {
+              cells.push(
+                <div
+                  key={`${entry.user_id || index}-date`}
+                  className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
+                >
                   {new Date(entry.last_active).toLocaleDateString()}
-                </div>
-              )}
-            </React.Fragment>
-          ))}
+                </div>,
+              );
+            }
+
+            return cells;
+          })}
 
           {/* User position if not in top entries */}
-          {currentUserEntry && !entries.some(entry => entry.is_current_user) && (
-            <>
-              <div className="table-cell separator" colSpan={showDates ? "4" : "3"}>. . .</div>
-              <div className="table-cell user-highlight">{currentUserEntry.rank || "?"}</div>
-              <div className="table-cell user-highlight">
-                {currentUserEntry.username}
-                <span className="you-badge">YOU</span>
-              </div>
-              <div className="table-cell user-highlight">
-                {currentUserEntry.streak_length || 0}
-              </div>
-              {showDates && (
-                <div className="table-cell user-highlight">
-                  {currentUserEntry.last_active 
-                    ? new Date(currentUserEntry.last_active).toLocaleDateString()
-                    : "N/A"
-                  }
+          {currentUserEntry &&
+            !entries.some((entry) => entry.is_current_user) && (
+              <>
+                <div
+                  key="streak-separator"
+                  className="table-cell separator"
+                  style={{ gridColumn: showDates ? "span 4" : "span 3" }}
+                >
+                  . . .
                 </div>
-              )}
-            </>
-          )}
+                <div
+                  key="current-streak-rank"
+                  className="table-cell user-highlight"
+                >
+                  {currentUserEntry.rank || "?"}
+                </div>
+                <div
+                  key="current-streak-name"
+                  className="table-cell user-highlight"
+                >
+                  {currentUserEntry.username}
+                  <span className="you-badge">YOU</span>
+                </div>
+                <div
+                  key="current-streak-length"
+                  className="table-cell user-highlight"
+                >
+                  {currentUserEntry.streak_length || 0}
+                </div>
+                {showDates && (
+                  <div
+                    key="current-streak-date"
+                    className="table-cell user-highlight"
+                  >
+                    {currentUserEntry.last_active
+                      ? new Date(
+                          currentUserEntry.last_active,
+                        ).toLocaleDateString()
+                      : "N/A"}
+                  </div>
+                )}
+              </>
+            )}
         </div>
 
         {/* Pagination */}
@@ -353,7 +481,19 @@ function Leaderboard() {
         )}
       </>
     );
-  }, [streakData, streakType, streakPeriod, leaderboardType, page, isAuthenticated, handleBack, handleTypeChange, handleStreakTypeChange, handleStreakPeriodChange, handlePageChange]);
+  }, [
+    streakData,
+    streakType,
+    streakPeriod,
+    leaderboardType,
+    page,
+    isAuthenticated,
+    handleBack,
+    handleTypeChange,
+    handleStreakTypeChange,
+    handleStreakPeriodChange,
+    handlePageChange,
+  ]);
 
   // Render personal stats
   const renderPersonalStats = useCallback(() => {
@@ -362,7 +502,10 @@ function Leaderboard() {
       return (
         <div className="personal-stats-login-required">
           <h3>Login Required</h3>
-          <p>Please log in to view your personal stats and position on the leaderboard.</p>
+          <p>
+            Please log in to view your personal stats and position on the
+            leaderboard.
+          </p>
           <button className="login-button" onClick={handleLoginClick}>
             Login
           </button>
@@ -378,8 +521,13 @@ function Leaderboard() {
     // Render personal stats UI
     return (
       <div className="personal-stats-container">
+        {/* Main navigation tabs */}
         <div className="tabs-container">
-          <button className="back-button" onClick={handleBack} aria-label="Back">
+          <button
+            className="back-button"
+            onClick={handleBack}
+            aria-label="Back"
+          >
             <FaArrowLeft />
           </button>
 
@@ -388,22 +536,23 @@ function Leaderboard() {
               className={`tab ${leaderboardType === "scores" ? "active" : ""}`}
               onClick={() => handleTypeChange("scores")}
             >
-              Scores
+              <FaTrophy style={{ marginRight: "5px" }} /> Scores
             </button>
             <button
               className={`tab ${leaderboardType === "streaks" ? "active" : ""}`}
               onClick={() => handleTypeChange("streaks")}
             >
-              Streaks
+              <FaFire style={{ marginRight: "5px" }} /> Streaks
             </button>
-          </div>
-
-          <div className="account-icon-container">
             <button
               className={`tab ${leaderboardType === "personal" ? "active" : ""}`}
               onClick={() => handleTypeChange("personal")}
+              disabled={!isAuthenticated}
+              title={
+                isAuthenticated ? "Your Stats" : "Login to view your stats"
+              }
             >
-              <FaUser />
+              <FaUser style={{ marginRight: "5px" }} /> My Stats
             </button>
           </div>
         </div>
@@ -414,11 +563,15 @@ function Leaderboard() {
         <div className="stats-summary">
           <div className="stat-card">
             <h3>Total Score</h3>
-            <div className="stat-value">{personalStats.cumulative_score?.toLocaleString() || 0}</div>
+            <div className="stat-value">
+              {personalStats.cumulative_score?.toLocaleString() || 0}
+            </div>
           </div>
           <div className="stat-card">
             <h3>Games Played</h3>
-            <div className="stat-value">{personalStats.total_games_played || 0}</div>
+            <div className="stat-value">
+              {personalStats.total_games_played || 0}
+            </div>
           </div>
           <div className="stat-card">
             <h3>Games Won</h3>
@@ -426,7 +579,9 @@ function Leaderboard() {
           </div>
           <div className="stat-card">
             <h3>Win Rate</h3>
-            <div className="stat-value">{personalStats.win_percentage || 0}%</div>
+            <div className="stat-value">
+              {personalStats.win_percentage || 0}%
+            </div>
           </div>
         </div>
 
@@ -436,19 +591,27 @@ function Leaderboard() {
           <div className="streaks-grid">
             <div className="streak-item">
               <span className="streak-label">Current Win Streak:</span>
-              <span className="streak-value">{personalStats.current_streak || 0}</span>
+              <span className="streak-value">
+                {personalStats.current_streak || 0}
+              </span>
             </div>
             <div className="streak-item">
               <span className="streak-label">Best Win Streak:</span>
-              <span className="streak-value">{personalStats.max_streak || 0}</span>
+              <span className="streak-value">
+                {personalStats.max_streak || 0}
+              </span>
             </div>
             <div className="streak-item">
               <span className="streak-label">Current No-Loss Streak:</span>
-              <span className="streak-value">{personalStats.current_noloss_streak || 0}</span>
+              <span className="streak-value">
+                {personalStats.current_noloss_streak || 0}
+              </span>
             </div>
             <div className="streak-item">
               <span className="streak-label">Best No-Loss Streak:</span>
-              <span className="streak-value">{personalStats.max_noloss_streak || 0}</span>
+              <span className="streak-value">
+                {personalStats.max_noloss_streak || 0}
+              </span>
             </div>
           </div>
         </div>
@@ -469,7 +632,10 @@ function Leaderboard() {
                 {personalStats.top_scores.map((score, index) => (
                   <tr key={index}>
                     <td>{score.score}</td>
-                    <td>{Math.floor(score.time_taken / 60)}m {score.time_taken % 60}s</td>
+                    <td>
+                      {Math.floor(score.time_taken / 60)}m{" "}
+                      {score.time_taken % 60}s
+                    </td>
                     <td>{new Date(score.date).toLocaleDateString()}</td>
                   </tr>
                 ))}
@@ -480,39 +646,51 @@ function Leaderboard() {
 
         {/* Last played date */}
         {personalStats.last_played_date && (
-                                   <p className="last-played">
-                                     Last played: {new Date(personalStats.last_played_date).toLocaleDateString()}
-                                   </p>
-                                   )}
-                                   </div>
-                                   );
-                                   }, [isAuthenticated, personalStats, leaderboardType, handleBack, handleLoginClick, handleTypeChange]);
+          <p className="last-played">
+            Last played:{" "}
+            {new Date(personalStats.last_played_date).toLocaleDateString()}
+          </p>
+        )}
+      </div>
+    );
+  }, [
+    isAuthenticated,
+    personalStats,
+    leaderboardType,
+    handleBack,
+    handleLoginClick,
+    handleTypeChange,
+  ]);
 
-                                   // Main render function
-                                   return (
-                                   <div className={`leaderboard ${settings?.theme === "dark" ? "dark-theme" : ""}`}>
-                                   {/* Show loading state */}
-                                   {isLoading && <LeaderboardLoading theme={settings?.theme} />}
+  // Main render function
+  return (
+    <div
+      className={`leaderboard ${settings?.theme === "dark" ? "dark-theme" : ""}`}
+    >
+      {/* Show loading state */}
+      {isLoading && (
+        <LeaderboardLoading theme={settings?.theme} type={leaderboardType} />
+      )}
 
-                                   {/* Show error state */}
-                                   {error && !isLoading && (
-                                   <LeaderboardError 
-                                   error={error} 
-                                   onRetry={refreshData} 
-                                   theme={settings?.theme} 
-                                   />
-                                   )}
+      {/* Show error state */}
+      {error && !isLoading && (
+        <LeaderboardError
+          error={error}
+          onRetry={refreshData}
+          theme={settings?.theme}
+        />
+      )}
 
-                                   {/* Show appropriate content based on selected tab */}
-                                   {!isLoading && !error && (
-                                   <>
-                                   {leaderboardType === "scores" && renderScoresLeaderboard()}
-                                   {leaderboardType === "streaks" && renderStreakLeaderboard()}
-                                   {leaderboardType === "personal" && renderPersonalStats()}
-                                   </>
-                                   )}
-                                   </div>
-                                   );
-                                   }
+      {/* Show appropriate content based on selected tab */}
+      {!isLoading && !error && (
+        <>
+          {leaderboardType === "scores" && renderScoresLeaderboard()}
+          {leaderboardType === "streaks" && renderStreakLeaderboard()}
+          {leaderboardType === "personal" && renderPersonalStats()}
+        </>
+      )}
+    </div>
+  );
+}
 
-                                   export default Leaderboard;
+export default Leaderboard;
