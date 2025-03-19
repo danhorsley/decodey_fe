@@ -712,24 +712,33 @@ const useGameStore = create((set, get) => ({
       // Clear local storage ID
       localStorage.removeItem("uncrypt-game-id");
 
-      // Reset other state but keep isResetting true and preserve settings values
+      // Get the latest settings before starting a new game
+      const latestSettings = useSettingsStore.getState().settings;
+      const currentDifficulty = latestSettings?.difficulty || "medium";
+
+      // Make sure it's a valid difficulty
+      const validatedDifficulty = ["easy", "medium", "hard"].includes(currentDifficulty) 
+        ? currentDifficulty 
+        : "medium";
+
+      // Reset other state but keep isResetting true and use latest settings
       set((state) => ({
         ...initialState,
         isResetting: true, // Maintain resetting flag
         isHintInProgress: false,
         pendingHints: 0,
-        // Keep current settings values
-        difficulty: state.difficulty,
-        maxMistakes: state.maxMistakes,
-        hardcoreMode: state.hardcoreMode || hardcoreMode, // Use parameter if provided
-        settingsInitialized: state.settingsInitialized,
+        // Use latest settings from settingsStore
+        difficulty: validatedDifficulty,
+        maxMistakes: MAX_MISTAKES_MAP[validatedDifficulty] || 5,
+        hardcoreMode: latestSettings?.hardcoreMode || hardcoreMode, // Use latest or parameter
+        settingsInitialized: true,
       }));
 
       // Wait to ensure state updates have time to propagate
       await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // Start new game
-      const result = await get().startGame(useLongText, hardcoreMode, true);
+      // Start new game with latest settings
+      const result = await get().startGame(useLongText, latestSettings?.hardcoreMode || hardcoreMode, true);
 
       // Only clear resetting flag after game has fully loaded
       set({ isResetting: false });
