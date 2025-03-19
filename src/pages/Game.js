@@ -116,16 +116,32 @@ function Game() {
   const onGuessClick = useCallback(
     (guessedLetter) => {
       if (selectedEncrypted && typeof submitGuess === "function") {
-        submitGuess(selectedEncrypted, guessedLetter);
+        submitGuess(selectedEncrypted, guessedLetter).then((result) => {
+          if (result.success) {
+            console.log("guess result : ", result);
+            if (result.isCorrect) {
+              playSound?.("correct");
+            } else if (result.isIncorrect) {
+              playSound?.("incorrect");
+            }
+
+            if (result.hasLost) {
+              playSound?.("lose");
+            }
+          }
+        });
       }
     },
-    [selectedEncrypted, submitGuess],
+    [selectedEncrypted, submitGuess, playSound],
   );
-
   // Handle hint button click
   const onHintClick = useCallback(() => {
     if (typeof getHint === "function") {
       getHint().then((result) => {
+        if (result.success) {
+          playSound?.("hint");
+        }
+
         // Add any user feedback for hint failures if needed
         if (!result.success) {
           if (result.reason === "would-exceed-max-mistakes") {
@@ -135,7 +151,7 @@ function Game() {
         }
       });
     }
-  }, [getHint]);
+  }, [getHint, playSound]);
 
   // Handle retry/restart game
   const handleStartNewGame = useCallback(() => {
@@ -199,7 +215,19 @@ function Game() {
         selectedEncrypted &&
         typeof submitGuess === "function"
       ) {
-        submitGuess(selectedEncrypted, guessedLetter);
+        submitGuess(selectedEncrypted, guessedLetter).then((result) => {
+          if (result.success) {
+            if (result.isCorrect) {
+              playSound?.("correct");
+            } else if (result.isIncorrect) {
+              playSound?.("incorrect");
+            }
+
+            if (result.hasLost) {
+              playSound?.("lose");
+            }
+          }
+        });
       }
     },
     playSound,

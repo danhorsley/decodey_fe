@@ -478,6 +478,10 @@ const useGameStore = create((set, get) => ({
         selectedEncrypted: null,
       };
 
+      // Check if the number of mistakes increased - this means the guess was incorrect
+      const isIncorrectGuess =
+        typeof data.mistakes === "number" && data.mistakes > state.mistakes;
+
       // Check for game lost - this must be checked FIRST
       if (updates.mistakes >= state.maxMistakes) {
         updates.hasLost = true;
@@ -517,6 +521,8 @@ const useGameStore = create((set, get) => ({
       return {
         success: true,
         isCorrect: isCorrectGuess,
+        isIncorrect: isIncorrectGuess,
+        hasLost: updates.hasLost,
       };
     } catch (error) {
       console.error("Error submitting guess:", error);
@@ -717,8 +723,10 @@ const useGameStore = create((set, get) => ({
       const currentDifficulty = latestSettings?.difficulty || "medium";
 
       // Make sure it's a valid difficulty
-      const validatedDifficulty = ["easy", "medium", "hard"].includes(currentDifficulty) 
-        ? currentDifficulty 
+      const validatedDifficulty = ["easy", "medium", "hard"].includes(
+        currentDifficulty,
+      )
+        ? currentDifficulty
         : "medium";
 
       // Reset other state but keep isResetting true and use latest settings
@@ -738,7 +746,11 @@ const useGameStore = create((set, get) => ({
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Start new game with latest settings
-      const result = await get().startGame(useLongText, latestSettings?.hardcoreMode || hardcoreMode, true);
+      const result = await get().startGame(
+        useLongText,
+        latestSettings?.hardcoreMode || hardcoreMode,
+        true,
+      );
 
       // Only clear resetting flag after game has fully loaded
       set({ isResetting: false });
