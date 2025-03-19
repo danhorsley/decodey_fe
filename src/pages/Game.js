@@ -47,6 +47,8 @@ function Game() {
 
   // Get initialization status from gameSession hook
   const { isInitializing, initializeGame, lastError } = useGameSession();
+  // Get isResetting from gameStore to properly handle transitions
+  const isResetting = useGameStore((state) => state.isResetting);
 
   // Settings
   const settings = useSettingsStore((state) => state.settings);
@@ -87,7 +89,10 @@ function Game() {
     getHint,
   } = useGameStore();
 
-  // Auto-initialize on first render - the component calls initializeGame 
+  // Hint-specific state - moved to top level
+  const isHintInProgress = useGameStore((state) => state.isHintInProgress);
+  const pendingHints = useGameStore((state) => state.pendingHints);
+  // Auto-initialize on first render - the component calls initializeGame
   // once on mount via React.useEffect()
   React.useEffect(() => {
     // Immediately invoke the initialization, assuming the hook takes care of
@@ -120,7 +125,15 @@ function Game() {
   // Handle hint button click
   const onHintClick = useCallback(() => {
     if (typeof getHint === "function") {
-      getHint();
+      getHint().then((result) => {
+        // Add any user feedback for hint failures if needed
+        if (!result.success) {
+          if (result.reason === "would-exceed-max-mistakes") {
+            console.log("Hint would exceed max mistakes");
+            // Could show a toast or flash the mistakes counter
+          }
+        }
+      });
     }
   }, [getHint]);
 
@@ -137,7 +150,13 @@ function Game() {
 
   // Any modal open check for keyboard handling
   const anyModalOpen =
-    isLoginOpen || isSignupOpen || isSettingsOpen || isAboutOpen || isContinueGameOpen || hasWon || hasLost;
+    isLoginOpen ||
+    isSignupOpen ||
+    isSettingsOpen ||
+    isAboutOpen ||
+    isContinueGameOpen ||
+    hasWon ||
+    hasLost;
 
   // Enable keyboard input only when appropriate - a game is active, no modals are open, and we're not initializing
   const keyboardEnabled = isGameActive && !anyModalOpen && !isInitializing;
@@ -155,21 +174,31 @@ function Game() {
       : encryptedLetters;
   }, [encrypted, settings?.gridSorting]);
 
+  const effectiveMistakes = mistakes + pendingHints;
+  const remainingMistakes = maxMistakes - effectiveMistakes;
+  const disableHint =
+    !isGameActive || isHintInProgress || remainingMistakes <= 1;
   // Setup keyboard input with more explicit callbacks
   useKeyboardInput({
     enabled: keyboardEnabled,
     speedMode: true,
-    encryptedLetters: Array.isArray(sortedEncryptedLetters) ? sortedEncryptedLetters : [],
+    encryptedLetters: Array.isArray(sortedEncryptedLetters)
+      ? sortedEncryptedLetters
+      : [],
     originalLetters: Array.isArray(originalLetters) ? originalLetters : [],
     selectedEncrypted,
     onEncryptedSelect: (letter) => {
-      if (keyboardEnabled && typeof handleEncryptedSelect === 'function') {
+      if (keyboardEnabled && typeof handleEncryptedSelect === "function") {
         handleEncryptedSelect(letter);
         playSound?.("keyclick");
       }
     },
     onGuessSubmit: (guessedLetter) => {
-      if (keyboardEnabled && selectedEncrypted && typeof submitGuess === 'function') {
+      if (
+        keyboardEnabled &&
+        selectedEncrypted &&
+        typeof submitGuess === "function"
+      ) {
         submitGuess(selectedEncrypted, guessedLetter);
       }
     },
@@ -184,7 +213,7 @@ function Game() {
 
   // ===== RENDER HELPERS =====
   // If loading, show loading screen
-  if (isInitializing) {
+  if (isInitializing || isResetting) {
     return (
       <div
         className={`App-container ${settings?.theme === "dark" ? "dark-theme" : "light-theme"}`}
@@ -194,7 +223,8 @@ function Game() {
           className={`loading-container ${settings?.theme === "dark" ? "dark-theme" : "light-theme"}`}
         >
           <h2 className="loading-title">
-            Loading game<span className="loading-dots"></span>
+            {isResetting ? "Starting new game" : "Loading game"}
+            <span className="loading-dots"></span>
           </h2>
 
           {/* Matrix Rain loading animation */}
@@ -202,7 +232,11 @@ function Game() {
             <MatrixRainLoading
               active={true}
               color={settings?.theme === "dark" ? "#4cc9f0" : "#00ff41"}
-              message="Decrypting data..."
+              message={
+                isResetting
+                  ? "Initializing new cipher..."
+                  : "Decrypting data..."
+              }
               width="100%"
               height="100%"
               density={40}
@@ -291,22 +325,30 @@ function Game() {
   );
 
   // Controls component
-  const renderControls = () => (
-    <div className="controls">
-      <div className="controls-main">
-        <p>
-          Mistakes: {mistakes}/{maxMistakes}
-        </p>
-        <button
-          onClick={onHintClick}
-          disabled={mistakes >= maxMistakes - 1 || !isGameActive}
-          className="hint-button"
-        >
-          Hint (Costs 1 Mistake)
-        </button>
+  const renderControls = () => {
+    return (
+      <div className="controls">
+        <div className="controls-main">
+          <p>
+            Mistakes: {mistakes}/{maxMistakes}
+            {pendingHints > 0 && (
+              <span className="pending-hint-indicator">
+                {" "}
+                (+{pendingHints} pending)
+              </span>
+            )}
+          </p>
+          <button
+            onClick={onHintClick}
+            disabled={disableHint}
+            className={`hint-button ${isHintInProgress ? "processing" : ""}`}
+          >
+            {isHintInProgress ? "Getting Hint..." : "Hint (Costs 1 Mistake)"}
+          </button>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // Win/lose states
   const renderGameOver = () => {

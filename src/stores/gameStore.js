@@ -32,19 +32,31 @@ const initialState = {
   difficulty: "easy",
   maxMistakes: 8,
   isResetting: false,
+  isHintInProgress: false,
+  pendingHints: 0,
 };
 
 const useGameStore = create((set, get) => ({
   ...initialState,
 
-  // Start a new game
+  // Start a new game with data integrity checks
   startGame: async (
     useLongText = false,
     hardcoreMode = false,
     forceNewGame = false,
   ) => {
     try {
-      // Clear existing game ID
+      // If we're forcing a new game, ensure any previous game is fully abandoned
+      if (forceNewGame) {
+        try {
+          await get().abandonGame();
+        } catch (err) {
+          console.warn("Abandonment before new game failed:", err);
+          // Continue anyway - we'll still try to start a new game
+        }
+      }
+
+      // Clear any existing game ID for a fresh start
       localStorage.removeItem("uncrypt-game-id");
 
       // Determine difficulty and max mistakes
@@ -57,38 +69,82 @@ const useGameStore = create((set, get) => ({
         difficulty,
       });
 
+      // Request new game from API
       const data = await apiService.startGame({
         longText: useLongText,
         difficulty,
       });
 
-      console.log("Game start response:", data);
+      console.log("Game start response received");
 
-      // Processing for hardcore mode
-      let processedEncrypted = data.encrypted_paragraph || "";
-      let processedDisplay = data.display || "";
+      // Validate essential data
+      if (!data || !data.encrypted_paragraph || !data.display) {
+        console.error("Invalid game data received:", data);
+        return false;
+      }
+
+      // Process for hardcore mode
+      let processedEncrypted = data.encrypted_paragraph;
+      let processedDisplay = data.display;
 
       if (hardcoreMode) {
         processedEncrypted = processedEncrypted.replace(/[^A-Z]/g, "");
         processedDisplay = processedDisplay.replace(/[^A-Z█]/g, "");
       }
 
-      // Store game ID
+      // DATA INTEGRITY CHECK: Ensure encrypted and display text are correctly aligned
+      if (processedEncrypted.length !== processedDisplay.length) {
+        console.error("Data integrity error: Text length mismatch", {
+          encryptedLength: processedEncrypted.length,
+          displayLength: processedDisplay.length,
+        });
+
+        // Attempt to fix by re-processing from original
+        if (data.encrypted_paragraph && data.display) {
+          console.log("Attempting to fix length mismatch");
+
+          processedEncrypted = hardcoreMode
+            ? data.encrypted_paragraph.replace(/[^A-Z]/g, "")
+            : data.encrypted_paragraph;
+
+          processedDisplay = hardcoreMode
+            ? data.display.replace(/[^A-Z█]/g, "")
+            : data.display;
+
+          // Check if fix worked
+          if (processedEncrypted.length !== processedDisplay.length) {
+            console.error(
+              "Failed to fix length mismatch - aborting game start",
+            );
+            return false;
+          }
+        } else {
+          return false;
+        }
+      }
+
+      // Store game ID if present
       if (data.game_id) {
         localStorage.setItem("uncrypt-game-id", data.game_id);
       }
 
-      // Update state
-      set({
+      // Create a clean, complete new state object
+      const newGameState = {
         encrypted: processedEncrypted,
         display: processedDisplay,
         mistakes: data.mistakes || 0,
-        correctlyGuessed: data.correctly_guessed || [],
+        correctlyGuessed: Array.isArray(data.correctly_guessed)
+          ? [...data.correctly_guessed]
+          : [],
         selectedEncrypted: null,
         lastCorrectGuess: null,
-        letterFrequency: data.letter_frequency || {},
+        letterFrequency: data.letter_frequency
+          ? { ...data.letter_frequency }
+          : {},
         guessedMappings: {},
-        originalLetters: data.original_letters || [],
+        originalLetters: Array.isArray(data.original_letters)
+          ? [...data.original_letters]
+          : [],
         startTime: Date.now(),
         gameId: data.game_id,
         hasGameStarted: true,
@@ -99,11 +155,18 @@ const useGameStore = create((set, get) => ({
         hasLost: false,
         winData: null,
         isResetting: false,
-      });
+      };
+
+      // Update state in a single operation
+      set(newGameState);
 
       return true;
     } catch (error) {
       console.error("Error starting game:", error);
+
+      // Make sure we're not left in a resetting state
+      set((state) => ({ ...state, isResetting: false }));
+
       return false;
     }
   },
@@ -352,22 +415,47 @@ const useGameStore = create((set, get) => ({
     }
   },
 
-  // Get a hint
+  // Get a hint with safety mechanisms against rapid clicks
   getHint: async () => {
+    const state = get();
+
+    // Safety check: Don't allow hints if a hint is already in progress
+    if (state.isHintInProgress) {
+      console.log("Hint already in progress, ignoring request");
+      return { success: false, reason: "hint-in-progress" };
+    }
+
+    // Safety check: Calculate if this hint would exceed max mistakes
+    const currentMistakes = state.mistakes;
+    const pendingMistakes = currentMistakes + state.pendingHints + 1; // +1 for this hint
+    const maxMistakesAllowed = state.maxMistakes;
+
+    // Don't allow hints that would cause a loss
+    if (pendingMistakes >= maxMistakesAllowed) {
+      console.log(
+        `Hint would exceed max mistakes (${currentMistakes}+${state.pendingHints}+1 vs ${maxMistakesAllowed})`,
+      );
+      return { success: false, reason: "would-exceed-max-mistakes" };
+    }
+
+    // Mark hint as in progress and increment pendingHints
+    set({ isHintInProgress: true, pendingHints: state.pendingHints + 1 });
+
     try {
       const data = await apiService.getHint();
 
       // Handle errors
       if (data.authRequired) {
+        set({ isHintInProgress: false, pendingHints: state.pendingHints });
         return { success: false, authRequired: true };
       }
 
       if (data.error) {
+        set({ isHintInProgress: false, pendingHints: state.pendingHints });
         return { success: false, error: data.error };
       }
 
       // Process display text for hardcore mode
-      const state = get();
       let displayText = data.display;
       if (state.hardcoreMode && displayText) {
         displayText = displayText.replace(/[^A-Z█]/g, "");
@@ -399,7 +487,7 @@ const useGameStore = create((set, get) => ({
         hasWon = true;
       }
 
-      // Update state
+      // Update state with all changes - including resetting hint flags
       set({
         display: displayText,
         mistakes: newMistakes,
@@ -407,6 +495,9 @@ const useGameStore = create((set, get) => ({
         guessedMappings: newMappings,
         hasLost: hasLost,
         hasWon: hasWon,
+        // Reset hint tracking
+        isHintInProgress: false,
+        pendingHints: 0, // Reset to 0 since we have the latest state from server
         // Only set completion time if game is over
         ...(hasLost || hasWon ? { completionTime: Date.now() } : {}),
       });
@@ -414,6 +505,13 @@ const useGameStore = create((set, get) => ({
       return { success: true };
     } catch (error) {
       console.error("Error getting hint:", error);
+
+      // Reset hint tracking even on error
+      set({
+        isHintInProgress: false,
+        pendingHints: Math.max(0, state.pendingHints - 1), // Decrement pending hints but don't go negative
+      });
+
       return { success: false, error: error.message };
     }
   },
@@ -430,7 +528,12 @@ const useGameStore = create((set, get) => ({
 
   // Reset game
   resetGame: () => {
-    set({ ...initialState, isResetting: true });
+    set({
+      ...initialState,
+      isResetting: true,
+      isHintInProgress: false,
+      pendingHints: 0,
+    });
   },
 
   // Reset complete
@@ -438,25 +541,47 @@ const useGameStore = create((set, get) => ({
     set({ isResetting: false });
   },
 
-  // Abandon game
+  // Abandon game - thoroughly clean up both frontend and backend state
   abandonGame: async () => {
     try {
-      // Remove game ID
+      // Clear any stored game ID first
       localStorage.removeItem("uncrypt-game-id");
 
-      try {
-        await apiService.api.delete("/api/abandon-game");
-      } catch (err) {
-        console.warn("Server abandon failed:", err);
+      // Get auth status to determine appropriate abandonment approach
+      const token = config.session.getAuthToken();
+      const isAuthenticated = !!token;
+
+      if (isAuthenticated) {
+        // For authenticated users, make a more thorough cleanup
+        try {
+          // Make direct call to abandon endpoint to ensure all game states are cleaned up
+          await apiService.api.delete("/api/abandon-game", {
+            headers: {
+              // Ensure authentication headers are included
+              ...config.session.getHeaders(),
+            },
+          });
+          console.log("Successfully abandoned authenticated game state");
+        } catch (err) {
+          // Log but continue - we'll still reset local state
+          console.warn("Server-side game abandonment failed:", err);
+        }
+      } else {
+        // For anonymous users, just try the standard abandon
+        try {
+          await apiService.abandonAndResetGame();
+        } catch (err) {
+          console.warn("Anonymous game abandon failed:", err);
+        }
       }
 
-      // Reset state
-      set({ ...initialState, isResetting: true });
-      setTimeout(() => set({ isResetting: false }), 50);
+      // We don't reset the full state here because that would interfere with the
+      // loading sequence and state flags. Let the calling context handle the
+      // reset of all game state.
 
       return true;
     } catch (error) {
-      console.error("Error abandoning game:", error);
+      console.error("Error completely abandoning game:", error);
       return false;
     }
   },
@@ -464,29 +589,39 @@ const useGameStore = create((set, get) => ({
   // Reset and start new game
   resetAndStartNewGame: async (useLongText = false, hardcoreMode = false) => {
     try {
-      // First abandon any existing game
-      try {
-        await apiService.api.delete("/api/abandon-game");
-      } catch (err) {
-        console.warn("Error abandoning game:", err);
-      }
+      // Set resetting flag first, before any async operations
+      set({ isResetting: true });
 
-      // Remove game ID
+      // Then perform abandonment and cleanup
+      await get().abandonGame();
+
+      // Clear local storage ID
       localStorage.removeItem("uncrypt-game-id");
 
-      // Reset state
-      set({ ...initialState, isResetting: true });
+      // Reset other state but keep isResetting true
+      set((state) => ({
+        ...initialState,
+        isResetting: true, // Maintain resetting flag
+        isHintInProgress: false,
+        pendingHints: 0,
+        // Keep current difficulty and settings
+        difficulty: state.difficulty,
+      }));
 
-      // Short delay to ensure state is reset
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      // Wait to ensure state updates have time to propagate
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Start new game
-      const difficulty = get().difficulty || "easy";
-      const result = await get().startGame(useLongText, hardcoreMode);
+      const result = await get().startGame(useLongText, hardcoreMode, true);
+
+      // Only clear resetting flag after game has fully loaded
+      set({ isResetting: false });
 
       return result;
     } catch (error) {
       console.error("Error in resetAndStartNewGame:", error);
+
+      // Always clear resetting flag on error
       set({ isResetting: false });
       return false;
     }
