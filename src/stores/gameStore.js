@@ -493,7 +493,12 @@ const useGameStore = create((set, get) => ({
         updates.hasWon = true;
         updates.hasLost = false; // Explicitly set hasLost to false to avoid conflicts
         updates.completionTime = Date.now();
-        updates.winData = data.winData || null;
+
+        // First update state with what we know
+        set(updates);
+
+        // Then verify with backend to get complete win data
+        get().verifyWinAndGetData();
       }
 
       // Handle correctly guessed letters
@@ -522,7 +527,8 @@ const useGameStore = create((set, get) => ({
         success: true,
         isCorrect: isCorrectGuess,
         isIncorrect: isIncorrectGuess,
-        hasLost: updates.hasLost,
+        hasWon: updates.hasWon || false,
+        hasLost: updates.hasLost || false,
       };
     } catch (error) {
       console.error("Error submitting guess:", error);
@@ -614,9 +620,11 @@ const useGameStore = create((set, get) => ({
         isHintInProgress: false,
         pendingHints: 0, // Reset to 0 since we have the latest state from server
         // Only set completion time if game is over
-        ...(hasLost || hasWon ? { completionTime: Date.now() } : {}),
+        ...(hasWon ? { completionTime: Date.now() } : {}),
       });
-
+      if (hasWon) {
+        get().verifyWinAndGetData();
+      }
       return { success: true };
     } catch (error) {
       console.error("Error getting hint:", error);
@@ -630,7 +638,94 @@ const useGameStore = create((set, get) => ({
       return { success: false, error: error.message };
     }
   },
+  /**
+   * Verify win status and get comprehensive win data from backend
+   * This is called when frontend detects a potential win
+   * @returns {Promise<Object>} Win verification result
+   */
+  /**
+   * Verify win status and get comprehensive win data from backend
+   * This is called when frontend detects a potential win
+   * @returns {Promise<Object>} Win verification result
+   */
+  verifyWinAndGetData: async () => {
+    try {
+      // Get fresh status from backend
+      const gameStatus = await apiService.getGameStatus();
 
+      if (gameStatus.error) {
+        console.error("Error verifying win:", gameStatus.error);
+        return { verified: false };
+      }
+
+      // If backend confirms win, update state with complete win data
+      if (
+        gameStatus.game_complete ||
+        gameStatus.gameComplete ||
+        gameStatus.hasWon ||
+        gameStatus.has_won
+      ) {
+        // Extract win data from the response - handle multiple possible field names
+        const winData = gameStatus.win_data || gameStatus.winData || {};
+
+        // Create complete win data structure with normalized field names
+        const formattedWinData = {
+          score: winData.score || 0,
+          mistakes: winData.mistakes || gameStatus.mistakes || 0,
+          maxMistakes: winData.maxMistakes || gameStatus.maxMistakes || 5,
+          gameTimeSeconds: winData.gameTimeSeconds || 0,
+          rating: winData.rating || "Cryptanalyst",
+          encrypted: get().encrypted || "",
+          display: get().display || "",
+          attribution: winData.attribution || {
+            major_attribution:
+              winData.major_attribution ||
+              gameStatus.major_attribution ||
+              "Unknown",
+            minor_attribution:
+              winData.minor_attribution || gameStatus.minor_attribution || "",
+          },
+          scoreStatus: {
+            recorded: !!config.session.getAuthToken(),
+            message: config.session.getAuthToken()
+              ? "Score recorded successfully!"
+              : "Score not recorded - anonymous game",
+          },
+        };
+
+        console.log("Formatted win data:", formattedWinData);
+
+        set({
+          hasWon: true,
+          hasLost: false,
+          completionTime: Date.now(),
+          winData: formattedWinData,
+        });
+
+        return {
+          verified: true,
+          winData: formattedWinData,
+        };
+      }
+
+      // Handle case where backend says game is lost
+      if (gameStatus.game_complete && !gameStatus.has_won) {
+        set({
+          hasWon: false,
+          hasLost: true,
+          completionTime: Date.now(),
+        });
+
+        return { verified: true, hasLost: true };
+      }
+
+      // No win/loss confirmed by backend
+      return { verified: false };
+    } catch (error) {
+      console.error("Error in win verification:", error);
+      return { verified: false, error };
+    }
+  },
   // Letter selection
   handleEncryptedSelect: (letter) => {
     const state = get();

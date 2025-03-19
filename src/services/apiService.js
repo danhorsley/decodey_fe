@@ -453,7 +453,55 @@ class ApiService {
       return { has_active_game: false };
     }
   }
+  /**
+   * Get current game status including win data if the game is complete
+   * @returns {Promise<Object>} Complete game status data
+   */
+  async getGameStatus() {
+    try {
+      const token = this.getToken();
+      const gameId = this.getGameId();
+      const isAnonymous = !token;
 
+      // For anonymous users, include game_id as query param
+      let url = "/api/game-status";
+      if (isAnonymous && gameId) {
+        url += `?game_id=${encodeURIComponent(gameId)}`;
+      }
+
+      // Make the request
+      const response = await this.api.get(url);
+
+      // Log the response for debugging
+      console.log("Game status response:", response.data);
+
+      // Normalize some field names for consistency
+      const data = response.data;
+
+      // The backend might use different field naming conventions
+      return {
+        // Normalize boolean properties
+        game_complete: data.game_complete || data.gameComplete || false,
+        has_won: data.has_won || data.hasWon || false,
+
+        // Pass through the complete data for further processing
+        ...data,
+
+        // Ensure win_data exists for consistency
+        win_data: data.win_data || data.winData || null,
+      };
+    } catch (error) {
+      console.error("Error getting game status:", error);
+      return {
+        error:
+          error.response?.data?.message ||
+          error.message ||
+          "Error getting game status",
+        game_complete: false,
+        has_won: false,
+      };
+    }
+  }
   /**
    * Continue an existing saved game
    * @returns {Promise<Object>} Continued game data

@@ -1,705 +1,518 @@
 // src/pages/Leaderboard.js
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaArrowLeft, FaTrophy } from "react-icons/fa";
-import useAuthStore from "../stores/authStore";
-import useSettingsStore from "../stores/settingsStore";
+import { FaArrowLeft, FaTrophy, FaMedal, FaFire, FaUser } from "react-icons/fa";
+import useLeaderboard from "../hooks/useLeaderboard";
 import useUIStore from "../stores/uiStore";
-import apiService from "../services/apiService";
+import useSettingsStore from "../stores/settingsStore";
 import "../Styles/Leaderboard.css";
-import MatrixRain from "../components/effects/MatrixRain";
 
-const Leaderboard = () => {
+// Component for when data is loading
+const LeaderboardLoading = ({ theme }) => (
+  <div className="leaderboard-loading">
+    <h2 className="loading-title">Loading leaderboard data...</h2>
+    <div className="leaderboard-loading-animation">
+      {/* Could add a nice loading animation here */}
+    </div>
+  </div>
+);
+
+// Component for error state
+const LeaderboardError = ({ error, onRetry, theme }) => (
+  <div className="error-message">
+    <p>{error}</p>
+    <button onClick={onRetry}>Try Again</button>
+  </div>
+);
+
+// Leaderboard page component
+function Leaderboard() {
   const navigate = useNavigate();
-
-  // Get auth state from store
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const user = useAuthStore((state) => state.user);
-
-  // Get settings from store
+  const { openLogin } = useUIStore();
   const settings = useSettingsStore((state) => state.settings);
 
-  // Get UI actions from store
-  const openLogin = useUIStore((state) => state.openLogin);
-
-  // Local state
-  const [activeTab, setActiveTab] = useState("leaderboard");
-  const [leaderboardData, setLeaderboardData] = useState({
-    entries: [],
-    pagination: {
-      current_page: 1,
-      total_pages: 1,
-      total_entries: 0,
-      per_page: 10,
-    },
-    currentUserEntry: null,
-    period: "all-time",
-  });
-  const [personalStats, setPersonalStats] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [timePeriod, setTimePeriod] = useState("all-time");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [streakType, setStreakType] = useState("win");
-  const [streakPeriod, setStreakPeriod] = useState("current");
-
-  // Function to fetch leaderboard data
-  const fetchLeaderboard = useCallback(
-    async (page = 1, period = "all-time") => {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await apiService.api.get(
-          `/leaderboard?page=${page}&period=${period}`,
-        );
-        if (response.status === 200) {
-          setLeaderboardData({
-            entries: response.data.entries || [],
-            pagination: response.data.pagination || {
-              current_page: 1,
-              total_pages: 1,
-              total_entries: 0,
-              per_page: 10,
-            },
-            currentUserEntry: response.data.currentUserEntry || null,
-            period: response.data.period || "all-time",
-          });
-        }
-      } catch (err) {
-        console.error("Error fetching leaderboard:", err);
-        setError("Failed to load leaderboard data. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [],
-  );
-
-  // Function to fetch streak leaderboard
-  const fetchStreakLeaderboard = useCallback(
-    async (page = 1, type = "win", period = "current") => {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await apiService.api.get(
-          `/streak_leaderboard?page=${page}&type=${type}&period=${period}`,
-        );
-        if (response.status === 200) {
-          setLeaderboardData({
-            entries: response.data.entries || [],
-            pagination: response.data.pagination || {
-              current_page: 1,
-              total_pages: 1,
-              total_entries: 0,
-              per_page: 10,
-            },
-            currentUserEntry: response.data.currentUserEntry || null,
-            streakType: response.data.streak_type || "win",
-            period: response.data.period || "current",
-          });
-        }
-      } catch (err) {
-        console.error("Error fetching streak leaderboard:", err);
-        setError("Failed to load streak leaderboard data. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [],
-  );
-
-  // Function to fetch personal stats
-  const fetchPersonalStats = useCallback(async () => {
-    if (!isAuthenticated) return;
-
-    setLoading(true);
-    try {
-      const response = await apiService.api.get("/user_stats");
-      if (response.status === 200) {
-        setPersonalStats(response.data);
-      }
-    } catch (err) {
-      console.error("Error fetching personal stats:", err);
-      // Not setting global error as this is a secondary feature
-    } finally {
-      setLoading(false);
-    }
-  }, [isAuthenticated]);
-
-  // Initial data load
-  useEffect(() => {
-    if (activeTab === "leaderboard") {
-      fetchLeaderboard(currentPage, timePeriod);
-    } else if (activeTab === "streaks") {
-      fetchStreakLeaderboard(currentPage, streakType, streakPeriod);
-    } else if (activeTab === "personal" && isAuthenticated) {
-      fetchPersonalStats();
-    }
-  }, [
-    activeTab,
-    currentPage,
-    timePeriod,
+  // Use our custom hook for all leaderboard functionality
+  const {
+    leaderboardType,
+    period,
     streakType,
     streakPeriod,
+    page,
+    isLoading,
+    error,
+    leaderboardData,
+    streakData,
+    personalStats,
+    handleTypeChange,
+    handlePeriodChange,
+    handleStreakTypeChange,
+    handleStreakPeriodChange,
+    handlePageChange,
+    refreshData,
     isAuthenticated,
-    fetchLeaderboard,
-    fetchStreakLeaderboard,
-    fetchPersonalStats,
-  ]);
+  } = useLeaderboard();
 
-  // Handle tab change
-  const handleTabChange = (tab) => {
-    setActiveTab(tab);
-    setCurrentPage(1); // Reset to first page on tab change
+  // Navigate back to game
+  const handleBack = useCallback(() => {
+    navigate("/");
+  }, [navigate]);
 
-    // Reset relevant state based on new tab
-    if (tab === "leaderboard") {
-      fetchLeaderboard(1, timePeriod);
-    } else if (tab === "streaks") {
-      fetchStreakLeaderboard(1, streakType, streakPeriod);
-    } else if (tab === "personal" && isAuthenticated) {
-      fetchPersonalStats();
-    }
-  };
+  // Handle login click
+  const handleLoginClick = useCallback(() => {
+    openLogin();
+  }, [openLogin]);
 
-  // Handle time period change
-  const handlePeriodChange = (period) => {
-    setTimePeriod(period);
-    setCurrentPage(1); // Reset to first page
-    fetchLeaderboard(1, period);
-  };
+  // Render the main leaderboard
+  const renderScoresLeaderboard = useCallback(() => {
+    if (!leaderboardData) return null;
 
-  // Handle page change
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
+    const { topEntries, currentUserEntry, pagination } = leaderboardData;
 
-    if (activeTab === "leaderboard") {
-      fetchLeaderboard(page, timePeriod);
-    } else if (activeTab === "streaks") {
-      fetchStreakLeaderboard(page, streakType, streakPeriod);
-    }
-  };
-
-  // Handle streak type change
-  const handleStreakTypeChange = (type) => {
-    setStreakType(type);
-    setCurrentPage(1); // Reset to first page
-    fetchStreakLeaderboard(1, type, streakPeriod);
-  };
-
-  // Handle streak period change
-  const handleStreakPeriodChange = (period) => {
-    setStreakPeriod(period);
-    setCurrentPage(1); // Reset to first page
-    fetchStreakLeaderboard(1, streakType, period);
-  };
-
-  // Format date for display
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
-
-    if (diffInDays === 0) {
-      return "Today";
-    } else if (diffInDays === 1) {
-      return "Yesterday";
-    } else if (diffInDays < 7) {
-      return `${diffInDays} days ago`;
-    } else {
-      return date.toLocaleDateString();
-    }
-  };
-
-  // Determine matrix color based on theme
-  const getMatrixColor = () => {
-    if (settings.theme === "dark") {
-      return settings.textColor === "scifi-blue" ? "#4cc9f0" : "#00ff41";
-    }
-    return "#007bff"; // Default blue for light theme
-  };
-
-  return (
-    <div
-      className={`leaderboard ${settings.theme === "dark" ? "dark-theme" : "light-theme"}`}
-    >
-      {/* Background Matrix Effect */}
-      <div
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          width: "100%",
-          height: "100%",
-          zIndex: -1,
-          opacity: 0.05,
-        }}
-      >
-        <MatrixRain
-          active={true}
-          color={getMatrixColor()}
-          density={20}
-          fadeSpeed={0.1}
-          speedFactor={0.8}
-        />
-      </div>
-
-      {/* Leaderboard Header and Navigation */}
-      <div className="tabs-container">
-        <button className="back-button" onClick={() => navigate("/")}>
-          <FaArrowLeft />
-        </button>
-
-        <div className="tabs">
-          <button
-            className={`tab ${activeTab === "leaderboard" ? "active" : ""}`}
-            onClick={() => handleTabChange("leaderboard")}
-          >
-            Leaderboard
+    return (
+      <>
+        {/* Leaderboard period tabs */}
+        <div className="tabs-container">
+          <button className="back-button" onClick={handleBack} aria-label="Back">
+            <FaArrowLeft />
           </button>
-          <button
-            className={`tab ${activeTab === "streaks" ? "active" : ""}`}
-            onClick={() => handleTabChange("streaks")}
-          >
-            Streaks
-          </button>
-          <button
-            className={`tab ${activeTab === "personal" ? "active" : ""}`}
-            onClick={() => handleTabChange("personal")}
-          >
-            My Stats
-          </button>
-        </div>
 
-        <div className="account-icon-container">
-          <FaTrophy
-            size={24}
-            color={settings.theme === "dark" ? "#4cc9f0" : "#007bff"}
-          />
-        </div>
-      </div>
-
-      {/* Main Content Area */}
-      {loading && activeTab !== "personal" && (
-        <div className="leaderboard-loading">
-          <h2 className="loading-title">Loading Data</h2>
-          <div className="leaderboard-loading-animation">
-            <MatrixRain
-              active={true}
-              color={getMatrixColor()}
-              density={30}
-              fadeSpeed={0.1}
-              speedFactor={1}
-              message="Decrypting leaderboard data..."
-            />
-          </div>
-        </div>
-      )}
-
-      {error && (
-        <div className="error-message">
-          <p>{error}</p>
-          <button
-            onClick={() => {
-              if (activeTab === "leaderboard") {
-                fetchLeaderboard(currentPage, timePeriod);
-              } else if (activeTab === "streaks") {
-                fetchStreakLeaderboard(currentPage, streakType, streakPeriod);
-              }
-            }}
-          >
-            Try Again
-          </button>
-        </div>
-      )}
-
-      {!loading && !error && activeTab === "leaderboard" && (
-        <>
-          {/* Period Selection */}
           <div className="tabs">
             <button
-              className={`tab ${timePeriod === "all-time" ? "active" : ""}`}
+              className={`tab ${period === "all-time" ? "active" : ""}`}
               onClick={() => handlePeriodChange("all-time")}
             >
               All Time
             </button>
             <button
-              className={`tab ${timePeriod === "weekly" ? "active" : ""}`}
+              className={`tab ${period === "weekly" ? "active" : ""}`}
               onClick={() => handlePeriodChange("weekly")}
             >
-              This Week
+              Weekly
             </button>
           </div>
 
-          {/* Leaderboard Table */}
-          <div className="table-container">
-            <div className="table-grid">
-              <div className="table-header">Rank</div>
-              <div className="table-header">Player</div>
-              <div className="table-header">Score</div>
-              <div className="table-header">Games</div>
-              <div className="table-header">Avg Score</div>
-
-              {leaderboardData.entries.map((entry, index) => (
-                <React.Fragment key={index}>
-                  <div
-                    className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
-                  >
-                    {entry.rank}
-                    {entry.is_current_user && (
-                      <span className="you-badge">YOU</span>
-                    )}
-                  </div>
-                  <div
-                    className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
-                  >
-                    {entry.username}
-                  </div>
-                  <div
-                    className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
-                  >
-                    {entry.score.toLocaleString()}
-                  </div>
-                  <div
-                    className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
-                  >
-                    {entry.games_played}
-                  </div>
-                  <div
-                    className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
-                  >
-                    {entry.avg_score}
-                  </div>
-                </React.Fragment>
-              ))}
-            </div>
-
-            {/* User Position Notice */}
-            {leaderboardData.currentUserEntry &&
-              !leaderboardData.entries.some((e) => e.is_current_user) && (
-                <div className="user-position">
-                  Your position: Rank {leaderboardData.currentUserEntry.rank}{" "}
-                  with {leaderboardData.currentUserEntry.score.toLocaleString()}{" "}
-                  points
-                </div>
-              )}
-
-            {/* Pagination */}
-            {leaderboardData.pagination &&
-              leaderboardData.pagination.total_pages > 1 && (
-                <div className="pagination">
-                  <button
-                    className="pagination-button"
-                    disabled={currentPage === 1}
-                    onClick={() => handlePageChange(currentPage - 1)}
-                  >
-                    &lt;
-                  </button>
-                  <span>
-                    Page {currentPage} of{" "}
-                    {leaderboardData.pagination.total_pages}
-                  </span>
-                  <button
-                    className="pagination-button"
-                    disabled={
-                      currentPage === leaderboardData.pagination.total_pages
-                    }
-                    onClick={() => handlePageChange(currentPage + 1)}
-                  >
-                    &gt;
-                  </button>
-                </div>
-              )}
-          </div>
-        </>
-      )}
-
-      {!loading && !error && activeTab === "streaks" && (
-        <>
-          {/* Streak Controls */}
-          <div className="streak-controls">
-            <div className="streak-type-selector">
-              <button
-                className={`streak-type-button ${streakType === "win" ? "active" : ""}`}
-                onClick={() => handleStreakTypeChange("win")}
-              >
-                Win Streaks
-              </button>
-              <button
-                className={`streak-type-button ${streakType === "noloss" ? "active" : ""}`}
-                onClick={() => handleStreakTypeChange("noloss")}
-              >
-                No-Loss Streaks
-              </button>
-            </div>
-
-            <div className="streak-period-selector">
-              <button
-                className={`streak-period-button ${streakPeriod === "current" ? "active" : ""}`}
-                onClick={() => handleStreakPeriodChange("current")}
-              >
-                Current Streaks
-              </button>
-              <button
-                className={`streak-period-button ${streakPeriod === "best" ? "active" : ""}`}
-                onClick={() => handleStreakPeriodChange("best")}
-              >
-                Best Streaks
-              </button>
-            </div>
-          </div>
-
-          <h3 className="streak-heading">
-            {streakType === "win" ? "Win" : "No-Loss"} Streaks
-            {streakPeriod === "current" ? " (Active)" : " (All-Time Best)"}
-          </h3>
-
-          {/* Streak Table */}
-          <div className="table-container">
-            <div
-              className={`streak-table ${streakPeriod === "current" ? "with-date" : ""}`}
+          <div className="account-icon-container">
+            <button
+              className={`tab ${leaderboardType === "personal" ? "active" : ""}`}
+              onClick={() => handleTypeChange("personal")}
+              disabled={!isAuthenticated}
+              title={isAuthenticated ? "Your Stats" : "Login to view your stats"}
             >
-              <div className="table-header">Rank</div>
-              <div className="table-header">Player</div>
-              <div className="table-header">Streak</div>
-              {streakPeriod === "current" && (
-                <div className="table-header">Last Active</div>
-              )}
-
-              {leaderboardData.entries.map((entry, index) => (
-                <React.Fragment key={index}>
-                  <div
-                    className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
-                  >
-                    {entry.rank}
-                    {entry.is_current_user && (
-                      <span className="you-badge">YOU</span>
-                    )}
-                  </div>
-                  <div
-                    className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
-                  >
-                    {entry.username}
-                  </div>
-                  <div
-                    className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
-                  >
-                    {entry.streak_length}
-                    {entry.rank <= 3 && (
-                      <span
-                        className={`streak-badge ${
-                          entry.rank === 1
-                            ? "gold"
-                            : entry.rank === 2
-                              ? "silver"
-                              : "bronze"
-                        }`}
-                      >
-                        {entry.rank === 1
-                          ? "🥇"
-                          : entry.rank === 2
-                            ? "🥈"
-                            : "🥉"}
-                      </span>
-                    )}
-                  </div>
-                  {streakPeriod === "current" && (
-                    <div
-                      className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
-                    >
-                      {formatDate(entry.last_active)}
-                    </div>
-                  )}
-                </React.Fragment>
-              ))}
-            </div>
-
-            {/* User Position Notice */}
-            {leaderboardData.currentUserEntry &&
-              !leaderboardData.entries.some((e) => e.is_current_user) && (
-                <div className="user-position">
-                  Your position: Rank {leaderboardData.currentUserEntry.rank}{" "}
-                  with streak of{" "}
-                  {leaderboardData.currentUserEntry.streak_length}
-                </div>
-              )}
-
-            {/* Pagination */}
-            {leaderboardData.pagination &&
-              leaderboardData.pagination.total_pages > 1 && (
-                <div className="pagination">
-                  <button
-                    className="pagination-button"
-                    disabled={currentPage === 1}
-                    onClick={() => handlePageChange(currentPage - 1)}
-                  >
-                    &lt;
-                  </button>
-                  <span>
-                    Page {currentPage} of{" "}
-                    {leaderboardData.pagination.total_pages}
-                  </span>
-                  <button
-                    className="pagination-button"
-                    disabled={
-                      currentPage === leaderboardData.pagination.total_pages
-                    }
-                    onClick={() => handlePageChange(currentPage + 1)}
-                  >
-                    &gt;
-                  </button>
-                </div>
-              )}
+              <FaUser />
+            </button>
           </div>
-        </>
-      )}
+        </div>
 
-      {activeTab === "personal" && (
-        <>
-          {!isAuthenticated ? (
-            <div className="personal-stats-login-required">
-              <p>You need to be logged in to see your personal statistics.</p>
-              <button className="login-button" onClick={openLogin}>
-                Login
-              </button>
-            </div>
-          ) : loading ? (
-            <div className="loading-spinner">Loading your stats...</div>
-          ) : personalStats ? (
-            <div className="personal-stats-container">
-              {/* Summary Stats */}
-              <div className="stats-summary">
-                <div className="stat-card">
-                  <h3>Games Played</h3>
-                  <div className="stat-value">
-                    {personalStats.total_games_played}
-                  </div>
-                </div>
-                <div className="stat-card">
-                  <h3>Total Score</h3>
-                  <div className="stat-value">
-                    {personalStats.cumulative_score.toLocaleString()}
-                  </div>
-                </div>
-                <div className="stat-card">
-                  <h3>Win Rate</h3>
-                  <div className="stat-value">
-                    {personalStats.win_percentage}%
-                  </div>
-                </div>
-                <div className="stat-card">
-                  <h3>Max Streak</h3>
-                  <div className="stat-value">{personalStats.max_streak}</div>
-                </div>
+        {/* Table header */}
+        <div className="table-container">
+          <div className="table-grid">
+            <div className="table-header">Rank</div>
+            <div className="table-header">Player</div>
+            <div className="table-header">Score</div>
+            <div className="table-header">Games</div>
+            <div className="table-header">Avg</div>
+          </div>
+
+          {/* No data message */}
+          {topEntries.length === 0 && (
+            <p className="no-data">No leaderboard data available.</p>
+          )}
+
+          {/* Table rows */}
+          {topEntries.map((entry, index) => (
+            <React.Fragment key={entry.user_id || index}>
+              <div className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}>
+                {entry.rank}
               </div>
-
-              {/* Streaks Section */}
-              <div className="streaks-section">
-                <h3>Your Streaks</h3>
-                <div className="streaks-grid">
-                  <div className="streak-item">
-                    <span className="streak-label">Current Win Streak:</span>
-                    <span className="streak-value">
-                      {personalStats.current_streak}
-                    </span>
-                  </div>
-                  <div className="streak-item">
-                    <span className="streak-label">Best Win Streak:</span>
-                    <span className="streak-value">
-                      {personalStats.max_streak}
-                    </span>
-                  </div>
-                  <div className="streak-item">
-                    <span className="streak-label">
-                      Current No-Loss Streak:
-                    </span>
-                    <span className="streak-value">
-                      {personalStats.current_noloss_streak}
-                    </span>
-                  </div>
-                  <div className="streak-item">
-                    <span className="streak-label">Best No-Loss Streak:</span>
-                    <span className="streak-value">
-                      {personalStats.max_noloss_streak}
-                    </span>
-                  </div>
-                </div>
+              <div className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}>
+                {entry.username}
+                {entry.is_current_user && <span className="you-badge">YOU</span>}
               </div>
+              <div className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}>
+                {entry.score.toLocaleString()}
+              </div>
+              <div className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}>
+                {entry.games_played}
+              </div>
+              <div className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}>
+                {entry.avg_score}
+              </div>
+            </React.Fragment>
+          ))}
 
-              {/* Top Performances */}
-              <div className="top-performances">
-                <h3>Your Top Scores</h3>
-                {personalStats.top_scores &&
-                personalStats.top_scores.length > 0 ? (
-                  <table className="top-scores-table">
-                    <thead>
-                      <tr>
-                        <th>Score</th>
-                        <th>Time</th>
-                        <th>Date</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {personalStats.top_scores.map((score, index) => (
-                        <tr key={index}>
-                          <td>{score.score}</td>
-                          <td>
-                            {Math.floor(score.time_taken / 60)}:
-                            {(score.time_taken % 60)
-                              .toString()
-                              .padStart(2, "0")}
-                          </td>
-                          <td>{new Date(score.date).toLocaleDateString()}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                ) : (
-                  <p>
-                    No game scores recorded yet. Play more games to see your top
-                    performances!
-                  </p>
+          {/* User position if not in top entries */}
+          {currentUserEntry && !topEntries.some(entry => entry.is_current_user) && (
+            <>
+              <div className="table-cell separator" colSpan="5">. . .</div>
+              <div className="table-cell user-highlight">{currentUserEntry.rank || "?"}</div>
+              <div className="table-cell user-highlight">
+                {currentUserEntry.username}
+                <span className="you-badge">YOU</span>
+              </div>
+              <div className="table-cell user-highlight">
+                {currentUserEntry.score?.toLocaleString() || 0}
+              </div>
+              <div className="table-cell user-highlight">
+                {currentUserEntry.games_played || 0}
+              </div>
+              <div className="table-cell user-highlight">
+                {currentUserEntry.avg_score || 0}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Pagination */}
+        {pagination && pagination.total_pages > 1 && (
+          <div className="pagination">
+            <button
+              className="pagination-button"
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page <= 1}
+            >
+              Prev
+            </button>
+            <span>
+              Page {pagination.current_page} of {pagination.total_pages}
+            </span>
+            <button
+              className="pagination-button"
+              onClick={() => handlePageChange(page + 1)}
+              disabled={page >= pagination.total_pages}
+            >
+              Next
+            </button>
+          </div>
+        )}
+      </>
+    );
+  }, [leaderboardData, period, leaderboardType, page, isAuthenticated, handleBack, handlePeriodChange, handleTypeChange, handlePageChange]);
+
+  // Render the streak leaderboard
+  const renderStreakLeaderboard = useCallback(() => {
+    if (!streakData) return null;
+
+    const { entries, currentUserEntry, pagination } = streakData;
+    const showDates = streakPeriod === "current";
+
+    return (
+      <>
+        {/* Streak type tabs */}
+        <div className="tabs-container">
+          <button className="back-button" onClick={handleBack} aria-label="Back">
+            <FaArrowLeft />
+          </button>
+
+          <div className="tabs">
+            <button
+              className={`tab ${leaderboardType === "scores" ? "active" : ""}`}
+              onClick={() => handleTypeChange("scores")}
+            >
+              Score
+            </button>
+            <button
+              className={`tab ${leaderboardType === "streaks" ? "active" : ""}`}
+              onClick={() => handleTypeChange("streaks")}
+            >
+              Streaks
+            </button>
+          </div>
+
+          <div className="account-icon-container">
+            <button
+              className={`tab ${leaderboardType === "personal" ? "active" : ""}`}
+              onClick={() => handleTypeChange("personal")}
+              disabled={!isAuthenticated}
+              title={isAuthenticated ? "Your Stats" : "Login to view your stats"}
+            >
+              <FaUser />
+            </button>
+          </div>
+        </div>
+
+        {/* Streak controls */}
+        <div className="streak-controls">
+          <div className="streak-type-selector">
+            <button
+              className={`streak-type-button ${streakType === "win" ? "active" : ""}`}
+              onClick={() => handleStreakTypeChange("win")}
+            >
+              Win Streaks
+            </button>
+            <button
+              className={`streak-type-button ${streakType === "noloss" ? "active" : ""}`}
+              onClick={() => handleStreakTypeChange("noloss")}
+            >
+              No-Loss Streaks
+            </button>
+          </div>
+
+          <div className="streak-period-selector">
+            <button
+              className={`streak-period-button ${streakPeriod === "current" ? "active" : ""}`}
+              onClick={() => handleStreakPeriodChange("current")}
+            >
+              Current Streaks
+            </button>
+            <button
+              className={`streak-period-button ${streakPeriod === "best" ? "active" : ""}`}
+              onClick={() => handleStreakPeriodChange("best")}
+            >
+              All-Time Best
+            </button>
+          </div>
+        </div>
+
+        {/* Table header */}
+        <div className="table-container">
+          <div className={`streak-table ${showDates ? "with-date" : ""}`}>
+            <div className="table-header">Rank</div>
+            <div className="table-header">Player</div>
+            <div className="table-header">Streak</div>
+            {showDates && <div className="table-header">Last Active</div>}
+          </div>
+
+          {/* No data message */}
+          {entries.length === 0 && (
+            <p className="no-data">No streak data available.</p>
+          )}
+
+          {/* Table rows */}
+          {entries.map((entry, index) => (
+            <React.Fragment key={entry.user_id || index}>
+              <div className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}>
+                {entry.rank}
+                {entry.rank <= 3 && (
+                  <span className={`streak-badge ${
+                    entry.rank === 1 ? "gold" : entry.rank === 2 ? "silver" : "bronze"
+                  }`}>
+                    {entry.rank === 1 ? "1st" : entry.rank === 2 ? "2nd" : "3rd"}
+                  </span>
                 )}
               </div>
-
-              {/* Weekly Stats */}
-              <div className="top-performances">
-                <h3>This Week</h3>
-                <div className="streaks-grid">
-                  <div className="streak-item">
-                    <span className="streak-label">Games Played:</span>
-                    <span className="streak-value">
-                      {personalStats.weekly_stats.games_played}
-                    </span>
-                  </div>
-                  <div className="streak-item">
-                    <span className="streak-label">Total Score:</span>
-                    <span className="streak-value">
-                      {personalStats.weekly_stats.score}
-                    </span>
-                  </div>
-                </div>
+              <div className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}>
+                {entry.username}
+                {entry.is_current_user && <span className="you-badge">YOU</span>}
               </div>
-
-              {/* Last Played */}
-              {personalStats.last_played_date && (
-                <p className="last-played">
-                  Last played: {formatDate(personalStats.last_played_date)}
-                </p>
+              <div className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}>
+                {entry.streak_length}
+              </div>
+              {showDates && (
+                <div className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}>
+                  {new Date(entry.last_active).toLocaleDateString()}
+                </div>
               )}
-            </div>
-          ) : (
-            <div className="error-message">
-              <p>Failed to load personal stats. Please try again.</p>
-              <button onClick={fetchPersonalStats}>Reload Stats</button>
-            </div>
-          )}
-        </>
-      )}
-    </div>
-  );
-};
+            </React.Fragment>
+          ))}
 
-export default Leaderboard;
+          {/* User position if not in top entries */}
+          {currentUserEntry && !entries.some(entry => entry.is_current_user) && (
+            <>
+              <div className="table-cell separator" colSpan={showDates ? "4" : "3"}>. . .</div>
+              <div className="table-cell user-highlight">{currentUserEntry.rank || "?"}</div>
+              <div className="table-cell user-highlight">
+                {currentUserEntry.username}
+                <span className="you-badge">YOU</span>
+              </div>
+              <div className="table-cell user-highlight">
+                {currentUserEntry.streak_length || 0}
+              </div>
+              {showDates && (
+                <div className="table-cell user-highlight">
+                  {currentUserEntry.last_active 
+                    ? new Date(currentUserEntry.last_active).toLocaleDateString()
+                    : "N/A"
+                  }
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Pagination */}
+        {pagination && pagination.total_pages > 1 && (
+          <div className="pagination">
+            <button
+              className="pagination-button"
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page <= 1}
+            >
+              Prev
+            </button>
+            <span>
+              Page {pagination.current_page} of {pagination.total_pages}
+            </span>
+            <button
+              className="pagination-button"
+              onClick={() => handlePageChange(page + 1)}
+              disabled={page >= pagination.total_pages}
+            >
+              Next
+            </button>
+          </div>
+        )}
+      </>
+    );
+  }, [streakData, streakType, streakPeriod, leaderboardType, page, isAuthenticated, handleBack, handleTypeChange, handleStreakTypeChange, handleStreakPeriodChange, handlePageChange]);
+
+  // Render personal stats
+  const renderPersonalStats = useCallback(() => {
+    // If not authenticated, show login prompt
+    if (!isAuthenticated) {
+      return (
+        <div className="personal-stats-login-required">
+          <h3>Login Required</h3>
+          <p>Please log in to view your personal stats and position on the leaderboard.</p>
+          <button className="login-button" onClick={handleLoginClick}>
+            Login
+          </button>
+        </div>
+      );
+    }
+
+    // If no stats data, show loading or error
+    if (!personalStats) {
+      return <p className="loading">Loading your stats...</p>;
+    }
+
+    // Render personal stats UI
+    return (
+      <div className="personal-stats-container">
+        <div className="tabs-container">
+          <button className="back-button" onClick={handleBack} aria-label="Back">
+            <FaArrowLeft />
+          </button>
+
+          <div className="tabs">
+            <button
+              className={`tab ${leaderboardType === "scores" ? "active" : ""}`}
+              onClick={() => handleTypeChange("scores")}
+            >
+              Scores
+            </button>
+            <button
+              className={`tab ${leaderboardType === "streaks" ? "active" : ""}`}
+              onClick={() => handleTypeChange("streaks")}
+            >
+              Streaks
+            </button>
+          </div>
+
+          <div className="account-icon-container">
+            <button
+              className={`tab ${leaderboardType === "personal" ? "active" : ""}`}
+              onClick={() => handleTypeChange("personal")}
+            >
+              <FaUser />
+            </button>
+          </div>
+        </div>
+
+        <h2>Your Stats</h2>
+
+        {/* Summary stats cards */}
+        <div className="stats-summary">
+          <div className="stat-card">
+            <h3>Total Score</h3>
+            <div className="stat-value">{personalStats.cumulative_score?.toLocaleString() || 0}</div>
+          </div>
+          <div className="stat-card">
+            <h3>Games Played</h3>
+            <div className="stat-value">{personalStats.total_games_played || 0}</div>
+          </div>
+          <div className="stat-card">
+            <h3>Games Won</h3>
+            <div className="stat-value">{personalStats.games_won || 0}</div>
+          </div>
+          <div className="stat-card">
+            <h3>Win Rate</h3>
+            <div className="stat-value">{personalStats.win_percentage || 0}%</div>
+          </div>
+        </div>
+
+        {/* Streaks section */}
+        <div className="streaks-section">
+          <h3>Your Streaks</h3>
+          <div className="streaks-grid">
+            <div className="streak-item">
+              <span className="streak-label">Current Win Streak:</span>
+              <span className="streak-value">{personalStats.current_streak || 0}</span>
+            </div>
+            <div className="streak-item">
+              <span className="streak-label">Best Win Streak:</span>
+              <span className="streak-value">{personalStats.max_streak || 0}</span>
+            </div>
+            <div className="streak-item">
+              <span className="streak-label">Current No-Loss Streak:</span>
+              <span className="streak-value">{personalStats.current_noloss_streak || 0}</span>
+            </div>
+            <div className="streak-item">
+              <span className="streak-label">Best No-Loss Streak:</span>
+              <span className="streak-value">{personalStats.max_noloss_streak || 0}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Top scores table */}
+        {personalStats.top_scores && personalStats.top_scores.length > 0 && (
+          <div className="top-performances">
+            <h3>Your Top Scores</h3>
+            <table className="top-scores-table">
+              <thead>
+                <tr>
+                  <th>Score</th>
+                  <th>Time</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {personalStats.top_scores.map((score, index) => (
+                  <tr key={index}>
+                    <td>{score.score}</td>
+                    <td>{Math.floor(score.time_taken / 60)}m {score.time_taken % 60}s</td>
+                    <td>{new Date(score.date).toLocaleDateString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Last played date */}
+        {personalStats.last_played_date && (
+                                   <p className="last-played">
+                                     Last played: {new Date(personalStats.last_played_date).toLocaleDateString()}
+                                   </p>
+                                   )}
+                                   </div>
+                                   );
+                                   }, [isAuthenticated, personalStats, leaderboardType, handleBack, handleLoginClick, handleTypeChange]);
+
+                                   // Main render function
+                                   return (
+                                   <div className={`leaderboard ${settings?.theme === "dark" ? "dark-theme" : ""}`}>
+                                   {/* Show loading state */}
+                                   {isLoading && <LeaderboardLoading theme={settings?.theme} />}
+
+                                   {/* Show error state */}
+                                   {error && !isLoading && (
+                                   <LeaderboardError 
+                                   error={error} 
+                                   onRetry={refreshData} 
+                                   theme={settings?.theme} 
+                                   />
+                                   )}
+
+                                   {/* Show appropriate content based on selected tab */}
+                                   {!isLoading && !error && (
+                                   <>
+                                   {leaderboardType === "scores" && renderScoresLeaderboard()}
+                                   {leaderboardType === "streaks" && renderStreakLeaderboard()}
+                                   {leaderboardType === "personal" && renderPersonalStats()}
+                                   </>
+                                   )}
+                                   </div>
+                                   );
+                                   }
+
+                                   export default Leaderboard;
