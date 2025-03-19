@@ -15,6 +15,9 @@ import "./Styles/Privacy.css";
 import "./Styles/Modal.css";
 
 import App from "./App";
+// Import stores needed for initialization
+import useGameStore from "./stores/gameStore";
+import useSettingsStore from "./stores/settingsStore";
 
 // Add data-theme attribute to HTML element for Samsung Browser
 const applyHtmlDataTheme = () => {
@@ -34,13 +37,24 @@ const applyHtmlDataTheme = () => {
 // Apply data-theme right away
 applyHtmlDataTheme();
 
+// Initialize store subscriptions
+const initializeStores = () => {
+  // Ensure settings are applied
+  useSettingsStore.getState().applyTheme();
+
+  // Initialize game store with settings
+  useGameStore.getState().initializeFromSettings();
+};
+
+// Run store initialization immediately
+initializeStores();
+
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
 // Check if we're in production
 const isProduction = process.env.NODE_ENV === "production";
 
 // Conditionally apply StrictMode only in development
-// Important: Use the new AppProviders component here, not the old AppProvider
 root.render(
   isProduction ? (
     <App />
@@ -50,7 +64,3 @@ root.render(
     </React.StrictMode>
   ),
 );
-
-
-
-

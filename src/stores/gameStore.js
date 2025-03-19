@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import apiService from "../services/apiService";
 import config from "../config";
+import useSettingsStore from "./settingsStore";
 
 // Define max mistakes map to avoid dependency on context
 const MAX_MISTAKES_MAP = {
@@ -29,15 +30,72 @@ const initialState = {
   hardcoreMode: false,
   isLocalWinDetected: false,
   isWinVerificationInProgress: false,
-  difficulty: "easy",
-  maxMistakes: 8,
+  difficulty: "easy", // Default, will be updated from settings
+  maxMistakes: 8, // Default, will be updated from settings
   isResetting: false,
   isHintInProgress: false,
   pendingHints: 0,
+  settingsInitialized: false, // Flag to track if settings have been applied
 };
 
 const useGameStore = create((set, get) => ({
   ...initialState,
+
+  // Called once during app initialization to sync with settings
+  initializeFromSettings: () => {
+    // Get current settings
+    const settings = useSettingsStore.getState().settings || {};
+
+    // Update game state with settings
+    set({
+      difficulty: settings.difficulty || "easy",
+      maxMistakes: MAX_MISTAKES_MAP[settings.difficulty] || 8,
+      hardcoreMode: settings.hardcoreMode || false,
+      settingsInitialized: true,
+    });
+
+    // Set up subscription to settings changes
+    const unsubscribe = useSettingsStore.subscribe(
+      (state) => state.settings?.difficulty, // Select difficulty from settings
+      (newDifficulty, previousDifficulty) => {
+        // Only update if difficulty actually changed
+        if (newDifficulty !== previousDifficulty && newDifficulty) {
+          console.log(
+            `Settings difficulty changed from ${previousDifficulty} to ${newDifficulty}`,
+          );
+
+          // Update game state with new difficulty and corresponding maxMistakes
+          set({
+            difficulty: newDifficulty,
+            maxMistakes: MAX_MISTAKES_MAP[newDifficulty] || 8,
+          });
+        }
+      },
+    );
+
+    // Set up subscription to hardcore mode changes
+    const unsubscribeHardcore = useSettingsStore.subscribe(
+      (state) => state.settings?.hardcoreMode,
+      (newHardcoreMode, previousHardcoreMode) => {
+        // Only update if hardcore setting actually changed
+        if (newHardcoreMode !== previousHardcoreMode) {
+          console.log(
+            `Settings hardcoreMode changed from ${previousHardcoreMode} to ${newHardcoreMode}`,
+          );
+
+          // Update game state with new hardcore mode setting
+          set({ hardcoreMode: newHardcoreMode });
+        }
+      },
+    );
+
+    // We don't need to unsubscribe since this store lives for the app's lifetime
+    // But if needed, we could return this function
+    return () => {
+      unsubscribe();
+      unsubscribeHardcore();
+    };
+  },
 
   // Start a new game with data integrity checks
   startGame: async (
@@ -59,20 +117,29 @@ const useGameStore = create((set, get) => ({
       // Clear any existing game ID for a fresh start
       localStorage.removeItem("uncrypt-game-id");
 
-      // Determine difficulty and max mistakes
-      const difficulty = get().difficulty || "easy";
-      const maxMistakesValue = MAX_MISTAKES_MAP[difficulty] || 8;
+      // Make sure we've initialized settings
+      if (!get().settingsInitialized) {
+        get().initializeFromSettings();
+      }
+
+      // Get current difficulty and max mistakes from our synchronized state
+      const difficulty = get().difficulty;
+      const maxMistakesValue = get().maxMistakes;
+
+      // Hardcore mode can come from parameter or store
+      const effectiveHardcoreMode = hardcoreMode || get().hardcoreMode;
 
       console.log("Starting new game with settings:", {
         longText: useLongText,
-        hardcoreMode,
+        hardcoreMode: effectiveHardcoreMode,
         difficulty,
+        maxMistakes: maxMistakesValue,
       });
 
       // Request new game from API
       const data = await apiService.startGame({
         longText: useLongText,
-        difficulty,
+        difficulty, // Always use current store difficulty here
       });
 
       console.log("Game start response received");
@@ -87,7 +154,7 @@ const useGameStore = create((set, get) => ({
       let processedEncrypted = data.encrypted_paragraph;
       let processedDisplay = data.display;
 
-      if (hardcoreMode) {
+      if (effectiveHardcoreMode) {
         processedEncrypted = processedEncrypted.replace(/[^A-Z]/g, "");
         processedDisplay = processedDisplay.replace(/[^A-Z█]/g, "");
       }
@@ -103,11 +170,11 @@ const useGameStore = create((set, get) => ({
         if (data.encrypted_paragraph && data.display) {
           console.log("Attempting to fix length mismatch");
 
-          processedEncrypted = hardcoreMode
+          processedEncrypted = effectiveHardcoreMode
             ? data.encrypted_paragraph.replace(/[^A-Z]/g, "")
             : data.encrypted_paragraph;
 
-          processedDisplay = hardcoreMode
+          processedDisplay = effectiveHardcoreMode
             ? data.display.replace(/[^A-Z█]/g, "")
             : data.display;
 
@@ -148,9 +215,9 @@ const useGameStore = create((set, get) => ({
         startTime: Date.now(),
         gameId: data.game_id,
         hasGameStarted: true,
-        hardcoreMode,
-        difficulty,
-        maxMistakes: maxMistakesValue,
+        hardcoreMode: effectiveHardcoreMode,
+        difficulty, // Use our synced difficulty
+        maxMistakes: maxMistakesValue, // Use our synced maxMistakes
         hasWon: false,
         hasLost: false,
         winData: null,
@@ -284,6 +351,7 @@ const useGameStore = create((set, get) => ({
       }
 
       // Determine difficulty and max mistakes
+      // Note: Saved games have their own difficulty, which may differ from current settings
       const difficulty = game.difficulty || "easy";
       const maxMistakesValue = MAX_MISTAKES_MAP[difficulty] || 8;
 
@@ -533,6 +601,11 @@ const useGameStore = create((set, get) => ({
       isResetting: true,
       isHintInProgress: false,
       pendingHints: 0,
+      // Preserve settings-derived values
+      difficulty: get().difficulty,
+      maxMistakes: get().maxMistakes,
+      hardcoreMode: get().hardcoreMode,
+      settingsInitialized: get().settingsInitialized,
     });
   },
 
@@ -598,14 +671,17 @@ const useGameStore = create((set, get) => ({
       // Clear local storage ID
       localStorage.removeItem("uncrypt-game-id");
 
-      // Reset other state but keep isResetting true
+      // Reset other state but keep isResetting true and preserve settings values
       set((state) => ({
         ...initialState,
         isResetting: true, // Maintain resetting flag
         isHintInProgress: false,
         pendingHints: 0,
-        // Keep current difficulty and settings
+        // Keep current settings values
         difficulty: state.difficulty,
+        maxMistakes: state.maxMistakes,
+        hardcoreMode: state.hardcoreMode || hardcoreMode, // Use parameter if provided
+        settingsInitialized: state.settingsInitialized,
       }));
 
       // Wait to ensure state updates have time to propagate
@@ -627,5 +703,13 @@ const useGameStore = create((set, get) => ({
     }
   },
 }));
+
+// Initialize settings synchronization
+setTimeout(() => {
+  const gameStore = useGameStore.getState();
+  if (!gameStore.settingsInitialized) {
+    gameStore.initializeFromSettings();
+  }
+}, 0);
 
 export default useGameStore;

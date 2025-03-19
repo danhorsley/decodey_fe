@@ -1,5 +1,5 @@
 // src/pages/Game.js - Simplified with initialization delegation
-import React, { useState, useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaTrophy } from "react-icons/fa";
 
