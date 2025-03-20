@@ -193,7 +193,6 @@ class ApiService {
       return { success: false, error };
     }
   }
-
   /**
    * Refresh the auth token using refresh token
    * @returns {Promise<Object>} Refresh result
@@ -208,25 +207,15 @@ class ApiService {
     // Check if we have a refresh token
     const refreshToken = localStorage.getItem("refresh_token");
     if (!refreshToken) {
-      console.warn("No refresh token available - cannot refresh");
+      console.warn("No refresh token available - proceeding as anonymous user");
 
-      // Handle anonymous user case - don't automatically logout
-      const hasAccessToken = this.getToken();
-      if (!hasAccessToken) {
-        console.log("No access token either, continuing as anonymous user");
-        return Promise.reject(
-          new Error("No tokens available, continuing anonymously"),
-        );
-      }
-
-      // Emit appropriate event based on token availability
-      if (!hasAccessToken) {
-        this.events.emit("auth:logout");
-      } else {
-        this.events.emit("auth:required");
-      }
-
-      return Promise.reject(new Error("No refresh token available"));
+      // We'll handle this as a specific kind of "success: false" that indicates
+      // we should continue as anonymous without throwing an error
+      return {
+        success: false,
+        anonymous: true,
+        message: "No refresh token available",
+      };
     }
 
     try {
@@ -268,13 +257,14 @@ class ApiService {
       refreshFailureTime = Date.now();
       isRefreshing = false;
 
-      // Handle 401 error by forcing logout
+      // Handle 401 error by returning a clean object instead of throwing
       if (error.response && error.response.status === 401) {
-        console.warn("Refresh token is invalid or expired - logging out");
-        localStorage.removeItem("uncrypt-token");
-        localStorage.removeItem("refresh_token");
-        sessionStorage.removeItem("uncrypt-token");
-        this.events.emit("auth:logout");
+        console.warn("Refresh token is invalid or expired");
+        return {
+          success: false,
+          expired: true,
+          message: "Refresh token is invalid or expired",
+        };
       }
 
       throw error;
@@ -282,7 +272,6 @@ class ApiService {
   }
 
   // ===== Game Methods =====
-
   /**
    * Start a new game with given options
    * @param {Object} options Game options
@@ -311,19 +300,56 @@ class ApiService {
       // Construct full URL
       const url = `${endpoint}${queryParams.toString() ? "?" + queryParams.toString() : ""}`;
 
+      // Check if we have a token (authenticated user)
+      const token = this.getToken();
+      const isAnonymousStart = !token;
+
       // Log the request for debugging
-      console.log(`Starting game with URL: ${url}, difficulty: ${difficulty}`);
+      console.log(`Starting game with URL: ${url}, difficulty: ${difficulty}, anonymous: ${isAnonymousStart}`);
 
-      // Make the request
-      const response = await this.api.get(url);
+      try {
+        // Make the request through our normal API instance
+        const response = await this.api.get(url);
 
-      // If there's a game ID in the response, store it
-      if (response.data.game_id) {
-        localStorage.setItem("uncrypt-game-id", response.data.game_id);
-        console.log(`Game started with ID: ${response.data.game_id}`);
+        // If there's a game ID in the response, store it
+        if (response.data.game_id) {
+          localStorage.setItem("uncrypt-game-id", response.data.game_id);
+          console.log(`Game started with ID: ${response.data.game_id}`);
+        }
+
+        return response.data;
+      } catch (error) {
+        // If we get a 401 error, try an anonymous start
+        if (error.response?.status === 401) {
+          console.log("Auth error in startGame, trying anonymous start");
+
+          // For anonymous start, create a request config without auth headers
+          const config = {
+            url: url,
+            method: 'get',
+            baseURL: this.api.defaults.baseURL,
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+            },
+            // Do not include auth headers
+          };
+
+          // Use our API instance but with a custom config that doesn't trigger the auth interceptor
+          const anonResponse = await this.api.request(config);
+
+          // If there's a game ID in the response, store it
+          if (anonResponse.data.game_id) {
+            localStorage.setItem("uncrypt-game-id", anonResponse.data.game_id);
+            console.log(`Anonymous game started with ID: ${anonResponse.data.game_id}`);
+          }
+
+          return anonResponse.data;
+        }
+
+        // Rethrow the error if it's not a 401
+        throw error;
       }
-
-      return response.data;
     } catch (error) {
       console.error("Error in startGame:", error);
       throw error;
@@ -453,9 +479,30 @@ class ApiService {
       return { has_active_game: false };
     }
   }
+
   /**
-   * Get current game status including win data if the game is complete
-   * @returns {Promise<Object>} Complete game status data
+   * Continue an existing saved game
+   * @returns {Promise<Object>} Continued game data
+   */
+  async continueGame() {
+    try {
+      // Make request to continue existing game
+      const response = await this.api.get("/api/continue-game");
+
+      // If there's a game ID in the response, store it
+      if (response.data.game_id) {
+        localStorage.setItem("uncrypt-game-id", response.data.game_id);
+      }
+
+      return response.data;
+    } catch (error) {
+      console.error("Error continuing game:", error);
+      throw error;
+    }
+  }
+  /**
+   * Get current game status
+   * @returns {Promise<Object>} Game status
    */
   async getGameStatus() {
     try {
@@ -491,6 +538,15 @@ class ApiService {
         win_data: data.win_data || data.winData || null,
       };
     } catch (error) {
+      // Handle specific error cases - fixed token reference
+      const currentToken = this.getToken(); // Define token in catch block scope
+
+      if (error.response?.status === 401 && currentToken) {
+        console.warn("Authentication required for game status");
+        this.events.emit("auth:required");
+        return { error: "Authentication required", authRequired: true };
+      }
+
       console.error("Error getting game status:", error);
       return {
         error:
@@ -500,59 +556,6 @@ class ApiService {
         game_complete: false,
         has_won: false,
       };
-    }
-  }
-  /**
-   * Continue an existing saved game
-   * @returns {Promise<Object>} Continued game data
-   */
-  async continueGame() {
-    try {
-      // Make request to continue existing game
-      const response = await this.api.get("/api/continue-game");
-
-      // If there's a game ID in the response, store it
-      if (response.data.game_id) {
-        localStorage.setItem("uncrypt-game-id", response.data.game_id);
-      }
-
-      return response.data;
-    } catch (error) {
-      console.error("Error continuing game:", error);
-      throw error;
-    }
-  }
-
-  /**
-   * Get current game status
-   * @returns {Promise<Object>} Game status
-   */
-  async getGameStatus() {
-    try {
-      const token = this.getToken();
-      const gameId = this.getGameId();
-      const isAnonymous = !token;
-
-      // For anonymous users, include game_id as query param
-      let url = "/api/game-status";
-      if (isAnonymous && gameId) {
-        url += `?game_id=${encodeURIComponent(gameId)}`;
-      }
-
-      // Make the request
-      const response = await this.api.get(url);
-
-      return response.data;
-    } catch (error) {
-      // Handle specific error cases
-      if (error.response?.status === 401 && token) {
-        console.warn("Authentication required for game status");
-        this.events.emit("auth:required");
-        return { error: "Authentication required", authRequired: true };
-      }
-
-      console.error("Error getting game status:", error);
-      return { error: error.message || "Error getting game status" };
     }
   }
 

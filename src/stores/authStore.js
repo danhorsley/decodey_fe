@@ -74,8 +74,38 @@ const useAuthStore = create(
         }
       },
 
+      // In src/stores/authStore.js
+      // The error is showing get().clearAuth is not a function
+      // Let's fix the handleInvalidToken function
+
       handleInvalidToken: async () => {
         try {
+          // Check for refresh token first
+          const refreshToken = localStorage.getItem("refresh_token");
+
+          // If no refresh token exists, immediately clear auth state for anonymous users
+          if (!refreshToken) {
+            console.log(
+              "No refresh token available - proceeding as anonymous user",
+            );
+
+            // Instead of calling get().clearAuth(), directly set the state
+            set({
+              isAuthenticated: false,
+              user: null,
+              loading: false,
+              hasActiveGame: false,
+            });
+
+            // Clear stored tokens to be safe
+            localStorage.removeItem("uncrypt-token");
+            localStorage.removeItem("refresh_token");
+            sessionStorage.removeItem("uncrypt-token");
+
+            return { success: false, anonymous: true };
+          }
+
+          // Rest of the function stays the same
           const refreshResult = await apiService.refreshToken();
 
           if (refreshResult && refreshResult.access_token) {
@@ -98,37 +128,24 @@ const useAuthStore = create(
               hasActiveGame: hasActiveGame,
             });
           } else {
-            get().clearAuth();
+            // Use set directly instead of get().clearAuth()
+            set({
+              isAuthenticated: false,
+              user: null,
+              loading: false,
+              hasActiveGame: false,
+            });
           }
         } catch (error) {
           console.error("Token refresh failed:", error);
-          get().clearAuth();
-        }
-      },
 
-      clearAuth: () => {
-        config.session.clearSession();
-        set({
-          isAuthenticated: false,
-          user: null,
-          loading: false,
-          hasActiveGame: false,
-        });
-      },
-
-      login: async (credentials) => {
-        try {
-          const result = await apiService.login(credentials);
-
-          // Update state via auth:login event (apiService still emits this)
-          // You could alternatively update directly here
-
-          return { success: true, data: result };
-        } catch (error) {
-          return {
-            success: false,
-            error: error.response?.data?.msg || "Login failed",
-          };
+          // Use set directly instead of get().clearAuth()
+          set({
+            isAuthenticated: false,
+            user: null,
+            loading: false,
+            hasActiveGame: false,
+          });
         }
       },
 

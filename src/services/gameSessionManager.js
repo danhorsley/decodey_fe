@@ -47,36 +47,117 @@ const startGame = async (options = {}) => {
     // Clear any previous game ID
     localStorage.removeItem("uncrypt-game-id");
 
-    // Start a new game via API
-    const gameData = await apiService.startGame(options);
+    // Check auth status - no need to refresh tokens for anonymous users
+    const token = config.session.getAuthToken();
+    const isAuthenticated = !!token;
 
-    // Store game ID if available
-    if (gameData?.game_id) {
-      localStorage.setItem("uncrypt-game-id", gameData.game_id);
+    // Log user status - helpful for debugging
+    console.log(
+      `Starting new game as ${isAuthenticated ? "authenticated" : "anonymous"} user`,
+    );
+
+    try {
+      // Start a new game via apiService
+      const gameData = await apiService.startGame(options);
+
+      // Store game ID if available
+      if (gameData?.game_id) {
+        localStorage.setItem("uncrypt-game-id", gameData.game_id);
+      }
+
+      // Update game store directly for efficiency
+      const gameStore = useGameStore.getState();
+      if (typeof gameStore.startGame === "function") {
+        await gameStore.startGame(
+          options.longText || false,
+          options.hardcoreMode || false,
+          true, // Force new
+        );
+      }
+
+      return {
+        success: true,
+        gameData,
+        anonymous: !isAuthenticated, // Flag to indicate this was an anonymous start
+      };
+    } catch (error) {
+      // Special handling for 401 errors - likely expired token
+      if (error.response?.status === 401) {
+        console.log(
+          "401 error starting game - clearing auth and trying anonymous start",
+        );
+
+        // Clear auth tokens
+        localStorage.removeItem("uncrypt-token");
+        localStorage.removeItem("refresh_token");
+        sessionStorage.removeItem("uncrypt-token");
+
+        // Try to start game with anonymous endpoint - using apiService again
+        console.log("Starting anonymous game after 401 error");
+
+        try {
+          // The apiService.startGame method now handles anonymous fallback internally
+          const anonData = await apiService.startGame(options);
+
+          // Store game ID if available
+          if (anonData?.game_id) {
+            localStorage.setItem("uncrypt-game-id", anonData.game_id);
+          }
+
+          // Update game store with anonymous game
+          const gameStore = useGameStore.getState();
+          if (typeof gameStore.startGame === "function") {
+            await gameStore.startGame(
+              options.longText || false,
+              options.hardcoreMode || false,
+              true,
+            );
+          }
+
+          return {
+            success: true,
+            gameData: anonData,
+            anonymous: true,
+            wasAuthError: true,
+          };
+        } catch (anonError) {
+          console.error(
+            "Error starting anonymous game after auth error:",
+            anonError,
+          );
+          // Fall through to default error handling
+          return {
+            success: false,
+            error: anonError,
+            anonymous: true,
+          };
+        }
+      }
+
+      // Default error handling
+      console.error("Error starting game:", error);
+      return {
+        success: false,
+        error,
+      };
     }
-
-    // Update game store directly for efficiency
-    const gameStore = useGameStore.getState();
-    if (typeof gameStore.startGame === "function") {
-      await gameStore.startGame(
-        options.longText || false,
-        options.hardcoreMode || false,
-        true, // Force new
-      );
-    }
-
-    return {
-      success: true,
-      gameData,
-    };
   } catch (error) {
-    console.error("Error starting game:", error);
+    console.error("Error in startGame:", error);
     return {
       success: false,
       error,
     };
   }
 };
+
+/**
+ * Initialize a new game session
+ * Single entry point for game initialization
+ * @param {Object} options Game options
+ * @returns {Promise<Object>} Initialization result
+ */
+// In src/services/gameSessionManager.js
+// Let's update the initialization flow to handle anonymous users better
 
 /**
  * Initialize a new game session
@@ -100,33 +181,53 @@ const initializeGameSession = async (options = {}) => {
     // Check if user is authenticated
     const { isAuthenticated } = checkAuthStatus();
 
-    // If user is authenticated, check for active game first
-    if (isAuthenticated) {
-      try {
-        const activeGameCheck = await apiService.checkActiveGame();
+    // Fast-track for anonymous users - bypass active game check completely
+    if (!isAuthenticated) {
+      console.log(
+        "Anonymous user detected - fast-tracking to new game, bypassing continue modal",
+      );
 
-        if (activeGameCheck.has_active_game) {
-          console.log("Active game found, continuing instead of starting new");
+      // Start a new game directly for anonymous users - never show continue modal
+      const result = await startGame(options);
 
-          // Continue the active game instead of starting a new one
-          const continueResult = await continueSavedGame();
-
-          // Update initialization status
-          sessionStore.setInitializing(false);
-
-          return {
-            success: continueResult.success,
-            continued: true,
-            gameData: continueResult.gameData,
-          };
-        }
-      } catch (checkError) {
-        console.warn("Error checking for active game:", checkError);
-        // Continue with new game initialization on error
+      // Update initialization status
+      if (!result.success) {
+        sessionStore.setInitError(result.error);
+      } else {
+        sessionStore.setInitializing(false);
       }
+
+      return result;
     }
 
-    // No active game found or not authenticated, start a new game
+    // If we get here, the user is authenticated - proceed with normal flow
+    // including checking for active games
+
+    try {
+      const activeGameCheck = await apiService.checkActiveGame();
+
+      if (activeGameCheck.has_active_game) {
+        console.log("Active game found for authenticated user");
+
+        // Emit event to show continue game modal, but only for authenticated users
+        eventEmitter.emit("game:active-game-found", {
+          gameStats: activeGameCheck.game_stats,
+        });
+
+        // Don't automatically continue - let the modal handle it
+        sessionStore.setInitializing(false);
+        return {
+          success: true,
+          activeGameFound: true,
+          gameStats: activeGameCheck.game_stats,
+        };
+      }
+    } catch (checkError) {
+      console.warn("Error checking for active game:", checkError);
+      // Continue with new game initialization on error
+    }
+
+    // No active game found or error in checking, start a new game
     const result = await startGame(options);
 
     // Update initialization status

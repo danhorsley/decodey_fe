@@ -7,6 +7,7 @@ import Signup from "../../pages/Signup";
 import ContinueGamePrompt from "./ContinueGamePrompt";
 import useGameSession from "../../hooks/useGameSession";
 import useUIStore from "../../stores/uiStore";
+import config from "../../config";
 
 /**
  * ModalManager component - handles rendering of all application modals
@@ -41,8 +42,16 @@ const ModalManager = ({ children }) => {
   useEffect(() => {
     // Subscribe to the active game found event
     const unsubscribe = subscribeToEvents(events.ACTIVE_GAME_FOUND, (data) => {
-      if (data && data.gameStats) {
+      // Only show continue game prompt for authenticated users
+      const isAuthenticated = !!config.session.getAuthToken();
+
+      if (isAuthenticated && data && data.gameStats) {
         openContinueGamePrompt(data.gameStats);
+      } else {
+        console.log(
+          "Active game found but user is not authenticated - bypassing continue prompt",
+        );
+        // For anonymous users, we don't show the modal at all
       }
     });
 
