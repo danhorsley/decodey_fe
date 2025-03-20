@@ -1,5 +1,6 @@
 // src/pages/Leaderboard.js
 import React, { useCallback } from "react";
+import { IconContext } from "react-icons";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft, FaTrophy, FaMedal, FaFire, FaUser } from "react-icons/fa";
 import useLeaderboard from "../hooks/useLeaderboard";
@@ -86,13 +87,14 @@ function Leaderboard() {
       <>
         {/* Main navigation tabs */}
         <div className="tabs-container">
-          <button
-            className="back-button"
-            onClick={handleBack}
-            aria-label="Back"
-          >
-            <FaArrowLeft />
-          </button>
+      
+            <button
+              className="back-button"
+              onClick={handleBack}
+              aria-label="Back"
+            >
+              <FaArrowLeft />
+            </button>
 
           <div className="tabs">
             <button
@@ -656,9 +658,9 @@ function Leaderboard() {
         {/* Main navigation tabs */}
         <div className="tabs-container">
           <button
-            className="back-button"
+            className="back-button leaderboard-back-button"
             onClick={handleBack}
-            aria-label="Back"
+            aria-label="Back to Game"
           >
             <FaArrowLeft />
           </button>

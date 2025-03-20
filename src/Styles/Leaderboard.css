@@ -85,33 +85,45 @@
   border: none;
   border-radius: 50%;
   cursor: pointer;
-  width: 32px;
-  height: 32px;
-  display: flex;
+  width: 40px;    /* Increased from 32px */
+  height: 40px;   /* Increased from 32px */
+  display: flex; 
   justify-content: center;
   align-items: center;
   margin-right: 10px;
   transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .back-button:hover {
-  background: rgb(0, 50, 130);
+  background: #0056b3;
   transform: scale(1.05);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
 }
 
 .back-button svg {
-  width: 16px;
-  height: 16px;
+  justify-content: center;
+  width: 1.3em;   
+  height: 1.3em;   
+  flex-shrink: 0;
+  stroke-width: 1em;
+  font-size: 1.3em;
   display: block;
+  fill: currentColor;  /* Ensure proper fill */
 }
 
 .dark-theme .back-button {
   background-color: #333;
+  color: #4cc9f0;  /* Make icon color brighter */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
 }
 
-.dark-theme .back-button svg {
-  color: #4cc9f0;
+.dark-theme .back-button:hover {
+  background-color: #444;
+  color: #97e6ff;  /* Even brighter on hover */
+  box-shadow: 0 3px 8px rgba(0, 225, 152, 0.3);
 }
+
 
 .dark-theme .back-button:hover {
   background: rgb(0, 225, 152);
