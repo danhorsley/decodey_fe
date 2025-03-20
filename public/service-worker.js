@@ -12,9 +12,6 @@ const APP_SHELL_ASSETS = [
   "/static/js/0.chunk.js",
   "/static/js/bundle.js",
   "/manifest.json",
-  "/favicon.ico",
-  "/logo192.png",
-  "/logo512.png",
 ];
 
 // API cache configuration - separate settings for different endpoints

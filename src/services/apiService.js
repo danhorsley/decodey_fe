@@ -305,7 +305,9 @@ class ApiService {
       const isAnonymousStart = !token;
 
       // Log the request for debugging
-      console.log(`Starting game with URL: ${url}, difficulty: ${difficulty}, anonymous: ${isAnonymousStart}`);
+      console.log(
+        `Starting game with URL: ${url}, difficulty: ${difficulty}, anonymous: ${isAnonymousStart}`,
+      );
 
       try {
         // Make the request through our normal API instance
@@ -326,7 +328,7 @@ class ApiService {
           // For anonymous start, create a request config without auth headers
           const config = {
             url: url,
-            method: 'get',
+            method: "get",
             baseURL: this.api.defaults.baseURL,
             headers: {
               Accept: "application/json",
@@ -341,7 +343,9 @@ class ApiService {
           // If there's a game ID in the response, store it
           if (anonResponse.data.game_id) {
             localStorage.setItem("uncrypt-game-id", anonResponse.data.game_id);
-            console.log(`Anonymous game started with ID: ${anonResponse.data.game_id}`);
+            console.log(
+              `Anonymous game started with ID: ${anonResponse.data.game_id}`,
+            );
           }
 
           return anonResponse.data;
@@ -423,14 +427,30 @@ class ApiService {
    */
   async abandonAndResetGame() {
     try {
-      // Try to explicitly abandon on server
-      await this.api.delete("/api/abandon-game");
+      // Check if user is authenticated
+      const token = this.getToken();
+
+      // For anonymous users, skip the server call completely
+      if (!token) {
+        console.log("Anonymous user - skipping server-side abandon call");
+
+        // Just remove game ID locally - no need for server call
+        localStorage.removeItem("uncrypt-game-id");
+
+        return true;
+      }
+
+      // For authenticated users, perform the normal server-side abandon
+      try {
+        // Try to explicitly abandon on server
+        await this.api.delete("/api/abandon-game");
+      } catch (serverError) {
+        console.warn("Error in server-side game abandonment:", serverError);
+        // Continue anyway - the important part is clearing local state
+      }
 
       // Remove game ID locally
       localStorage.removeItem("uncrypt-game-id");
-
-      // Short delay to ensure changes propagate
-      await new Promise((resolve) => setTimeout(resolve, 100));
 
       return true;
     } catch (error) {

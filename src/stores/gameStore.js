@@ -802,15 +802,32 @@ const useGameStore = create((set, get) => ({
   },
 
   // Reset and start new game
+  // In src/stores/gameStore.js
+  // Update resetAndStartNewGame to handle anonymous users better
+
+  // Reset and start new game
   resetAndStartNewGame: async (useLongText = false, hardcoreMode = false) => {
     try {
       // Set resetting flag first, before any async operations
       set({ isResetting: true });
 
-      // Then perform abandonment and cleanup
-      await get().abandonGame();
+      // Check if the user is anonymous
+      const token = config.session.getAuthToken();
+      const isAnonymous = !token;
 
-      // Clear local storage ID
+      // For anonymous users, skip the abandonment step entirely
+      if (!isAnonymous) {
+        try {
+          await get().abandonGame();
+        } catch (err) {
+          console.warn("Abandonment before new game failed:", err);
+          // Continue anyway - we'll still try to start a new game
+        }
+      } else {
+        console.log("Anonymous user - skipping server abandonment");
+      }
+
+      // Clear local storage ID regardless of user type
       localStorage.removeItem("uncrypt-game-id");
 
       // Get the latest settings before starting a new game
