@@ -162,6 +162,7 @@ const useGameStore = create((set, get) => ({
       const data = await apiService.startGame({
         longText: useLongText,
         difficulty: difficulty, // Both frontend and backend use the same terminology
+        hardcoreMode: effectiveHardcoreMode,
       });
 
       console.log("Game start response received");
