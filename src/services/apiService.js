@@ -297,9 +297,14 @@ class ApiService {
       const queryParams = new URLSearchParams();
       queryParams.append("difficulty", difficulty);
 
+      // Add hardcore mode parameter to query string
+      if (options.hardcoreMode) {
+        queryParams.append("hardcore", "true");
+      }
+      console.log("options.hardcoreMode", options.hardcoreMode);
       // Construct full URL
       const url = `${endpoint}${queryParams.toString() ? "?" + queryParams.toString() : ""}`;
-
+      console.log("starting url : ", url);
       // Check if we have a token (authenticated user)
       const token = this.getToken();
       const isAnonymousStart = !token;
