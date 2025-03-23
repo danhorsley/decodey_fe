@@ -192,6 +192,7 @@ function Game() {
 
   const effectiveMistakes = mistakes + pendingHints;
   const remainingMistakes = maxMistakes - effectiveMistakes;
+  const hardcoreMode = useGameStore((state) => state.hardcoreMode);
   const disableHint =
     !isGameActive || isHintInProgress || remainingMistakes <= 1;
   // Setup keyboard input with more explicit callbacks
@@ -295,16 +296,12 @@ function Game() {
 
   // Text container component
   const renderTextContainer = () => (
-    <div
-      className={`text-container ${settings?.hardcoreMode ? "hardcore-mode" : ""}`}
-    >
+    <div className={`text-container ${hardcoreMode ? "hardcore-mode" : ""}`}>
       <div
         className="alternating-text"
         dangerouslySetInnerHTML={formattedText}
       />
-      {settings?.hardcoreMode && (
-        <div className="hardcore-badge">HARDCORE MODE</div>
-      )}
+      {hardcoreMode && <div className="hardcore-badge">HARDCORE MODE</div>}
     </div>
   );
 
@@ -374,7 +371,7 @@ function Game() {
     // loss takes precedence (logical since you can't win after losing)
     if (hasLost) {
       return (
-        <div className="game-message">
+        <div className={`game-message ${hardcoreMode ? "hardcore-mode" : ""}`}>
           <p>Game Over! Too many mistakes.</p>
           <button onClick={handleStartNewGame}>Try Again</button>
         </div>

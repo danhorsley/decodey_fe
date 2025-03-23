@@ -421,7 +421,7 @@ const useGameStore = create((set, get) => ({
         startTime: Date.now() - (game.time_spent || 0) * 1000,
 
         // Game configuration
-        hardcoreMode: currentHardcoreMode,
+        hardcoreMode: game.hardcoreMode || currentHardcoreMode,
         difficulty: difficulty, // Now using consistent terminology
         maxMistakes: maxMistakesValue,
 
@@ -678,6 +678,7 @@ const useGameStore = create((set, get) => ({
           rating: winData.rating || "Cryptanalyst",
           encrypted: get().encrypted || "",
           display: get().display || "",
+          hardcoreMode: get().hardcoreMode,
           attribution: winData.attribution || {
             major_attribution:
               winData.major_attribution ||
