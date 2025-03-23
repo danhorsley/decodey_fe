@@ -668,7 +668,7 @@ const useGameStore = create((set, get) => ({
       ) {
         // Extract win data from the response - handle multiple possible field names
         const winData = gameStatus.win_data || gameStatus.winData || {};
-
+        const uniqueLettersSolved = new Set(get().correctlyGuessed || []).size;
         // Create complete win data structure with normalized field names
         const formattedWinData = {
           score: winData.score || 0,
@@ -679,6 +679,7 @@ const useGameStore = create((set, get) => ({
           encrypted: get().encrypted || "",
           display: get().display || "",
           hardcoreMode: get().hardcoreMode,
+          lettersSolved: uniqueLettersSolved,
           attribution: winData.attribution || {
             major_attribution:
               winData.major_attribution ||

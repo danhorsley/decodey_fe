@@ -6,20 +6,23 @@ import useAuthStore from "../../stores/authStore";
 import useUIStore from "../../stores/uiStore";
 import useGameStore from "../../stores/gameStore";
 import useSettingsStore from "../../stores/settingsStore";
+import { FaXTwitter } from "react-icons/fa6";
 
 const WinCelebration = ({ playSound, winData }) => {
   // Get auth state from store
-  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   // Get UI actions from store
-  const openLogin = useUIStore(state => state.openLogin);
+  const openLogin = useUIStore((state) => state.openLogin);
 
   // Get game actions from store
-  const resetAndStartNewGame = useGameStore(state => state.resetAndStartNewGame);
-  const isResetting = useGameStore(state => state.isResetting);
+  const resetAndStartNewGame = useGameStore(
+    (state) => state.resetAndStartNewGame,
+  );
+  const isResetting = useGameStore((state) => state.isResetting);
 
   // Get settings from store
-  const settings = useSettingsStore(state => state.settings);
+  const settings = useSettingsStore((state) => state.settings);
 
   // Local state
   const [showMatrixRain, setShowMatrixRain] = useState(true);
@@ -29,6 +32,14 @@ const WinCelebration = ({ playSound, winData }) => {
   const [isStartingNewGame, setIsStartingNewGame] = useState(false);
   const [wasAnonymousGame, setWasAnonymousGame] = useState(!isAuthenticated);
 
+  const getShareUrl = (score, difficulty, rating, hardcoreMode) => {
+    // Create a message to share
+    const message = `I scored ${score} points on Uncrypt${hardcoreMode ? " (Hardcore Mode)" : ""} with a "${rating}" rating! Can you beat my score? Play at`;
+    const url = "https://decodey.game"; // Replace with your actual game URL
+
+    // Encode the message for URL
+    return `https://twitter.com/intent/tweet?text=${encodeURIComponent(message)}&url=${encodeURIComponent(url)}`;
+  };
   // Only set wasAnonymousGame once on mount
   useEffect(() => {
     setWasAnonymousGame(!isAuthenticated);
@@ -89,7 +100,7 @@ const WinCelebration = ({ playSound, winData }) => {
         console.log("Starting new game after win");
         await resetAndStartNewGame(
           settings.longText === true,
-          settings.hardcoreMode === true
+          settings.hardcoreMode === true,
         );
       }
     } catch (error) {
@@ -97,7 +108,12 @@ const WinCelebration = ({ playSound, winData }) => {
     } finally {
       setIsStartingNewGame(false);
     }
-  }, [isStartingNewGame, resetAndStartNewGame, settings.longText, settings.hardcoreMode]);
+  }, [
+    isStartingNewGame,
+    resetAndStartNewGame,
+    settings.longText,
+    settings.hardcoreMode,
+  ]);
 
   // Staged animation sequence - only run once on mount with fixed dependencies
   useEffect(() => {
@@ -139,12 +155,12 @@ const WinCelebration = ({ playSound, winData }) => {
     const timers = [
       setTimeout(() => timeline[1](), 300),
       setTimeout(() => timeline[2](), 600),
-      setTimeout(() => timeline[3](), 1200)
+      setTimeout(() => timeline[3](), 1200),
     ];
 
     // Clean up all timers
     return () => {
-      timers.forEach(timer => clearTimeout(timer));
+      timers.forEach((timer) => clearTimeout(timer));
     };
   }, []); // Empty dependency array ensures this only runs once on mount
 
@@ -238,7 +254,23 @@ const WinCelebration = ({ playSound, winData }) => {
           >
             {isStartingNewGame ? "Starting..." : "Play Again"}
           </button>
-
+          {/* Share on X button */}
+          <button
+            className="share-button"
+            onClick={() =>
+              window.open(
+                getShareUrl(
+                  winData.score,
+                  winData.difficulty || "normal",
+                  winData.rating || "Cryptanalyst",
+                  winData.hardcoreMode || false,
+                ),
+                "_blank",
+              )
+            }
+          >
+            <FaXTwitter /> Share on X
+          </button>
           {/* Simplified score status message */}
           <div className="score-section">
             {!wasAnonymousGame ? (
