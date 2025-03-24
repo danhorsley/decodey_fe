@@ -1,5 +1,5 @@
-// src/hooks/useGameSession.js - Simplified to delegate to gameSessionManager
-import { useState, useCallback } from "react";
+// src/hooks/useGameSession.js - Updated to work with strategy pattern
+import { useCallback } from "react";
 import useSettingsStore from "../stores/settingsStore";
 import {
   initializeGameSession,
@@ -11,11 +11,16 @@ import {
   onGameSessionEvent,
   GameSessionEvents,
   useGameSessionStore,
+
+  // Import new daily challenge functions
+  initializeDailyChallenge,
+  checkDailyCompletion,
+  getDailyStats,
 } from "../services/gameSessionManager";
 
 /**
- * Simplified hook to interact with the game session manager
- * Acts as a thin wrapper around gameSessionManager functionality
+ * Hook to interact with the game session manager
+ * Acts as a clean API for components to use game session functionality
  */
 const useGameSession = () => {
   // Access settings store for game options
@@ -140,6 +145,45 @@ const useGameSession = () => {
     }
   }, [settings?.longText, settings?.hardcoreMode]);
 
+  /**
+   * Initialize a daily challenge
+   * @returns {Promise<Object>} Result
+   */
+  const startDailyChallenge = useCallback(async () => {
+    try {
+      return await initializeDailyChallenge();
+    } catch (error) {
+      console.error("Error in useGameSession.startDailyChallenge:", error);
+      return { success: false, error };
+    }
+  }, []);
+
+  /**
+   * Check if today's daily challenge has been completed
+   * @returns {Promise<Object>} Result with isCompleted flag
+   */
+  const isDailyCompleted = useCallback(async () => {
+    try {
+      return await checkDailyCompletion();
+    } catch (error) {
+      console.error("Error in useGameSession.isDailyCompleted:", error);
+      return { isCompleted: false, error };
+    }
+  }, []);
+
+  /**
+   * Get daily challenge statistics
+   * @returns {Promise<Object>} Daily stats
+   */
+  const getDailyChallengeStats = useCallback(async () => {
+    try {
+      return await getDailyStats();
+    } catch (error) {
+      console.error("Error in useGameSession.getDailyChallengeStats:", error);
+      return { success: false, error };
+    }
+  }, []);
+
   // Return a simplified API
   return {
     // Status
@@ -153,6 +197,11 @@ const useGameSession = () => {
     loginAndInitGame,
     userLogout,
     startNewGame,
+
+    // Daily challenge functions
+    startDailyChallenge,
+    isDailyCompleted,
+    getDailyChallengeStats,
 
     // Events support
     subscribeToEvents: onGameSessionEvent,

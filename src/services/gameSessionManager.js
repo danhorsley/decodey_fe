@@ -1,12 +1,16 @@
-// src/services/gameSessionManager.js - Streamlined to remove redundancy
+// src/services/gameSessionManager.js - Updated to use Strategy Pattern
 import { create } from "zustand";
 import apiService from "./apiService";
 import config from "../config";
 import EventEmitter from "events";
 import useGameStore from "../stores/gameStore";
+import GameStrategyFactory from "../strategies/GameStrategyFactory";
 
 // Centralized event emitter for internal communication
 const eventEmitter = new EventEmitter();
+
+// Create strategy factory with event emitter
+const strategyFactory = new GameStrategyFactory(eventEmitter);
 
 /**
  * Game Session Store - For tracking initialization and session state
@@ -27,142 +31,10 @@ export const useGameSessionStore = create((set) => ({
 }));
 
 /**
- * Simplified auth status check
- * @returns {Object} Auth status
- */
-const checkAuthStatus = () => {
-  const token = config.session.getAuthToken();
-  return {
-    isAuthenticated: !!token,
-  };
-};
-
-/**
- * Start a new game with specified options
- * @param {Object} options Game options
- * @returns {Promise<Object>} Result
- */
-const startGame = async (options = {}) => {
-  try {
-    // Clear any previous game ID
-    localStorage.removeItem("uncrypt-game-id");
-
-    // Check auth status - no need to refresh tokens for anonymous users
-    const token = config.session.getAuthToken();
-    const isAuthenticated = !!token;
-
-    // Log user status - helpful for debugging
-    console.log(
-      `Starting new game as ${isAuthenticated ? "authenticated" : "anonymous"} user`,
-    );
-
-    try {
-      // Start a new game via apiService
-      const gameData = await apiService.startGame(options);
-
-      // Store game ID if available
-      if (gameData?.game_id) {
-        localStorage.setItem("uncrypt-game-id", gameData.game_id);
-      }
-
-      // Update game store directly for efficiency
-      const gameStore = useGameStore.getState();
-      if (typeof gameStore.startGame === "function") {
-        await gameStore.startGame(
-          options.longText || false,
-          options.hardcoreMode || false,
-          true, // Force new
-        );
-      }
-
-      return {
-        success: true,
-        gameData,
-        anonymous: !isAuthenticated, // Flag to indicate this was an anonymous start
-      };
-    } catch (error) {
-      // Special handling for 401 errors - likely expired token
-      if (error.response?.status === 401) {
-        console.log(
-          "401 error starting game - clearing auth and trying anonymous start",
-        );
-
-        // Clear auth tokens
-        localStorage.removeItem("uncrypt-token");
-        localStorage.removeItem("refresh_token");
-        sessionStorage.removeItem("uncrypt-token");
-
-        // Try to start game with anonymous endpoint - using apiService again
-        console.log("Starting anonymous game after 401 error");
-
-        try {
-          // The apiService.startGame method now handles anonymous fallback internally
-          const anonData = await apiService.startGame(options);
-
-          // Store game ID if available
-          if (anonData?.game_id) {
-            localStorage.setItem("uncrypt-game-id", anonData.game_id);
-          }
-
-          // Update game store with anonymous game
-          const gameStore = useGameStore.getState();
-          if (typeof gameStore.startGame === "function") {
-            await gameStore.startGame(
-              options.longText || false,
-              options.hardcoreMode || false,
-              true,
-            );
-          }
-
-          return {
-            success: true,
-            gameData: anonData,
-            anonymous: true,
-            wasAuthError: true,
-          };
-        } catch (anonError) {
-          console.error(
-            "Error starting anonymous game after auth error:",
-            anonError,
-          );
-          // Fall through to default error handling
-          return {
-            success: false,
-            error: anonError,
-            anonymous: true,
-          };
-        }
-      }
-
-      // Default error handling
-      console.error("Error starting game:", error);
-      return {
-        success: false,
-        error,
-      };
-    }
-  } catch (error) {
-    console.error("Error in startGame:", error);
-    return {
-      success: false,
-      error,
-    };
-  }
-};
-
-/**
  * Initialize a new game session
  * Single entry point for game initialization
  * @param {Object} options Game options
- * @returns {Promise<Object>} Initialization result
- */
-// In src/services/gameSessionManager.js
-// Let's update the initialization flow to handle anonymous users better
-
-/**
- * Initialize a new game session
- * Single entry point for game initialization
- * @param {Object} options Game options
+ * @param {boolean} options.daily Whether to initialize a daily challenge
  * @returns {Promise<Object>} Initialization result
  */
 const initializeGameSession = async (options = {}) => {
@@ -178,57 +50,36 @@ const initializeGameSession = async (options = {}) => {
   sessionStore.setInitializing(true);
 
   try {
-    // Check if user is authenticated
-    const { isAuthenticated } = checkAuthStatus();
+    // Get the appropriate strategy for the current user and game type
+    const isDaily = options.daily === true;
+    const strategy = strategyFactory.getStrategy({ daily: isDaily });
+    console.log(
+      `Using ${strategy.constructor.name} for game initialization (${isDaily ? "daily" : "standard"})`,
+    );
 
-    // Fast-track for anonymous users - bypass active game check completely
-    if (!isAuthenticated) {
-      console.log(
-        "Anonymous user detected - fast-tracking to new game, bypassing continue modal",
-      );
+    // Initialize game using the selected strategy
+    let result;
 
-      // Start a new game directly for anonymous users - never show continue modal
-      const result = await startGame(options);
-
-      // Update initialization status
-      if (!result.success) {
-        sessionStore.setInitError(result.error);
-      } else {
-        sessionStore.setInitializing(false);
-      }
-
-      return result;
+    if (isDaily) {
+      // For daily challenges, use the daily-specific method
+      result = await strategy.startDailyChallenge();
+    } else {
+      // For standard games, use the regular initialization
+      result = await strategy.initializeGame(options);
     }
 
-    // If we get here, the user is authenticated - proceed with normal flow
-    // including checking for active games
-
-    try {
-      const activeGameCheck = await apiService.checkActiveGame();
-
-      if (activeGameCheck.has_active_game) {
-        console.log("Active game found for authenticated user");
-
-        // Emit event to show continue game modal, but only for authenticated users
-        eventEmitter.emit("game:active-game-found", {
-          gameStats: activeGameCheck.game_stats,
-        });
-
-        // Don't automatically continue - let the modal handle it
-        sessionStore.setInitializing(false);
-        return {
-          success: true,
-          activeGameFound: true,
-          gameStats: activeGameCheck.game_stats,
-        };
+    // Update game store if initialization succeeded with game data
+    if (result.success && result.gameData) {
+      const gameStore = useGameStore.getState();
+      if (typeof gameStore.startGame === "function") {
+        await gameStore.startGame(
+          options.longText || false,
+          options.hardcoreMode || false,
+          true, // Force new
+          isDaily, // Pass daily flag to game store
+        );
       }
-    } catch (checkError) {
-      console.warn("Error checking for active game:", checkError);
-      // Continue with new game initialization on error
     }
-
-    // No active game found or error in checking, start a new game
-    const result = await startGame(options);
 
     // Update initialization status
     if (!result.success) {
@@ -254,25 +105,21 @@ const initializeGameSession = async (options = {}) => {
  */
 const continueSavedGame = async () => {
   try {
-    // Check if user is authenticated
-    const { isAuthenticated } = checkAuthStatus();
-    if (!isAuthenticated) {
-      return { success: false, reason: "not-authenticated" };
+    // Get the appropriate strategy - must be authenticated for continue
+    const strategy = strategyFactory.getStrategyByType("authenticated");
+
+    // Continue game using strategy
+    const result = await strategy.continueGame();
+
+    // Update game store if continuation succeeded
+    if (result.success && result.gameData) {
+      const gameStore = useGameStore.getState();
+      if (typeof gameStore.continueSavedGame === "function") {
+        await gameStore.continueSavedGame(result.gameData);
+      }
     }
 
-    // Get existing game from API
-    const gameData = await apiService.continueGame();
-
-    // Update game store directly
-    const gameStore = useGameStore.getState();
-    if (typeof gameStore.continueSavedGame === "function") {
-      await gameStore.continueSavedGame(gameData);
-    }
-
-    return {
-      success: true,
-      gameData,
-    };
+    return result;
   } catch (error) {
     console.error("Error continuing saved game:", error);
     return {
@@ -295,18 +142,20 @@ const handleLogin = async (credentials) => {
     // Check for existing game after successful login
     if (loginResult && loginResult.access_token) {
       try {
-        const activeGameCheck = await apiService.checkActiveGame();
+        // After login, we need to use the authenticated strategy
+        const strategy = strategyFactory.getStrategyByType("authenticated");
+        const activeGameCheck = await strategy.checkActiveGame();
 
-        if (activeGameCheck.has_active_game) {
+        if (activeGameCheck.hasActiveGame) {
           // Notify UI about active game
           eventEmitter.emit("game:active-game-found", {
-            gameStats: activeGameCheck.game_stats,
+            gameStats: activeGameCheck.gameStats,
           });
 
           return {
             success: true,
             hasActiveGame: true,
-            activeGameStats: activeGameCheck.game_stats,
+            activeGameStats: activeGameCheck.gameStats,
           };
         }
       } catch (checkError) {
@@ -349,9 +198,24 @@ const loginAndStartGame = async (credentials, gameOptions = {}) => {
       return loginResult;
     }
 
-    // No active game found, start a new one
+    // No active game found, start a new one using authenticated strategy
     console.log("Login successful, no active game found - starting new game");
-    const gameResult = await startGame(gameOptions);
+
+    // Get authenticated strategy explicitly since we just logged in
+    const strategy = strategyFactory.getStrategyByType("authenticated");
+    const gameResult = await strategy.initializeGame(gameOptions);
+
+    // Update game store if needed
+    if (gameResult.success && gameResult.gameData) {
+      const gameStore = useGameStore.getState();
+      if (typeof gameStore.startGame === "function") {
+        await gameStore.startGame(
+          gameOptions.longText || false,
+          gameOptions.hardcoreMode || false,
+          true, // Force new
+        );
+      }
+    }
 
     // Return combined result
     return {
@@ -385,7 +249,9 @@ const handleLogout = async (options = { startAnonymousGame: true }) => {
 
     // Start a new anonymous game if requested
     if (options.startAnonymousGame) {
-      return await startGame(options.gameOptions || {});
+      // After logout, we need the anonymous strategy
+      const strategy = strategyFactory.getStrategyByType("anonymous");
+      return await strategy.initializeGame(options.gameOptions || {});
     }
 
     return { success: true };
@@ -398,7 +264,8 @@ const handleLogout = async (options = { startAnonymousGame: true }) => {
     // Try to start a new game if requested
     if (options.startAnonymousGame) {
       try {
-        return await startGame(options.gameOptions || {});
+        const strategy = strategyFactory.getStrategyByType("anonymous");
+        return await strategy.initializeGame(options.gameOptions || {});
       } catch (gameError) {
         console.error("Failed to start game after logout:", gameError);
       }
@@ -418,15 +285,14 @@ const handleLogout = async (options = { startAnonymousGame: true }) => {
  */
 const abandonAndStartNew = async (options = {}) => {
   try {
-    // Try to abandon via API
-    try {
-      await apiService.abandonAndResetGame();
-    } catch (abandonError) {
-      console.warn("Error abandoning game:", abandonError);
-    }
+    // Get the appropriate strategy for the current user
+    const strategy = strategyFactory.getStrategy();
 
-    // Start new game
-    return await startGame(options);
+    // Abandon current game using strategy
+    await strategy.abandonGame();
+
+    // Start new game using the same strategy
+    return await strategy.initializeGame(options);
   } catch (error) {
     console.error("Error in abandon and start new:", error);
     return {
@@ -452,6 +318,70 @@ const onGameSessionEvent = (event, callback) => {
   return () => eventEmitter.off(event, callback);
 };
 
+/**
+ * Initialize a daily challenge
+ * @returns {Promise<Object>} Result of daily challenge initialization
+ */
+const initializeDailyChallenge = async () => {
+  // Simply call initializeGameSession with daily flag
+  return await initializeGameSession({ daily: true });
+};
+
+/**
+ * Check if today's daily challenge has been completed
+ * @returns {Promise<Object>} Result with isCompleted flag
+ */
+const checkDailyCompletion = async () => {
+  try {
+    // Get the appropriate daily strategy
+    const dailyStrategy = strategyFactory.getDailyStrategy();
+
+    // Check completion status
+    return await dailyStrategy.checkDailyCompletion();
+  } catch (error) {
+    console.error("Error checking daily completion:", error);
+    return {
+      isCompleted: false,
+      error,
+    };
+  }
+};
+
+/**
+ * Get daily challenge statistics
+ * @returns {Promise<Object>} Daily stats
+ */
+const getDailyStats = async () => {
+  try {
+    // Get the appropriate daily strategy
+    const dailyStrategy = strategyFactory.getDailyStrategy();
+
+    // Get daily stats
+    return await dailyStrategy.getDailyStats();
+  } catch (error) {
+    console.error("Error getting daily stats:", error);
+
+    // For anonymous users, return empty stats object
+    if (error.code === "ANONYMOUS_OPERATION") {
+      return {
+        success: false,
+        anonymous: true,
+        dailyStats: {
+          currentStreak: 0,
+          bestStreak: 0,
+          totalCompleted: 0,
+          completionRate: 0,
+        },
+      };
+    }
+
+    return {
+      success: false,
+      error,
+    };
+  }
+};
+
 // Export key functions
 export {
   initializeGameSession,
@@ -461,9 +391,15 @@ export {
   handleLogout,
   abandonAndStartNew,
   onGameSessionEvent,
+
+  // Daily challenge functions
+  initializeDailyChallenge,
+  checkDailyCompletion,
+  getDailyStats,
 };
 
 // Event constants
 export const GameSessionEvents = {
   ACTIVE_GAME_FOUND: "game:active-game-found",
+  DAILY_ALREADY_COMPLETED: "daily:already-completed",
 };

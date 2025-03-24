@@ -61,6 +61,10 @@ const WinCelebration = ({ playSound, winData }) => {
         ? "Score not recorded - anonymous game"
         : "Score recorded successfully!",
     },
+    // Daily challenge properties
+    isDailyChallenge = false,
+    dailyDate = null,
+    dailyStats = null,
   } = winData || {};
 
   // Format time for display
@@ -162,7 +166,7 @@ const WinCelebration = ({ playSound, winData }) => {
     return () => {
       timers.forEach((timer) => clearTimeout(timer));
     };
-  }, []); // Empty dependency array ensures this only runs once on mount
+  }, [playSound]); // Empty dependency array ensures this only runs once on mount
 
   // Force show stats after a delay (backup)
   useEffect(() => {
@@ -173,7 +177,7 @@ const WinCelebration = ({ playSound, winData }) => {
     }, 1000);
 
     return () => clearTimeout(forceShowStatsTimer);
-  }, []);
+  }, [showStats]);
 
   // Clean up animations after some time
   useEffect(() => {
@@ -252,7 +256,11 @@ const WinCelebration = ({ playSound, winData }) => {
             onClick={handlePlayAgain}
             disabled={isStartingNewGame || isResetting}
           >
-            {isStartingNewGame ? "Starting..." : "Play Again"}
+            {isStartingNewGame
+              ? "Starting..."
+              : isDailyChallenge
+                ? "Try Custom Puzzle"
+                : "Play Again"}
           </button>
           {/* Share on X button */}
           <button
@@ -288,6 +296,30 @@ const WinCelebration = ({ playSound, winData }) => {
               </div>
             )}
           </div>
+
+          {/* Daily Challenge Stats (only shown for daily challenges) */}
+          {isDailyChallenge && isAuthenticated && dailyStats && (
+            <div className="daily-stats-section">
+              <h3 className="daily-stats-title">Daily Challenge Streak</h3>
+              <div className="daily-streak">
+                <div className="streak-item">
+                  <span className="streak-label">Current Streak</span>
+                  <span className="streak-value">
+                    {dailyStats.currentStreak || 0}
+                  </span>
+                </div>
+                <div className="streak-item">
+                  <span className="streak-label">Best Streak</span>
+                  <span className="streak-value">
+                    {dailyStats.bestStreak || 0}
+                  </span>
+                </div>
+              </div>
+              <p className="streak-message">
+                Come back tomorrow for a new daily challenge!
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

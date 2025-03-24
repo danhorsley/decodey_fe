@@ -1,4 +1,4 @@
-// src/services/apiService.js - Fully rewritten to use Axios consistently
+// src/services/apiService.js - Updated with daily challenge support
 import axios from "axios";
 import EventEmitter from "events";
 import config from "../config";
@@ -301,10 +301,10 @@ class ApiService {
       if (options.hardcoreMode) {
         queryParams.append("hardcore", "true");
       }
-      console.log("options.hardcoreMode", options.hardcoreMode);
+
       // Construct full URL
       const url = `${endpoint}${queryParams.toString() ? "?" + queryParams.toString() : ""}`;
-      console.log("starting url : ", url);
+
       // Check if we have a token (authenticated user)
       const token = this.getToken();
       const isAnonymousStart = !token;
@@ -364,6 +364,86 @@ class ApiService {
       throw error;
     }
   }
+
+  /**
+   * Start a daily challenge for the given date
+   * @param {string} dateString Date string in YYYY-MM-DD format
+   * @returns {Promise<Object>} Game data
+   */
+  async startDailyChallenge(dateString) {
+    try {
+      // Validate date string
+      if (!dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        throw new Error("Invalid date format. Use YYYY-MM-DD");
+      }
+
+      // Build the URL
+      const url = `/api/daily/${dateString}`;
+
+      // Check if we have a token (authenticated user)
+      const token = this.getToken();
+      const isAnonymousStart = !token;
+
+      // Log the request for debugging
+      console.log(
+        `Starting daily challenge for date: ${dateString}, anonymous: ${isAnonymousStart}`,
+      );
+
+      try {
+        // Make the request through our normal API instance
+        const response = await this.api.get(url);
+
+        // If there's a game ID in the response, store it
+        if (response.data.game_id) {
+          localStorage.setItem("uncrypt-game-id", response.data.game_id);
+          console.log(
+            `Daily challenge started with ID: ${response.data.game_id}`,
+          );
+        }
+
+        return response.data;
+      } catch (error) {
+        // If we get a 401 error, try an anonymous start
+        if (error.response?.status === 401) {
+          console.log(
+            "Auth error in startDailyChallenge, trying anonymous start",
+          );
+
+          // For anonymous start, create a request config without auth headers
+          const config = {
+            url: url,
+            method: "get",
+            baseURL: this.api.defaults.baseURL,
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+            },
+            // Do not include auth headers
+          };
+
+          // Use our API instance but with a custom config that doesn't trigger the auth interceptor
+          const anonResponse = await this.api.request(config);
+
+          // If there's a game ID in the response, store it
+          if (anonResponse.data.game_id) {
+            localStorage.setItem("uncrypt-game-id", anonResponse.data.game_id);
+            console.log(
+              `Anonymous daily challenge started with ID: ${anonResponse.data.game_id}`,
+            );
+          }
+
+          return anonResponse.data;
+        }
+
+        // Rethrow the error if it's not a 401
+        throw error;
+      }
+    } catch (error) {
+      console.error("Error in startDailyChallenge:", error);
+      throw error;
+    }
+  }
+
   /**
    * Submit a guess for the current game
    * @param {string} encryptedLetter The encrypted letter
@@ -502,6 +582,108 @@ class ApiService {
       }
 
       return { has_active_game: false };
+    }
+  }
+
+  /**
+   * Check if the daily challenge for a given date has been completed
+   * @param {string} dateString Date string in YYYY-MM-DD format
+   * @returns {Promise<Object>} Completion status
+   */
+  async checkDailyCompletion(dateString) {
+    try {
+      // Skip check if no token (anonymous users can't have completion history)
+      const token = this.getToken();
+      if (!token) {
+        console.log("No auth token available, no daily completion possible");
+        return {
+          is_completed: false,
+          anonymous: true,
+        };
+      }
+
+      // Validate date string
+      if (!dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        throw new Error("Invalid date format. Use YYYY-MM-DD");
+      }
+
+      // Make request to check for daily completion
+      const response = await this.api.get(
+        `/api/daily-completion/${dateString}`,
+      );
+
+      return {
+        is_completed: response.data.is_completed || false,
+        completion_data: response.data.completion_data || null,
+      };
+    } catch (error) {
+      console.error("Error checking daily completion:", error);
+
+      // For auth errors, don't report as error
+      if (error.response?.status === 401) {
+        return { is_completed: false, auth_error: true };
+      }
+
+      return { is_completed: false, error: true };
+    }
+  }
+
+  /**
+   * Get daily challenge stats for the current user
+   * @returns {Promise<Object>} Daily stats
+   */
+  async getDailyStats() {
+    try {
+      // Skip check if no token (anonymous users can't have stats)
+      const token = this.getToken();
+      if (!token) {
+        console.log("No auth token available, no daily stats possible");
+        return {
+          success: false,
+          anonymous: true,
+          dailyStats: {
+            currentStreak: 0,
+            bestStreak: 0,
+            totalCompleted: 0,
+            completionRate: 0,
+          },
+        };
+      }
+
+      // Make request to get daily stats
+      const response = await this.api.get("/api/daily-stats");
+
+      return {
+        success: true,
+        dailyStats: response.data,
+      };
+    } catch (error) {
+      console.error("Error getting daily stats:", error);
+
+      // For auth errors, don't report as error
+      if (error.response?.status === 401) {
+        return {
+          success: false,
+          auth_error: true,
+          dailyStats: {
+            currentStreak: 0,
+            bestStreak: 0,
+            totalCompleted: 0,
+            completionRate: 0,
+          },
+        };
+      }
+
+      return {
+        success: false,
+        error: true,
+        dailyStats: {
+          currentStreak: 0,
+          bestStreak: 0,
+          totalCompleted: 0,
+          completionRate: 0,
+        },
+      };
     }
   }
 

@@ -36,6 +36,10 @@ const initialState = {
   isHintInProgress: false,
   pendingHints: 0,
   settingsInitialized: false, // Flag to track if settings have been applied
+
+  // Add daily challenge flags
+  isDailyChallenge: false,
+  dailyDate: null, // Will store YYYY-MM-DD string for daily challenge
 };
 
 const useGameStore = create((set, get) => ({
@@ -122,6 +126,7 @@ const useGameStore = create((set, get) => ({
     useLongText = false,
     hardcoreMode = false,
     forceNewGame = false,
+    isDailyChallenge = false, // New parameter
   ) => {
     try {
       // If we're forcing a new game, ensure any previous game is fully abandoned
@@ -154,16 +159,24 @@ const useGameStore = create((set, get) => ({
         hardcoreMode: effectiveHardcoreMode,
         difficulty,
         maxMistakes: maxMistakesValue,
+        isDailyChallenge,
       });
 
-      // Request new game from API - no translation needed now
-      console.log(`Starting game with difficulty: ${difficulty}`);
+      // Request new game from API
+      let data;
 
-      const data = await apiService.startGame({
-        longText: useLongText,
-        difficulty: difficulty, // Both frontend and backend use the same terminology
-        hardcoreMode: effectiveHardcoreMode,
-      });
+      if (isDailyChallenge) {
+        // For daily challenges, use the daily API endpoint
+        const todayDate = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+        data = await apiService.startDailyChallenge(todayDate);
+      } else {
+        // For regular games, use the standard startGame
+        data = await apiService.startGame({
+          longText: useLongText,
+          difficulty: difficulty,
+          hardcoreMode: effectiveHardcoreMode,
+        });
+      }
 
       console.log("Game start response received");
 
@@ -218,16 +231,18 @@ const useGameStore = create((set, get) => ({
         localStorage.setItem("uncrypt-game-id", data.game_id);
 
         // If game_id contains difficulty info, log it for debugging
-        // Game IDs have format: "{difficulty}-{uuid}"
+        // Game IDs have format: "{difficulty}-{daily/custom}-{uuid}"
         try {
-          const gameDifficultyPrefix = data.game_id.split("-")[0];
-          if (gameDifficultyPrefix) {
+          const parts = data.game_id.split("-");
+          if (parts.length >= 3) {
+            const gameDifficultyPrefix = parts[0];
+            const gameTypePrefix = parts[1]; // Could be "daily" or "custom"
             console.log(
-              `Game returned with difficulty: ${gameDifficultyPrefix}`,
+              `Game returned with difficulty: ${gameDifficultyPrefix}, type: ${gameTypePrefix}`,
             );
           }
         } catch (e) {
-          console.warn("Could not parse difficulty from game_id:", e);
+          console.warn("Could not parse game_id:", e);
         }
       }
 
@@ -258,6 +273,12 @@ const useGameStore = create((set, get) => ({
         hasLost: false,
         winData: null,
         isResetting: false,
+
+        // Set daily challenge flags
+        isDailyChallenge: isDailyChallenge,
+        dailyDate: isDailyChallenge
+          ? new Date().toISOString().split("T")[0]
+          : null,
       };
 
       // Update state in a single operation
@@ -275,32 +296,56 @@ const useGameStore = create((set, get) => ({
   },
 
   // Continue a saved game
-  continueSavedGame: async () => {
+  continueSavedGame: async (gameData) => {
     try {
       console.log("Attempting to continue saved game in store");
 
-      // Check for auth token
-      const token = config.session.getAuthToken();
-      if (!token) {
-        console.warn("Cannot continue saved game - no auth token found");
-        return false;
+      // Check if this is a direct call with game data already provided
+      if (!gameData) {
+        // Check for auth token
+        const token = config.session.getAuthToken();
+        if (!token) {
+          console.warn("Cannot continue saved game - no auth token found");
+          return false;
+        }
+
+        // Get game state from API
+        const response = await apiService.api.get("/api/continue-game");
+        console.log("Continue game API response:", response.data);
+
+        if (!response.data || response.data.error) {
+          console.warn("Error or empty response from continue-game endpoint");
+          return false;
+        }
+
+        gameData = response.data;
       }
 
-      // Get game state from API
-      const response = await apiService.api.get("/api/continue-game");
-      console.log("Continue game API response:", response.data);
+      // Check if this is a daily challenge
+      let isDailyChallenge = false; // Default to false
+      let dailyDate = null;
 
-      if (!response.data || response.data.error) {
-        console.warn("Error or empty response from continue-game endpoint");
-        return false;
+      // Parse game_id to check if it's a daily challenge
+      if (gameData.game_id) {
+        const parts = gameData.game_id.split("-");
+        if (parts.length >= 3 && parts[1] === "daily") {
+          console.log("Continuing a daily challenge game");
+          isDailyChallenge = true;
+
+          // Try to extract date from game data if available
+          if (gameData.daily_date) {
+            dailyDate = gameData.daily_date;
+          } else {
+            // Otherwise use today's date as fallback
+            dailyDate = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+          }
+        }
       }
-
-      const game = response.data;
 
       // Process game data for hardcore mode if needed
       const currentHardcoreMode = get().hardcoreMode;
-      let processedEncrypted = game.encrypted_paragraph || "";
-      let processedDisplay = game.display || "";
+      let processedEncrypted = gameData.encrypted_paragraph || "";
+      let processedDisplay = gameData.display || "";
 
       if (currentHardcoreMode) {
         processedEncrypted = processedEncrypted.replace(/[^A-Z]/g, "");
@@ -324,16 +369,16 @@ const useGameStore = create((set, get) => ({
         );
 
         // Try to fix if possible
-        if (game.encrypted_paragraph && game.display) {
+        if (gameData.encrypted_paragraph && gameData.display) {
           console.log("Attempting to fix length mismatch");
           // Re-process from original data
           processedEncrypted = currentHardcoreMode
-            ? game.encrypted_paragraph.replace(/[^A-Z]/g, "")
-            : game.encrypted_paragraph;
+            ? gameData.encrypted_paragraph.replace(/[^A-Z]/g, "")
+            : gameData.encrypted_paragraph;
 
           processedDisplay = currentHardcoreMode
-            ? game.display.replace(/[^A-Z█]/g, "")
-            : game.display;
+            ? gameData.display.replace(/[^A-Z█]/g, "")
+            : gameData.display;
         }
 
         // Verify fix worked
@@ -344,33 +389,39 @@ const useGameStore = create((set, get) => ({
       }
 
       // Construct proper guessedMappings with immutability
-      const correctlyGuessed = Array.isArray(game.correctly_guessed)
-        ? [...game.correctly_guessed]
+      const correctlyGuessed = Array.isArray(gameData.correctly_guessed)
+        ? [...gameData.correctly_guessed]
         : [];
 
       const guessedMappings = {};
 
       // If game has guessedMappings, use that
-      if (game.guessedMappings && typeof game.guessedMappings === "object") {
+      if (
+        gameData.guessedMappings &&
+        typeof gameData.guessedMappings === "object"
+      ) {
         // Create a fresh copy for immutability
-        Object.entries(game.guessedMappings).forEach(([key, value]) => {
+        Object.entries(gameData.guessedMappings).forEach(([key, value]) => {
           guessedMappings[key] = value;
         });
       }
       // Otherwise reconstruct from correctly_guessed and reverse_mapping
-      else if (game.reverse_mapping && correctlyGuessed.length > 0) {
+      else if (gameData.reverse_mapping && correctlyGuessed.length > 0) {
         correctlyGuessed.forEach((encryptedLetter) => {
-          if (encryptedLetter in game.reverse_mapping) {
+          if (encryptedLetter in gameData.reverse_mapping) {
             guessedMappings[encryptedLetter] =
-              game.reverse_mapping[encryptedLetter];
+              gameData.reverse_mapping[encryptedLetter];
           }
         });
       }
 
       // Create a new letterFrequency object with immutability
       const letterFrequency = {};
-      if (game.letter_frequency && typeof game.letter_frequency === "object") {
-        Object.entries(game.letter_frequency).forEach(([key, value]) => {
+      if (
+        gameData.letter_frequency &&
+        typeof gameData.letter_frequency === "object"
+      ) {
+        Object.entries(gameData.letter_frequency).forEach(([key, value]) => {
           letterFrequency[key] = value;
         });
       } else {
@@ -382,13 +433,12 @@ const useGameStore = create((set, get) => ({
       }
 
       // Store game ID
-      if (game.game_id) {
-        localStorage.setItem("uncrypt-game-id", game.game_id);
+      if (gameData.game_id) {
+        localStorage.setItem("uncrypt-game-id", gameData.game_id);
       }
 
       // Determine difficulty and max mistakes
-      // Note: Saved games have their own difficulty, which may differ from current settings
-      const difficulty = game.difficulty || "easy";
+      const difficulty = gameData.difficulty || "easy";
 
       // Get max mistakes - now terminology is aligned
       const maxMistakesValue = MAX_MISTAKES_MAP[difficulty] || 8;
@@ -398,30 +448,30 @@ const useGameStore = create((set, get) => ({
       );
 
       // Determine game state (won/lost)
-      const hasWon = game.hasWon || game.hasWon === true;
-      const hasLost = game.mistakes >= maxMistakesValue;
+      const hasWon = gameData.hasWon || gameData.has_won === true;
+      const hasLost = gameData.mistakes >= maxMistakesValue;
 
       // Create a complete new state object for immutability
       const newGameState = {
         // Core game data
         encrypted: processedEncrypted,
         display: processedDisplay,
-        mistakes: game.mistakes || 0,
+        mistakes: gameData.mistakes || 0,
 
         // Derived/processed data with proper immutability
         correctlyGuessed: correctlyGuessed,
         guessedMappings: guessedMappings,
         letterFrequency: letterFrequency,
-        originalLetters: Array.isArray(game.original_letters)
-          ? [...game.original_letters]
+        originalLetters: Array.isArray(gameData.original_letters)
+          ? [...gameData.original_letters]
           : [],
 
         // Game metadata
-        gameId: game.game_id,
-        startTime: Date.now() - (game.time_spent || 0) * 1000,
+        gameId: gameData.game_id,
+        startTime: Date.now() - (gameData.time_spent || 0) * 1000,
 
         // Game configuration
-        hardcoreMode: game.hardcoreMode || currentHardcoreMode,
+        hardcoreMode: gameData.hardcoreMode || currentHardcoreMode,
         difficulty: difficulty, // Now using consistent terminology
         maxMistakes: maxMistakesValue,
 
@@ -433,9 +483,13 @@ const useGameStore = create((set, get) => ({
         hasGameStarted: true,
         hasWon: hasWon,
         hasLost: hasLost,
-        winData: game.winData || null,
+        winData: gameData.winData || null,
         isResetting: false,
         stateInitialized: true, // Flag to indicate state is properly initialized
+
+        // Daily challenge flags
+        isDailyChallenge: isDailyChallenge,
+        dailyDate: dailyDate,
       };
 
       // Replace entire game state at once for clean update
@@ -639,11 +693,7 @@ const useGameStore = create((set, get) => ({
       return { success: false, error: error.message };
     }
   },
-  /**
-   * Verify win status and get comprehensive win data from backend
-   * This is called when frontend detects a potential win
-   * @returns {Promise<Object>} Win verification result
-   */
+
   /**
    * Verify win status and get comprehensive win data from backend
    * This is called when frontend detects a potential win
@@ -669,6 +719,11 @@ const useGameStore = create((set, get) => ({
         // Extract win data from the response - handle multiple possible field names
         const winData = gameStatus.win_data || gameStatus.winData || {};
         const uniqueLettersSolved = new Set(get().correctlyGuessed || []).size;
+
+        // Get daily challenge status
+        const isDailyChallenge = get().isDailyChallenge;
+        const dailyDate = get().dailyDate;
+
         // Create complete win data structure with normalized field names
         const formattedWinData = {
           score: winData.score || 0,
@@ -694,6 +749,11 @@ const useGameStore = create((set, get) => ({
               ? "Score recorded successfully!"
               : "Score not recorded - anonymous game",
           },
+
+          // Add daily challenge info to win data
+          isDailyChallenge: isDailyChallenge,
+          dailyDate: dailyDate,
+          dailyStats: winData.dailyStats || null,
         };
 
         console.log("Formatted win data:", formattedWinData);
@@ -729,6 +789,7 @@ const useGameStore = create((set, get) => ({
       return { verified: false, error };
     }
   },
+
   // Letter selection
   handleEncryptedSelect: (letter) => {
     const state = get();
@@ -803,10 +864,6 @@ const useGameStore = create((set, get) => ({
       return false;
     }
   },
-
-  // Reset and start new game
-  // In src/stores/gameStore.js
-  // Update resetAndStartNewGame to handle anonymous users better
 
   // Reset and start new game
   resetAndStartNewGame: async (useLongText = false, hardcoreMode = false) => {

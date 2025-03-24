@@ -1,8 +1,8 @@
 // src/strategies/GameStrategyFactory.js
-import AnonymousGameStrategy from './AnonymousGameStrategy';
-import AuthenticatedGameStrategy from './AuthenticatedGameStrategy';
-import AnonymousDailyStrategy from './AnonymousDailyStrategy';
-import AuthenticatedDailyStrategy from './AuthenticatedDailyStrategy';
+import AnonymousGameStrategy from "./AnonymousGameStrategy";
+import AuthenticatedGameStrategy from "./AuthenticatedGameStrategy";
+import AnonymousDailyStrategy from "./AnonymousDailyStrategy";
+import AuthenticatedDailyStrategy from "./AuthenticatedDailyStrategy";
 
 /**
  * Factory class for creating appropriate game strategy instances
@@ -20,7 +20,7 @@ class GameStrategyFactory {
 
       // Daily challenge strategies
       dailyAnonymous: new AnonymousDailyStrategy(),
-      dailyAuthenticated: new AuthenticatedDailyStrategy(events)
+      dailyAuthenticated: new AuthenticatedDailyStrategy(events),
     };
   }
 
@@ -35,13 +35,13 @@ class GameStrategyFactory {
     const isDaily = options.daily === true;
 
     if (isDaily) {
-      return isAuthenticated ? 
-        this.strategies.dailyAuthenticated : 
-        this.strategies.dailyAnonymous;
+      return isAuthenticated
+        ? this.strategies.dailyAuthenticated
+        : this.strategies.dailyAnonymous;
     } else {
-      return isAuthenticated ? 
-        this.strategies.authenticated : 
-        this.strategies.anonymous;
+      return isAuthenticated
+        ? this.strategies.authenticated
+        : this.strategies.anonymous;
     }
   }
 
@@ -65,9 +65,9 @@ class GameStrategyFactory {
    */
   getDailyStrategy() {
     const isAuthenticated = this._isUserAuthenticated();
-    return isAuthenticated ? 
-      this.strategies.dailyAuthenticated : 
-      this.strategies.dailyAnonymous;
+    return isAuthenticated
+      ? this.strategies.dailyAuthenticated
+      : this.strategies.dailyAnonymous;
   }
 
   /**
@@ -77,12 +77,11 @@ class GameStrategyFactory {
    */
   _isUserAuthenticated() {
     // Check for auth token in localStorage or sessionStorage
-    const token = localStorage.getItem('uncrypt-token') || 
-                 sessionStorage.getItem('uncrypt-token');
+    const token =
+      localStorage.getItem("uncrypt-token") ||
+      sessionStorage.getItem("uncrypt-token");
     return !!token;
   }
 }
-
-export default GameStrategyFactory;
 
 export default GameStrategyFactory;

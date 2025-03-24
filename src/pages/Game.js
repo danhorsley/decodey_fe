@@ -1,7 +1,10 @@
 // src/pages/Game.js - Simplified with initialization delegation
 import React, { useCallback, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { FaTrophy } from "react-icons/fa";
+
+// Import daily challenge button
+import DailyChallengeButton from "../components/DailyChallengeButton";
 
 // Simplified imports
 import useGameStore from "../stores/gameStore";
@@ -45,8 +48,15 @@ function Game() {
   // Navigation hook
   const navigate = useNavigate();
 
+  // Location hook to get state from routing
+  const location = useLocation();
+
+  // Check if this is a daily challenge (passed from DailyChallenge component)
+  const isDailyFromRoute = location.state?.dailyChallenge === true;
+
   // Get initialization status from gameSession hook
-  const { isInitializing, initializeGame, lastError } = useGameSession();
+  const { isInitializing, initializeGame, startDailyChallenge, lastError } =
+    useGameSession();
   // Get isResetting from gameStore to properly handle transitions
   const isResetting = useGameStore((state) => state.isResetting);
 
@@ -92,13 +102,24 @@ function Game() {
   // Hint-specific state - moved to top level
   const isHintInProgress = useGameStore((state) => state.isHintInProgress);
   const pendingHints = useGameStore((state) => state.pendingHints);
+
+  // Game flag states
+  const hardcoreMode = useGameStore((state) => state.hardcoreMode);
+  const isDailyChallenge = useGameStore((state) => state.isDailyChallenge);
+
   // Auto-initialize on first render - the component calls initializeGame
   // once on mount via React.useEffect()
   React.useEffect(() => {
-    // Immediately invoke the initialization, assuming the hook takes care of
-    // preventing duplicate initializations
-    initializeGame();
-  }, [initializeGame]);
+    // Check if this is a daily challenge from route state
+    if (isDailyFromRoute) {
+      console.log("Initializing daily challenge from route");
+      startDailyChallenge();
+    } else {
+      // Standard game initialization
+      console.log("Initializing standard game");
+      initializeGame();
+    }
+  }, [initializeGame, startDailyChallenge, isDailyFromRoute]);
 
   // ===== GAME INTERACTION HANDLERS =====
   // Handle encrypted letter selection
@@ -192,7 +213,7 @@ function Game() {
 
   const effectiveMistakes = mistakes + pendingHints;
   const remainingMistakes = maxMistakes - effectiveMistakes;
-  const hardcoreMode = useGameStore((state) => state.hardcoreMode);
+
   const disableHint =
     !isGameActive || isHintInProgress || remainingMistakes <= 1;
   // Setup keyboard input with more explicit callbacks
@@ -247,7 +268,9 @@ function Game() {
       <div
         className={`App-container ${settings?.theme === "dark" ? "dark-theme" : "light-theme"}`}
       >
-        <HeaderControls title="uncrypt" />
+        <HeaderControls
+          title={isDailyChallenge ? "Daily Challenge" : "uncrypt"}
+        />
         <div
           className={`loading-container ${settings?.theme === "dark" ? "dark-theme" : "light-theme"}`}
         >
@@ -272,7 +295,9 @@ function Game() {
       <div
         className={`App-container ${settings?.theme === "dark" ? "dark-theme" : "light-theme"}`}
       >
-        <HeaderControls title="uncrypt" />
+        <HeaderControls
+          title={isDailyChallenge ? "Daily Challenge" : "uncrypt"}
+        />
         <div
           className={`error-container ${settings?.theme === "dark" ? "dark-theme" : "light-theme"}`}
         >
@@ -292,7 +317,16 @@ function Game() {
 
   // ===== UI COMPONENTS =====
   // Game header component
-  const renderGameHeader = () => <HeaderControls title="uncrypt" />;
+  const renderGameHeader = () => (
+    <>
+      <HeaderControls
+        title={isDailyChallenge ? "Daily Challenge" : "uncrypt"}
+      />
+      {isDailyChallenge && (
+        <div className="daily-challenge-indicator">DAILY CHALLENGE</div>
+      )}
+    </>
+  );
 
   // Text container component
   const renderTextContainer = () => (
@@ -387,13 +421,18 @@ function Game() {
 
   // Leaderboard button
   const renderLeaderboardButton = () => (
-    <button
-      className="leaderboard-button-fixed"
-      onClick={() => navigate("/leaderboard")}
-      aria-label="Leaderboard"
-    >
-      <FaTrophy size={16} />
-    </button>
+    <>
+      <button
+        className="leaderboard-button-fixed"
+        onClick={() => navigate("/leaderboard")}
+        aria-label="Leaderboard"
+      >
+        <FaTrophy size={16} />
+      </button>
+
+      {/* Don't show daily challenge button on Daily Challenge */}
+      {!isDailyChallenge && <DailyChallengeButton />}
+    </>
   );
 
   // ===== MAIN RENDER =====

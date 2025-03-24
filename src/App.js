@@ -1,5 +1,5 @@
-// src/App.js
-import React, { useEffect, Suspense, lazy } from "react";
+// src/App.js (Updated with Daily Challenge)
+import React, { Suspense, lazy } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -16,7 +16,8 @@ import NotFound from "./pages/NotFound";
 const Game = lazy(() => import("./pages/Game"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const Privacy = lazy(() => import("./pages/Privacy"));
-const Scoring = lazy(() => import("./pages/Scoring")); // Add Scoring page
+const Scoring = lazy(() => import("./pages/Scoring"));
+const DailyChallenge = lazy(() => import("./pages/DailyChallenge")); // Add Daily Challenge
 
 // Simple loading component
 const Loading = () => (
@@ -44,10 +45,6 @@ function GlobalUIElements() {
 
 // Main App component using Router
 function App() {
-  // No need to initialize any stores manually
-  // The game session manager is used by the components that need it
-  // and it initializes itself on first use
-
   return (
     <Router>
       {/* ModalManager wraps everything to provide modal functionality */}
@@ -58,8 +55,9 @@ function App() {
             <Route path="/" element={<Game />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/privacy" element={<Privacy />} />
-            <Route path="/scoring" element={<Scoring />} />{" "}
-            {/* Add Scoring route */}
+            <Route path="/scoring" element={<Scoring />} />
+            <Route path="/daily" element={<DailyChallenge />} />{" "}
+            {/* Add Daily Challenge route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
