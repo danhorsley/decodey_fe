@@ -93,18 +93,20 @@ const WinCelebration = ({ playSound, winData }) => {
   }, [display]);
 
   // Improved Play Again handler
+  // In WinCelebration.js - handlePlayAgain function
   const handlePlayAgain = useCallback(async () => {
     // Prevent multiple clicks
     if (isStartingNewGame) return;
     setIsStartingNewGame(true);
 
     try {
-      // Start a new game with the current settings
+      // Start a new game with the current settings and explicit custom game flag
       if (typeof resetAndStartNewGame === "function") {
-        console.log("Starting new game after win");
+        console.log("Starting new custom game after win");
         await resetAndStartNewGame(
           settings.longText === true,
           settings.hardcoreMode === true,
+          { customGameRequested: true }, // Add this flag
         );
       }
     } catch (error) {

@@ -866,7 +866,11 @@ const useGameStore = create((set, get) => ({
   },
 
   // Reset and start new game
-  resetAndStartNewGame: async (useLongText = false, hardcoreMode = false) => {
+  resetAndStartNewGame: async (
+    useLongText = false,
+    hardcoreMode = false,
+    options = {},
+  ) => {
     try {
       // Set resetting flag first, before any async operations
       set({ isResetting: true });
@@ -922,6 +926,8 @@ const useGameStore = create((set, get) => ({
         useLongText,
         latestSettings?.hardcoreMode || hardcoreMode,
         true,
+        options.isDaily || false,
+        { customGameRequested: options.customGameRequested }, // Pass through the flag
       );
 
       // Only clear resetting flag after game has fully loaded

@@ -52,7 +52,11 @@ const initializeGameSession = async (options = {}) => {
   try {
     // Get the appropriate strategy for the current user and game type
     const isDaily = options.daily === true;
-    const strategy = strategyFactory.getStrategy({ daily: isDaily });
+    const customGameRequested = options.customGameRequested === true;
+    const strategy = strategyFactory.getStrategy({
+      daily: isDaily,
+      customGameRequested: customGameRequested,
+    });
     console.log(
       `Using ${strategy.constructor.name} for game initialization (${isDaily ? "daily" : "standard"})`,
     );

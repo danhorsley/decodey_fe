@@ -391,6 +391,7 @@ class ApiService {
 
       try {
         // Make the request through our normal API instance
+        console.log("***url daily***", url);
         const response = await this.api.get(url);
 
         // If there's a game ID in the response, store it
@@ -420,7 +421,7 @@ class ApiService {
             },
             // Do not include auth headers
           };
-
+          console.log("***config***", config);
           // Use our API instance but with a custom config that doesn't trigger the auth interceptor
           const anonResponse = await this.api.request(config);
 
