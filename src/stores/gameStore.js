@@ -267,8 +267,10 @@ const useGameStore = create((set, get) => ({
         gameId: data.game_id,
         hasGameStarted: true,
         hardcoreMode: effectiveHardcoreMode,
-        difficulty, // Use our synced difficulty
-        maxMistakes: maxMistakesValue, // Use our synced maxMistakes
+        // Override difficulty for daily challenges
+        difficulty: isDailyChallenge ? "easy" : difficulty,
+        // Override maxMistakes for daily challenges
+        maxMistakes: isDailyChallenge ? 8 : maxMistakesValue,
         hasWon: false,
         hasLost: false,
         winData: null,

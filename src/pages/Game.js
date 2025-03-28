@@ -15,7 +15,7 @@ import useUIStore from "../stores/uiStore";
 import useSound from "../services/WebAudioSoundManager";
 import useKeyboardInput from "../hooks/KeyboardController";
 import { formatAlternatingLines } from "../utils/utils";
-
+import config from "../config";
 // Component imports
 import HeaderControls from "../components/HeaderControls";
 import MobileLayout from "../components/layout/MobileLayout";
@@ -110,13 +110,15 @@ function Game() {
 
   // Auto-initialize on first render - the component calls initializeGame
   // once on mount via React.useEffect()
-  React.useEffect(() => {
-    // Check if this is a daily challenge from route state
-    if (isDailyFromRoute) {
-      console.log("Initializing daily challenge from route");
+  useEffect(() => {
+    // Check if this is a daily challenge from route state or anonymous user
+    const isAnonymous = !config.session.getAuthToken();
+
+    if (isDailyFromRoute || isAnonymous) {
+      console.log("Initializing daily challenge");
       startDailyChallenge();
     } else {
-      // Standard game initialization
+      // Standard game initialization for authenticated users
       console.log("Initializing standard game");
       initializeGame();
     }
