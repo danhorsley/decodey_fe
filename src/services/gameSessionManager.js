@@ -64,7 +64,7 @@ const initializeGameSession = async (options = {}) => {
     // Initialize game using the selected strategy
     let result;
 
-    if (isDaily) {
+    if (isDaily || strategy.constructor.name.includes("Daily")) {
       // For daily challenges, use the daily-specific method
       result = await strategy.startDailyChallenge();
     } else {

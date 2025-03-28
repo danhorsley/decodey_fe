@@ -33,7 +33,7 @@ class GameStrategyFactory {
   getStrategy(options = {}) {
     const isAuthenticated = this._isUserAuthenticated();
     const isDaily = options.daily === true;
-    const customGameExplicitlyRequested = options.customGameRequested === true;
+    const customGameExplicitlyRequested = options.customGameRequested === false;
 
     // For anonymous users who haven't explicitly requested a custom game, always use daily strategy
     if (!isAuthenticated && !customGameExplicitlyRequested) {
