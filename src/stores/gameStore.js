@@ -868,6 +868,8 @@ const useGameStore = create((set, get) => ({
   },
 
   // Reset and start new game
+  // In gameStore.js, modify resetAndStartNewGame to include more explicit data handling:
+
   resetAndStartNewGame: async (
     useLongText = false,
     hardcoreMode = false,
@@ -877,68 +879,95 @@ const useGameStore = create((set, get) => ({
       // Set resetting flag first, before any async operations
       set({ isResetting: true });
 
-      // Check if the user is anonymous
-      const token = config.session.getAuthToken();
-      const isAnonymous = !token;
+      // First abandon the current game
+      await get().abandonGame();
 
-      // For anonymous users, skip the abandonment step entirely
-      if (!isAnonymous) {
-        try {
-          await get().abandonGame();
-        } catch (err) {
-          console.warn("Abandonment before new game failed:", err);
-          // Continue anyway - we'll still try to start a new game
-        }
-      } else {
-        console.log("Anonymous user - skipping server abandonment");
-      }
-
-      // Clear local storage ID regardless of user type
+      // Clear local storage ID
       localStorage.removeItem("uncrypt-game-id");
 
-      // Get the latest settings before starting a new game
-      const latestSettings = useSettingsStore.getState().settings;
-      const currentDifficulty = latestSettings?.difficulty || "medium";
-
-      // Make sure it's a valid difficulty
-      const validatedDifficulty = ["easy", "medium", "hard"].includes(
-        currentDifficulty,
-      )
-        ? currentDifficulty
-        : "medium";
-
-      // Reset other state but keep isResetting true and use latest settings
+      // Reset state but keep isResetting flag
       set((state) => ({
         ...initialState,
-        isResetting: true, // Maintain resetting flag
-        isHintInProgress: false,
-        pendingHints: 0,
+        isResetting: true,
         // Use latest settings from settingsStore
-        difficulty: validatedDifficulty,
-        maxMistakes: MAX_MISTAKES_MAP[validatedDifficulty] || 5,
-        hardcoreMode: latestSettings?.hardcoreMode || hardcoreMode, // Use latest or parameter
+        difficulty: state.difficulty,
+        maxMistakes: state.maxMistakes,
+        hardcoreMode: state.hardcoreMode,
         settingsInitialized: true,
       }));
 
-      // Wait to ensure state updates have time to propagate
+      // Add a small delay to ensure state changes propagate
       await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // Start new game with latest settings
-      const result = await get().startGame(
-        useLongText,
-        latestSettings?.hardcoreMode || hardcoreMode,
-        true,
-        options.isDaily || false,
-        { customGameRequested: options.customGameRequested }, // Pass through the flag
-      );
+      // Make direct API call to start game rather than using startGame method
+      try {
+        const latestSettings = useSettingsStore.getState().settings;
 
-      // Only clear resetting flag after game has fully loaded
-      set({ isResetting: false });
+        // Directly call API service
+        const gameData = await apiService.startGame({
+          longText: useLongText,
+          difficulty: latestSettings?.difficulty || "medium",
+          hardcoreMode: latestSettings?.hardcoreMode || hardcoreMode,
+        });
 
-      return result;
+        if (gameData && gameData.encrypted_paragraph && gameData.display) {
+          // Process data for hardcore mode if needed
+          const effectiveHardcoreMode =
+            latestSettings?.hardcoreMode || hardcoreMode;
+          let processedEncrypted = effectiveHardcoreMode
+            ? gameData.encrypted_paragraph.replace(/[^A-Z]/g, "")
+            : gameData.encrypted_paragraph;
+
+          let processedDisplay = effectiveHardcoreMode
+            ? gameData.display.replace(/[^A-Z█]/g, "")
+            : gameData.display;
+
+          // Store game ID if present
+          if (gameData.game_id) {
+            localStorage.setItem("uncrypt-game-id", gameData.game_id);
+          }
+
+          // Explicitly update game state with new game data
+          set({
+            encrypted: processedEncrypted,
+            display: processedDisplay,
+            mistakes: gameData.mistakes || 0,
+            correctlyGuessed: Array.isArray(gameData.correctly_guessed)
+              ? [...gameData.correctly_guessed]
+              : [],
+            letterFrequency: gameData.letter_frequency
+              ? { ...gameData.letter_frequency }
+              : {},
+            originalLetters: Array.isArray(gameData.original_letters)
+              ? [...gameData.original_letters]
+              : [],
+            startTime: Date.now(),
+            gameId: gameData.game_id,
+            hasGameStarted: true,
+            hardcoreMode: effectiveHardcoreMode,
+            difficulty: latestSettings?.difficulty || "medium",
+            maxMistakes:
+              MAX_MISTAKES_MAP[latestSettings?.difficulty || "medium"] || 5,
+            hasWon: false,
+            hasLost: false,
+            winData: null,
+            isResetting: false,
+            isDailyChallenge: options.isDaily || false,
+          });
+
+          console.log("Game state successfully updated with new game data");
+          return true;
+        } else {
+          throw new Error("Invalid game data received");
+        }
+      } catch (error) {
+        console.error("Error starting new game directly:", error);
+        // Clear resetting flag on error
+        set({ isResetting: false });
+        return false;
+      }
     } catch (error) {
       console.error("Error in resetAndStartNewGame:", error);
-
       // Always clear resetting flag on error
       set({ isResetting: false });
       return false;

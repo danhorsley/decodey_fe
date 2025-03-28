@@ -179,9 +179,18 @@ function Game() {
 
   // Handle retry/restart game
   const handleStartNewGame = useCallback(() => {
-    // Force a new game initialization
-    initializeGame(true);
-  }, [initializeGame]);
+    // Use the more comprehensive reset and start function from gameStore
+    const resetAndStart = useGameStore.getState().resetAndStartNewGame;
+    if (typeof resetAndStart === "function") {
+      // Use settings from the store
+      const settingsStore = useSettingsStore.getState();
+      resetAndStart(
+        settingsStore.settings?.longText || false,
+        settingsStore.settings?.hardcoreMode || false,
+        { forceRender: true }, // Add a flag we can check for forcing updates
+      );
+    }
+  }, []);
 
   // ===== DERIVED STATE =====
   // Determine if game is active - computed value
