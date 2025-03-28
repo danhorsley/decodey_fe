@@ -10,6 +10,7 @@ import DailyChallengeButton from "../components/DailyChallengeButton";
 import useGameStore from "../stores/gameStore";
 import useGameSession from "../hooks/useGameSession";
 import useSettingsStore from "../stores/settingsStore";
+import useAuthStore from "../stores/authStore";
 import useUIStore from "../stores/uiStore";
 import useSound from "../services/WebAudioSoundManager";
 import useKeyboardInput from "../hooks/KeyboardController";
@@ -47,7 +48,7 @@ const LetterCell = React.memo(
 function Game() {
   // Navigation hook
   const navigate = useNavigate();
-
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   // Location hook to get state from routing
   const location = useLocation();
 
@@ -420,20 +421,27 @@ function Game() {
   };
 
   // Leaderboard button
-  const renderLeaderboardButton = () => (
-    <>
-      <button
-        className="leaderboard-button-fixed"
-        onClick={() => navigate("/leaderboard")}
-        aria-label="Leaderboard"
-      >
-        <FaTrophy size={16} />
-      </button>
+  const renderLeaderboardButton = () => {
+    // If not authenticated, return null
+    if (!isAuthenticated) {
+      return null;
+    }
 
-      {/* Don't show daily challenge button on Daily Challenge */}
-      {!isDailyChallenge && <DailyChallengeButton />}
-    </>
-  );
+    return (
+      <>
+        <button
+          className="leaderboard-button-fixed"
+          onClick={() => navigate("/leaderboard")}
+          aria-label="Leaderboard"
+        >
+          <FaTrophy size={16} />
+        </button>
+
+        {/* Don't show daily challenge button on Daily Challenge */}
+        {!isDailyChallenge && <DailyChallengeButton />}
+      </>
+    );
+  };
 
   // ===== MAIN RENDER =====
   // Use mobile layout if needed

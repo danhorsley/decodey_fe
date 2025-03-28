@@ -292,13 +292,38 @@ const abandonAndStartNew = async (options = {}) => {
     // Get the appropriate strategy for the current user
     const strategy = strategyFactory.getStrategy();
 
-    // Abandon current game using strategy
-    await strategy.abandonGame();
+    // Safety check - only try to abandon if the method exists
+    if (strategy && typeof strategy.abandonGame === "function") {
+      try {
+        // Abandon current game using strategy
+        await strategy.abandonGame();
+      } catch (abandonError) {
+        console.warn("Error abandoning game:", abandonError);
+        // Fallback: At minimum clear the game ID from localStorage
+        localStorage.removeItem("uncrypt-game-id");
+      }
+    } else {
+      // Fallback for when the strategy doesn't implement abandonGame
+      console.warn("Strategy missing abandonGame method, using basic cleanup");
+      localStorage.removeItem("uncrypt-game-id");
+    }
 
     // Start new game using the same strategy
-    return await strategy.initializeGame(options);
+    // This should work as long as initializeGame is implemented
+    if (strategy && typeof strategy.initializeGame === "function") {
+      return await strategy.initializeGame(options);
+    } else {
+      // Last resort fallback - use apiService directly
+      console.warn(
+        "Strategy missing initializeGame method, using API directly",
+      );
+      const gameData = await apiService.startGame(options);
+      return { success: !!gameData, gameData };
+    }
   } catch (error) {
     console.error("Error in abandon and start new:", error);
+    // Last resort cleanup
+    localStorage.removeItem("uncrypt-game-id");
     return {
       success: false,
       error,
