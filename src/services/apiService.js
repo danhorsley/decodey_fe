@@ -291,12 +291,15 @@ class ApiService {
       }
 
       // Determine endpoint based on longText option
-      const endpoint = options.longText ? "/api/longstart" : "/api/start";
+      const endpoint = "/api/start";
 
       // Build query parameters
       const queryParams = new URLSearchParams();
       queryParams.append("difficulty", difficulty);
-
+      // Add longText parameter to query string
+      if (options.longText) {
+        queryParams.append("longText", "true");
+      }
       // Add hardcore mode parameter to query string
       if (options.hardcoreMode) {
         queryParams.append("hardcore", "true");
