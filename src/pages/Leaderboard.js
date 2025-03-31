@@ -6,6 +6,7 @@ import { FaArrowLeft, FaTrophy, FaMedal, FaFire, FaUser } from "react-icons/fa";
 import useLeaderboard from "../hooks/useLeaderboard";
 import useUIStore from "../stores/uiStore";
 import useSettingsStore from "../stores/settingsStore";
+import LeaderboardUI from "../components/LeaderboardUI";
 import "../Styles/Leaderboard.css";
 
 // Component for when data is loading
@@ -87,14 +88,13 @@ function Leaderboard() {
       <>
         {/* Main navigation tabs */}
         <div className="tabs-container">
-      
-            <button
-              className="back-button"
-              onClick={handleBack}
-              aria-label="Back"
-            >
-              <FaArrowLeft />
-            </button>
+          <button
+            className="back-button"
+            onClick={handleBack}
+            aria-label="Back"
+          >
+            <FaArrowLeft />
+          </button>
 
           <div className="tabs">
             <button
@@ -802,17 +802,11 @@ function Leaderboard() {
       className={`leaderboard ${settings?.theme === "dark" ? "dark-theme" : ""}`}
     >
       {/* Show loading state */}
-      {isLoading && (
-        <LeaderboardLoading theme={settings?.theme} type={leaderboardType} />
-      )}
+      {isLoading && <LeaderboardUI type={leaderboardType} />}
 
       {/* Show error state */}
       {error && !isLoading && (
-        <LeaderboardError
-          error={error}
-          onRetry={refreshData}
-          theme={settings?.theme}
-        />
+        <LeaderboardUI type="error" message={error} onRetry={refreshData} />
       )}
 
       {/* Show appropriate content based on selected tab */}

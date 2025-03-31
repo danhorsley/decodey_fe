@@ -235,19 +235,21 @@ const WinCelebration = ({ playSound, winData }) => {
             transition: "opacity 0.8s ease-out",
           }}
         >
-          <div className="stat-item">
-            <span className="stat-label">Time</span>
-            <span className="stat-value">{timeString}</span>
-          </div>
-          <div className="stat-item">
-            <span className="stat-label">Mistakes</span>
-            <span className="stat-value">
-              {mistakes} / {maxMistakes}
-            </span>
-          </div>
-          <div className="stat-item score">
-            <span className="stat-label">Score</span>
-            <span className="stat-value">{score}</span>
+          <div className="stats-flex-container">
+            <div className="stat-item">
+              <span className="stat-label">Time</span>
+              <span className="stat-value">{timeString}</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">Mistakes</span>
+              <span className="stat-value">
+                {mistakes} / {maxMistakes}
+              </span>
+            </div>
+            <div className="stat-item score">
+              <span className="stat-label">Score</span>
+              <span className="stat-value">{score}</span>
+            </div>
           </div>
         </div>
 
@@ -279,7 +281,7 @@ const WinCelebration = ({ playSound, winData }) => {
               )
             }
           >
-            <FaXTwitter /> Share on X
+            <FaXTwitter /> Share Score
           </button>
           {/* Simplified score status message */}
           <div className="score-section">

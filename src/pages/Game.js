@@ -1,4 +1,4 @@
-// src/pages/Game.js - Simplified with initialization delegation
+// Game.js - Simplified with clear mobile support
 import React, { useCallback, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FaTrophy } from "react-icons/fa";
@@ -66,7 +66,7 @@ function Game() {
 
   // UI state for mobile/responsive
   const useMobileMode = useUIStore((state) => state.useMobileMode);
-  const isLandscape = useUIStore((state) => state.isLandscape);
+  // No longer need isLandscape
 
   // Modal states
   const isLoginOpen = useUIStore((state) => state.isLoginOpen);
@@ -340,18 +340,22 @@ function Game() {
     </>
   );
 
-  // Text container component
+  // Text container component - simplified for better mobile display
   const renderTextContainer = () => (
     <div className={`text-container ${hardcoreMode ? "hardcore-mode" : ""}`}>
       <div
         className="alternating-text"
         dangerouslySetInnerHTML={formattedText}
       />
-      {hardcoreMode && <div className="hardcore-badge">HARDCORE MODE</div>}
+      {hardcoreMode && (
+        <div className="hardcore-badge">
+          <span>HARDCORE MODE</span>
+        </div>
+      )}
     </div>
   );
 
-  // Grid components
+  // Grid components - simplified for both mobile and desktop
   const renderGrids = () => (
     <div className="grids">
       {/* Encrypted grid */}
@@ -385,18 +389,18 @@ function Game() {
     </div>
   );
 
-  // Controls component
+  // Controls component - simplified for better mobile display
   const renderControls = () => {
     return (
       <div className="controls">
         <div className="controls-main">
-          <p>
-            Mistakes: {mistakes}/{maxMistakes}
+          <p className="mistakes-counter">
+            <span className="mistakes-label">Mistakes:</span>
+            <span className="mistakes-value">
+              {mistakes}/{maxMistakes}
+            </span>
             {pendingHints > 0 && (
-              <span className="pending-hint-indicator">
-                {" "}
-                (+{pendingHints} pending)
-              </span>
+              <span className="pending-hint-indicator"> (+{pendingHints})</span>
             )}
           </p>
           <button
@@ -404,7 +408,7 @@ function Game() {
             disabled={disableHint}
             className={`hint-button ${isHintInProgress ? "processing" : ""}`}
           >
-            {isHintInProgress ? "Getting Hint..." : "Hint (Costs 1 Mistake)"}
+            {isHintInProgress ? "Processing..." : "Hint"}
           </button>
         </div>
       </div>
@@ -455,11 +459,13 @@ function Game() {
   };
 
   // ===== MAIN RENDER =====
-  // Use mobile layout if needed
+  // Determine if we should use mobile layout - UPDATED VERSION
   if (useMobileMode) {
+    console.log("Rendering mobile layout"); // Debug log
     return (
-      <div className="App-container">
-        <MobileLayout isLandscape={isLandscape}>
+      <div className="App-container mobile-view">
+        <MobileLayout>
+          {/* Simplified mobile view with direct child rendering */}
           {renderGameHeader()}
           {renderTextContainer()}
           {renderGrids()}
