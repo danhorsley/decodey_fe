@@ -56,7 +56,6 @@
   gap: var(--grid-gap);
   width: 48%;
 }
-
 /* Letter cells */
 .mobile-mode .letter-cell {
   width: auto;
@@ -66,6 +65,9 @@
   align-items: center;
   justify-content: center;
   position: relative;
+  padding: 0;
+  margin: 2px;
+  box-sizing: border-box;
 }
 
 /* Frequency indicators */
@@ -74,6 +76,7 @@
   position: absolute;
   bottom: 0.1rem;
   right: 0.1rem;
+  opacity: 0.8;
 }
 
 /* Controls */
@@ -140,6 +143,39 @@
   margin: 5vh auto;
   overflow-y: auto;
   padding: 1rem;
+}
+
+/* Login/Signup modals */
+.mobile-mode .login-container {
+  max-width: 100%;
+  width: 95%;
+  margin: 5vh auto;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.mobile-mode .login-field {
+  margin-bottom: 0.8rem;
+}
+
+.mobile-mode .login-field input {
+  height: 40px;
+  font-size: 16px; /* Prevents iOS zoom on focus */
+}
+
+.mobile-mode .login-button {
+  height: 44px;
+  font-size: 16px;
+}
+
+.mobile-mode .login-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.mobile-mode .login-actions button {
+  margin: 0.4rem 0;
 }
 
 .mobile-mode .settings-option {
@@ -209,31 +245,45 @@
 
 /* Media queries for different screen sizes */
 @media (max-width: 480px) {
-  .mobile-mode .grids {
-    flex-direction: column;
-    gap: 1rem;
-  }
-
   .mobile-mode .encrypted-grid,
   .mobile-mode .guess-grid {
-    width: 100%;
-    grid-template-columns: repeat(auto-fill, minmax(2.2rem, 1fr));
+    width: 49%;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.2rem;
   }
 
   .mobile-mode .letter-cell {
     min-width: 30px;
     min-height: 36px;
     font-size: 0.9rem;
+    padding: 2px;
+  }
+}
+/* Ultra-narrow screens */
+@media (max-width: 370px) {
+  .mobile-mode .encrypted-grid,
+  .mobile-mode .guess-grid {
+    gap: 1px;
+  }
+
+  .mobile-mode .letter-cell {
+    min-width: 24px;
+    min-height: 32px;
+    font-size: 0.8rem;
+    margin: 1px;
+  }
+
+  .mobile-mode .frequency-indicator {
+    font-size: 0.5rem;
+  }
+
+  .mobile-mode .mistakes-counter {
+    font-size: 0.8rem;
   }
 
   .mobile-mode .hint-button {
     font-size: 0.8rem;
-    padding: 0.4rem;
-  }
-
-  .mobile-mode .text-container {
-    max-height: 25vh;
-    font-size: 0.85rem;
+    padding: 0.3rem 0.6rem;
   }
 }
 

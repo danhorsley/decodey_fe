@@ -1,0 +1,171 @@
+/* Slide Menu CSS */
+
+/* Backdrop for closing when clicking outside */
+.menu-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 998;
+  animation: fade-in 0.3s ease-out;
+}
+
+/* Menu container */
+.slide-menu {
+  position: fixed;
+  top: 0;
+  left: -280px; /* Start off-screen */
+  width: 280px;
+  height: 100vh;
+  background-color: var(--bg-color, #fff);
+  transition: left 0.3s ease-out;
+  z-index: 999;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+/* Open state */
+.slide-menu.open {
+  left: 0;
+}
+
+/* Menu header */
+.menu-header {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.menu-title {
+  flex: 1;
+  margin: 0;
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.close-menu {
+  background: none;
+  border: none;
+  font-size: 1.8rem;
+  cursor: pointer;
+  padding: 0;
+  margin-right: 10px;
+  line-height: 1;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.close-menu:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* User info section (when logged in) */
+.user-info {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.user-icon {
+  margin-right: 10px;
+  font-size: 1.2rem;
+  color: var(--primary-color, #007bff);
+}
+
+.username {
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+/* Menu items */
+.menu-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex: 1;
+}
+
+.menu-items li {
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.menu-items li:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.menu-icon {
+  margin-right: 15px;
+  font-size: 1.2rem;
+  min-width: 20px;
+  color: var(--primary-color, #007bff);
+}
+
+/* Special styling for action items like login/logout */
+.menu-action-item {
+  margin-top: 20px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Menu footer */
+.menu-footer {
+  padding: 1rem;
+  text-align: center;
+  font-size: 0.8rem;
+  color: #777;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.version {
+  margin: 0;
+}
+
+/* Dark theme overrides */
+.dark-theme .slide-menu {
+  background-color: var(--bg-color-dark, #333);
+  color: var(--text-color-dark, #f8f9fa);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dark-theme .menu-header,
+.dark-theme .user-info,
+.dark-theme .menu-action-item,
+.dark-theme .menu-footer {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-theme .menu-items li:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.dark-theme .close-menu:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-theme .user-info {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Animation */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

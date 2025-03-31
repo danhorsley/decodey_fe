@@ -1,12 +1,12 @@
-// Game.js - Simplified with clear mobile support
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { FaTrophy } from "react-icons/fa";
 
-// Import daily challenge button
-import DailyChallengeButton from "../components/DailyChallengeButton";
+// Import our new UI components
+import SlideMenu from "../components/SlideMenu";
+import CompactHeader from "../components/CompactHeader";
+import GameDashboard from "../components/GameDashboard";
 
-// Simplified imports
+// Import stores and hooks
 import useGameStore from "../stores/gameStore";
 import useGameSession from "../hooks/useGameSession";
 import useSettingsStore from "../stores/settingsStore";
@@ -16,8 +16,6 @@ import useSound from "../services/WebAudioSoundManager";
 import useKeyboardInput from "../hooks/KeyboardController";
 import { formatAlternatingLines } from "../utils/utils";
 import config from "../config";
-// Component imports
-import HeaderControls from "../components/HeaderControls";
 import MobileLayout from "../components/layout/MobileLayout";
 import WinCelebration from "../components/modals/WinCelebration";
 import MatrixRainLoading from "../components/effects/MatrixRainLoading";
@@ -52,6 +50,10 @@ function Game() {
   // Location hook to get state from routing
   const location = useLocation();
 
+  // Slide menu state - NEW
+  const [menuOpen, setMenuOpen] = useState(false);
+  const toggleMenu = useCallback(() => setMenuOpen((prev) => !prev), []);
+
   // Check if this is a daily challenge (passed from DailyChallenge component)
   const isDailyFromRoute = location.state?.dailyChallenge === true;
 
@@ -66,7 +68,6 @@ function Game() {
 
   // UI state for mobile/responsive
   const useMobileMode = useUIStore((state) => state.useMobileMode);
-  // No longer need isLandscape
 
   // Modal states
   const isLoginOpen = useUIStore((state) => state.isLoginOpen);
@@ -158,6 +159,7 @@ function Game() {
     },
     [selectedEncrypted, submitGuess, playSound],
   );
+
   // Handle hint button click
   const onHintClick = useCallback(() => {
     if (typeof getHint === "function") {
@@ -228,6 +230,7 @@ function Game() {
 
   const disableHint =
     !isGameActive || isHintInProgress || remainingMistakes <= 1;
+
   // Setup keyboard input with more explicit callbacks
   useKeyboardInput({
     enabled: keyboardEnabled,
@@ -280,9 +283,12 @@ function Game() {
       <div
         className={`App-container ${settings?.theme === "dark" ? "dark-theme" : "light-theme"}`}
       >
-        <HeaderControls
+        <CompactHeader
           title={isDailyChallenge ? "Daily Challenge" : "uncrypt"}
+          toggleMenu={toggleMenu}
+          isDailyChallenge={isDailyChallenge}
         />
+        <SlideMenu isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
         <div
           className={`loading-container ${settings?.theme === "dark" ? "dark-theme" : "light-theme"}`}
         >
@@ -301,15 +307,19 @@ function Game() {
       </div>
     );
   }
+
   // If error or no game loaded, show error screen
   if (!encrypted && !isInitializing) {
     return (
       <div
         className={`App-container ${settings?.theme === "dark" ? "dark-theme" : "light-theme"}`}
       >
-        <HeaderControls
+        <CompactHeader
           title={isDailyChallenge ? "Daily Challenge" : "uncrypt"}
+          toggleMenu={toggleMenu}
+          isDailyChallenge={isDailyChallenge}
         />
+        <SlideMenu isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
         <div
           className={`error-container ${settings?.theme === "dark" ? "dark-theme" : "light-theme"}`}
         >
@@ -331,12 +341,15 @@ function Game() {
   // Game header component
   const renderGameHeader = () => (
     <>
-      <HeaderControls
+      {/* New Compact Header */}
+      <CompactHeader
         title={isDailyChallenge ? "Daily Challenge" : "uncrypt"}
+        toggleMenu={toggleMenu}
+        isDailyChallenge={isDailyChallenge}
       />
-      {isDailyChallenge && (
-        <div className="daily-challenge-indicator">DAILY CHALLENGE</div>
-      )}
+
+      {/* Slide menu */}
+      <SlideMenu isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
     </>
   );
 
@@ -389,31 +402,17 @@ function Game() {
     </div>
   );
 
-  // Controls component - simplified for better mobile display
-  const renderControls = () => {
-    return (
-      <div className="controls">
-        <div className="controls-main">
-          <p className="mistakes-counter">
-            <span className="mistakes-label">Mistakes:</span>
-            <span className="mistakes-value">
-              {mistakes}/{maxMistakes}
-            </span>
-            {pendingHints > 0 && (
-              <span className="pending-hint-indicator"> (+{pendingHints})</span>
-            )}
-          </p>
-          <button
-            onClick={onHintClick}
-            disabled={disableHint}
-            className={`hint-button ${isHintInProgress ? "processing" : ""}`}
-          >
-            {isHintInProgress ? "Processing..." : "Hint"}
-          </button>
-        </div>
-      </div>
-    );
-  };
+  // Controls component - Now using GameDashboard
+  const renderControls = () => (
+    <GameDashboard
+      mistakes={mistakes}
+      maxMistakes={maxMistakes}
+      pendingHints={pendingHints}
+      onHintClick={onHintClick}
+      disableHint={disableHint}
+      isHintInProgress={isHintInProgress}
+    />
+  );
 
   // Win/lose states
   const renderGameOver = () => {
@@ -435,29 +434,6 @@ function Game() {
     return null;
   };
 
-  // Leaderboard button
-  const renderLeaderboardButton = () => {
-    // If not authenticated, return null
-    if (!isAuthenticated) {
-      return null;
-    }
-
-    return (
-      <>
-        <button
-          className="leaderboard-button-fixed"
-          onClick={() => navigate("/leaderboard")}
-          aria-label="Leaderboard"
-        >
-          <FaTrophy size={16} />
-        </button>
-
-        {/* Don't show daily challenge button on Daily Challenge */}
-        {!isDailyChallenge && <DailyChallengeButton />}
-      </>
-    );
-  };
-
   // ===== MAIN RENDER =====
   // Determine if we should use mobile layout - UPDATED VERSION
   if (useMobileMode) {
@@ -465,28 +441,26 @@ function Game() {
     return (
       <div className="App-container mobile-view">
         <MobileLayout>
-          {/* Simplified mobile view with direct child rendering */}
           {renderGameHeader()}
           {renderTextContainer()}
-          {renderGrids()}
           {renderControls()}
+          {renderGrids()}
           {renderGameOver()}
         </MobileLayout>
       </div>
     );
   }
 
-  // Standard desktop layout
+  // Standard desktop layout - also using new components
   return (
     <div
       className={`App-container ${settings?.theme === "dark" ? "dark-theme" : ""}`}
     >
       {renderGameHeader()}
       {renderTextContainer()}
-      {renderGrids()}
       {renderControls()}
+      {renderGrids()}
       {renderGameOver()}
-      {renderLeaderboardButton()}
     </div>
   );
 }
