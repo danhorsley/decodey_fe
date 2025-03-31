@@ -21,27 +21,27 @@ import WinCelebration from "../components/modals/WinCelebration";
 import MatrixRainLoading from "../components/effects/MatrixRainLoading";
 
 // Letter cell component using memo to reduce re-renders
-const LetterCell = React.memo(
-  ({
-    letter,
-    isSelected,
-    isGuessed,
-    isFlashing,
-    frequency,
-    onClick,
-    disabled,
-  }) => (
-    <div
-      className={`letter-cell ${isSelected ? "selected" : ""} ${isGuessed ? "guessed" : ""} ${isFlashing ? "flash" : ""}`}
-      onClick={!disabled ? onClick : undefined}
-    >
-      {letter}
-      {typeof frequency !== "undefined" && (
-        <span className="frequency-indicator">{frequency}</span>
-      )}
-    </div>
-  ),
-);
+// const LetterCell = React.memo(
+//   ({
+//     letter,
+//     isSelected,
+//     isGuessed,
+//     isFlashing,
+//     frequency,
+//     onClick,
+//     disabled,
+//   }) => (
+//     <div
+//       className={`letter-cell ${isSelected ? "selected" : ""} ${isGuessed ? "guessed" : ""} ${isFlashing ? "flash" : ""}`}
+//       onClick={!disabled ? onClick : undefined}
+//     >
+//       {letter}
+//       {typeof frequency !== "undefined" && (
+//         <span className="frequency-indicator">{frequency}</span>
+//       )}
+//     </div>
+//   ),
+// );
 
 function Game() {
   // Navigation hook
@@ -369,40 +369,6 @@ function Game() {
   );
 
   // Grid components - simplified for both mobile and desktop
-  const renderGrids = () => (
-    <div className="grids">
-      {/* Encrypted grid */}
-      <div className="encrypted-grid">
-        {sortedEncryptedLetters.map((letter) => (
-          <LetterCell
-            key={letter}
-            letter={letter}
-            isSelected={selectedEncrypted === letter}
-            isGuessed={correctlyGuessed.includes(letter)}
-            isFlashing={lastCorrectGuess === letter}
-            frequency={letterFrequency?.[letter] || 0}
-            onClick={() => onEncryptedClick(letter)}
-            disabled={!isGameActive}
-          />
-        ))}
-      </div>
-
-      {/* Guess grid */}
-      <div className="guess-grid">
-        {originalLetters.map((letter) => (
-          <LetterCell
-            key={letter}
-            letter={letter}
-            isGuessed={Object.values(guessedMappings || {}).includes(letter)}
-            onClick={() => onGuessClick(letter)}
-            disabled={!isGameActive || !selectedEncrypted}
-          />
-        ))}
-      </div>
-    </div>
-  );
-
-  // Controls component - Now using GameDashboard
   const renderControls = () => (
     <GameDashboard
       mistakes={mistakes}
@@ -411,6 +377,16 @@ function Game() {
       onHintClick={onHintClick}
       disableHint={disableHint}
       isHintInProgress={isHintInProgress}
+      sortedEncryptedLetters={sortedEncryptedLetters}
+      selectedEncrypted={selectedEncrypted}
+      correctlyGuessed={correctlyGuessed}
+      lastCorrectGuess={lastCorrectGuess}
+      letterFrequency={letterFrequency}
+      onEncryptedClick={onEncryptedClick}
+      isGameActive={isGameActive}
+      originalLetters={originalLetters}
+      guessedMappings={guessedMappings}
+      onGuessClick={onGuessClick}
     />
   );
 
@@ -444,7 +420,6 @@ function Game() {
           {renderGameHeader()}
           {renderTextContainer()}
           {renderControls()}
-          {renderGrids()}
           {renderGameOver()}
         </MobileLayout>
       </div>
@@ -459,7 +434,6 @@ function Game() {
       {renderGameHeader()}
       {renderTextContainer()}
       {renderControls()}
-      {renderGrids()}
       {renderGameOver()}
     </div>
   );
