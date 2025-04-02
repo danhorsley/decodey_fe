@@ -91,7 +91,7 @@ const DailyChallenge = () => {
       <div
         className={`App-container ${settings?.theme === "dark" ? "dark-theme" : "light-theme"}`}
       >
-        <HeaderControls title="Daily Challenge" />
+        <HeaderControls title="decodey" />
         <div className="loading-container">
           <h2 className="loading-title">Loading Today's Challenge</h2>
           <div className="loading-animation">
@@ -115,7 +115,7 @@ const DailyChallenge = () => {
       <div
         className={`App-container ${settings?.theme === "dark" ? "dark-theme" : "light-theme"}`}
       >
-        <HeaderControls title="Daily Challenge" />
+        <HeaderControls title="decodey" />
 
         <div className="daily-completed-container">
           <h2>You've already completed today's challenge!</h2>
@@ -159,7 +159,7 @@ const DailyChallenge = () => {
       <div
         className={`App-container ${settings?.theme === "dark" ? "dark-theme" : "light-theme"}`}
       >
-        <HeaderControls title="Daily Challenge" />
+        <HeaderControls title="decodey" />
 
         <div className="error-container">
           <h2 className="error-title">Oops!</h2>
@@ -180,7 +180,7 @@ const DailyChallenge = () => {
     <div
       className={`App-container ${settings?.theme === "dark" ? "dark-theme" : "light-theme"}`}
     >
-      <HeaderControls title="Daily Challenge" />
+      <HeaderControls title="decodey" />
       <p>Redirecting to today's challenge...</p>
     </div>
   );

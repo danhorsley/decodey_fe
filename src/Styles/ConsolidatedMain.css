@@ -6,10 +6,13 @@
 
 :root {
   /* Crossword theme (light mode) */
-  --font-primary: "Franklin", "Times New Roman", serif;
+  /* --font-primary: "Franklin", "Times New Roman", serif; */
+  --font-primary: "IBM Plex Mono", "Courier New", monospace;
   --font-secondary: Arial, Helvetica, sans-serif;
   --font-monospace: monospace;
-  --font-size: 0.5rem;
+  --grid-cell-width: 1.6ch;
+  --char-font-size: 1.05rem;
+  --char-letter-spacing: 10px;
   /* For elements that need monospace in both themes */
 
   /* Color variables */
@@ -248,16 +251,15 @@ button:hover:not(:disabled) {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
   justify-content: center;
-  font-family: var(--font-primary);
+  font-size: var(--char-font-size);
+  letter-spacing: var(--char-letter-spacing);
 }
 
 .char-grid.encrypted-line {
   padding: 4px 0 0 0;
   color: #333;
   /* font-weight: 600; */
-  font-family: var(--font-primary);
-  font-size: var(--font-primary);
-  letter-spacing: 2px !important;
+  /* letter-spacing: 2px !important; */
   line-height: 1.2;
   /* Adjust this value as needed */
   min-height: 1.2em;
@@ -268,11 +270,9 @@ button:hover:not(:disabled) {
   padding: 0 0 8px 0;
   color: rgb(0, 66, 170);
   /* font-weight: bold; */
-  font-family: var(--font-primary);
-  font-size: var(--font-primary);
   margin-bottom: 8px;
   margin-top: 8px;
-  letter-spacing: 2px !important;
+  /* letter-spacing: 2.2px !important; */
   line-height: 1.2;
   /* Adjust this value as needed */
   min-height: 1.2em;
@@ -280,9 +280,9 @@ button:hover:not(:disabled) {
 }
 
 .grid-cell {
-  width: 1ch;
-  min-width: 1ch;
-  max-width: 1ch;
+  width: var(--grid-cell-width);
+  min-width: var(--grid-cell-width);
+  max-width: var(--grid-cell-width);
   display: flex;
   justify-content: center;
   align-items: center;

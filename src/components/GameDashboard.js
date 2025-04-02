@@ -49,15 +49,14 @@ const GameDashboard = ({
 
   // Hint text representations with crossword-style filled squares
   const hintTexts = {
-    8: "EIGHT",
-    7: "SEVEN",
-    6: "█SIX█",
-    5: "█FIVE",
-    4: "FOUR█",
-    3: "THREE",
-    2: "█TWO█",
-    1: "█ONE█",
-    0: "ZERO█",
+    8: "SEVEN",
+    7: "█SIX█",
+    6: "█FIVE",
+    5: "FOUR█",
+    4: "THREE",
+    3: "█TWO█",
+    2: "█ONE█",
+    1: "ZERO█",
   };
 
   const getStatusColor = () => {
