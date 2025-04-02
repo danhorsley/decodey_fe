@@ -1,7 +1,7 @@
 import React from "react";
-import { FaLightbulb } from "react-icons/fa";
 import useUIStore from "../stores/uiStore";
 import "../Styles/GameDashboard.css";
+
 const LetterCell = React.memo(
   ({
     letter,
@@ -23,6 +23,7 @@ const LetterCell = React.memo(
     </div>
   ),
 );
+
 const GameDashboard = ({
   mistakes,
   maxMistakes,
@@ -42,8 +43,23 @@ const GameDashboard = ({
   onGuessClick,
 }) => {
   const isMobile = useUIStore((state) => state.useMobileMode);
+  const isDarkTheme = useUIStore((state) => state.isDarkTheme);
 
   const remainingMistakes = maxMistakes - mistakes - pendingHints;
+
+  // Hint text representations with crossword-style filled squares
+  const hintTexts = {
+    8: "EIGHT",
+    7: "SEVEN",
+    6: "█SIX█",
+    5: "█FIVE",
+    4: "FOUR█",
+    3: "THREE",
+    2: "█TWO█",
+    1: "█ONE█",
+    0: "ZERO█",
+  };
+
   const getStatusColor = () => {
     if (remainingMistakes <= 1) return "danger";
     if (remainingMistakes <= maxMistakes / 2) return "warning";
@@ -68,28 +84,21 @@ const GameDashboard = ({
         ))}
       </div>
 
-      {/* Middle Section: Mistakes and Hint Stacked */}
+      {/* Middle Section: New Crossword Hint Counter Button */}
       <div className="controls-stack">
-        <div className={`mistake-counter status-${getStatusColor()}`}>
-          <span className="counter-label">Mistakes</span>
-          <span className="counter-value">
-            {mistakes}
-            <span className="max-value">/{maxMistakes}</span>
-            {pendingHints > 0 && (
-              <span className="pending-value">+{pendingHints}</span>
-            )}
-          </span>
-        </div>
-        <button
-          className={`hint-button ${isHintInProgress ? "processing" : ""}`}
-          disabled={disableHint}
-          onClick={onHintClick}
-          aria-label="Get hint"
+        <div
+          className={`crossword-hint-button status-${getStatusColor()} ${isHintInProgress ? "processing" : ""}`}
+          onClick={!disableHint ? onHintClick : undefined}
         >
-          <FaLightbulb className="hint-icon" />
-          {!isMobile && <span className="hint-text">Hint</span>}
+          <div className="hint-text-display">
+            {hintTexts[remainingMistakes] || hintTexts[0]}
+          </div>
+          <div className="hint-label">HINT TOKENS</div>
+          {pendingHints > 0 && (
+            <div className="pending-hint-indicator">+{pendingHints}</div>
+          )}
           {isHintInProgress && <span className="processing-spinner"></span>}
-        </button>
+        </div>
       </div>
 
       {/* Guess Grid */}

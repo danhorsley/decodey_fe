@@ -5,7 +5,7 @@
   align-items: center;
   padding: 0.75rem 1rem;
   position: relative;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  /* box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); */
   margin-bottom: 0.5rem;
   z-index: 10;
   background-color: #fff;
@@ -13,8 +13,8 @@
 
 /* Dark theme version */
 .dark-theme .compact-header {
-  background-color: var(--bg-color-dark, #333);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  background-color: #222;
+  /* box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); */
 }
 
 /* Menu toggle button with hamburger icon */

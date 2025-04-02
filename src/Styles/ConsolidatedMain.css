@@ -1,9 +1,10 @@
 /* 
-   ConsolidatedMain.css - Optimized core styles for Uncrypt game
-   Removed duplicate styles that were moved to specialized files
+   Revised ConsolidatedMain.css - Keeps letter-cell styles
+   Only removes the .grids, .encrypted-grid, and .guess-grid containers
 */
 /* Global Font Settings */
-html, body {
+html,
+body {
   font-family: 'Courier New', Courier, monospace;
 }
 
@@ -14,6 +15,7 @@ html, body {
 * {
   font-family: 'Courier New', Courier, monospace;
 }
+
 /* ===== CONTAINER STYLES ===== */
 .App {
   text-align: center;
@@ -235,8 +237,10 @@ button:hover:not(:disabled) {
   color: #333;
   font-weight: 600;
   letter-spacing: 2px !important;
-  line-height: 1.2; /* Adjust this value as needed */
-  min-height: 1.2em; /* Ensures consistent height */
+  line-height: 1.2;
+  /* Adjust this value as needed */
+  min-height: 1.2em;
+  /* Ensures consistent height */
 }
 
 .char-grid.display-line {
@@ -246,8 +250,10 @@ button:hover:not(:disabled) {
   margin-bottom: 8px;
   margin-top: 8px;
   letter-spacing: 2px !important;
-  line-height: 1.2; /* Adjust this value as needed */
-  min-height: 1.2em; /* Ensures consistent height */
+  line-height: 1.2;
+  /* Adjust this value as needed */
+  min-height: 1.2em;
+  /* Ensures consistent height */
 }
 
 .grid-cell {
@@ -271,32 +277,6 @@ button:hover:not(:disabled) {
   position: absolute;
   font-size: 0.7em;
   opacity: 0.5;
-}
-
-/* ===== GRID LAYOUTS ===== */
-.grids {
-  display: flex;
-  justify-content: center;
-  gap: 30px;
-  margin: 25px 0;
-  flex-wrap: wrap;
-}
-
-.encrypted-grid,
-.guess-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 6px;
-  padding: 12px;
-  border-radius: 8px;
-}
-
-.encrypted-grid {
-  background-color: #ffffff;
-}
-
-.guess-grid {
-  background-color: rgba(255, 255, 255, 0.1);
 }
 
 /* ===== LETTER CELL ===== */
@@ -360,10 +340,12 @@ button:hover:not(:disabled) {
     background-color: #28a745;
     color: white;
   }
+
   70% {
     background-color: #d4edda;
     color: #155724;
   }
+
   100% {
     background-color: white;
     color: inherit;
@@ -379,28 +361,6 @@ button:hover:not(:disabled) {
   opacity: 0.7;
   font-weight: normal;
   line-height: 1;
-}
-
-/* ===== CONTROLS ===== */
-.controls {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 15px;
-  margin: 15px 0;
-  padding: 15px;
-  background-color: #ffffff;
-  border-radius: 4px;
-}
-
-.controls p {
-  margin: 0;
-  padding: 6px 12px;
-  background-color: white;
-  border-radius: 4px;
-  font-weight: bold;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 /* ===== GAME MESSAGES ===== */
@@ -462,205 +422,6 @@ button:hover:not(:disabled) {
   border: 1px solid #f5c6cb;
 }
 
-/* ===== WIN CELEBRATION ===== */
-/* Main celebration container - most styles moved to ConsolidatedMobile.css */
-.win-celebration {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-  background-color: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(2px);
-  animation: fade-in 0.5s ease-out;
-}
-
-.celebration-content {
-  background-color: #333;
-  color: #fff;
-  border-radius: 16px;
-  padding: 30px;
-  max-width: 500px;
-  width: 90%;
-  text-align: center;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  position: relative;
-  z-index: 1001;
-  overflow: hidden;
-  animation: pop-in 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.celebration-content * {
-  opacity: 1 !important;
-}
-
-/* Victory message */
-.victory-message {
-  margin-bottom: 25px;
-}
-
-.victory-title {
-  font-size: 2.5rem;
-  margin: 0 0 15px 0;
-  color: #ff9500;
-  font-weight: bold;
-  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-}
-
-.victory-subtitle {
-  font-size: 1.2rem;
-  margin: 0;
-  opacity: 0.8;
-}
-
-/* Stats display */
-.stats-container {
-  display: flex !important;
-  flex-wrap: wrap !important;
-  justify-content: center !important;
-  gap: 20px !important;
-  margin: 25px 0 !important;
-  opacity: 0;
-  transition: opacity 0.8s ease-out !important;
-}
-
-.stats-container.animate-slide-in {
-  opacity: 1 !important;
-}
-
-.stat-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-width: 100px;
-}
-
-.stat-label {
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  opacity: 0.7;
-  margin-bottom: 5px;
-}
-
-.stat-value {
-  font-size: 1.8rem;
-  font-weight: bold;
-}
-
-.stat-item.score .stat-value {
-  font-size: 2.2rem;
-  color: #ff9500;
-}
-
-/* Action buttons */
-.celebration-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  margin-top: 25px;
-}
-
-.play-again-button {
-  padding: 12px 24px;
-  font-size: 1.1rem;
-  background-color: #4cc9f0;
-  color: white !important;
-  border: none;
-  border-radius: 30px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-weight: bold;
-  box-shadow: 0 4px 10px rgba(76, 201, 240, 0.3);
-}
-
-.play-again-button:hover {
-  background-color: #3db8df;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(76, 201, 240, 0.4);
-}
-
-/* Quote display */
-.quote-container {
-  margin-top: 25px;
-  padding: 20px;
-  background-color: rgba(0, 0, 0, 0.3);
-  border-radius: 10px;
-  position: relative;
-  max-height: 200px;
-  overflow-y: auto;
-  text-align: left;
-}
-
-.decrypted-quote {
-  font-family: 'Courier New', monospace;
-  font-size: 1rem;
-  line-height: 1.5;
-  margin-bottom: 15px;
-  color: white;
-  font-weight: normal;
-}
-
-.quote-attribution {
-  text-align: right;
-  font-style: italic;
-  margin-top: 10px;
-  opacity: 0.9;
-}
-
-/* Animation keyframes */
-@keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes pop-in {
-  0% {
-    transform: scale(0.8);
-    opacity: 0;
-  }
-  80% {
-    transform: scale(1.05);
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.animate-scale-in {
-  animation: scale-in 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
-
-@keyframes scale-in {
-  0% {
-    transform: scale(0.5);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.animate-slide-in {
-  animation: slide-in 0.8s ease-out forwards;
-}
-
-@keyframes slide-in {
-  0% {
-    transform: translateY(20px);
-    opacity: 0;
-  }
-  100% {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
 /* ===== LEADERBOARD BUTTON ===== */
 .leaderboard-button-fixed {
   position: absolute;
@@ -705,30 +466,6 @@ button:hover:not(:disabled) {
   }
 }
 
-/* Light theme adjustment */
-body:not(.dark-theme) .celebration-content {
-  background-color: white;
-  color: #333;
-}
-
-body:not(.dark-theme) .celebration-content .stat-label,
-body:not(.dark-theme) .celebration-content .stat-value {
-  color: #333;
-}
-
-body:not(.dark-theme) .celebration-content .victory-title {
-  color: #007bff;
-}
-
-body:not(.dark-theme) .celebration-content .quote-container {
-  background-color: rgba(0, 0, 0, 0.05);
-}
-
-body:not(.dark-theme) .celebration-content .quote-attribution,
-body:not(.dark-theme) .celebration-content .decrypted-quote {
-  color: #333;
-}
-
 /* User position notice */
 .user-position {
   text-align: center;
@@ -759,7 +496,8 @@ body:not(.dark-theme) .celebration-content .decrypted-quote {
   justify-content: flex-start;
   align-items: center;
   height: 100vh;
-  padding-top: 100px; /* Position content higher on the screen */
+  padding-top: 100px;
+  /* Position content higher on the screen */
   position: relative;
   z-index: 1;
 }
@@ -776,8 +514,10 @@ body:not(.dark-theme) .celebration-content .decrypted-quote {
 .loading-animation {
   margin: 20px 0;
   width: 80%;
-  max-width: 600px; /* Closer to the width of the game content */
-  height: 250px; /* Taller to match approximately where grids will be */
+  max-width: 600px;
+  /* Closer to the width of the game content */
+  height: 250px;
+  /* Taller to match approximately where grids will be */
   border-radius: 8px;
   overflow: hidden;
   position: relative;
@@ -849,18 +589,20 @@ body:not(.dark-theme) .celebration-content .decrypted-quote {
 /* Error screen styles */
 .error-container {
   text-align: center;
-  margin: 100px auto 0; /* Position it higher on the screen */
+  margin: 100px auto 0;
+  /* Position it higher on the screen */
   max-width: 450px;
   padding: 25px;
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   position: relative;
-  z-index: 5; /* Ensure it's above the matrix background */
+  z-index: 5;
+  /* Ensure it's above the matrix background */
 }
 
 .dark-theme .error-container {
   background-color: #333;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
 }
 
 .light-theme .error-container {
@@ -931,9 +673,23 @@ body:not(.dark-theme) .celebration-content .decrypted-quote {
 }
 
 @keyframes loading-dots {
-  0% { content: ''; }
-  25% { content: '.'; }
-  50% { content: '..'; }
-  75% { content: '...'; }
-  100% { content: ''; }
+  0% {
+    content: '';
+  }
+
+  25% {
+    content: '.';
+  }
+
+  50% {
+    content: '..';
+  }
+
+  75% {
+    content: '...';
+  }
+
+  100% {
+    content: '';
+  }
 }

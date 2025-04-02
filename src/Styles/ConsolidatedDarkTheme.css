@@ -1,6 +1,6 @@
 /* 
-   ConsolidatedDarkTheme.css - Optimized dark theme styles
-   Removed duplication with mobile styles
+   ConsolidatedDarkTheme.css - Essential Dark Theme Styles
+   Component-specific dark theme styles have been moved to their respective component CSS files
 */
 
 /* ===== GLOBAL DARK THEME ===== */
@@ -71,66 +71,7 @@ html.dark-theme {
   color: #f8f9fa;
 }
 
-/* ===== UI ELEMENTS ===== */
-.dark-theme .encrypted-grid,
-.dark-theme .guess-grid {
-  background-color: #222;
-}
-
-.dark-theme .letter-cell {
-  background-color: #444;
-  color: #4cc9f0;
-  border-color: #555;
-}
-
-.dark-theme .letter-cell:hover {
-  background-color: #505050;
-  border-color: #666;
-}
-
-.dark-theme .letter-cell.guessed {
-  background-color: #333;
-  color: #adb5bd;
-}
-
-.dark-theme .controls,
-.dark-theme .sidebar {
-  background-color: #222;
-}
-
-.dark-theme .guess-grid .letter-cell {
-  color: rgb(0, 225, 152);
-  text-shadow: 0 0 5px rgba(0, 225, 152, 0.5);
-}
-
-.dark-theme .controls p {
-  background-color: #222;
-  color: #4cc9f0;
-}
-
-.dark-theme .settings-icon:hover,
-.dark-theme .about-icon:hover {
-  background-color: #444;
-  color: rgb(0, 225, 152);
-}
-
-.dark-theme .hint-button {
-  background-color: #333;
-  color: rgb(0, 225, 152);
-  text-shadow: 0 0 5px rgba(0, 225, 152, 0.5);
-}
-
-.dark-theme .account-icon {
-  background-color: #333;
-  color: #4cc9f0;
-}
-
-.dark-theme .account-icon:hover {
-  background-color: #333;
-  color: rgb(0, 225, 152);
-}
-
-/* ===== GAME MESSAGE & CELEBRATION ===== */
+/* ===== GAME MESSAGE ===== */
 .dark-theme .game-message {
   background-color: #344055;
 }
@@ -139,15 +80,7 @@ html.dark-theme {
   background-color: #b02a37;
 }
 
-.dark-theme .celebration-content {
-  background-color: #222;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-}
-
-.dark-theme .victory-subtitle {
-  color: #f8f9fa;
-}
-
+/* ===== STATUS MESSAGES ===== */
 .dark-theme .save-success {
   background-color: #285e34;
   color: #d4edda;
@@ -160,43 +93,10 @@ html.dark-theme {
   border-color: #dc3545;
 }
 
-/* ===== COMPONENTS ===== */
-.dark-theme .leaderboard-button-fixed {
-  color: #E5B80B !important;
-  background-color: #000 !important;
-}
-
-.dark-theme .leaderboard-button-fixed:hover {
-  background-color: rgb(0, 225, 152) !important;
-}
-
-.dark-theme .pagination-button {
-  background: rgb(0, 225, 152);
-  color: #333;
-}
-
-.dark-theme .pagination-button:disabled {
-  background: #444;
-}
-
-.dark-theme .pagination-button:hover:not(:disabled) {
-  background: rgb(0, 225, 152);
-  text-shadow: 0 0 8px rgba(0, 225, 152, 0.5);
-}
-
+/* ===== USER INDICATOR ===== */
 .dark-theme .auth-indicator {
   background-color: #4cc9f0;
   border: 2px solid #222;
-}
-
-.dark-theme .fixed-button {
-  background-color: rgba(30, 30, 40, 0.9);
-  color: #4cc9f0;
-}
-
-.dark-theme .fixed-button:hover {
-  background-color: rgba(30, 30, 40, 1);
-  color: rgb(0, 225, 152);
 }
 
 /* ===== PLACEHOLDERS ===== */
@@ -209,4 +109,37 @@ html.dark-theme {
   font-weight: bold;
   text-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
   opacity: 0.9;
+}
+
+/* ===== LOADING & ERROR STATES ===== */
+.dark-theme .loading-retry {
+  background-color: #333;
+}
+
+.dark-theme .loading-error {
+  color: #ff6b6b;
+}
+
+.dark-theme .error-container {
+  background-color: #333;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+.dark-theme .error-message {
+  color: #ff6b6b;
+}
+
+.dark-theme .try-again-button {
+  background-color: #4cc9f0;
+  color: #333;
+}
+
+.dark-theme .try-again-button:hover {
+  background-color: #3db8df;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(76, 201, 240, 0.3);
+}
+
+.dark-theme .help-text {
+  color: #adb5bd;
 }
