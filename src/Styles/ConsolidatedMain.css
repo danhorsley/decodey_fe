@@ -3,37 +3,54 @@
    Only removes the .grids, .encrypted-grid, and .guess-grid containers
 */
 /* Global Font Settings */
-html,
-body {
-  font-family: 'Courier New', Courier, monospace;
-}
 
 :root {
-  font-family: 'Courier New', Courier, monospace;
+  /* Crossword theme (light mode) */
+  --font-primary: "Franklin", "Times New Roman", serif;
+  --font-secondary: Arial, Helvetica, sans-serif;
+  --font-monospace: monospace;
+  --font-size: 0.5rem;
+  /* For elements that need monospace in both themes */
+
+  /* Color variables */
+  --bg-color: white;
+  --text-color: #333;
+  --grid-border-color: #ddd;
+  --letter-bg-color: white;
+
+
 }
 
-* {
-  font-family: 'Courier New', Courier, monospace;
+html,
+body {
+  font-family: var(--font-primary);
 }
+
+
+
+
 
 /* ===== CONTAINER STYLES ===== */
 .App {
   text-align: center;
-  font-family: 'Courier New', Courier, monospace;
+  font-family: var(--font-primary);
+  /* Updated */
   max-width: 900px;
   margin: 30px auto;
   padding: 20px;
-  background-color: white;
+  background-color: var(--bg-color);
+  /* Updated */
   border-radius: 10px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .retro-title {
-  font-size: 1.75rem;
   color: #333;
   margin-bottom: 20px;
-  font-weight: bold;
   letter-spacing: 1px;
+  font-family: var(--font-primary);
+  font-size: 1.5rem;
+  font-weight: bold;
 }
 
 .game-header {
@@ -115,7 +132,7 @@ button {
   font-weight: 600;
   transition: all 0.2s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  font-family: 'Courier New', Courier, monospace;
+  font-family: var(--font-secondary);
 }
 
 button:disabled {
@@ -152,8 +169,7 @@ button:hover:not(:disabled) {
 .display {
   padding: 15px 20px;
   margin: 0;
-  font-size: 1.2em;
-  font-family: monospace;
+  font-size: var(--font-primary);
   letter-spacing: 0;
   line-height: 1.7;
   white-space: pre-wrap;
@@ -165,6 +181,9 @@ button:hover:not(:disabled) {
   position: relative;
   word-break: keep-all;
   overflow-wrap: anywhere;
+  font-family: var(--font-primary);
+  color: var(--text-color);
+  /* Updated */
 }
 
 .encrypted {
@@ -226,16 +245,18 @@ button:hover:not(:disabled) {
   grid-auto-columns: min-content;
   width: 100%;
   max-width: 100%;
-  font-family: monospace;
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
   justify-content: center;
+  font-family: var(--font-primary);
 }
 
 .char-grid.encrypted-line {
   padding: 4px 0 0 0;
   color: #333;
-  font-weight: 600;
+  /* font-weight: 600; */
+  font-family: var(--font-primary);
+  font-size: var(--font-primary);
   letter-spacing: 2px !important;
   line-height: 1.2;
   /* Adjust this value as needed */
@@ -246,7 +267,9 @@ button:hover:not(:disabled) {
 .char-grid.display-line {
   padding: 0 0 8px 0;
   color: rgb(0, 66, 170);
-  font-weight: bold;
+  /* font-weight: bold; */
+  font-family: var(--font-primary);
+  font-size: var(--font-primary);
   margin-bottom: 8px;
   margin-top: 8px;
   letter-spacing: 2px !important;
@@ -286,17 +309,22 @@ button:hover:not(:disabled) {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #ddd;
   border-radius: 4px;
   cursor: pointer;
   font-size: 1.3em;
   font-weight: bold;
-  background-color: white;
-  color: #212529;
   user-select: none;
   transition: all 0.2s ease;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   position: relative;
+  font-family: var(--font-primary);
+  /* Updated */
+  background-color: var(--letter-bg-color);
+  /* Updated */
+  color: var(--text-color);
+  /* Updated */
+  border: 1px solid var(--grid-border-color);
+  /* Updated */
 }
 
 .guess-grid .letter-cell {
@@ -504,7 +532,7 @@ button:hover:not(:disabled) {
 
 .loading-title {
   margin-bottom: 15px;
-  font-family: 'Courier New', Courier, monospace;
+  font-family: var(--font-primary);
   position: relative;
   z-index: 2;
   font-size: 1.4rem;
@@ -611,7 +639,7 @@ button:hover:not(:disabled) {
 
 .error-title {
   margin-bottom: 15px;
-  font-family: 'Courier New', Courier, monospace;
+  font-family: var(--font-primary);
 }
 
 .error-message {

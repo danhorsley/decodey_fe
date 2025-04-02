@@ -7,11 +7,19 @@
 .dark-theme {
   background-color: #222;
   color: #f8f9fa;
+  --font-primary: "Courier New", monospace;
+  --font-secondary: "Courier New", monospace;
+
+  /* Theme color overrides */
+  --bg-color: #222;
+  --text-color: #33FF33;
+  --grid-border-color: #444;
+  --letter-bg-color: #333;
 }
 
 body.dark-theme {
   background-color: #222;
-  color: #f8f9fa;
+  /* color: #f8f9fa; */
 }
 
 html.dark-theme {
