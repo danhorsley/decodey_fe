@@ -53,7 +53,7 @@ const SlideMenu = ({ isOpen, onClose }) => {
           >
             &times;
           </button>
-          <h2 className="menu-title">Uncrypt</h2>
+          <h2 className="menu-title">decodey</h2>
         </div>
 
         {/* User info section (if authenticated) */}

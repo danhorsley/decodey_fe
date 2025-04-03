@@ -315,7 +315,7 @@ function Game() {
         className={`App-container ${settings?.theme === "dark" ? "dark-theme" : "light-theme"}`}
       >
         <CompactHeader
-          title={isDailyChallenge ? "decodey" : "uncrypt"}
+          title={isDailyChallenge ? "decodey - daily" : "decodey"}
           toggleMenu={toggleMenu}
           isDailyChallenge={isDailyChallenge}
         />
@@ -343,7 +343,7 @@ function Game() {
     <>
       {/* New Compact Header */}
       <CompactHeader
-        title={isDailyChallenge ? "decodey" : "uncrypt"}
+        title={isDailyChallenge ? "decodey - daily" : "decodey"}
         toggleMenu={toggleMenu}
         isDailyChallenge={isDailyChallenge}
       />
@@ -387,26 +387,17 @@ function Game() {
       originalLetters={originalLetters}
       guessedMappings={guessedMappings}
       onGuessClick={onGuessClick}
+      hasLost={hasLost}
+      onStartNewGame={handleStartNewGame}
     />
   );
 
   // Win/lose states
   const renderGameOver = () => {
-    // Check for loss first, then win. This ensures that if somehow both flags are true,
-    // loss takes precedence (logical since you can't win after losing)
-    if (hasLost) {
-      return (
-        <div className={`game-message ${hardcoreMode ? "hardcore-mode" : ""}`}>
-          <p>Game Over! Too many mistakes.</p>
-          <button onClick={handleStartNewGame}>Try Again</button>
-        </div>
-      );
-    }
-
+    // Only handle win scenario here, loss is handled in GameDashboard
     if (hasWon) {
       return <WinCelebration playSound={playSound} winData={winData || {}} />;
     }
-
     return null;
   };
 

@@ -75,7 +75,8 @@
 .dark-theme .crossword-hint-button {
   background-color: #222;
   border-color: #666;
-  color: #33ff33;
+  /* color: #33ff33; */
+  color:#4cc9f0;
 }
 
 .crossword-hint-button:hover:not(:disabled) {
@@ -84,7 +85,8 @@
 }
 
 .dark-theme .crossword-hint-button:hover:not(:disabled) {
-  box-shadow: 0 0 8px rgba(0, 255, 0, 0.2);
+  /* box-shadow: 0 0 8px rgba(0, 255, 0, 0.2); */
+  box-shadow: 0 0 8px #4cc9f0;
 }
 
 .crossword-hint-button:disabled {
@@ -116,7 +118,8 @@
 
 /* Status colors for crossword hint button */
 .crossword-hint-button.status-success {
-  border-color: #28a745;
+  /* border-color: #28a745; */
+  border-color: rgb(0, 66, 170);
 }
 
 .crossword-hint-button.status-warning {
@@ -130,15 +133,15 @@
 
 /* Dark theme versions */
 .dark-theme .crossword-hint-button.status-success {
-  border-color: #5cb85c;
+  border-color: #4cc9f0;
 }
 
 .dark-theme .crossword-hint-button.status-warning {
-  border-color: #f0ad4e;
+  border-color: #FF9E64;
 }
 
 .dark-theme .crossword-hint-button.status-danger {
-  border-color: #d9534f;
+  border-color: #FF5277;
 }
 
 /* Pending hints indicator */
@@ -263,5 +266,42 @@
 
   50% {
     opacity: 0.7;
+  }
+}
+
+.crossword-hint-button.game-over {
+  cursor: pointer;
+  animation: pulse-game-over 2s infinite;
+  transform-origin: center;
+  transition: all 0.3s ease;
+}
+
+.crossword-hint-button.game-over:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px rgba(255, 0, 0, 0.6);
+}
+
+.crossword-hint-button.game-over .hint-text-display {
+  font-weight: bold;
+  font-size: 1.2em;
+  color: #fff;
+  text-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+}
+
+.crossword-hint-button.game-over .hint-label {
+  font-weight: bold;
+  color: #fff;
+  font-size: 1.1em;
+}
+
+@keyframes pulse-game-over {
+  0% {
+    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
   }
 }

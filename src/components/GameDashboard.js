@@ -41,6 +41,8 @@ const GameDashboard = ({
   originalLetters,
   guessedMappings,
   onGuessClick,
+  hasLost,
+  onStartNewGame
 }) => {
   const isMobile = useUIStore((state) => state.useMobileMode);
   const isDarkTheme = useUIStore((state) => state.isDarkTheme);
@@ -65,6 +67,39 @@ const GameDashboard = ({
     return "success";
   };
 
+  // Render the hint button or game over message
+  const renderHintOrGameOver = () => {
+    if (hasLost) {
+      return (
+        <div 
+          className="crossword-hint-button game-over status-danger"
+          onClick={onStartNewGame}
+        >
+          <div className="hint-text-display">
+            GAME OVER
+          </div>
+          <div className="hint-label">Try Again</div>
+        </div>
+      );
+    }
+
+    return (
+      <div
+        className={`crossword-hint-button status-${getStatusColor()} ${isHintInProgress ? "processing" : ""}`}
+        onClick={!disableHint ? onHintClick : undefined}
+      >
+        <div className="hint-text-display">
+          {hintTexts[remainingMistakes] || hintTexts[0]}
+        </div>
+        <div className="hint-label">HINT TOKENS</div>
+        {pendingHints > 0 && (
+          <div className="pending-hint-indicator">+{pendingHints}</div>
+        )}
+        {isHintInProgress && <span className="processing-spinner"></span>}
+      </div>
+    );
+  };
+
   return (
     <div className="game-dashboard">
       {/* Encrypted Grid */}
@@ -83,21 +118,9 @@ const GameDashboard = ({
         ))}
       </div>
 
-      {/* Middle Section: New Crossword Hint Counter Button */}
+      {/* Middle Section: Hint Button or Game Over */}
       <div className="controls-stack">
-        <div
-          className={`crossword-hint-button status-${getStatusColor()} ${isHintInProgress ? "processing" : ""}`}
-          onClick={!disableHint ? onHintClick : undefined}
-        >
-          <div className="hint-text-display">
-            {hintTexts[remainingMistakes] || hintTexts[0]}
-          </div>
-          <div className="hint-label">HINT TOKENS</div>
-          {pendingHints > 0 && (
-            <div className="pending-hint-indicator">+{pendingHints}</div>
-          )}
-          {isHintInProgress && <span className="processing-spinner"></span>}
-        </div>
+        {renderHintOrGameOver()}
       </div>
 
       {/* Guess Grid */}
