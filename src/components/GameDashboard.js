@@ -1,6 +1,7 @@
 import React from "react";
 import useUIStore from "../stores/uiStore";
 import useSettingsStore from "../stores/settingsStore";
+import CryptoSpinner from "./CryptoSpinner";
 import "../Styles/GameDashboard.css";
 
 const LetterCell = React.memo(
@@ -99,9 +100,11 @@ const GameDashboard = ({
           </div>
           <div className="hint-label">HINT TOKENS</div>
           {pendingHints > 0 && (
-            <div className="pending-hint-indicator">+{pendingHints}</div>
+            <div className="pending-hint-indicator">-{pendingHints}</div>
           )}
-          {isHintInProgress && <span className="processing-spinner"></span>}
+          {isHintInProgress && (
+            <CryptoSpinner isActive={true} isDarkTheme={isDarkTheme} />
+          )}
         </div>
       </div>
     );
