@@ -10,14 +10,15 @@
   --font-primary: "IBM Plex Mono", "Courier New", monospace;
   --font-secondary: Arial, Helvetica, sans-serif;
   --font-monospace: monospace;
-  --grid-cell-width: 1.6ch;
+  --grid-cell-width: 1.25ch;
   --char-font-size: 1.05rem;
-  --char-letter-spacing: 10px;
+  --char-letter-spacing: 2px;
   /* For elements that need monospace in both themes */
 
   /* Color variables */
   --bg-color: white;
-  --text-color: #333;
+  --text-color-primary: #333;
+  --text-color-secondary: rgb(0, 66, 170);
   --grid-border-color: #ddd;
   --letter-bg-color: white;
 
@@ -185,7 +186,7 @@ button:hover:not(:disabled) {
   word-break: keep-all;
   overflow-wrap: anywhere;
   font-family: var(--font-primary);
-  color: var(--text-color);
+  color: var(--text-color-primary);
   /* Updated */
 }
 
@@ -321,14 +322,14 @@ button:hover:not(:disabled) {
   /* Updated */
   background-color: var(--letter-bg-color);
   /* Updated */
-  color: var(--text-color);
+  color: var(--text-color-primary);
   /* Updated */
   border: 1px solid var(--grid-border-color);
   /* Updated */
 }
 
 .guess-grid .letter-cell {
-  color: rgb(0, 66, 170);
+  color: var(--text-color-secondary);
 }
 
 .letter-cell:hover {

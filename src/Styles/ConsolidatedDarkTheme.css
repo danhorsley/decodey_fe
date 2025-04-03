@@ -6,13 +6,14 @@
 /* ===== GLOBAL DARK THEME ===== */
 .dark-theme {
   background-color: #222;
-  color: #f8f9fa;
+  color: #4cc9f0;
   --font-primary: "Courier New", monospace;
   --font-secondary: "Courier New", monospace;
 
   /* Theme color overrides */
   --bg-color: #222;
-  --text-color: #33FF33;
+  --text-color-primary: #4cc9f0;
+  --text-color-secondary: #00ED99;
   --grid-border-color: #444;
   --letter-bg-color: #333;
 }
@@ -52,7 +53,7 @@ html.dark-theme {
   background-clip: text;
 
   /* Optional: Add a subtle glow for monitor effect */
-  text-shadow: 0 0 5px rgba(0, 225, 152, 0.85);
+  text-shadow: 0 0 5px rgb(var(--text-color-secondary),0.85);
 }
 
 .dark-theme .text-container {
@@ -61,15 +62,28 @@ html.dark-theme {
 }
 
 .dark-theme .encrypted-line {
-  color: #4cc9f0;
-  text-shadow: 0 0 8px rgba(76, 201, 240, 0.5);
+  color: var(--text-color-primary);
+  text-shadow: 0 0 8px rgb(var(--text-color-primary),0.75);
 }
 
 .dark-theme .display-line {
-  color: rgb(0, 225, 152);
-  text-shadow: 0 0 8px rgba(0, 225, 152, 0.5);
+  color: var(--text-color-secondary);
+  text-shadow: 0 0 8px rgb(var(--text-color-secondary),0.75);
 }
 
+.dark-theme .guessed {
+  background-color: #222;
+  color: #aaaaaa;
+  border-color: #7a7a7a;
+  cursor: default;
+  box-shadow: none;
+}
+
+.dark-theme .letter-cell .guessed {
+  background-color: #222;
+  color: grey;
+  border-color: #7a7a7a;
+}
 .dark-theme .encrypted {
   background-color: #222;
 }
