@@ -1,5 +1,6 @@
 import React from "react";
 import useUIStore from "../stores/uiStore";
+import useSettingsStore from "../stores/settingsStore";
 import "../Styles/GameDashboard.css";
 
 const LetterCell = React.memo(
@@ -42,10 +43,11 @@ const GameDashboard = ({
   guessedMappings,
   onGuessClick,
   hasLost,
-  onStartNewGame
+  onStartNewGame,
 }) => {
   const isMobile = useUIStore((state) => state.useMobileMode);
-  const isDarkTheme = useUIStore((state) => state.isDarkTheme);
+  const settings = useSettingsStore((state) => state.settings);
+  const isDarkTheme = settings?.theme === "dark";
 
   const remainingMistakes = maxMistakes - mistakes - pendingHints;
 
@@ -71,37 +73,44 @@ const GameDashboard = ({
   const renderHintOrGameOver = () => {
     if (hasLost) {
       return (
-        <div 
-          className="crossword-hint-button game-over status-danger"
+        <div
+          className="controls-stack game-over-state"
           onClick={onStartNewGame}
         >
-          <div className="hint-text-display">
-            GAME OVER
+          <div className="game-over-text">GAME OVER</div>
+          <div
+            className={`crossword-hint-button game-over ${isDarkTheme ? "dark-theme" : "light-theme"}`}
+          >
+            <div className="hint-text-display">AGAIN</div>
+            <div className="hint-label question-mark">?</div>
           </div>
-          <div className="hint-label">Try Again</div>
         </div>
       );
     }
 
     return (
-      <div
-        className={`crossword-hint-button status-${getStatusColor()} ${isHintInProgress ? "processing" : ""}`}
-        onClick={!disableHint ? onHintClick : undefined}
-      >
-        <div className="hint-text-display">
-          {hintTexts[remainingMistakes] || hintTexts[0]}
+      <div className="controls-stack">
+        <div
+          className={`crossword-hint-button status-${getStatusColor()} ${isHintInProgress ? "processing" : ""}`}
+          onClick={!disableHint ? onHintClick : undefined}
+        >
+          <div className="hint-text-display">
+            {hintTexts[remainingMistakes] || hintTexts[0]}
+          </div>
+          <div className="hint-label">HINT TOKENS</div>
+          {pendingHints > 0 && (
+            <div className="pending-hint-indicator">+{pendingHints}</div>
+          )}
+          {isHintInProgress && <span className="processing-spinner"></span>}
         </div>
-        <div className="hint-label">HINT TOKENS</div>
-        {pendingHints > 0 && (
-          <div className="pending-hint-indicator">+{pendingHints}</div>
-        )}
-        {isHintInProgress && <span className="processing-spinner"></span>}
       </div>
     );
   };
 
   return (
-    <div className="game-dashboard">
+    <div
+      className={`game-dashboard ${isDarkTheme ? "dark-theme" : "light-theme"}`}
+    >
       {/* Encrypted Grid */}
       <div className="encrypted-grid">
         {sortedEncryptedLetters.map((letter) => (
@@ -119,9 +128,7 @@ const GameDashboard = ({
       </div>
 
       {/* Middle Section: Hint Button or Game Over */}
-      <div className="controls-stack">
-        {renderHintOrGameOver()}
-      </div>
+      <div className="controls-stack">{renderHintOrGameOver()}</div>
 
       {/* Guess Grid */}
       <div className="guess-grid">
