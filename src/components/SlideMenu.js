@@ -1,131 +1,121 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  FaCog,
-  FaInfoCircle,
-  FaTrophy,
-  FaCalendarDay,
-  FaUser,
-  FaSignOutAlt,
-  FaSignInAlt,
+import { 
+  FaTrophy, FaUserCircle, FaSignOutAlt, FaSignInAlt, 
+  FaCog, FaInfoCircle, FaCalendarAlt, FaHome 
 } from "react-icons/fa";
-import useUIStore from "../stores/uiStore";
-import useAuthStore from "../stores/authStore";
-import useGameSession from "../hooks/useGameSession";
 import "../Styles/SlideMenu.css";
+import useAuthStore from "../stores/authStore";
+import useUIStore from "../stores/uiStore";
 
 /**
- * SlideMenu - A mobile-friendly slide-out menu component
+ * SlideMenu - The sidebar menu that opens when the hamburger is clicked
  */
 const SlideMenu = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
 
-  // Get UI actions from store
-  const openSettings = useUIStore((state) => state.openSettings);
-  const openAbout = useUIStore((state) => state.openAbout);
-  const openLogin = useUIStore((state) => state.openLogin);
-
-  // Auth state
+  // Get auth state and actions
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
 
-  // Get logout function
-  const { userLogout } = useGameSession();
+  // Get UI actions
+  const openLogin = useUIStore((state) => state.openLogin);
+  const openSignup = useUIStore((state) => state.openSignup);
+  const openSettings = useUIStore((state) => state.openSettings);
+  const openAbout = useUIStore((state) => state.openAbout);
 
-  // Handle logout
-  const handleLogout = async () => {
+  // Handle navigation
+  const handleNavigation = (path) => {
+    navigate(path);
     onClose();
-    await userLogout(true); // Logout and start new anonymous game
+  };
+
+  // Handle auth actions
+  const handleLogin = () => {
+    openLogin();
+    onClose();
+  };
+
+  const handleSignup = () => {
+    openSignup();
+    onClose();
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    onClose();
   };
 
   return (
     <>
-      {/* Backdrop for closing the menu when clicking outside */}
+      {/* Backdrop for closing when clicking outside */}
       {isOpen && <div className="menu-backdrop" onClick={onClose}></div>}
 
-      {/* The slide menu itself */}
-      <div className={`slide-menu ${isOpen ? "open" : ""}`}>
+      {/* The menu itself */}
+      <div className={`slide-menu ${isOpen ? 'open' : ''}`}>
+        {/* Header */}
         <div className="menu-header">
-          <button
-            className="close-menu"
-            onClick={onClose}
-            aria-label="Close menu"
-          >
-            &times;
-          </button>
+          <button className="close-menu" onClick={onClose}>&times;</button>
           <h2 className="menu-title">decodey</h2>
         </div>
 
-        {/* User info section (if authenticated) */}
+        {/* User info if logged in */}
         {isAuthenticated && user && (
           <div className="user-info">
-            <FaUser className="user-icon" />
+            <FaUserCircle className="user-icon" />
             <span className="username">{user.username}</span>
           </div>
         )}
 
         {/* Menu items */}
         <ul className="menu-items">
-          <li
-            onClick={() => {
-              onClose();
-              openAbout();
-            }}
-          >
-            <FaInfoCircle className="menu-icon" />
-            <span>About</span>
+          <li onClick={() => handleNavigation('/')}>
+            <FaHome className="menu-icon" />
+            Home
           </li>
 
-          <li
-            onClick={() => {
-              onClose();
-              openSettings();
-            }}
-          >
-            <FaCog className="menu-icon" />
-            <span>Settings</span>
+          <li onClick={() => handleNavigation('/daily')}>
+            <FaCalendarAlt className="menu-icon" />
+            Daily Challenge
           </li>
 
-          <li
-            onClick={() => {
-              onClose();
-              navigate("/leaderboard");
-            }}
-          >
+          <li onClick={() => handleNavigation('/leaderboard')}>
             <FaTrophy className="menu-icon" />
-            <span>Leaderboards</span>
+            Leaderboard
           </li>
 
-          <li
-            onClick={() => {
-              onClose();
-              navigate("/daily");
-            }}
-          >
-            <FaCalendarDay className="menu-icon" />
-            <span>Daily Challenge</span>
+          <li onClick={openSettings}>
+            <FaCog className="menu-icon" />
+            Settings
           </li>
 
-          {/* Conditional login/logout */}
+          <li onClick={openAbout}>
+            <FaInfoCircle className="menu-icon" />
+            About
+          </li>
+
+          {/* Auth actions */}
           {isAuthenticated ? (
             <li className="menu-action-item" onClick={handleLogout}>
               <FaSignOutAlt className="menu-icon" />
-              <span>Sign Out</span>
+              Logout
             </li>
           ) : (
-            <li
-              className="menu-action-item"
-              onClick={() => {
-                onClose();
-                openLogin();
-              }}
-            >
-              <FaSignInAlt className="menu-icon" />
-              <span>Sign In</span>
-            </li>
+            <>
+              <li className="menu-action-item" onClick={handleLogin}>
+                <FaSignInAlt className="menu-icon" />
+                Login
+              </li>
+              <li onClick={handleSignup}>
+                <FaUserCircle className="menu-icon" />
+                Create Account
+              </li>
+            </>
           )}
         </ul>
 
+        {/* Footer */}
         <div className="menu-footer">
           <p className="version">Version 1.0.0</p>
         </div>

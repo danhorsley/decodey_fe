@@ -145,3 +145,56 @@
     height: 14px;
   }
 }
+
+/* Login status indicator - LED style */
+.status-indicator {
+  position: absolute;
+  bottom: -9px;
+  right: -9px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+/* Status colors */
+.status-indicator.logged-in {
+  background-color: #28a745; /* Green */
+  box-shadow: 0 0 4px rgba(40, 167, 69, 0.7);
+}
+
+.status-indicator.logged-out {
+  background-color: #adb5bd; /* Gray */
+  box-shadow: none;
+}
+
+/* Dark theme variations */
+.dark-theme .status-indicator.logged-in {
+  background-color: #4cc9f0; /* Cyan */
+  box-shadow: 0 0 5px rgba(76, 201, 240, 0.7);
+}
+
+.dark-theme .status-indicator.logged-out {
+  background-color: #6c757d; /* Darker gray */
+  box-shadow: none;
+}
+
+/* Pulsing animation when first logged in */
+@keyframes pulse-login {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.status-indicator.just-logged-in {
+  animation: pulse-login 1.5s ease-in-out;
+}
