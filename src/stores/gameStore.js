@@ -343,7 +343,7 @@ const useGameStore = create((set, get) => ({
           }
         }
       }
-
+      console.log("printing gameData for continue", gameData);
       // Process game data for hardcore mode if needed
       const gameHardcoreMode = gameData.hardcoreMode || false;
       let processedEncrypted = gameData.encrypted_paragraph || "";
