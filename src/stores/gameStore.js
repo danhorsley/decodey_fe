@@ -345,11 +345,11 @@ const useGameStore = create((set, get) => ({
       }
 
       // Process game data for hardcore mode if needed
-      const currentHardcoreMode = get().hardcoreMode;
+      const gameHardcoreMode = gameData.hardcoreMode || false;
       let processedEncrypted = gameData.encrypted_paragraph || "";
       let processedDisplay = gameData.display || "";
 
-      if (currentHardcoreMode) {
+      if (gameHardcoreMode) {
         processedEncrypted = processedEncrypted.replace(/[^A-Z]/g, "");
         processedDisplay = processedDisplay.replace(/[^A-Z█]/g, "");
       }
@@ -374,11 +374,11 @@ const useGameStore = create((set, get) => ({
         if (gameData.encrypted_paragraph && gameData.display) {
           console.log("Attempting to fix length mismatch");
           // Re-process from original data
-          processedEncrypted = currentHardcoreMode
+          processedEncrypted = gameHardcoreMode
             ? gameData.encrypted_paragraph.replace(/[^A-Z]/g, "")
             : gameData.encrypted_paragraph;
 
-          processedDisplay = currentHardcoreMode
+          processedDisplay = gameHardcoreMode
             ? gameData.display.replace(/[^A-Z█]/g, "")
             : gameData.display;
         }
@@ -473,7 +473,7 @@ const useGameStore = create((set, get) => ({
         startTime: Date.now() - (gameData.time_spent || 0) * 1000,
 
         // Game configuration
-        hardcoreMode: gameData.hardcoreMode || currentHardcoreMode,
+        hardcoreMode: gameData.hardcoreMode || gameHardcoreMode,
         difficulty: difficulty, // Now using consistent terminology
         maxMistakes: maxMistakesValue,
 
