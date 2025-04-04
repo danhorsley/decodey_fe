@@ -112,22 +112,13 @@
 
 /* Daily Challenge Indicator in Game */
 .daily-challenge-indicator {
-  position: absolute;
-  top: 10px;
-  right: 45px; /* Positioned to not interfere with other controls */
   background-color: #FF5722;
   color: white;
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 0.7rem;
-  font-weight: bold;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  z-index: 10;
 }
 
 .dark-theme .daily-challenge-indicator {
   background-color: #FF7043;
-  color: #333;
+  color: #222;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 

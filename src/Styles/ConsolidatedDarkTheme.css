@@ -99,7 +99,9 @@ html.dark-theme {
 }
 
 .dark-theme .hardcore-badge {
-  background-color: #b02a37;
+  background-color: #E53935;
+  color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
 /* ===== STATUS MESSAGES ===== */

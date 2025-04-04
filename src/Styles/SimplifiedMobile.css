@@ -309,3 +309,49 @@
     padding: 0.3rem;
   }
 }
+
+
+/* Updated badge styling for both Daily and Hardcore indicators */
+
+/* Base badge styles */
+.badge-indicator {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 0.7rem;
+  font-weight: bold;
+  padding: 3px 8px;
+  letter-spacing: 1px;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  border-bottom-left-radius: 5px;
+}
+
+/* Daily Challenge Badge - top right corner */
+.daily-challenge-indicator {
+  background-color: #FF5722;
+  color: white;
+}
+
+/* Dark theme adjustment for daily badge */
+.dark-theme .daily-challenge-indicator {
+  background-color: #FF7043;
+  color: #222;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* Hardcore Badge - also top right corner (won't appear with Daily) */
+.hardcore-badge {
+  background-color: #dc3545;
+  color: white;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 480px) {
+  .badge-indicator, 
+  .daily-challenge-indicator,
+  .hardcore-badge {
+    font-size: 0.65rem;
+    padding: 2px 6px;
+  }
+}

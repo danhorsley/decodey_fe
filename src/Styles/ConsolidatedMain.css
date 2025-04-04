@@ -204,25 +204,23 @@ button:hover:not(:disabled) {
   font-weight: bold;
   z-index: 1;
 }
-
-/* Hardcore mode styles */
-.text-container.hardcore-mode {
-  border: 2px solid #dc3545;
-  position: relative;
-}
-
-.hardcore-badge {
+/* Base badge styles */
+.badge-indicator {
   position: absolute;
   top: 0;
   right: 0;
-  background-color: #dc3545;
-  color: white;
   font-size: 0.7rem;
   font-weight: bold;
   padding: 3px 8px;
-  border-bottom-left-radius: 5px;
   letter-spacing: 1px;
-  z-index: 2;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  border-bottom-left-radius: 5px;
+}
+
+.hardcore-badge {
+  background-color: #dc3545;
+  color: white;
 }
 
 /* Alternating text display */

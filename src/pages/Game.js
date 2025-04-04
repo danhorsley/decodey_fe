@@ -341,11 +341,12 @@ function Game() {
   // Game header component
   const renderGameHeader = () => (
     <>
-      {/* New Compact Header */}
+      {/* Updated CompactHeader with both isDailyChallenge and hardcoreMode props */}
       <CompactHeader
         title={isDailyChallenge ? "decodey - daily" : "decodey"}
         toggleMenu={toggleMenu}
         isDailyChallenge={isDailyChallenge}
+        hardcoreMode={hardcoreMode}
       />
 
       {/* Slide menu */}
@@ -360,11 +361,11 @@ function Game() {
         className="alternating-text"
         dangerouslySetInnerHTML={formattedText}
       />
-      {hardcoreMode && (
+      {/* {hardcoreMode && (
         <div className="hardcore-badge">
           <span>HARDCORE MODE</span>
         </div>
-      )}
+      )} */}
     </div>
   );
 

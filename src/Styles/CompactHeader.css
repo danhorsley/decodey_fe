@@ -72,20 +72,37 @@
   letter-spacing: 1px;
 }
 
-/* Daily challenge badge */
-.daily-badge {
-  background-color: #ff9500;
-  color: #fff;
+/* Badge indicators (Daily and Hardcore) */
+.badge-indicator {
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   font-size: 0.65rem;
   font-weight: bold;
   letter-spacing: 1px;
   margin-left: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Daily badge */
+.daily-badge {
+  background-color: #ff9500;
+  color: #fff;
 }
 
 .dark-theme .daily-badge {
   background-color: #fd7e14;
+  color: #222;
+}
+
+/* Hardcore badge */
+.hardcore-badge {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+.dark-theme .hardcore-badge {
+  background-color: #E53935;
+  color: #fff;
 }
 
 /* Mobile optimizations */
@@ -98,7 +115,7 @@
     font-size: 1.2rem;
   }
 
-  .daily-badge {
+  .badge-indicator {
     font-size: 0.6rem;
     padding: 0.2rem 0.4rem;
   }
@@ -114,7 +131,7 @@
     font-size: 1.1rem;
   }
 
-  .daily-badge {
+  .badge-indicator {
     font-size: 0.55rem;
     padding: 0.15rem 0.3rem;
   }
