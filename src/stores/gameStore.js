@@ -345,7 +345,9 @@ const useGameStore = create((set, get) => ({
       }
       console.log("printing gameData for continue", gameData);
       // Process game data for hardcore mode if needed
-      const gameHardcoreMode = gameData.hardcoreMode || false;
+      const gameHardcoreMode = gameData.game_id
+        ? gameData.game_id.includes("-hardcore-")
+        : false;
       let processedEncrypted = gameData.encrypted_paragraph || "";
       let processedDisplay = gameData.display || "";
 
@@ -473,7 +475,7 @@ const useGameStore = create((set, get) => ({
         startTime: Date.now() - (gameData.time_spent || 0) * 1000,
 
         // Game configuration
-        hardcoreMode: gameData.hardcoreMode || gameHardcoreMode,
+        hardcoreMode: gameHardcoreMode,
         difficulty: difficulty, // Now using consistent terminology
         maxMistakes: maxMistakesValue,
 
