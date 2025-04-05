@@ -56,6 +56,7 @@ const DailyChallenge = () => {
             // No active game but daily completed
             setAlreadyCompleted(true);
             setCompletionData(result.completion_data);
+            return;
           } else {
             // Daily not completed, start it
             const dailyResult = await startDailyChallenge();
@@ -64,9 +65,25 @@ const DailyChallenge = () => {
               return;
             }
           }
-            return;
-          }
         }
+
+        // If not completed or anonymous, start the daily challenge
+        const dailyResult = await startDailyChallenge();
+        
+        if (dailyResult.success) {
+          navigate("/", { state: { dailyChallenge: true } });
+        } else if (dailyResult.alreadyCompleted) {
+          setAlreadyCompleted(true);
+          setCompletionData(dailyResult.completionData);
+        } else {
+          setError(dailyResult.error || "Failed to start daily challenge");
+        }
+      } catch (err) {
+        console.error("Error in daily challenge initialization:", err);
+        setError("Could not load daily challenge. Please try again.");
+      } finally {
+        setChecking(false);
+      }
 
         // If not completed or anonymous, start the daily challenge
         const dailyResult = await startDailyChallenge();
