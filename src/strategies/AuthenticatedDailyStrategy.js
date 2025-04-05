@@ -31,6 +31,19 @@ class AuthenticatedDailyStrategy extends DailyChallengeInterface {
           "AuthenticatedDailyStrategy: User already completed today's challenge",
         );
 
+        // Check for active game to continue
+        const activeGame = await apiService.checkActiveGame();
+        if (activeGame.has_active_game) {
+          console.log("AuthenticatedDailyStrategy: Found active game to continue");
+          const continueResult = await apiService.continueGame();
+          return {
+            success: true,
+            gameData: continueResult,
+            daily: true,
+            continued: true
+          };
+        }
+
         // Emit event to notify UI about already completed daily
         if (this.events) {
           this.events.emit("daily:already-completed", {

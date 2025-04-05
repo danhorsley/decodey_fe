@@ -22,8 +22,7 @@ const DailyChallenge = () => {
   const settings = useSettingsStore((state) => state.settings);
 
   // Get game session functions
-  const { startDailyChallenge, isDailyCompleted, isInitializing } =
-    useGameSession();
+  const { startDailyChallenge, isInitializing } = useGameSession();
 
   // Local state
   const [checking, setChecking] = useState(true);
@@ -32,44 +31,24 @@ const DailyChallenge = () => {
   const [error, setError] = useState(null);
 
   // Check completion status on mount
-  const gameSession = useGameSession();
-
   useEffect(() => {
-    const checkDailyStatus = async () => {
+    const initializeDaily = async () => {
       try {
         setChecking(true);
+        const dailyResult = await startDailyChallenge();
 
-        // First check daily completion for authenticated users
-        if (isAuthenticated) {
-          const result = await isDailyCompleted();
-          console.log("Daily challenge status:", result);
-          if (result.isCompleted) {
-            // Daily is completed, check for active game to continue
-            const activeGame = await gameSession.checkActiveGame();
-            if (activeGame.hasActiveGame) {
-              const continueResult = await gameSession.continueGame();
-              if (continueResult.success) {
-                navigate("/", { state: { continuedGame: true } });
-                return;
-              }
-            }
-            // No active game but daily completed
-            setAlreadyCompleted(true);
-            setCompletionData(result.completion_data);
+        if (dailyResult.success) {
+          if (dailyResult.continued || !dailyResult.alreadyCompleted) {
+            navigate("/", { state: { dailyChallenge: true } });
             return;
-          } else {
-            // Daily not completed, start it
-            const dailyResult = await startDailyChallenge();
-            if (dailyResult.success) {
-              navigate("/", { state: { dailyChallenge: true } });
-              return;
-            } else if (dailyResult.alreadyCompleted) {
-              setAlreadyCompleted(true);
-              setCompletionData(dailyResult.completionData);
-            } else {
-              setError(dailyResult.error || "Failed to start daily challenge");
-            }
           }
+
+          if (dailyResult.alreadyCompleted) {
+            setAlreadyCompleted(true);
+            setCompletionData(dailyResult.completionData);
+          }
+        } else {
+          setError(dailyResult.error || "Failed to start daily challenge");
         }
       } catch (err) {
         console.error("Error in daily challenge initialization:", err);
@@ -79,8 +58,8 @@ const DailyChallenge = () => {
       }
     };
 
-    checkDailyStatus();
-  }, [isAuthenticated, isDailyCompleted, startDailyChallenge, navigate]);
+    initializeDaily();
+  }, [startDailyChallenge, navigate]);
 
   // Format time for display
   const formatTime = (seconds) => {
