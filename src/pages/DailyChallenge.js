@@ -32,6 +32,8 @@ const DailyChallenge = () => {
   const [error, setError] = useState(null);
 
   // Check completion status on mount
+  const gameSession = useGameSession();
+
   useEffect(() => {
     const checkDailyStatus = async () => {
       try {
@@ -39,7 +41,6 @@ const DailyChallenge = () => {
 
         // First check for active game if authenticated
         if (isAuthenticated) {
-          const gameSession = useGameSession();
           const activeGame = await gameSession.checkActiveGame();
           
           if (activeGame.hasActiveGame) {
