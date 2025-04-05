@@ -40,23 +40,21 @@ class AuthenticatedDailyStrategy extends DailyChallengeInterface {
             success: true,
             gameData: continueResult,
             daily: true,
-            continued: true
+            continued: true,
+            alreadyCompleted: true,
+            completionData: completionCheck.completionData
           };
         }
 
-        // Emit event to notify UI about already completed daily
-        if (this.events) {
-          this.events.emit("daily:already-completed", {
-            completionData: completionCheck.completionData,
-          });
-        }
-
+        // No active game to continue, return completed state
         return {
           success: true,
           alreadyCompleted: true,
           completionData: completionCheck.completionData,
-          daily: true,
+          daily: true
         };
+
+        // Emit event to notify UI about already completed daily
       }
 
       // Not completed yet, start the daily challenge
