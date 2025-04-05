@@ -66,9 +66,6 @@ const DailyChallenge = () => {
             }
           }
         }
-
-        // If not completed or anonymous, start the daily challenge
-        const dailyResult = await startDailyChallenge();
         
         if (dailyResult.success) {
           navigate("/", { state: { dailyChallenge: true } });
