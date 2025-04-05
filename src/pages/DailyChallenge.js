@@ -42,7 +42,7 @@ const DailyChallenge = () => {
         // First check daily completion for authenticated users
         if (isAuthenticated) {
           const result = await isDailyCompleted();
-          
+
           if (result.isCompleted) {
             // Daily is completed, check for active game to continue
             const activeGame = await gameSession.checkActiveGame();
@@ -63,44 +63,15 @@ const DailyChallenge = () => {
             if (dailyResult.success) {
               navigate("/", { state: { dailyChallenge: true } });
               return;
+            } else if (dailyResult.alreadyCompleted) {
+              setAlreadyCompleted(true);
+              setCompletionData(dailyResult.completionData);
+            } else {
+              setError(dailyResult.error || "Failed to start daily challenge");
             }
           }
         }
-        
-        if (dailyResult.success) {
-          navigate("/", { state: { dailyChallenge: true } });
-        } else if (dailyResult.alreadyCompleted) {
-          setAlreadyCompleted(true);
-          setCompletionData(dailyResult.completionData);
-        } else {
-          setError(dailyResult.error || "Failed to start daily challenge");
-        }
-      } catch (err) {
-        console.error("Error in daily challenge initialization:", err);
-        setError("Could not load daily challenge. Please try again.");
-      } finally {
-        setChecking(false);
-      }
 
-        // If not completed or anonymous, start the daily challenge
-        const dailyResult = await startDailyChallenge();
-
-        if (dailyResult.success) {
-          // Completion check and challenge start successful, redirect to game page
-          navigate("/", {
-            state: {
-              dailyChallenge: true,
-              date: new Date().toISOString().split("T")[0],
-            },
-          });
-        } else if (dailyResult.alreadyCompleted) {
-          // Already completed (caught from start attempt)
-          setAlreadyCompleted(true);
-          setCompletionData(dailyResult.completionData);
-        } else {
-          // Some other error
-          setError(dailyResult.error || "Failed to start daily challenge");
-        }
       } catch (err) {
         console.error("Error in daily challenge initialization:", err);
         setError("Could not load daily challenge. Please try again.");
