@@ -42,7 +42,7 @@ const DailyChallenge = () => {
         // First check daily completion for authenticated users
         if (isAuthenticated) {
           const result = await isDailyCompleted();
-
+          console.log("Daily challenge status:", result);
           if (result.isCompleted) {
             // Daily is completed, check for active game to continue
             const activeGame = await gameSession.checkActiveGame();
@@ -71,7 +71,6 @@ const DailyChallenge = () => {
             }
           }
         }
-
       } catch (err) {
         console.error("Error in daily challenge initialization:", err);
         setError("Could not load daily challenge. Please try again.");
