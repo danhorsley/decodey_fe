@@ -21,6 +21,11 @@ class DailyChallengeInterface {
    * @returns {Promise<Object>} Result with success flag and game data
    */
   async startDailyChallenge() {
+    // Ensure hardcore mode is never used for daily challenges
+    if (localStorage.getItem('uncrypt-hardcore-mode') === 'true') {
+      localStorage.setItem('uncrypt-hardcore-mode', 'false');
+    }
+    
     throw new Error(
       "startDailyChallenge must be implemented by concrete classes",
     );
