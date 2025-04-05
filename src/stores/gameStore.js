@@ -190,10 +190,10 @@ const useGameStore = create((set, get) => ({
       let processedEncrypted = data.encrypted_paragraph;
       let processedDisplay = data.display;
 
-      if (effectiveHardcoreMode) {
-        processedEncrypted = processedEncrypted.replace(/[^A-Z]/g, "");
-        processedDisplay = processedDisplay.replace(/[^A-Z█]/g, "");
-      }
+      // if (effectiveHardcoreMode) {
+      //   processedEncrypted = processedEncrypted.replace(/[^A-Z]/g, "");
+      //   processedDisplay = processedDisplay.replace(/[^A-Z█]/g, "");
+      // }
 
       // DATA INTEGRITY CHECK: Ensure encrypted and display text are correctly aligned
       if (processedEncrypted.length !== processedDisplay.length) {
@@ -521,11 +521,11 @@ const useGameStore = create((set, get) => ({
       if (data.error && data.error.includes("Session expired")) {
         return { success: false, sessionExpired: true };
       }
-
+      const isDailyChallenge = get().isDailyChallenge;
       // Process display text for hardcore mode
       const state = get();
       let displayText = data.display;
-      if (displayText && state.hardcoreMode) {
+      if (displayText && state.hardcoreMode && !isDailyChallenge) {
         displayText = displayText.replace(/[^A-Z█]/g, "");
       }
 
@@ -634,10 +634,10 @@ const useGameStore = create((set, get) => ({
         set({ isHintInProgress: false, pendingHints: state.pendingHints });
         return { success: false, error: data.error };
       }
-
+      const isDailyChallenge = get().isDailyChallenge;
       // Process display text for hardcore mode
       let displayText = data.display;
-      if (state.hardcoreMode && displayText) {
+      if (state.hardcoreMode && displayText && !isDailyChallenge) {
         displayText = displayText.replace(/[^A-Z█]/g, "");
       }
 
