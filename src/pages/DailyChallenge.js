@@ -22,7 +22,8 @@ const DailyChallenge = () => {
   const settings = useSettingsStore((state) => state.settings);
 
   // Get game session functions
-  const { startDailyChallenge, isInitializing } = useGameSession();
+  const { startDailyChallenge, isDailyCompleted, isInitializing } =
+    useGameSession();
 
   // Local state
   const [checking, setChecking] = useState(true);
@@ -32,22 +33,38 @@ const DailyChallenge = () => {
 
   // Check completion status on mount
   useEffect(() => {
-    const initializeDaily = async () => {
+    const checkDailyStatus = async () => {
       try {
         setChecking(true);
+
+        // Only check completion for authenticated users
+        if (isAuthenticated) {
+          const result = await isDailyCompleted();
+
+          if (result.isCompleted) {
+            setAlreadyCompleted(true);
+            setCompletionData(result.completion_data);
+            return;
+          }
+        }
+
+        // If not completed or anonymous, start the daily challenge
         const dailyResult = await startDailyChallenge();
 
         if (dailyResult.success) {
-          if (dailyResult.continued || !dailyResult.alreadyCompleted) {
-            navigate("/", { state: { dailyChallenge: true } });
-            return;
-          }
-
-          if (dailyResult.alreadyCompleted) {
-            setAlreadyCompleted(true);
-            setCompletionData(dailyResult.completionData);
-          }
+          // Completion check and challenge start successful, redirect to game page
+          navigate("/", {
+            state: {
+              dailyChallenge: true,
+              date: new Date().toISOString().split("T")[0],
+            },
+          });
+        } else if (dailyResult.alreadyCompleted) {
+          // Already completed (caught from start attempt)
+          setAlreadyCompleted(true);
+          setCompletionData(dailyResult.completionData);
         } else {
+          // Some other error
           setError(dailyResult.error || "Failed to start daily challenge");
         }
       } catch (err) {
@@ -58,8 +75,8 @@ const DailyChallenge = () => {
       }
     };
 
-    initializeDaily();
-  }, [startDailyChallenge, navigate]);
+    checkDailyStatus();
+  }, [isAuthenticated, isDailyCompleted, startDailyChallenge, navigate]);
 
   // Format time for display
   const formatTime = (seconds) => {
