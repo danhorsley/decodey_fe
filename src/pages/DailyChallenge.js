@@ -37,10 +37,22 @@ const DailyChallenge = () => {
       try {
         setChecking(true);
 
-        // Only check completion for authenticated users
+        // First check for active game if authenticated
         if (isAuthenticated) {
-          const result = await isDailyCompleted();
+          const gameSession = useGameSession();
+          const activeGame = await gameSession.checkActiveGame();
+          
+          if (activeGame.hasActiveGame) {
+            // If there's an active game, continue it instead
+            const continueResult = await gameSession.continueGame();
+            if (continueResult.success) {
+              navigate("/", { state: { continuedGame: true } });
+              return;
+            }
+          }
 
+          // If no active game, check daily completion
+          const result = await isDailyCompleted();
           if (result.isCompleted) {
             setAlreadyCompleted(true);
             setCompletionData(result.completion_data);
