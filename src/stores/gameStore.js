@@ -561,33 +561,21 @@ const useGameStore = create((set, get) => ({
       }
 
       // Handle correctly guessed letters
+      let isCorrectGuess = false;
       if (Array.isArray(data.correctly_guessed)) {
         updates.correctlyGuessed = data.correctly_guessed;
 
-        // Update guessedMappings based on display text
-        const newMappings = { ...state.guessedMappings };
-        data.correctly_guessed.forEach(letter => {
-          // Find the corresponding plain text letter from display
-          for(let i = 0; i < state.encrypted.length; i++) {
-            if(state.encrypted[i] === letter && displayText[i] !== '█') {
-              newMappings[letter] = displayText[i];
-              break;
-            }
-          }
-        });
-        updates.guessedMappings = newMappings;
-
-        // Check if this guess was correct (not previously guessed)
+        // Check if this guess was correct
         if (
           data.correctly_guessed.includes(encryptedLetter) &&
           !state.correctlyGuessed.includes(encryptedLetter)
         ) {
+          isCorrectGuess = true;
           updates.lastCorrectGuess = encryptedLetter;
-          // Play correct sound
-          //playSound && playSound("correct");
-        } else if (data.mistakes > state.mistakes) {
-          // This was an incorrect guess
-          //playSound && playSound("incorrect");
+          updates.guessedMappings = {
+            ...state.guessedMappings,
+            [encryptedLetter]: guessedLetter.toUpperCase(),
+          };
         }
       }
 
@@ -596,8 +584,8 @@ const useGameStore = create((set, get) => ({
 
       return {
         success: true,
-        isCorrect: data.correctly_guessed.includes(encryptedLetter),
-        isIncorrect: data.mistakes > state.mistakes,
+        isCorrect: isCorrectGuess,
+        isIncorrect: isIncorrectGuess,
         hasWon: updates.hasWon || false,
         hasLost: updates.hasLost || false,
       };
@@ -962,7 +950,7 @@ const useGameStore = create((set, get) => ({
               ? [...gameData.correctly_guessed]
               : [],
             letterFrequency: gameData.letter_frequency
-              ?? { ...gameData.letter_frequency }
+              ? { ...gameData.letter_frequency }
               : {},
             originalLetters: Array.isArray(gameData.original_letters)
               ? [...gameData.original_letters]
