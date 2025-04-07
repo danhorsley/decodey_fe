@@ -93,7 +93,7 @@
   }
 
   /* Adjust dashboard grid for better fit */
-  .mobile-mode .letter-cell {
+  .mobile-mode {
     min-width: 34px;
     min-height: 34px;
     font-size: 0.9rem;
