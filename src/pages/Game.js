@@ -58,8 +58,13 @@ function Game() {
   const isDailyFromRoute = location.state?.dailyChallenge === true;
 
   // Get initialization status and events from gameSession hook
-  const { isInitializing, initializeGame, startDailyChallenge, lastError, subscribeToEvents } =
-    useGameSession();
+  const {
+    isInitializing,
+    initializeGame,
+    startDailyChallenge,
+    lastError,
+    subscribeToEvents,
+  } = useGameSession();
 
   // Handle logout transition
   useEffect(() => {
@@ -69,17 +74,20 @@ function Game() {
     });
 
     // Handle anonymous transition
-    const unsubscribeAnon = subscribeToEvents("game:anonymous-transition", (result) => {
-      if (result.success && result.gameData) {
-        // Start new anonymous game with the received data
-        useGameStore.getState().startGame(
-          false, // longText
-          false, // hardcoreMode
-          true,  // forceNew
-          false  // isDaily
-        );
-      }
-    });
+    const unsubscribeAnon = subscribeToEvents(
+      "game:anonymous-transition",
+      (result) => {
+        if (result.success && result.gameData) {
+          // Start new anonymous game with the received data
+          useGameStore.getState().startGame(
+            false, // longText
+            false, // hardcoreMode
+            true, // forceNew
+            false, // isDaily
+          );
+        }
+      },
+    );
 
     return () => {
       unsubscribe();
@@ -433,7 +441,7 @@ function Game() {
   if (useMobileMode) {
     console.log("Rendering mobile layout"); // Debug log
     return (
-      <div className="App-container mobile-view">
+      <div className="App-container mobile-mode">
         <MobileLayout>
           {renderGameHeader()}
           {renderTextContainer()}
