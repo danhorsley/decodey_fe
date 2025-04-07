@@ -57,9 +57,35 @@ function Game() {
   // Check if this is a daily challenge (passed from DailyChallenge component)
   const isDailyFromRoute = location.state?.dailyChallenge === true;
 
-  // Get initialization status from gameSession hook
-  const { isInitializing, initializeGame, startDailyChallenge, lastError } =
+  // Get initialization status and events from gameSession hook
+  const { isInitializing, initializeGame, startDailyChallenge, lastError, subscribeToEvents } =
     useGameSession();
+
+  // Handle logout transition
+  useEffect(() => {
+    const unsubscribe = subscribeToEvents("auth:logout-transition", () => {
+      // Reset any authenticated-user specific state
+      useGameStore.getState().resetState();
+    });
+
+    // Handle anonymous transition
+    const unsubscribeAnon = subscribeToEvents("game:anonymous-transition", (result) => {
+      if (result.success && result.gameData) {
+        // Start new anonymous game with the received data
+        useGameStore.getState().startGame(
+          false, // longText
+          false, // hardcoreMode
+          true,  // forceNew
+          false  // isDaily
+        );
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      unsubscribeAnon();
+    };
+  }, [subscribeToEvents]);
   // Get isResetting from gameStore to properly handle transitions
   const isResetting = useGameStore((state) => state.isResetting);
 
