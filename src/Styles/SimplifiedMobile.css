@@ -22,11 +22,13 @@
 .mobile-mode .game-header {
   padding: 0.5rem;
   justify-content: space-between;
+  
 }
 
 .mobile-mode .retro-title {
   font-size: 1.5rem;
   margin: 0;
+  
 }
 
 /* Text container */
@@ -55,6 +57,7 @@
   grid-template-columns: repeat(auto-fill, minmax(2.5rem, 1fr));
   gap: var(--grid-gap);
   width: 48%;
+  border: 5px solid red !important; 
 }
 /* Letter cells */
 .mobile-mode .letter-cell {
