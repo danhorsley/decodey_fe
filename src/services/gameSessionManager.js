@@ -251,11 +251,21 @@ const handleLogout = async (options = { startAnonymousGame: true }) => {
     // Clear session data
     config.session.clearSession();
 
+    // Emit event for UI state transition
+    eventEmitter.emit("auth:logout-transition");
+
     // Start a new anonymous game if requested
     if (options.startAnonymousGame) {
       // After logout, we need the anonymous strategy
       const strategy = strategyFactory.getStrategyByType("anonymous");
-      return await strategy.initializeGame(options.gameOptions || {});
+      const gameResult = await strategy.initializeGame(options.gameOptions || {});
+      
+      // Emit event for game state transition
+      if (gameResult.success) {
+        eventEmitter.emit("game:anonymous-transition", gameResult);
+      }
+      
+      return gameResult;
     }
 
     return { success: true };
@@ -269,7 +279,14 @@ const handleLogout = async (options = { startAnonymousGame: true }) => {
     if (options.startAnonymousGame) {
       try {
         const strategy = strategyFactory.getStrategyByType("anonymous");
-        return await strategy.initializeGame(options.gameOptions || {});
+        const gameResult = await strategy.initializeGame(options.gameOptions || {});
+        
+        // Emit event even after error recovery
+        if (gameResult.success) {
+          eventEmitter.emit("game:anonymous-transition", gameResult);
+        }
+        
+        return gameResult;
       } catch (gameError) {
         console.error("Failed to start game after logout:", gameError);
       }
