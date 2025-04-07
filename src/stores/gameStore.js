@@ -827,6 +827,18 @@ const useGameStore = create((set, get) => ({
   // Abandon game - thoroughly clean up both frontend and backend state
   abandonGame: async () => {
     try {
+      // Check if there's an active daily game - don't abandon if starting daily
+      const activeGameId = localStorage.getItem("uncrypt-game-id");
+      const isActiveDailyGame =
+        activeGameId && activeGameId.includes("-daily-");
+      const isActiveCustomGame =
+        activeGameId && !activeGameId.includes("-daily-");
+
+      // If we have a daily game and we're trying to start a new daily, don't abandon
+      if (isActiveDailyGame && window.location.pathname.includes("/daily")) {
+        console.log("Preserving daily game during daily initialization");
+        return true;
+      }
       // Clear any stored game ID first
       localStorage.removeItem("uncrypt-game-id");
 
