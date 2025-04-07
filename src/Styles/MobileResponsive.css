@@ -1,0 +1,377 @@
+/* 
+   MobileResponsive.css - Consolidated responsive design system
+   This file contains all mobile-specific media queries and responsive styles
+   Ensures consistent breakpoints and styling across all mobile experiences
+*/
+
+/* ===== BREAKPOINT SYSTEM ===== */
+/* 
+   Standardized breakpoints:
+   - xs: 0-374px (Small phones like iPhone SE)
+   - sm: 375-479px (Typical modern small phones)
+   - md: 480-767px (Large phones like iPhone Pro Max, Samsung S20+)
+   - lg: 768-991px (Tablets in portrait mode)
+   - xl: 992px+ (Tablets in landscape and desktops)
+*/
+
+/* ===== BASE MOBILE SETTINGS ===== */
+.mobile-mode {
+  font-size: 16px; /* Base font size for mobile */
+  --grid-gap: 0.5rem;
+  --button-min-height: 44px; /* Touch-friendly button height */
+  --letter-cell-size: 40px; /* Default letter cell size */
+}
+
+/* ===== EXTRA SMALL DEVICES (under 375px) ===== */
+@media (max-width: 374px) {
+  .mobile-mode {
+    font-size: 14px;
+    --grid-gap: 0.25rem;
+    --letter-cell-size: 32px;
+  }
+
+  /* Smaller text for very small screens */
+  .mobile-mode .text-container {
+    font-size: 0.85rem;
+    max-height: 25vh;
+  }
+
+  /* Tighter letter cells to fit more on screen */
+  .mobile-mode .letter-cell {
+    min-width: 30px;
+    min-height: 30px;
+    font-size: 0.8rem;
+    margin: 1px;
+  }
+
+  /* Tighter controls with smaller padding */
+  .mobile-mode .controls {
+    padding: 0.3rem;
+  }
+
+  /* Handle badge sizing */
+  .mobile-mode .badge-indicator {
+    font-size: 0.6rem;
+    padding: 0.15rem 0.3rem;
+  }
+
+  /* Frequency indicator adjustment */
+  .mobile-mode .frequency-indicator {
+    font-size: 0.45rem;
+    bottom: 1px;
+    right: 1px;
+  }
+
+  /* Ensure hint button is still usable */
+  .mobile-mode .crossword-hint-button {
+    min-width: 80px;
+    min-height: 50px;
+    padding: 0.5rem 0.4rem;
+  }
+
+  /* Win celebration adjustments */
+  .mobile-mode .celebration-content {
+    width: 95%;
+    padding: 15px;
+  }
+
+  .mobile-mode .victory-title {
+    font-size: 1.8rem;
+  }
+
+  .mobile-mode .decrypted-quote {
+    font-size: 0.8rem;
+  }
+}
+
+/* ===== SMALL DEVICES (375px - 479px) ===== */
+@media (min-width: 375px) and (max-width: 479px) {
+  .mobile-mode {
+    font-size: 15px;
+    --grid-gap: 0.35rem;
+    --letter-cell-size: 36px;
+  }
+
+  /* Adjust dashboard grid for better fit */
+  .mobile-mode .letter-cell {
+    min-width: 34px;
+    min-height: 34px;
+    font-size: 0.9rem;
+    margin: 2px;
+  }
+
+  /* Text container adjustments */
+  .mobile-mode .text-container {
+    font-size: 0.9rem;
+    max-height: 28vh;
+  }
+
+  /* Frequency indicator positioning */
+  .mobile-mode .frequency-indicator {
+    font-size: 0.5rem;
+  }
+
+  /* Win celebration adjustments */
+  .mobile-mode .celebration-content {
+    width: 92%;
+    padding: 18px;
+  }
+
+  .mobile-mode .victory-title {
+    font-size: 2rem;
+  }
+
+  .mobile-mode .decrypted-quote {
+    font-size: 0.85rem;
+  }
+}
+
+/* ===== MEDIUM DEVICES (480px - 767px) ===== */
+@media (min-width: 480px) and (max-width: 767px) {
+  .mobile-mode {
+    font-size: 16px;
+    --grid-gap: 0.4rem;
+    --letter-cell-size: 42px;
+  }
+
+  /* Larger devices get larger buttons */
+  .mobile-mode button:not(.letter-cell) {
+    min-height: 48px;
+    font-size: 1rem;
+  }
+
+  /* Larger letter cells for better touch targets */
+  .mobile-mode .letter-cell {
+    min-width: 42px;
+    min-height: 42px;
+    font-size: 1.1rem;
+    margin: 3px;
+  }
+
+  /* Larger text area */
+  .mobile-mode .text-container {
+    font-size: 1rem;
+    max-height: 30vh;
+    padding: 0.75rem;
+  }
+
+  /* Better hint button sizing */
+  .mobile-mode .crossword-hint-button {
+    min-width: 110px;
+    min-height: 65px;
+    padding: 0.75rem 0.5rem;
+  }
+
+  /* Win celebration adjustments */
+  .mobile-mode .celebration-content {
+    width: 90%;
+    max-width: 500px;
+    padding: 20px;
+  }
+
+  .mobile-mode .victory-title {
+    font-size: 2.2rem;
+  }
+
+  .mobile-mode .play-again-button,
+  .mobile-mode .share-button {
+    min-height: 50px;
+    font-size: 1.1rem;
+    min-width: 220px;
+  }
+}
+
+/* ===== LARGE DEVICES (768px - 991px) ===== */
+@media (min-width: 768px) and (max-width: 991px) {
+  .mobile-mode {
+    font-size: 16px;
+    --grid-gap: 0.5rem;
+  }
+
+  /* Further increase button sizes */
+  .mobile-mode button:not(.letter-cell) {
+    min-height: 52px; 
+    padding: 10px 20px;
+    font-size: 1.1rem;
+  }
+
+  /* Larger letter cells */
+  .mobile-mode .letter-cell {
+    min-width: 46px;
+    min-height: 46px;
+    font-size: 1.2rem;
+    margin: 4px;
+  }
+
+  /* Larger hint button */
+  .mobile-mode .crossword-hint-button {
+    min-width: 120px;
+    min-height: 70px;
+  }
+
+  /* Header scaling */
+  .mobile-mode .retro-title,
+  .mobile-mode .game-title {
+    font-size: 1.6rem;
+  }
+
+  /* Win celebration can use more space */
+  .mobile-mode .celebration-content {
+    width: 85%;
+    max-width: 650px;
+    padding: 25px;
+  }
+
+  .mobile-mode .play-again-button,
+  .mobile-mode .share-button {
+    min-height: 54px; 
+    font-size: 1.15rem;
+    min-width: 250px;
+  }
+}
+
+/* ===== ORIENTATION SPECIFIC STYLES ===== */
+/* Portrait orientation - optimize vertical space usage */
+@media (orientation: portrait) {
+  .mobile-mode .text-container {
+    max-height: 35vh;
+  }
+
+  /* Win celebration should fit better in portrait */
+  .mobile-mode .celebration-content {
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+
+  .mobile-mode .quote-container {
+    max-height: 30vh;
+  }
+
+  /* Adjust grid layout to be more compact vertically */
+  .mobile-mode .game-dashboard {
+    grid-template-areas:
+      "encrypted"
+      "controls"
+      "guess";
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 0.5rem;
+  }
+}
+
+/* Landscape orientation - make use of horizontal space */
+@media (orientation: landscape) {
+  .mobile-mode .text-container {
+    max-height: 25vh;
+  }
+
+  /* Win celebration should be wider in landscape */
+  .mobile-mode .celebration-content {
+    max-width: 85vw;
+    max-height: 80vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Side-by-side layout for landscape */
+  .mobile-mode .quote-container {
+    max-height: 20vh;
+  }
+
+  /* Use more horizontal layout for grids */
+  .mobile-mode .game-dashboard {
+    grid-template-areas:
+      "encrypted controls guess";
+    grid-template-columns: 5fr 1fr 5fr;
+    gap: 0.5rem;
+  }
+
+  /* Stats display should be horizontal */
+  .mobile-mode .stats-container {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+/* ===== FONT MODIFICATION FOR LEGIBILITY ===== */
+/* Special styling for E and F to make them more distinguishable */
+.mobile-mode .letter-cell:contains('E') {
+  font-weight: 900; /* Extra bold */
+  text-shadow: 0 0 1px currentColor; /* Slight shadow to enhance visibility */
+}
+
+.mobile-mode .letter-cell:contains('F') {
+  font-weight: 700; /* Bold but less than E */
+}
+
+/* Alternative approach using a position indicator */
+.mobile-mode .letter-cell[data-letter="E"]::after,
+.mobile-mode .letter-cell[data-letter="F"]::after {
+  content: '';
+  position: absolute;
+  bottom: 3px; 
+  height: 2px;
+  width: 50%;
+  background-color: currentColor;
+  opacity: 0.5;
+}
+
+.mobile-mode .letter-cell[data-letter="E"]::after {
+  width: 75%; /* E has longer bottom line */
+}
+
+.mobile-mode .letter-cell[data-letter="F"]::after {
+  width: 0; /* F has no bottom line */
+}
+
+/* ===== TEXT OVERFLOW HANDLING ===== */
+/* Better text wrapping and overflow handling */
+.mobile-mode .char-grid {
+  flex-wrap: wrap;
+  overflow-wrap: break-word;
+  word-break: break-all;
+  max-width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.mobile-mode .grid-cell {
+  flex: 0 0 auto;
+}
+
+/* Ensure long text can scroll properly */
+.mobile-mode .text-container {
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ===== MODAL STYLING ===== */
+/* Improve modal positioning and sizing on mobile */
+.mobile-mode .win-celebration {
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+}
+
+/* Ensure buttons are tap-friendly across all screens */
+.mobile-mode button,
+.mobile-mode .letter-cell,
+.mobile-mode .settings-option,
+.mobile-mode .tab {
+  min-height: var(--button-min-height);
+  touch-action: manipulation;
+}
+
+/* Improve modal scrolling behavior */
+.mobile-mode .about-container,
+.mobile-mode .settings-container,
+.mobile-mode .login-container {
+  max-height: 85vh;
+  width: 92vw;
+  margin: 0 auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
