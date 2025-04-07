@@ -11,10 +11,10 @@ import "./Styles/About.css";
 import "./Styles/Settings.css";
 import "./Styles/Leaderboard.css";
 import "./Styles/Privacy.css";
-import "./Styles/Scoring.css"; // Import the new Scoring.css
-// Keep Modal CSS separate as it's used across components
+import "./Styles/Scoring.css"; 
 import "./Styles/Modal.css";
 import "./Styles/DailyChallenge.css";
+import "./Styles/MobileResponsive.css";
 
 import App from "./App";
 // Import stores needed for initialization
