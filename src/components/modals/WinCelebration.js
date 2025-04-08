@@ -206,13 +206,75 @@ const WinCelebration = ({ playSound, winData }) => {
         <MatrixRain active={isMatrixActive} color={matrixColor} density={70} />
       )}
 
-      {/* Main celebration content */}
-      <div className="celebration-content">
-        {/* Victory message */}
-        <div className="victory-message">
-          <h2 className="victory-title">Solved! Rating: </h2>
-          <h2 className="victory-title">{rating || "Cryptanalyst"}</h2>
+      {/* Main celebration content with landscape orientation */}
+      <div className="celebration-content landscape-layout">
+        <div className="celebration-main-content">
+          {/* Victory message */}
+          <div className="victory-message">
+            <h2 className="victory-title">Solved! Rating: </h2>
+            <h2 className="victory-title">{rating || "Cryptanalyst"}</h2>
+          </div>
 
+          {/* Stats display */}
+          <div
+            className={`stats-container ${showStats ? "animate-slide-in" : ""}`}
+            style={{
+              opacity: showStats ? 1 : 0,
+              transition: "opacity 0.8s ease-out",
+            }}
+          >
+            <div className="stats-flex-container">
+              <div className="stat-item">
+                <span className="stat-label">Time</span>
+                <span className="stat-value">{timeString}</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-label">Mistakes</span>
+                <span className="stat-value">
+                  {mistakes} / {maxMistakes}
+                </span>
+              </div>
+              <div className="stat-item score">
+                <span className="stat-label">Score</span>
+                <span className="stat-value">{score}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Action buttons */}
+          <div className="celebration-actions">
+            <button
+              className="play-again-button"
+              onClick={handlePlayAgain}
+              disabled={isStartingNewGame || isResetting}
+            >
+              {isStartingNewGame
+                ? "Starting..."
+                : isDailyChallenge
+                  ? "Try Custom Puzzle"
+                  : "Play Again"}
+            </button>
+            {/* Share on X button */}
+            <button
+              className="share-button"
+              onClick={() =>
+                window.open(
+                  getShareUrl(
+                    winData.score,
+                    winData.difficulty || "normal",
+                    winData.rating || "Cryptanalyst",
+                    winData.hardcoreMode || false,
+                  ),
+                  "_blank",
+                )
+              }
+            >
+              <FaXTwitter /> Share Score
+            </button>
+          </div>
+        </div>
+
+        <div className="celebration-side-content">
           {/* Display the original quote and attribution */}
           <div className="quote-container">
             <p className="decrypted-quote">
@@ -225,64 +287,7 @@ const WinCelebration = ({ playSound, winData }) => {
               )}
             </p>
           </div>
-        </div>
 
-        {/* Stats display */}
-        <div
-          className={`stats-container ${showStats ? "animate-slide-in" : ""}`}
-          style={{
-            opacity: showStats ? 1 : 0,
-            transition: "opacity 0.8s ease-out",
-          }}
-        >
-          <div className="stats-flex-container">
-            <div className="stat-item">
-              <span className="stat-label">Time</span>
-              <span className="stat-value">{timeString}</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-label">Mistakes</span>
-              <span className="stat-value">
-                {mistakes} / {maxMistakes}
-              </span>
-            </div>
-            <div className="stat-item score">
-              <span className="stat-label">Score</span>
-              <span className="stat-value">{score}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Action buttons */}
-        <div className="celebration-actions">
-          <button
-            className="play-again-button"
-            onClick={handlePlayAgain}
-            disabled={isStartingNewGame || isResetting}
-          >
-            {isStartingNewGame
-              ? "Starting..."
-              : isDailyChallenge
-                ? "Try Custom Puzzle"
-                : "Play Again"}
-          </button>
-          {/* Share on X button */}
-          <button
-            className="share-button"
-            onClick={() =>
-              window.open(
-                getShareUrl(
-                  winData.score,
-                  winData.difficulty || "normal",
-                  winData.rating || "Cryptanalyst",
-                  winData.hardcoreMode || false,
-                ),
-                "_blank",
-              )
-            }
-          >
-            <FaXTwitter /> Share Score
-          </button>
           {/* Simplified score status message */}
           <div className="score-section">
             {!wasAnonymousGame ? (

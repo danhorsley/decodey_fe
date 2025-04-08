@@ -45,6 +45,10 @@
   margin-bottom: 25px;
 }
 
+.landscape-layout .victory-message {
+  text-align: center;
+}
+
 .victory-title {
   font-size: 2.5rem;
   margin: 0 0 15px 0;
@@ -70,6 +74,12 @@
   transition: opacity 0.8s ease-out !important;
 }
 
+.landscape-layout .stats-container {
+  margin: 15px 0 !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+}
+
 .stats-container.animate-slide-in {
   opacity: 1 !important;
 }
@@ -79,6 +89,9 @@
   flex-direction: column;
   align-items: center;
   min-width: 100px;
+}
+.landscape-layout .stat-item {
+  min-width: 80px;
 }
 
 .stat-label {
@@ -93,9 +106,16 @@
   font-weight: bold;
 }
 
+.landscape-layout .stat-value {
+  font-size: 1.5rem;
+}
+
 .stat-item.score .stat-value {
   font-size: 2.2rem;
   color: #ff9500;
+}
+.landscape-layout .stat-item.score .stat-value {
+  font-size: 1.8rem;
 }
 
 /* Action buttons */
@@ -106,7 +126,16 @@
   margin-top: 25px;
 }
 
-.play-again-button {
+.landscape-layout .celebration-actions {
+  margin-top: 15px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.play-again-button,
+.share-button {
   padding: 12px 24px;
   font-size: 1.1rem;
   background-color: #4cc9f0;
@@ -117,6 +146,13 @@
   transition: all 0.2s ease;
   font-weight: bold;
   box-shadow: 0 4px 10px rgba(76, 201, 240, 0.3);
+}
+.landscape-layout .play-again-button,
+.landscape-layout .share-button {
+  padding: 10px 20px;
+  font-size: 1rem;
+  flex: 1;
+  min-width: 120px;
 }
 
 .play-again-button:hover {
@@ -135,6 +171,12 @@
   max-height: 200px;
   overflow-y: auto;
   text-align: left;
+}
+/* Adjust quote container in landscape layout */
+.landscape-layout .quote-container {
+  margin-top: 0;
+  max-height: 30vh;
+  flex: 1;
 }
 
 .decrypted-quote {
@@ -158,6 +200,12 @@
   margin-top: 15px;
   padding: 10px;
   border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.landscape-layout .score-section {
+  margin-top: 10px;
+  padding: 8px;
+  border-top: none;
 }
 
 .score-success {
@@ -394,4 +442,75 @@
 
 .light-theme .login-button:hover {
   background-color: #0069d9;
+}
+
+/* Adjustments for small screens in landscape */
+@media (max-width: 800px) {
+  .celebration-content.landscape-layout {
+    max-width: 95%;
+  }
+
+  .celebration-main-content {
+    padding-right: 15px;
+  }
+
+  .celebration-side-content {
+    padding-left: 15px;
+  }
+}
+
+/* Very small screens - revert to stacked layout */
+@media (max-width: 600px) {
+  .celebration-content.landscape-layout {
+    flex-direction: column;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+
+  .celebration-main-content {
+    padding-right: 0;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+  }
+
+  .celebration-side-content {
+    padding-left: 0;
+    border-left: none;
+  }
+}
+
+/* Mobile optimizations for the celebration window */
+@media (max-width: 500px) {
+  .celebration-content {
+    padding: 15px;
+  }
+
+  .play-again-button,
+  .share-button {
+    font-size: 0.95rem;
+    padding: 10px 18px;
+  }
+
+  .victory-title {
+    font-size: 2rem;
+  }
+
+  .stat-value {
+    font-size: 1.6rem;
+  }
+
+  .stat-item.score .stat-value {
+    font-size: 1.8rem;
+  }
+
+  .quote-container {
+    padding: 15px;
+    max-height: 150px;
+  }
+
+  .decrypted-quote {
+    font-size: 0.9rem;
+  }
 }
