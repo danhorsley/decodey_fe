@@ -202,13 +202,28 @@
   padding: 1rem;
 }
 
+.mobile-mode .victory-title {
+  font-size: 1.2rem;
+}
+
 .mobile-mode .victory-message {
   font-size: 0.9rem;
 }
 
+.mobile-mode .landscape-layout .quote-container {
+  max-height : 15vh;
+  padding:1px;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+/* Chrome, Safari and Opera */
+.mobile-mode .landscape-layout .quote-container::-webkit-scrollbar {
+  display: none;
+}
 .mobile-mode .decrypted-quote {
-  font-size: 0.9rem;
+  font-size: 0.75rem;
   margin: 1rem 0;
+  line-height:1;
 }
 
 /* Improved stats layout for mobile */
@@ -218,12 +233,24 @@
   flex-wrap: wrap;
   justify-content: space-around;
   width: 100%;
+  --text-container-max-height: 18vh;
+  --controls-padding: 0.05rem;
 }
 
 .mobile-mode .stat-item {
   min-width: 90px;
   margin: 5px;
   text-align: center;
+  font-size:1rem;
+}
+.mobile-mode .landscape-layout .stat-value {
+  font-size:1rem ;
+}
+.mobile-mode .landscape-layout .stat-label {
+  font-size:1rem ;
+}
+.mobile-mode .landscape-layout .stat-item.score .stat-value{
+  font-size:1rem ;
 }
 
 .mobile-mode .celebration-actions {
@@ -235,10 +262,10 @@
 
 .mobile-mode .celebration-actions button {
   font-size: 0.9rem;
-  padding: 0.75rem;
-  margin: 0.5rem 0;
+  padding: 0.01rem;
+  margin: 0.1rem 0;
   min-width: 200px;
-  min-height: 44px;
+  min-height: 30px;
   border-radius: 8px;
 }
 

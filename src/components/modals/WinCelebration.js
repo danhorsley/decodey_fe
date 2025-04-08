@@ -208,14 +208,29 @@ const WinCelebration = ({ playSound, winData }) => {
       )}
 
       {/* Main celebration content with landscape orientation */}
-      <div className={`celebration-content ${settings.theme === "dark" ? "dark-theme" : "light-theme"} text-${settings.textColor} ${useMobileMode ? 'landscape-layout' : ''}`}>
+      <div
+        className={`celebration-content ${settings.theme === "dark" ? "dark-theme" : "light-theme"} text-${settings.textColor} ${useMobileMode ? "landscape-layout" : ""}`}
+      >
         <div className="celebration-main-content">
           {/* Victory message */}
           <div className="victory-message">
-            <h2 className="victory-title">Solved! Rating: </h2>
-            <h2 className="victory-title">{rating || "Cryptanalyst"}</h2>
+            <h2 className="victory-title">
+              Solved! Rating: {rating || "Cryptanalyst"}
+            </h2>
           </div>
-
+          <div className="celebration-side-content">
+            {/* Display the original quote and attribution */}
+            <div className="quote-container">
+              <p className="decrypted-quote">
+                {getDecryptedText()}
+                {attribution?.major_attribution && (
+                  <> — {attribution.major_attribution}</>
+                )}
+                {attribution?.minor_attribution && (
+                  <> , {attribution.minor_attribution}</>
+                )}
+              </p>
+            </div>
           {/* Stats display */}
           <div
             className={`stats-container ${showStats ? "animate-slide-in" : ""}`}
@@ -275,19 +290,7 @@ const WinCelebration = ({ playSound, winData }) => {
           </div>
         </div>
 
-        <div className="celebration-side-content">
-          {/* Display the original quote and attribution */}
-          <div className="quote-container">
-            <p className="decrypted-quote">
-              {getDecryptedText()}
-              {attribution?.major_attribution && (
-                <> — {attribution.major_attribution}</>
-              )}
-              {attribution?.minor_attribution && (
-                <> , {attribution.minor_attribution}</>
-              )}
-            </p>
-          </div>
+ 
 
           {/* Simplified score status message */}
           <div className="score-section">

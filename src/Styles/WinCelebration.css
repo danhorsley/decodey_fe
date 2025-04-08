@@ -68,14 +68,14 @@
   display: flex !important;
   flex-wrap: wrap !important;
   justify-content: center !important;
-  gap: 20px !important;
-  margin: 25px 0 !important;
+  gap: 10px ;
+  margin: 1px 0;
   opacity: 0;
   transition: opacity 0.8s ease-out !important;
 }
 
 .landscape-layout .stats-container {
-  margin: 15px 0 !important;
+  margin: 1px 0 ;
   justify-content: space-between !important;
   gap: 10px !important;
 }
@@ -127,11 +127,13 @@
 }
 
 .landscape-layout .celebration-actions {
-  margin-top: 15px;
+  margin-top: 1px;
   flex-direction: row;
   flex-wrap: wrap;
   justify-content: center;
   gap: 10px;
+  --text-container-max-height: 18vh;
+  --controls-padding: 0.05rem;
 }
 
 .play-again-button,
@@ -197,8 +199,8 @@
 
 /* Score status section */
 .score-section {
-  margin-top: 15px;
-  padding: 10px;
+  margin-top: 1px;
+  padding: 1px;
   border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
 
@@ -405,7 +407,11 @@
   line-height: 1.5;
   border-radius: 4px;
 }
-
+.mobile-mode .anon-score-message {
+  margin-bottom: 1px;
+  line-height: 1;
+  padding:1px;
+}
 .warning-icon {
   margin-right: 5px;
   font-size: 1.2em;
@@ -447,7 +453,7 @@
 /* Adjustments for small screens in landscape */
 @media (max-width: 800px) {
   .celebration-content.landscape-layout {
-    max-width: 95%;
+    max-width: 80%;
   }
 
   .celebration-main-content {
