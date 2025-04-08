@@ -54,8 +54,8 @@
 .mobile-mode .encrypted-grid,
 .mobile-mode .guess-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(2.5rem, 1fr));
-  gap: var(--grid-gap);
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.2rem;
   width: 48%;
   /* border: 5px solid red !important;  */
 }
@@ -81,7 +81,7 @@
 
 /* Frequency indicators */
 .mobile-mode .frequency-indicator {
-  font-size: 0.6rem;
+  font-size: 0.85rem;
   position: absolute;
   bottom: 0.1rem;
   right: 0.1rem;
@@ -513,6 +513,6 @@
 }
 
 .mobile-mode.landscape-mode .letter-cell {
-  min-width: 36px;
-  min-height: 36px;
+  min-width: 45px;
+  min-height: 45px;
 }

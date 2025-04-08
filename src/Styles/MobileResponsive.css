@@ -251,9 +251,11 @@
   }
 
   /* Very compact letter cells for small landscape screens */
-  .mobile-mode .letter-cell {
-    min-width: 28px;
-    min-height: 28px;
+  .mobile-mode .landscape-mode .letter-cell {
+    min-width: 30px;
+    min-height: 30px;
+    max-width: 35px;
+    max-height: 35px;
     font-size: 0.85rem;
     margin: 1px;
   }
@@ -321,7 +323,7 @@
   .mobile-mode .letter-cell {
     min-width: 38px;
     min-height: 38px;
-    font-size: 1rem;
+    font-size: 1.55rem;
     margin: 3px;
   }
 
