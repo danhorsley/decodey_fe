@@ -93,10 +93,10 @@
   }
 
   /* Shift guess grid to the left too */
-  .mobile-mode .guess-grid {
-    justify-self: start; /* Align to left edge */
-    margin-left: 0; /* Remove margin for maximum left shift */
-  }
+  /* .mobile-mode .guess-grid {
+    justify-self: start; 
+    margin-left: 0; 
+  } */
 
   /* Center the hint button as that should stay in the middle */
   .mobile-mode .controls-stack {
@@ -294,7 +294,7 @@
   .mobile-mode .letter-cell {
     min-width: 32px;
     min-height: 32px;
-    font-size: 0.9rem;
+    font-size: 1.35rem;
     margin: 2px;
   }
 

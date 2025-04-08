@@ -53,29 +53,49 @@
 }
 
 /* Landscape phones need even tighter styling */
-@media (orientation: landscape) and (max-height: 500px) {
+@media (orientation: landscape) and (max-width: 975px) {
   .char-grid {
-    font-size: 1.05rem;
+    font-size: 1.15rem;
     letter-spacing: 1px;
   }
 
   .quote-medium .char-grid {
-    font-size: 1rem;
+    font-size: 1.1rem;
     letter-spacing: 0.5px;
   }
 
   .quote-long .char-grid {
-    font-size: 0.9rem;
+    font-size: 1.05rem;
     letter-spacing: 0.25px;
   }
 
   .quote-very-long .char-grid {
-    font-size: 0.85rem;
+    font-size: 1rem;
     letter-spacing: 0;
   }
 }
+@media (orientation: landscape) and (max-width: 897px) {
+  .char-grid {
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+  }
 
-@media (orientation: landscape) and (max-height: 400px) {
+  .quote-medium .char-grid {
+    font-size: 1.05rem;
+    letter-spacing: 0.5px;
+  }
+
+  .quote-long .char-grid {
+    font-size: 0.98rem;
+    letter-spacing: 0.25px;
+  }
+
+  .quote-very-long .char-grid {
+    font-size: 0.9rem;
+    letter-spacing: 0;
+  }
+}
+@media (orientation: landscape) and (max-width: 741px) {
   .char-grid {
     font-size: 0.95rem;
     letter-spacing: 1px;
@@ -87,12 +107,12 @@
   }
 
   .quote-long .char-grid {
-    font-size: 0.80rem;
+    font-size: 0.75rem;
     letter-spacing: 0.25px;
   }
 
   .quote-very-long .char-grid {
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     letter-spacing: 0;
   }
 }

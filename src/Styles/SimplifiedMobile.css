@@ -51,12 +51,21 @@
 }
 
 /* Grid styling - improved for consistent experience */
-.mobile-mode .encrypted-grid,
+.mobile-mode .encrypted-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.2rem;
+  width: 48%;
+  /* border: 5px solid red !important;  */
+}
+
 .mobile-mode .guess-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 0.2rem;
   width: 48%;
+  /* justify-self: end;
+  padding-right: 0.5rem; */
   /* border: 5px solid red !important;  */
 }
 /* Letter cells */
