@@ -167,6 +167,12 @@ button:hover:not(:disabled) {
   padding-bottom: 1px;
   padding-top: 1px;
   font-size: 1.10rem;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+/* Chrome, Safari and Opera */
+.text-container::-webkit-scrollbar {
+  display: none;
 }
 
 .encrypted,

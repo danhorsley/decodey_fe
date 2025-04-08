@@ -1,0 +1,76 @@
+/* Responsive Quotes CSS - Handles various quote lengths elegantly */
+
+/* Default quote styling - for quotes under 56 characters */
+.char-grid {
+  font-size: var(--char-font-size, 1.05rem);
+  letter-spacing: var(--char-letter-spacing, 2px);
+  transition: font-size 0.3s, letter-spacing 0.3s;
+}
+
+/* Medium-length quotes (56-62 chars) */
+.quote-medium .char-grid {
+  font-size: 1rem;
+  letter-spacing: 1px;
+}
+
+/* Long quotes (63-70 chars) */
+.quote-long .char-grid {
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
+}
+
+/* Very long quotes (71+ chars) */
+.quote-very-long .char-grid {
+  font-size: 0.9rem;
+  letter-spacing: 0px;
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 767px) {
+  /* Mobile quotes need tighter styling to prevent line breaks */
+  .char-grid {
+    /* Slightly tighter by default on mobile */
+    letter-spacing: 1.5px;
+  }
+
+  /* Medium-length quotes on mobile */
+  .quote-medium .char-grid {
+    font-size: 0.95rem;
+    letter-spacing: 0.75px;
+  }
+
+  /* Long quotes on mobile */
+  .quote-long .char-grid {
+    font-size: 0.9rem;
+    letter-spacing: 0.25px;
+  }
+
+  /* Very long quotes on mobile */
+  .quote-very-long .char-grid {
+    font-size: 0.85rem;
+    letter-spacing: 0;
+  }
+}
+
+/* Landscape phones need even tighter styling */
+@media (orientation: landscape) and (max-height: 500px) {
+  .char-grid {
+    font-size: 0.95rem;
+    letter-spacing: 1px;
+  }
+
+  .quote-medium .char-grid {
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+  }
+
+  .quote-long .char-grid {
+    font-size: 0.80rem;
+    letter-spacing: 0.25px;
+  }
+
+  .quote-very-long .char-grid {
+    font-size: 0.75rem;
+    letter-spacing: 0;
+  }
+}

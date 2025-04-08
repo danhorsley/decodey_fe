@@ -20,28 +20,7 @@ import MobileLayout from "../components/layout/MobileLayout";
 import WinCelebration from "../components/modals/WinCelebration";
 import MatrixRainLoading from "../components/effects/MatrixRainLoading";
 
-// Letter cell component using memo to reduce re-renders
-// const LetterCell = React.memo(
-//   ({
-//     letter,
-//     isSelected,
-//     isGuessed,
-//     isFlashing,
-//     frequency,
-//     onClick,
-//     disabled,
-//   }) => (
-//     <div
-//       className={`letter-cell ${isSelected ? "selected" : ""} ${isGuessed ? "guessed" : ""} ${isFlashing ? "flash" : ""}`}
-//       onClick={!disabled ? onClick : undefined}
-//     >
-//       {letter}
-//       {typeof frequency !== "undefined" && (
-//         <span className="frequency-indicator">{frequency}</span>
-//       )}
-//     </div>
-//   ),
-// );
+// Format the display text
 
 function Game() {
   // Navigation hook
@@ -65,7 +44,7 @@ function Game() {
     lastError,
     subscribeToEvents,
   } = useGameSession();
-  
+
   useEffect(() => {
     const handleOrientationChange = () => {
       // Force a re-render by updating a local state
@@ -74,12 +53,15 @@ function Game() {
     };
 
     // Listen to both native and custom orientation change events
-    window.addEventListener('orientationchange', handleOrientationChange);
-    window.addEventListener('app:orientationchange', handleOrientationChange);
+    window.addEventListener("orientationchange", handleOrientationChange);
+    window.addEventListener("app:orientationchange", handleOrientationChange);
 
     return () => {
-      window.removeEventListener('orientationchange', handleOrientationChange);
-      window.removeEventListener('app:orientationchange', handleOrientationChange);
+      window.removeEventListener("orientationchange", handleOrientationChange);
+      window.removeEventListener(
+        "app:orientationchange",
+        handleOrientationChange,
+      );
     };
   }, []);
   // Handle logout transition
@@ -320,11 +302,23 @@ function Game() {
     playSound,
   });
 
-  // Format the display text
   const formattedText = React.useMemo(() => {
     if (!encrypted || !display) return { __html: "" };
     return formatAlternatingLines(encrypted, display, true);
   }, [encrypted, display]);
+
+  // Determine quote length class for responsive text sizing
+  const quoteClasses = React.useMemo(() => {
+    if (!encrypted) return "";
+
+    // Count visible characters in the encrypted text (ignoring spaces and punctuation)
+    const visibleCharCount = encrypted.length;
+
+    if (visibleCharCount > 70) return "quote-very-long";
+    if (visibleCharCount > 60) return "quote-long";
+    if (visibleCharCount > 50) return "quote-medium";
+    return "";
+  }, [encrypted]);
 
   // ===== RENDER HELPERS =====
   // If loading, show loading screen
@@ -406,16 +400,13 @@ function Game() {
 
   // Text container component - simplified for better mobile display
   const renderTextContainer = () => (
-    <div className={`text-container ${hardcoreMode ? "hardcore-mode" : ""}`}>
+    <div
+      className={`text-container ${hardcoreMode ? "hardcore-mode" : ""} ${quoteClasses}`}
+    >
       <div
         className="alternating-text"
         dangerouslySetInnerHTML={formattedText}
       />
-      {/* {hardcoreMode && (
-        <div className="hardcore-badge">
-          <span>HARDCORE MODE</span>
-        </div>
-      )} */}
     </div>
   );
 

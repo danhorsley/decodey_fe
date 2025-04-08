@@ -35,7 +35,7 @@
 .mobile-mode .text-container {
   padding: 0.5rem;
   font-size: 0.9rem;
-  margin: 0;
+  margin: 0 auto;
   overflow-y: auto;
   max-height: 30vh;
 }
