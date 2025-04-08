@@ -1,14 +1,16 @@
+
 import React, { useState } from "react";
-import { useAuth, useSettings } from "../context";
 import WinCelebration from "../components/modals/WinCelebration";
+import useSettingsStore from "../stores/settingsStore";
+import useGameStore from "../stores/gameStore";
 import "../Styles/WinCelebrationTest.css";
 
 function WinCelebrationTest() {
-  const { settings, updateSettings } = useSettings();
+  const settings = useSettingsStore((state) => state.settings);
   const [showCelebration, setShowCelebration] = useState(false);
-  const [previewMode, setPreviewMode] = useState("desktop"); // desktop or mobile
+  const [previewMode, setPreviewMode] = useState("desktop");
 
-  // Sample game data
+  // Sample game data for testing
   const testData = {
     mistakes: 3,
     maxMistakes: 8,
@@ -26,7 +28,6 @@ function WinCelebrationTest() {
       D: "I",
       E: "S",
     },
-    // Fake attribution data instead of requesting from backend
     attribution: {
       major_attribution: "Traditional English",
       minor_attribution: "Proverb",
@@ -39,6 +40,7 @@ function WinCelebrationTest() {
   };
 
   // Toggle theme
+  const updateSettings = useSettingsStore((state) => state.updateSettings);
   const toggleTheme = () => {
     const newTheme = settings.theme === "dark" ? "light" : "dark";
     const newTextColor = newTheme === "dark" ? "scifi-blue" : "default";
@@ -49,7 +51,6 @@ function WinCelebrationTest() {
     <div
       className={`win-test-container ${settings.theme === "dark" ? "dark-theme" : ""} ${previewMode}`}
     >
-      {/* Small toggle control positioned at top center */}
       <div className="win-test-toggle-controls">
         <button
           className="test-button"
@@ -84,7 +85,6 @@ function WinCelebrationTest() {
         </button>
       </div>
 
-      {/* Tiny link to go back to game */}
       <a href="/" className="back-link">
         Back to Game
       </a>
@@ -92,20 +92,8 @@ function WinCelebrationTest() {
       {showCelebration && (
         <div className={previewMode === "mobile" ? "mobile-mode" : ""}>
           <WinCelebration
-            startGame={() => setShowCelebration(false)}
             playSound={playSound}
-            mistakes={testData.mistakes}
-            maxMistakes={testData.maxMistakes}
-            startTime={testData.startTime}
-            completionTime={testData.completionTime}
-            theme={settings.theme}
-            textColor={settings.textColor}
-            encrypted={testData.encrypted}
-            display={testData.display}
-            correctlyGuessed={testData.correctlyGuessed}
-            guessedMappings={testData.guessedMappings}
-            hasWon={testData.hasWon}
-            attribution={testData.attribution} // Pass the fake attribution
+            winData={testData}
           />
         </div>
       )}
