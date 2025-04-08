@@ -17,7 +17,8 @@ const Game = lazy(() => import("./pages/Game"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Scoring = lazy(() => import("./pages/Scoring"));
-const DailyChallenge = lazy(() => import("./pages/DailyChallenge")); // Add Daily Challenge
+const DailyChallenge = lazy(() => import("./pages/DailyChallenge"));
+const WinCelebrationTest = lazy(() => import("./pages/WinCelebrationTest"));
 
 // Simple loading component
 const Loading = () => (
@@ -56,8 +57,8 @@ function App() {
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/scoring" element={<Scoring />} />
-            <Route path="/daily" element={<DailyChallenge />} />{" "}
-            {/* Add Daily Challenge route */}
+            <Route path="/daily" element={<DailyChallenge />} />
+            <Route path="/wintest" element={<WinCelebrationTest />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
