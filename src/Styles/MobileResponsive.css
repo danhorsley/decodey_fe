@@ -2,15 +2,26 @@
    MobileResponsive.css - Consolidated responsive design system
    This file contains all mobile-specific media queries and responsive styles
    Ensures consistent breakpoints and styling across all mobile experiences
+
+   UPDATED: Added explicit orientation checks to media queries
 */
 
 /* ===== BREAKPOINT SYSTEM ===== */
 /* 
-   Standardized breakpoints:
-   - xs: 0-374px (Small phones like iPhone SE)
-   - sm: 375-479px (Typical modern small phones)
-   - md: 480-767px (Large phones like iPhone Pro Max, Samsung S20+)
-   - lg: 768-991px (Tablets in portrait mode)
+   Standardized breakpoints with orientation awareness:
+
+   PORTRAIT MODE:
+   - xs-portrait: 0-374px width (Small phones like iPhone SE in portrait)
+   - sm-portrait: 375-479px width (Typical modern small phones in portrait)
+   - md-portrait: 480-767px width (Large phones like iPhone Pro Max in portrait)
+
+   LANDSCAPE MODE:
+   - xs-landscape: 0-667px width (Small phones like iPhone SE in landscape)
+   - sm-landscape: 668-844px width (Modern phones in landscape)
+   - md-landscape: 845-1024px width (Large phones & small tablets in landscape)
+
+   SHARED:
+   - lg: 768-991px (Tablets in portrait, phones in landscape)
    - xl: 992px+ (Tablets in landscape and desktops)
 */
 
@@ -22,8 +33,106 @@
   --letter-cell-size: 40px; /* Default letter cell size */
 }
 
-/* ===== EXTRA SMALL DEVICES (under 375px) ===== */
-@media (max-width: 374px) {
+/* ===== PORTRAIT MODE STYLES ===== */
+@media (orientation: portrait) {
+  .mobile-mode {
+    /* Portrait-specific base values */
+    --text-container-max-height: 35vh;
+    --controls-padding: 0.5rem;
+  }
+
+  /* Ensure game dashboard is stacked vertically in portrait */
+  .mobile-mode .game-dashboard {
+    grid-template-areas:
+      "encrypted"
+      "controls"
+      "guess";
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 0.5rem;
+  }
+
+  /* Optimize text container for portrait */
+  .mobile-mode .text-container {
+    max-height: var(--text-container-max-height);
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  /* Win celebration adjustments for portrait */
+  .mobile-mode .celebration-content {
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 1rem;
+  }
+}
+
+
+/* ===== LANDSCAPE MODE STYLES ===== */
+@media (orientation: landscape) {
+  .mobile-mode {
+    /* Landscape-specific base values */
+    --text-container-max-height: 25vh;
+    --controls-padding: 0.25rem;
+  }
+
+  /* Use horizontal layout for game dashboard in landscape */
+  .mobile-mode .game-dashboard {
+    grid-template-areas: "encrypted controls guess";
+    grid-template-columns: 5fr 1fr 5fr;
+    gap: 0.75rem;
+    margin-left: 0; /* Reset margin to avoid extra space */
+    padding-left: 0; /* Remove left padding */
+  }
+
+  /* Shift encrypted grid to the left */
+  .mobile-mode .encrypted-grid {
+    justify-self: start; /* Align to left edge */
+    margin-left: 0; /* Remove margin for maximum left shift */
+  }
+
+  /* Shift guess grid to the left too */
+  .mobile-mode .guess-grid {
+    justify-self: start; /* Align to left edge */
+    margin-left: 0; /* Remove margin for maximum left shift */
+  }
+
+  /* Center the hint button as that should stay in the middle */
+  .mobile-mode .controls-stack {
+    justify-self: center;
+  }
+
+  /* Optimize text container for landscape */
+  .mobile-mode .text-container {
+    max-height: var(--text-container-max-height);
+    padding: 0.25rem;
+    margin-bottom: 0.25rem;
+  }
+
+  /* Optimize win celebration for landscape */
+  .mobile-mode .celebration-content {
+    width: 85%;
+    max-width: 800px;
+    max-height: 80vh;
+    overflow-y: auto;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* More horizontal stats layout for landscape */
+  .mobile-mode .stats-container {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+/* ===== PORTRAIT SIZE BREAKPOINTS ===== */
+
+/* EXTRA SMALL DEVICES IN PORTRAIT (under 375px width) */
+@media (orientation: portrait) and (max-width: 374px) {
   .mobile-mode {
     font-size: 14px;
     --grid-gap: 0.25rem;
@@ -33,7 +142,6 @@
   /* Smaller text for very small screens */
   .mobile-mode .text-container {
     font-size: 0.85rem;
-    max-height: 25vh;
   }
 
   /* Tighter letter cells to fit more on screen */
@@ -44,18 +152,7 @@
     margin: 1px;
   }
 
-  /* Tighter controls with smaller padding */
-  .mobile-mode .controls {
-    padding: 0.3rem;
-  }
-
-  /* Handle badge sizing */
-  .mobile-mode .badge-indicator {
-    font-size: 0.6rem;
-    padding: 0.15rem 0.3rem;
-  }
-
-  /* Frequency indicator adjustment */
+  /* Smaller frequency indicators */
   .mobile-mode .frequency-indicator {
     font-size: 0.45rem;
     bottom: 1px;
@@ -69,31 +166,22 @@
     padding: 0.5rem 0.4rem;
   }
 
-  /* Win celebration adjustments */
-  .mobile-mode .celebration-content {
-    width: 95%;
-    padding: 15px;
-  }
-
+  /* Smaller victory title */
   .mobile-mode .victory-title {
     font-size: 1.8rem;
   }
-
-  .mobile-mode .decrypted-quote {
-    font-size: 0.8rem;
-  }
 }
 
-/* ===== SMALL DEVICES (375px - 479px) ===== */
-@media (min-width: 375px) and (max-width: 479px) {
+/* SMALL DEVICES IN PORTRAIT (375px - 479px width) */
+@media (orientation: portrait) and (min-width: 375px) and (max-width: 479px) {
   .mobile-mode {
     font-size: 15px;
     --grid-gap: 0.35rem;
     --letter-cell-size: 36px;
   }
 
-  /* Adjust dashboard grid for better fit */
-  .mobile-mode {
+  /* Adjust letter cells */
+  .mobile-mode .letter-cell {
     min-width: 34px;
     min-height: 34px;
     font-size: 0.9rem;
@@ -103,7 +191,6 @@
   /* Text container adjustments */
   .mobile-mode .text-container {
     font-size: 0.9rem;
-    max-height: 28vh;
   }
 
   /* Frequency indicator positioning */
@@ -111,23 +198,14 @@
     font-size: 0.5rem;
   }
 
-  /* Win celebration adjustments */
-  .mobile-mode .celebration-content {
-    width: 92%;
-    padding: 18px;
-  }
-
+  /* Victory title size */
   .mobile-mode .victory-title {
     font-size: 2rem;
   }
-
-  .mobile-mode .decrypted-quote {
-    font-size: 0.85rem;
-  }
 }
 
-/* ===== MEDIUM DEVICES (480px - 767px) ===== */
-@media (min-width: 480px) and (max-width: 767px) {
+/* MEDIUM DEVICES IN PORTRAIT (480px - 767px width) */
+@media (orientation: portrait) and (min-width: 480px) and (max-width: 767px) {
   .mobile-mode {
     font-size: 16px;
     --grid-gap: 0.4rem;
@@ -151,7 +229,6 @@
   /* Larger text area */
   .mobile-mode .text-container {
     font-size: 1rem;
-    max-height: 30vh;
     padding: 0.75rem;
   }
 
@@ -161,169 +238,121 @@
     min-height: 65px;
     padding: 0.75rem 0.5rem;
   }
+}
 
-  /* Win celebration adjustments */
-  .mobile-mode .celebration-content {
-    width: 90%;
-    max-width: 500px;
-    padding: 20px;
+/* ===== LANDSCAPE SIZE BREAKPOINTS ===== */
+
+/* SMALL PHONES IN LANDSCAPE (up to 667px width) */
+@media (orientation: landscape) and (max-width: 667px) {
+  .mobile-mode {
+    font-size: 14px;
+    --grid-gap: 0.2rem;
+    --letter-cell-size: 28px;
   }
 
-  .mobile-mode .victory-title {
-    font-size: 2.2rem;
+  /* Very compact letter cells for small landscape screens */
+  .mobile-mode .letter-cell {
+    min-width: 28px;
+    min-height: 28px;
+    font-size: 0.85rem;
+    margin: 1px;
   }
 
-  .mobile-mode .play-again-button,
-  .mobile-mode .share-button {
-    min-height: 50px;
-    font-size: 1.1rem;
-    min-width: 220px;
+  
+  /* More compact text display */
+  .mobile-mode .text-container {
+    font-size: 0.85rem;
+    max-height: 20vh;
+    padding: 0.25rem;
+  }
+
+  /* Smaller hint button */
+  .mobile-mode .crossword-hint-button {
+    min-width: 70px;
+    min-height: 45px;
+    padding: 0.25rem;
+  }
+
+  /* Tighter game dashboard */
+  .mobile-mode .game-dashboard {
+    gap: 0.25rem;
+    padding: 0.25rem;
   }
 }
 
-/* ===== LARGE DEVICES (768px - 991px) ===== */
-@media (min-width: 768px) and (max-width: 991px) {
+/* MEDIUM PHONES IN LANDSCAPE (668px - 844px width) */
+@media (orientation: landscape) and (min-width: 668px) and (max-width: 844px) {
+  .mobile-mode {
+    font-size: 15px;
+    --grid-gap: 0.3rem;
+    --letter-cell-size: 32px;
+  }
+
+  /* Standard letter cells for medium landscape screens */
+  .mobile-mode .letter-cell {
+    min-width: 32px;
+    min-height: 32px;
+    font-size: 0.9rem;
+    margin: 2px;
+  }
+
+  /* Adjusted text container */
+  .mobile-mode .text-container {
+    font-size: 0.9rem;
+    max-height: 22vh;
+  }
+
+  /* Medium sized hint button */
+  .mobile-mode .crossword-hint-button {
+    min-width: 80px;
+    min-height: 55px;
+  }
+}
+
+/* LARGE PHONES & SMALL TABLETS IN LANDSCAPE (845px - 1024px width) */
+@media (orientation: landscape) and (min-width: 845px) and (max-width: 1024px) {
   .mobile-mode {
     font-size: 16px;
     --grid-gap: 0.5rem;
+    --letter-cell-size: 38px;
   }
 
-  /* Further increase button sizes */
-  .mobile-mode button:not(.letter-cell) {
-    min-height: 52px; 
-    padding: 10px 20px;
-    font-size: 1.1rem;
-  }
-
-  /* Larger letter cells */
+  /* Larger letter cells for big landscape screens */
   .mobile-mode .letter-cell {
-    min-width: 46px;
-    min-height: 46px;
-    font-size: 1.2rem;
-    margin: 4px;
+    min-width: 38px;
+    min-height: 38px;
+    font-size: 1rem;
+    margin: 3px;
+  }
+
+  /* Larger text container */
+  .mobile-mode .text-container {
+    font-size: 1rem;
+    max-height: 25vh;
   }
 
   /* Larger hint button */
   .mobile-mode .crossword-hint-button {
-    min-width: 120px;
-    min-height: 70px;
+    min-width: 90px;
+    min-height: 60px;
   }
 
-  /* Header scaling */
-  .mobile-mode .retro-title,
-  .mobile-mode .game-title {
-    font-size: 1.6rem;
-  }
-
-  /* Win celebration can use more space */
-  .mobile-mode .celebration-content {
-    width: 85%;
-    max-width: 650px;
-    padding: 25px;
-  }
-
-  .mobile-mode .play-again-button,
-  .mobile-mode .share-button {
-    min-height: 54px; 
-    font-size: 1.15rem;
-    min-width: 250px;
-  }
-}
-
-/* ===== ORIENTATION SPECIFIC STYLES ===== */
-/* Portrait orientation - optimize vertical space usage */
-@media (orientation: portrait) {
-  .mobile-mode .text-container {
-    max-height: 35vh;
-  }
-
-  /* Win celebration should fit better in portrait */
-  .mobile-mode .celebration-content {
-    max-height: 85vh;
-    overflow-y: auto;
-  }
-
-  .mobile-mode .quote-container {
-    max-height: 30vh;
-  }
-
-  /* Adjust grid layout to be more compact vertically */
+  /* More spread out game dashboard */
   .mobile-mode .game-dashboard {
-    grid-template-areas:
-      "encrypted"
-      "controls"
-      "guess";
-    grid-template-columns: 1fr;
-    grid-template-rows: auto auto auto;
-    gap: 0.5rem;
-  }
-}
-
-/* Landscape orientation - make use of horizontal space */
-@media (orientation: landscape) {
-  .mobile-mode .text-container {
-    max-height: 25vh;
-  }
-
-  /* Win celebration should be wider in landscape */
-  .mobile-mode .celebration-content {
-    max-width: 85vw;
-    max-height: 80vh;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* Side-by-side layout for landscape */
-  .mobile-mode .quote-container {
-    max-height: 20vh;
-  }
-
-  /* Use more horizontal layout for grids */
-  .mobile-mode .game-dashboard {
-    grid-template-areas:
-      "encrypted controls guess";
-    grid-template-columns: 5fr 1fr 5fr;
-    gap: 0.5rem;
-  }
-
-  /* Stats display should be horizontal */
-  .mobile-mode .stats-container {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
+    gap: 0.75rem;
+    padding: 0.5rem;
   }
 }
 
 /* ===== FONT MODIFICATION FOR LEGIBILITY ===== */
 /* Special styling for E and F to make them more distinguishable */
-.mobile-mode .letter-cell:contains('E') {
+.mobile-mode .letter-cell[data-letter="E"] {
   font-weight: 900; /* Extra bold */
   text-shadow: 0 0 1px currentColor; /* Slight shadow to enhance visibility */
 }
 
-.mobile-mode .letter-cell:contains('F') {
+.mobile-mode .letter-cell[data-letter="F"] {
   font-weight: 700; /* Bold but less than E */
-}
-
-/* Alternative approach using a position indicator */
-.mobile-mode .letter-cell[data-letter="E"]::after,
-.mobile-mode .letter-cell[data-letter="F"]::after {
-  content: '';
-  position: absolute;
-  bottom: 3px; 
-  height: 2px;
-  width: 50%;
-  background-color: currentColor;
-  opacity: 0.5;
-}
-
-.mobile-mode .letter-cell[data-letter="E"]::after {
-  width: 75%; /* E has longer bottom line */
-}
-
-.mobile-mode .letter-cell[data-letter="F"]::after {
-  width: 0; /* F has no bottom line */
 }
 
 /* ===== TEXT OVERFLOW HANDLING ===== */
@@ -349,13 +378,6 @@
 }
 
 /* ===== MODAL STYLING ===== */
-/* Improve modal positioning and sizing on mobile */
-.mobile-mode .win-celebration {
-  align-items: center;
-  justify-content: center;
-  padding: 10px;
-}
-
 /* Ensure buttons are tap-friendly across all screens */
 .mobile-mode button,
 .mobile-mode .letter-cell,

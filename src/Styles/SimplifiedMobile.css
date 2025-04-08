@@ -57,7 +57,7 @@
   grid-template-columns: repeat(auto-fill, minmax(2.5rem, 1fr));
   gap: var(--grid-gap);
   width: 48%;
-  border: 5px solid red !important; 
+  /* border: 5px solid red !important;  */
 }
 /* Letter cells */
 .mobile-mode .letter-cell {
