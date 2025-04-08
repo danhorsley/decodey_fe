@@ -14,6 +14,7 @@ const WinCelebration = ({ playSound, winData }) => {
 
   // Get UI actions from store
   const openLogin = useUIStore((state) => state.openLogin);
+  const useMobileMode = useUIStore((state) => state.useMobileMode); // Added line
 
   // Get game actions from store
   const resetAndStartNewGame = useGameStore(
@@ -207,7 +208,7 @@ const WinCelebration = ({ playSound, winData }) => {
       )}
 
       {/* Main celebration content with landscape orientation */}
-      <div className="celebration-content landscape-layout">
+      <div className={`celebration-content ${settings.theme === "dark" ? "dark-theme" : "light-theme"} text-${settings.textColor} ${useMobileMode ? 'landscape-layout' : ''}`}>
         <div className="celebration-main-content">
           {/* Victory message */}
           <div className="victory-message">
