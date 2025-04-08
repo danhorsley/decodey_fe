@@ -143,16 +143,20 @@ const useUIStore = create(
             ? deviceInfo.isMobile
             : detectMobileDevice();
 
+        // Get accurate orientation info
+        const newIsLandscape = 
+          typeof deviceInfo.isLandscape === "boolean"
+            ? deviceInfo.isLandscape
+            : (deviceInfo.screenWidth > deviceInfo.screenHeight);
+
         console.log(
-          `[uiStore] updateDeviceInfo: Detected ${isActuallyMobile ? "MOBILE" : "DESKTOP"} device`,
+          `[uiStore] updateDeviceInfo: Detected ${isActuallyMobile ? "MOBILE" : "DESKTOP"} device, orientation: ${newIsLandscape ? "landscape" : "portrait"}`,
         );
 
         // Update device info
         set({
           isMobile: isActuallyMobile,
-          isLandscape:
-            deviceInfo.isLandscape ||
-            deviceInfo.screenWidth > deviceInfo.screenHeight,
+          isLandscape: newIsLandscape,
           screenWidth: deviceInfo.screenWidth || window.innerWidth,
           screenHeight: deviceInfo.screenHeight || window.innerHeight,
         });
@@ -166,6 +170,20 @@ const useUIStore = create(
             `[uiStore] Auto mode: setting useMobileMode to ${isActuallyMobile}`,
           );
           set({ useMobileMode: isActuallyMobile });
+        }
+
+        // Dispatch a custom event that components can listen for
+        // This helps with orientation-aware components that need to update
+        try {
+          const orientationEvent = new CustomEvent('app:orientationchange', { 
+            detail: { 
+              isLandscape: newIsLandscape,
+              isMobile: isActuallyMobile
+            }
+          });
+          window.dispatchEvent(orientationEvent);
+        } catch (e) {
+          console.warn('[uiStore] Could not dispatch orientation event:', e);
         }
       },
 

@@ -65,7 +65,23 @@ function Game() {
     lastError,
     subscribeToEvents,
   } = useGameSession();
+  
+  useEffect(() => {
+    const handleOrientationChange = () => {
+      // Force a re-render by updating a local state
+      // This is only needed if you notice components not updating properly
+      console.log("Game component detected orientation change");
+    };
 
+    // Listen to both native and custom orientation change events
+    window.addEventListener('orientationchange', handleOrientationChange);
+    window.addEventListener('app:orientationchange', handleOrientationChange);
+
+    return () => {
+      window.removeEventListener('orientationchange', handleOrientationChange);
+      window.removeEventListener('app:orientationchange', handleOrientationChange);
+    };
+  }, []);
   // Handle logout transition
   useEffect(() => {
     const unsubscribe = subscribeToEvents("auth:logout-transition", () => {
