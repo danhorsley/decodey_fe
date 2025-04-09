@@ -422,7 +422,8 @@ function Settings({ onCancel }) {
                   }
                 />
                 <span className="option-label">
-                  Use Longer Quotes - over 65 characters
+                  Use Longer Quotes - over 65 characters & over 18 unique
+                  letters
                 </span>
               </label>
               <p className="settings-description warning-text">
