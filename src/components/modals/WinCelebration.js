@@ -103,10 +103,12 @@ const WinCelebration = ({ playSound, winData }) => {
     const url = "https://decodey.game";
 
     if (hasLost) {
-      const percentage = calculatePercentageSolved();
-      message = `[FAILED TO DECODEY]
-  > Completion: ${percentage}%
-  ${hardcoreMode ? "> Mode: HARDCORE\n" : ""}Think you can do better?`;
+      const solvePercentage = calculatePercentageSolved();
+      const failBlocks = Math.round(solvePercentage / 10);
+      const failBar = "■".repeat(failBlocks) + "□".repeat(10 - failBlocks);
+      message = `>>>  [D E C O D E Y   F A I L E D]  <<<
+> P C T : [${failBar}] ${solvePercentage}% <
+> D E C O D E Y . G A M E .  .  .  .  .  .  .<`;
     } else {
       const blocks = ["░", "▒", "▓", "█", "⠿", "■", "□"];
       const ratingNum = calculatePercentageRating(score);
