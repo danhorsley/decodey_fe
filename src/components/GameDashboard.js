@@ -73,23 +73,23 @@ const GameDashboard = ({
 
   // Render the hint button or game over message
   const renderHintOrGameOver = () => {
-    if (hasLost) {
-      return (
-        <div
-          className="controls-stack game-over-state"
-          onClick={onStartNewGame}
-        >
-          <div className="game-over-text">GAME OVER</div>
-          <div
-            className={`crossword-hint-button game-over ${isDarkTheme ? "dark-theme" : "light-theme"}`}
-            contentEditable="false"
-          >
-            <div className="hint-text-display">AGAIN</div>
-            <div className="hint-label question-mark">?</div>
-          </div>
-        </div>
-      );
-    }
+    // if (hasLost) {
+    //   return (
+    //     <div
+    //       className="controls-stack game-over-state"
+    //       onClick={onStartNewGame}
+    //     >
+    //       <div className="game-over-text">GAME OVER</div>
+    //       <div
+    //         className={`crossword-hint-button game-over ${isDarkTheme ? "dark-theme" : "light-theme"}`}
+    //         contentEditable="false"
+    //       >
+    //         <div className="hint-text-display">AGAIN</div>
+    //         <div className="hint-label question-mark">?</div>
+    //       </div>
+    //     </div>
+    //   );
+    // }
 
     return (
       <div className="controls-stack">
