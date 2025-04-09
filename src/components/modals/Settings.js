@@ -291,7 +291,7 @@ function Settings({ onCancel }) {
                   checked={localSettings.difficulty === "easy"}
                   onChange={() => handleChange("difficulty", "easy")}
                 />
-                <span className="option-label">Easy (8 mistakes)</span>
+                <span className="option-label">Easy (7 mistakes)</span>
               </label>
               <label className="settings-option">
                 <input
@@ -300,7 +300,7 @@ function Settings({ onCancel }) {
                   checked={localSettings.difficulty === "medium"}
                   onChange={() => handleChange("difficulty", "medium")}
                 />
-                <span className="option-label">Medium (5 mistakes)</span>
+                <span className="option-label">Medium (4 mistakes)</span>
               </label>
               <label className="settings-option">
                 <input
@@ -309,7 +309,7 @@ function Settings({ onCancel }) {
                   checked={localSettings.difficulty === "hard"}
                   onChange={() => handleChange("difficulty", "hard")}
                 />
-                <span className="option-label">Hard (3 mistakes)</span>
+                <span className="option-label">Hard (2 mistakes)</span>
               </label>
 
               {hasStartedPlaying && (

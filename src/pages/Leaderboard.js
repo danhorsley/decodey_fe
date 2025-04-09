@@ -210,13 +210,13 @@ function Leaderboard() {
                 style={{ display: "table-row" }}
               >
                 <div
-                  className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
+                  className={`table-cell ${entry.is_current_user ? "user-highlight" : ""} rank-${entry.rank}`}
                   style={{ display: "table-cell" }}
                 >
                   {entry.rank}
                 </div>
                 <div
-                  className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
+                  className={`table-cell ${entry.is_current_user ? "user-highlight" : ""} rank-${entry.rank}`}
                   style={{ display: "table-cell" }}
                 >
                   {entry.username}
@@ -225,19 +225,19 @@ function Leaderboard() {
                   )}
                 </div>
                 <div
-                  className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
+                  className={`table-cell ${entry.is_current_user ? "user-highlight" : ""} rank-${entry.rank}`}
                   style={{ display: "table-cell" }}
                 >
                   {entry.score.toLocaleString()}
                 </div>
                 <div
-                  className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
+                  className={`table-cell ${entry.is_current_user ? "user-highlight" : ""} rank-${entry.rank}`}
                   style={{ display: "table-cell" }}
                 >
                   {entry.games_played}
                 </div>
                 <div
-                  className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
+                  className={`table-cell ${entry.is_current_user ? "user-highlight" : ""} rank-${entry.rank}`}
                   style={{ display: "table-cell" }}
                 >
                   {entry.avg_score}
@@ -489,30 +489,13 @@ function Leaderboard() {
                 style={{ display: "table-row" }}
               >
                 <div
-                  className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
+                  className={`table-cell ${entry.is_current_user ? "user-highlight" : ""} rank-${entry.rank}`}
                   style={{ display: "table-cell" }}
                 >
                   {entry.rank}
-                  {entry.rank <= 3 && (
-                    <span
-                      className={`streak-badge ${
-                        entry.rank === 1
-                          ? "gold"
-                          : entry.rank === 2
-                            ? "silver"
-                            : "bronze"
-                      }`}
-                    >
-                      {entry.rank === 1
-                        ? "1st"
-                        : entry.rank === 2
-                          ? "2nd"
-                          : "3rd"}
-                    </span>
-                  )}
                 </div>
                 <div
-                  className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
+                  className={`table-cell ${entry.is_current_user ? "user-highlight" : ""} rank-${entry.rank}`}
                   style={{ display: "table-cell" }}
                 >
                   {entry.username}
@@ -521,14 +504,14 @@ function Leaderboard() {
                   )}
                 </div>
                 <div
-                  className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
+                  className={`table-cell ${entry.is_current_user ? "user-highlight" : ""} rank-${entry.rank}`}
                   style={{ display: "table-cell" }}
                 >
                   {entry.streak_length}
                 </div>
                 {showDates && (
                   <div
-                    className={`table-cell ${entry.is_current_user ? "user-highlight" : ""}`}
+                    className={`table-cell ${entry.is_current_user ? "user-highlight" : ""} rank-${entry.rank}`}
                     style={{ display: "table-cell" }}
                   >
                     {new Date(entry.last_active).toLocaleDateString()}

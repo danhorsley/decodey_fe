@@ -8,6 +8,22 @@ import useUIStore from "../../stores/uiStore";
 import useSettingsStore from "../../stores/settingsStore";
 import { FaXTwitter } from "react-icons/fa6";
 
+/**
+ * Convert raw score to percentage rating (50-100%)
+ * @param {number} score - The raw score
+ * @return {number} - Percentage score between 50-100
+ */
+const calculatePercentageRating = (score) => {
+  // Maximum theoretical score (Hard, Hardcore, 0 mistakes, minimal time)
+  const MAX_THEORETICAL_SCORE = 11250;
+
+  // Calculate percentage (50% minimum for winners)
+  const percentage = 50 + (score / MAX_THEORETICAL_SCORE) * 50;
+
+  // Cap at 100% and ensure we have an integer
+  return Math.min(100, Math.round(percentage));
+};
+
 const WinCelebration = ({ playSound, winData }) => {
   // Get auth and settings state
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -32,9 +48,9 @@ const WinCelebration = ({ playSound, winData }) => {
   const {
     score = 0,
     mistakes = 0,
-    maxMistakes = 5,
+    maxMistakes = 4,
     gameTimeSeconds = 0,
-    rating = "Cryptanalyst",
+    rating = 50,
     encrypted = "",
     display = "",
     correctlyGuessed = [],
@@ -117,7 +133,9 @@ const WinCelebration = ({ playSound, winData }) => {
             {/* Simple header */}
             <div className="retro-header">
               <h2 className="status-text">
-                {hasLost ? "GAME OVER" : `DECODED! Rating: ${rating}`}
+                {hasLost
+                  ? "GAME OVER"
+                  : `DECODED! Rating: ${calculatePercentageRating(score)}%`}
               </h2>
             </div>
 
@@ -138,7 +156,7 @@ const WinCelebration = ({ playSound, winData }) => {
               <div className="stat-row">
                 <div className="stat-item">TIME: {formatTime()}</div>
                 <div className="stat-item">
-                  MISTAKES: {mistakes}/{maxMistakes}
+                  MISTAKES: {mistakes}/{maxMistakes - 1}
                 </div>
                 {hasLost ? (
                   <div className="stat-item score">

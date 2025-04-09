@@ -69,6 +69,15 @@ const Scoring = () => {
             These multipliers reflect the exponential increase in difficulty as
             the number of allowed mistakes decreases.
           </p>
+          <p>
+            While a theoretical solver with perfect strategy might breeze
+            through with fewer mistakes, real players tend to rely more on
+            guesses than hints. Because of this human behavior, the actual
+            difficulty progression (and score potential) more closely matches
+            these multipliers than a purely mathematical model might suggest. As
+            a result, players who perform well on Hard mode are rewarded for
+            both skill and optimal strategy.
+          </p>
         </section>
 
         <section className="privacy-section">
