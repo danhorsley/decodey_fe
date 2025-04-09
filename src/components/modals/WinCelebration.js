@@ -37,6 +37,7 @@ const WinCelebration = ({ playSound, winData }) => {
     rating = "Cryptanalyst",
     encrypted = "",
     display = "",
+    correctlyGuessed = [],
     hardcoreMode = false,
     hasLost = false,
     attribution = {},
@@ -50,8 +51,10 @@ const WinCelebration = ({ playSound, winData }) => {
     dailyStats = null,
   } = winData || {};
 
-  // Format time display
+  // Format time display - show infinity symbol for losses
   const formatTime = () => {
+    if (hasLost) return "∞"; // Infinity symbol for losses
+
     const minutes = Math.floor(gameTimeSeconds / 60);
     const seconds = gameTimeSeconds % 60;
     return `${minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
@@ -62,9 +65,31 @@ const WinCelebration = ({ playSound, winData }) => {
     return display || "";
   };
 
+  // Calculate percentage solved
+  const calculatePercentageSolved = () => {
+    if (!encrypted || !correctlyGuessed) return 0;
+
+    // Get unique letters in the encrypted text
+    const uniqueEncryptedLetters = [
+      ...new Set(encrypted.match(/[A-Z]/g) || []),
+    ];
+    // Calculate percentage based on correctly guessed letters
+    const percentage = Math.round(
+      (correctlyGuessed.length / uniqueEncryptedLetters.length) * 100,
+    );
+
+    return percentage;
+  };
+
   // Share URL for Twitter
   const getShareUrl = () => {
-    const message = `I scored ${score} points on Uncrypt${hardcoreMode ? " (Hardcore Mode)" : ""} with a "${rating}" rating! Can you beat my score? Play at`;
+    let message;
+    if (hasLost) {
+      const percentage = calculatePercentageSolved();
+      message = `I solved ${percentage}% of Uncrypt's puzzle${hardcoreMode ? " (Hardcore Mode)" : ""}! Can you do better? Play at`;
+    } else {
+      message = `I scored ${score} points on Uncrypt${hardcoreMode ? " (Hardcore Mode)" : ""} with a "${rating}" rating! Can you beat my score? Play at`;
+    }
     const url = "https://decodey.game";
     return `https://twitter.com/intent/tweet?text=${encodeURIComponent(message)}&url=${encodeURIComponent(url)}`;
   };
@@ -92,7 +117,7 @@ const WinCelebration = ({ playSound, winData }) => {
             {/* Simple header */}
             <div className="retro-header">
               <h2 className="status-text">
-                {hasLost ? "GAME OVER" : `SOLVED! Rating: ${rating}`}
+                {hasLost ? "GAME OVER" : `DECODED! Rating: ${rating}`}
               </h2>
             </div>
 
@@ -115,7 +140,13 @@ const WinCelebration = ({ playSound, winData }) => {
                 <div className="stat-item">
                   MISTAKES: {mistakes}/{maxMistakes}
                 </div>
-                <div className="stat-item score">SCORE: {score}</div>
+                {hasLost ? (
+                  <div className="stat-item score">
+                    SOLVED: {calculatePercentageSolved()}%
+                  </div>
+                ) : (
+                  <div className="stat-item score">SCORE: {score}</div>
+                )}
               </div>
             </div>
 
@@ -128,7 +159,7 @@ const WinCelebration = ({ playSound, winData }) => {
                   className="game-over-action-button login-hint"
                   onClick={openLogin}
                 >
-                  <div className="hint-text-display">LOGIN</div>
+                  <div className="game-over-text-display">LOGIN</div>
                 </button>
               </div>
             )}
@@ -163,7 +194,7 @@ const WinCelebration = ({ playSound, winData }) => {
                   className="game-over-action-button reveal"
                   onClick={() => setShowQuote(true)}
                 >
-                  <div className="game-over-text-display">REVEAL QUOTE</div>
+                  <div className="hint-text-display">REVEAL QUOTE</div>
                 </button>
               )}
 

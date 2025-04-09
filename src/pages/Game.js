@@ -449,6 +449,7 @@ function Game() {
         gameTimeSeconds: winData?.gameTimeSeconds || 0,
         encrypted: encrypted,
         display: display,
+        correctlyGuessed: correctlyGuessed, // Add correctly guessed letters for percentage calculation
         hardcoreMode: hardcoreMode,
         // Add callback for Play Again button
         onPlayAgain: handleStartNewGame,
