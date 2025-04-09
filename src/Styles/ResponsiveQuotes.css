@@ -2,26 +2,26 @@
 
 /* Default quote styling - for quotes under 56 characters */
 .char-grid {
-  font-size: var(--char-font-size, 1.05rem);
+  font-size: var(--char-font-size, 1.25rem);
   letter-spacing: var(--char-letter-spacing, 2px);
   transition: font-size 0.3s, letter-spacing 0.3s;
 }
 
 /* Medium-length quotes (56-62 chars) */
 .quote-medium .char-grid {
-  font-size: 1rem;
+  font-size: 1.25rem;
   letter-spacing: 1px;
 }
 
 /* Long quotes (63-70 chars) */
 .quote-long .char-grid {
-  font-size: 0.95rem;
+  font-size: 1.15rem;
   letter-spacing: 0.5px;
 }
 
 /* Very long quotes (71+ chars) */
 .quote-very-long .char-grid {
-  font-size: 0.9rem;
+  font-size: 1.1rem;
   letter-spacing: 0px;
 }
 
