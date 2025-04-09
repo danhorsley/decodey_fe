@@ -9,7 +9,7 @@ import {
 
 // Import ModalManager
 import ModalManager from "./components/modals/ModalManager";
-import AccountButtonWrapper from "./components/AccountButtonWrapper";
+// import AccountButtonWrapper from "./components/AccountButtonWrapper";
 import NotFound from "./pages/NotFound";
 
 // Lazy load components for code splitting
@@ -36,13 +36,13 @@ const Loading = () => (
 );
 
 // Create a wrapper component that conditionally renders the AccountButtonWrapper
-function GlobalUIElements() {
-  const location = useLocation();
-  // Don't render the account button on the leaderboard page
-  const isLeaderboardPage = location.pathname === "/leaderboard";
+// function GlobalUIElements() {
+//   const location = useLocation();
+//   // Don't render the account button on the leaderboard page
+//   const isLeaderboardPage = location.pathname === "/leaderboard";
 
-  return !isLeaderboardPage ? <AccountButtonWrapper /> : null;
-}
+//   return !isLeaderboardPage ? <AccountButtonWrapper /> : null;
+// }
 
 // Main App component using Router
 function App() {
@@ -64,7 +64,7 @@ function App() {
         </Suspense>
 
         {/* Global fixed UI elements with conditional rendering */}
-        <GlobalUIElements />
+        {/* <GlobalUIElements /> */}
       </ModalManager>
     </Router>
   );

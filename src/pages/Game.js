@@ -328,7 +328,7 @@ function Game() {
         className={`App-container ${settings?.theme === "dark" ? "dark-theme" : "light-theme"}`}
       >
         <CompactHeader
-          title={isDailyChallenge ? "decodey" : "uncrypt"}
+          title={isDailyChallenge ? "decodey" : "decodey"}
           toggleMenu={toggleMenu}
           isDailyChallenge={isDailyChallenge}
         />
@@ -359,7 +359,7 @@ function Game() {
         className={`App-container ${settings?.theme === "dark" ? "dark-theme" : "light-theme"}`}
       >
         <CompactHeader
-          title={isDailyChallenge ? "decodey - daily" : "decodey"}
+          title={isDailyChallenge ? "decodey" : "decodey"}
           toggleMenu={toggleMenu}
           isDailyChallenge={isDailyChallenge}
         />
@@ -387,7 +387,7 @@ function Game() {
     <>
       {/* Updated CompactHeader with both isDailyChallenge and hardcoreMode props */}
       <CompactHeader
-        title={isDailyChallenge ? "decodey - daily" : "decodey"}
+        title={isDailyChallenge ? "decodey" : "decodey"}
         toggleMenu={toggleMenu}
         isDailyChallenge={isDailyChallenge}
         hardcoreMode={hardcoreMode}
