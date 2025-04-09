@@ -98,16 +98,30 @@ const WinCelebration = ({ playSound, winData }) => {
   };
 
   // Share URL for Twitter
-  const getShareUrl = () => {
+  const getShareUrl = (score) => {
     let message;
+    const url = "https://decodey.game";
+
     if (hasLost) {
       const percentage = calculatePercentageSolved();
-      message = `I solved ${percentage}% of Uncrypt's puzzle${hardcoreMode ? " (Hardcore Mode)" : ""}! Can you do better? Play at`;
+      message = `[FAILED TO DECODEY]
+  > Completion: ${percentage}%
+  ${hardcoreMode ? "> Mode: HARDCORE\n" : ""}Think you can do better?`;
     } else {
-      message = `I scored ${score} points on Uncrypt${hardcoreMode ? " (Hardcore Mode)" : ""} with a "${rating}" rating! Can you beat my score? Play at`;
+      const blocks = ["░", "▒", "▓", "█", "⠿", "■", "□"];
+      const ratingNum = calculatePercentageRating(score);
+      const filledBlocks = Math.round(ratingNum / 10);
+      const ratingBar =
+        blocks[5].repeat(filledBlocks) + blocks[6].repeat(10 - filledBlocks);
+
+      message = `>> [D E C O D E Y   C O M P L E T E] <<
+  > T I M E : ${formatTime()} .  .  .  T O K E N S :  ${mistakes} <
+  > S C O R E : ${score} .  .  .  .  .  .  .  .  .  .  .  .<
+  > P C T : [${ratingBar}] ${ratingNum}% <
+  > D E C O D E Y . G A M E .  .  .  .  .  .  .<`;
     }
-    const url = "https://decodey.game";
-    return `https://twitter.com/intent/tweet?text=${encodeURIComponent(message)}&url=${encodeURIComponent(url)}`;
+
+    return `https://twitter.com/intent/tweet?text=${encodeURIComponent(message)}`;
   };
 
   return (
@@ -218,7 +232,7 @@ const WinCelebration = ({ playSound, winData }) => {
 
               <button
                 className="game-over-action-button share"
-                onClick={() => window.open(getShareUrl(), "_blank")}
+                onClick={() => window.open(getShareUrl(score), "_blank")}
               >
                 <div className="game-over-text-display">
                   SHARE <FaXTwitter />
