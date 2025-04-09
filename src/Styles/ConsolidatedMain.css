@@ -509,7 +509,7 @@ button:hover:not(:disabled) {
   justify-content: flex-start;
   align-items: center;
   height: 100vh;
-  padding-top: 100px;
+  padding-top: 10px;
   /* Position content higher on the screen */
   position: relative;
   z-index: 1;

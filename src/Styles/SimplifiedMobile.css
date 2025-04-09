@@ -136,7 +136,7 @@
 
 /* Char grid for the encrypted text display */
 .mobile-mode .char-grid {
-  font-size: 1rem;
+  font-size: 1.15rem;
   line-height: 1.2;
 }
 
@@ -293,7 +293,7 @@
   .mobile-mode .encrypted-grid,
   .mobile-mode .guess-grid {
     width: 49%;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(6, 1fr);
     gap: 0.2rem;
   }
 

@@ -289,15 +289,22 @@
     --grid-gap: 0.3rem;
     --letter-cell-size: 32px;
   }
-
-  /* Standard letter cells for medium landscape screens */
-  .mobile-mode .letter-cell {
-    min-width: 32px;
-    min-height: 32px;
-    font-size: 1.35rem;
-    margin: 2px;
+  .mobile-mode .landscape-mode .encrypted-grid,
+  .mobile-mode .landscape-mode .guess-grid {
+    gap: 1px;
+    grid-template-columns: repeat(6, 1fr);
+    width: 49%;
   }
-
+  /* Standard letter cells for medium landscape screens */
+  .mobile-mode .landscape-mode .letter-cell {
+    min-width: 35px ;
+    min-height: 35px ;
+    font-size: 1.30rem;
+    margin: 0.5px;
+  }
+  .mobile-mode .char-grid{
+    font-size:1.05rem;
+  }
   /* Adjusted text container */
   .mobile-mode .text-container {
     font-size: 0.9rem;
@@ -324,7 +331,7 @@
     min-width: 38px;
     min-height: 38px;
     font-size: 1.55rem;
-    margin: 3px;
+    margin: 1px;
   }
 
   /* Larger text container */
@@ -419,6 +426,9 @@
 }
 .mobile-mode .login-prompt {
     margin:1px;
+  }
+  .mobile-mode .char-grid {
+    font-size:1.05rem;
   }
                                                                                 .mobile-mode .victory-title {                                                                                 margin:1px;                                                                         }
 
