@@ -436,9 +436,25 @@ function Game() {
 
   // Win/lose states
   const renderGameOver = () => {
-    // Only handle win scenario here, loss is handled in GameDashboard
-    if (hasWon) {
-      return <WinCelebration playSound={playSound} winData={winData || {}} />;
+    // Handle both win and loss scenarios with the same component
+    if (hasWon || hasLost) {
+      // Create win data object with necessary props for both states
+      const gameOverData = {
+        ...winData,
+        hasLost: hasLost,
+        // Make sure we include important data needed for either state
+        score: winData?.score || 0,
+        mistakes: mistakes,
+        maxMistakes: maxMistakes,
+        gameTimeSeconds: winData?.gameTimeSeconds || 0,
+        encrypted: encrypted,
+        display: display,
+        hardcoreMode: hardcoreMode,
+        // Add callback for Play Again button
+        onPlayAgain: handleStartNewGame,
+      };
+
+      return <WinCelebration playSound={playSound} winData={gameOverData} />;
     }
     return null;
   };

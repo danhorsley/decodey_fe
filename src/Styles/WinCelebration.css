@@ -1,9 +1,3 @@
-/* 
-  WinCelebration.css - Desktop-only styles for the victory celebration
-  Mobile styles have been moved to ConsolidatedMobile.css
-*/
-
-/* Main celebration container */
 .win-celebration {
   position: fixed;
   top: 0;
@@ -14,509 +8,173 @@
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  background-color: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(2px);
-  animation: fade-in 0.5s ease-out;
+  background-color: rgba(0, 0, 0, 0.6);
 }
 
-/* Celebration content box */
-.celebration-content {
-  background-color: #333;
-  color: #fff;
-  border-radius: 16px;
-  padding: 30px;
-  max-width: 500px;
+/* Main content box */
+.celebration-retro {
+  background-color: rgba(0, 0, 0, 0.8);
+  color: #f8f9fa;
+  border: 2px solid #444;
+  border-radius: 8px;
+  padding: 20px;
+  max-width: 550px;
   width: 90%;
   text-align: center;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  font-family: 'Courier New', monospace;
   position: relative;
   z-index: 1001;
-  overflow: hidden;
-  animation: pop-in 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-/* Ensure all elements inside are fully visible */
-.celebration-content * {
-  opacity: 1 !important;
-}
-
-/* Victory message */
-.victory-message {
-  margin-bottom: 25px;
-}
-
-.landscape-layout .victory-message {
-  text-align: center;
-}
-
-.victory-title {
-  font-size: 2.5rem;
+/* Simple retro header */
+.status-text {
+  font-size: 1.7rem;
   margin: 0 0 15px 0;
-  color: #ff9500;
+  letter-spacing: 1px;
   font-weight: bold;
-  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  font-family: 'Courier New', monospace;
 }
 
-.victory-subtitle {
-  font-size: 1.2rem;
-  margin: 0;
-  opacity: 0.8;
+/* Dark theme coloring */
+.dark-theme .status-text {
+  color: #4cc9f0;
+  text-shadow: 0 0 8px rgba(76, 201, 240, 0.5);
 }
 
-/* Stats display */
-.stats-container {
-  display: flex !important;
-  flex-wrap: wrap !important;
-  justify-content: center !important;
-  gap: 10px ;
-  margin: 1px 0;
-  opacity: 0;
-  transition: opacity 0.8s ease-out !important;
+.light-theme .status-text {
+  color: #007bff;
 }
 
-.landscape-layout .stats-container {
-  margin: 1px 0 ;
-  justify-content: space-between !important;
-  gap: 10px !important;
-}
-
-.stats-container.animate-slide-in {
-  opacity: 1 !important;
-}
-
-.stat-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-width: 100px;
-}
-.landscape-layout .stat-item {
-  min-width: 80px;
-}
-
-.stat-label {
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  opacity: 0.7;
-  margin-bottom: 5px;
-}
-
-.stat-value {
-  font-size: 1.8rem;
-  font-weight: bold;
-}
-
-.landscape-layout .stat-value {
-  font-size: 1.5rem;
-}
-
-.stat-item.score .stat-value {
-  font-size: 2.2rem;
-  color: #ff9500;
-}
-.landscape-layout .stat-item.score .stat-value {
-  font-size: 1.8rem;
-}
-
-/* Action buttons */
-.celebration-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  margin-top: 25px;
-}
-
-.landscape-layout .celebration-actions {
-  margin-top: 1px;
-  flex-direction: row;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px;
-  --text-container-max-height: 18vh;
-  --controls-padding: 0.05rem;
-}
-
-.play-again-button,
-.share-button {
-  padding: 12px 24px;
-  font-size: 1.1rem;
-  background-color: #4cc9f0;
-  color: white !important;
-  border: none;
-  border-radius: 30px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-weight: bold;
-  box-shadow: 0 4px 10px rgba(76, 201, 240, 0.3);
-}
-.landscape-layout .play-again-button,
-.landscape-layout .share-button {
-  padding: 10px 20px;
-  font-size: 1rem;
-  flex: 1;
-  min-width: 120px;
-}
-
-.play-again-button:hover {
-  background-color: #3db8df;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(76, 201, 240, 0.4);
-}
-
-/* Quote display */
-.quote-container {
-  margin-top: 25px;
-  padding: 20px;
+/* Quote container */
+.retro-quote {
+  border: 1px solid #444;
+  border-radius: 4px;
+  padding: 15px;
+  margin: 15px 0;
   background-color: rgba(0, 0, 0, 0.3);
-  border-radius: 10px;
-  position: relative;
-  max-height: 200px;
-  overflow-y: auto;
   text-align: left;
-}
-/* Adjust quote container in landscape layout */
-.landscape-layout .quote-container {
-  margin-top: 0;
-  max-height: 30vh;
-  flex: 1;
+  max-height: 150px;
+  overflow-y: auto;
 }
 
-.decrypted-quote {
+.quote-text {
   font-family: 'Courier New', monospace;
   font-size: 1rem;
-  line-height: 1.5;
-  margin-bottom: 15px;
-  color: white;
-  font-weight: normal;
+  line-height: 1.4;
+  white-space: pre-wrap;
 }
 
 .quote-attribution {
   text-align: right;
-  font-style: italic;
   margin-top: 10px;
-  opacity: 0.9;
-}
-
-/* Score status section */
-.score-section {
-  margin-top: 1px;
-  padding: 1px;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.landscape-layout .score-section {
-  margin-top: 10px;
-  padding: 8px;
-  border-top: none;
-}
-
-.score-success {
-  color: #28a745;
-  margin: 8px 0;
-}
-
-.score-recording {
-  color: #f8f9fa;
   opacity: 0.8;
-  margin: 8px 0;
+  font-style: italic;
 }
 
-.score-queued {
-  margin: 8px 0;
+/* Stats display */
+.retro-stats {
+  margin: 15px 0;
 }
 
-.score-error {
-  color: #dc3545;
-  margin: 8px 0;
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
-.retry-button {
-  margin-top: 8px;
-  padding: 5px 12px;
-  font-size: 0.9rem;
-  background-color: #6c757d;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.retry-button:hover {
-  background-color: #5a6268;
-}
-
-.login-prompt {
-  margin: 10px 0;
-}
-
-.login-button {
-  margin-top: 8px;
-  padding: 5px 12px;
-  font-size: 0.9rem;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.login-button:hover {
-  background-color: #0069d9;
-}
-
-/* Fireworks effect */
-.fireworks-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 999;
-  overflow: hidden;
-}
-
-.firework {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 0;
-  height: 0;
-}
-
-.firework:before, 
-.firework:after {
-  content: '';
-  position: absolute;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  box-shadow: 0 0 10px 2px rgba(255, 255, 255, 0.8);
-  animation: explode 1.5s ease-out forwards;
-}
-
-.firework.delayed {
-  animation-delay: 0.3s;
-}
-
-.firework.delayed-2 {
-  animation-delay: 0.6s;
-}
-
-/* Light theme adjustments */
-.light-theme .celebration-content {
-  background-color: white;
-  color: #333;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-}
-
-.light-theme .victory-title {
-  color: #007bff;
-  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.light-theme .quote-container {
-  background-color: rgba(0, 0, 0, 0.05);
-}
-
-.light-theme .decrypted-quote,
-.light-theme .quote-attribution {
-  color: #333;
-}
-
-.light-theme .login-button {
-  background-color: #007bff;
-}
-
-.light-theme .retry-button {
-  background-color: #6c757d;
-}
-
-/* Animations */
-@keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes pop-in {
-  0% {
-    transform: scale(0.8);
-    opacity: 0;
-  }
-  80% {
-    transform: scale(1.05);
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-@keyframes explode {
-  0% {
-    transform: translate(-50%, -50%) scale(0.1);
-    opacity: 1;
-  }
-  50% {
-    opacity: 1;
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(20);
-    opacity: 0;
-  }
-}
-
-.animate-scale-in {
-  animation: scale-in 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
-
-@keyframes scale-in {
-  0% {
-    transform: scale(0.5);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.animate-slide-in {
-  animation: slide-in 0.8s ease-out forwards;
-}
-
-@keyframes slide-in {
-  0% {
-    transform: translateY(20px);
-    opacity: 0;
-  }
-  100% {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-/* Add to WinCelebration.css */
-.anon-score-message {
-  background-color: rgba(255, 217, 102, 0.2);
-  border-left: 3px solid #ffd966;
-  padding: 12px;
-  margin-bottom: 15px;
-  text-align: left;
-  line-height: 1.5;
+.stat-item {
+  font-family: 'Courier New', monospace;
+  font-size: 1.1rem;
+  padding: 5px 10px;
+  background-color: rgba(0, 0, 0, 0.3);
   border-radius: 4px;
 }
-.mobile-mode .anon-score-message {
-  margin-bottom: 1px;
-  line-height: 1;
-  padding:1px;
-}
-.warning-icon {
-  margin-right: 5px;
-  font-size: 1.2em;
-  display: inline-block;
-  vertical-align: text-top;
-}
 
-.dark-theme .anon-score-message {
-  background-color: rgba(255, 217, 102, 0.1);
-}
-
-.login-button {
-  background-color: #4cc9f0;
-  color: #333;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 20px;
+.stat-item.score {
   font-weight: bold;
-  transition: all 0.2s ease;
-  margin-top: 10px;
+}
+
+/* Dark theme stat colors */
+.dark-theme .stat-item.score {
+  color: #4cc9f0;
+}
+
+/* Anonymous message */
+.anon-message {
+  margin: 15px 0;
+  padding: 10px;
+  background-color: rgba(255, 217, 102, 0.1);
+  border-left: 3px solid #ffd966;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+/* Action buttons - using the same style as crossword-hint-button */
+.retro-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+/* Reuse the crossword-hint-button styling directly */
+.game-over-action-button {
+  min-width: 85px;
+  padding: 10px 15px;
+  border-radius: 4px;
+  border: 1px solid #444;
+  font-family: 'Courier New', monospace;
   cursor: pointer;
 }
 
-.login-button:hover {
-  background-color: #3db8df;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(76, 201, 240, 0.3);
+.game-over-action-button:hover {
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+.game-over-text-display{
+  --char-font-size:1.05rem;
+}
+/* Daily streak info */
+.retro-daily {
+  margin: 15px 0;
+  padding: 10px;
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
 }
 
-.light-theme .login-button {
-  background-color: #007bff;
-  color: white;
+.daily-streak-row {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
 }
 
-.light-theme .login-button:hover {
-  background-color: #0069d9;
+.streak-item {
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
 }
 
-/* Adjustments for small screens in landscape */
-@media (max-width: 800px) {
-  .celebration-content.landscape-layout {
-    max-width: 80%;
+/* Mobile adjustments */
+@media (max-width: 480px) {
+  .celebration-retro {
+    padding: 15px;
   }
 
-  .celebration-main-content {
-    padding-right: 15px;
+  .status-text {
+    font-size: 1.4rem;
   }
 
-  .celebration-side-content {
-    padding-left: 15px;
-  }
-}
-
-/* Very small screens - revert to stacked layout */
-@media (max-width: 600px) {
-  .celebration-content.landscape-layout {
+  .stat-row {
     flex-direction: column;
-    max-height: 85vh;
-    overflow-y: auto;
+    align-items: center;
   }
 
-  .celebration-main-content {
-    padding-right: 0;
-    border-right: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    padding-bottom: 15px;
-    margin-bottom: 15px;
+  .retro-actions {
+    flex-direction: column;
   }
 
-  .celebration-side-content {
-    padding-left: 0;
-    border-left: none;
-  }
-}
-
-/* Mobile optimizations for the celebration window */
-@media (max-width: 500px) {
-  .celebration-content {
-    padding: 15px;
-  }
-
-  .play-again-button,
-  .share-button {
-    font-size: 0.95rem;
-    padding: 10px 18px;
-  }
-
-  .victory-title {
-    font-size: 2rem;
-  }
-
-  .stat-value {
-    font-size: 1.6rem;
-  }
-
-  .stat-item.score .stat-value {
-    font-size: 1.8rem;
-  }
-
-  .quote-container {
-    padding: 15px;
-    max-height: 150px;
-  }
-
-  .decrypted-quote {
-    font-size: 0.9rem;
+  .game-over-action-button {
+    width: 100%;
   }
 }
