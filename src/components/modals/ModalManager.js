@@ -1,5 +1,6 @@
-// src/components/modals/ModalManager.js - Updated to support Daily Challenge button
+// src/components/modals/ModalManager.js - Updated with Custom Game flag
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import About from "./About";
 import Settings from "./Settings";
 import Login from "../../pages/Login";
@@ -7,7 +8,7 @@ import Signup from "../../pages/Signup";
 import ContinueGamePrompt from "./ContinueGamePrompt";
 import useGameSession from "../../hooks/useGameSession";
 import useUIStore from "../../stores/uiStore";
-import { useNavigate } from "react-router-dom";
+import useSettingsStore from "../../stores/settingsStore"; // Added missing import
 import config from "../../config";
 
 /**
@@ -97,12 +98,47 @@ const ModalManager = ({ children }) => {
     closeContinueGamePrompt();
   };
 
+  // Listen for game state changes
+  useEffect(() => {
+    // Subscribe to game state changes
+    const unsubscribe = subscribeToEvents("game:state-changed", () => {
+      console.log(
+        "Game state changed detected - closing continue prompt if open",
+      );
+      // Close the continue prompt if it's open
+      if (isContinueGameOpen) {
+        closeContinueGamePrompt();
+      }
+    });
+
+    return unsubscribe;
+  }, [isContinueGameOpen, closeContinueGamePrompt, subscribeToEvents]);
+
+  // Updated handler for custom game - now with custom flag
   const handleNewGame = async () => {
-    await startNewGame();
+    // Get settings
+    const settingsStore = useSettingsStore.getState();
+    const options = {
+      longText: settingsStore?.settings?.longText || false,
+      hardcoreMode: settingsStore?.settings?.hardcoreMode || false,
+      customGameRequested: true, // Add this flag to force custom game
+    };
+
+    // Start new game
+    const result = await startNewGame(options);
+
+    // Emit an event that the game state has changed
+    if (result.success) {
+      if (events && events.emit) {
+        events.emit("game:state-changed", { source: "custom-game-start" });
+      }
+    }
+
+    // Close the modal
     closeContinueGamePrompt();
   };
 
-  // New handler for daily challenge button
+  // Handler for daily challenge button
   const handleDailyChallenge = async () => {
     closeContinueGamePrompt();
     // Navigate to daily challenge page

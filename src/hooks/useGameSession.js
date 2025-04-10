@@ -131,19 +131,29 @@ const useGameSession = () => {
 
   /**
    * Start a new game after abandoning current
+   * @param {Object} options Game options with customGameRequested flag
    * @returns {Promise<Object>} Result
    */
-  const startNewGame = useCallback(async () => {
-    try {
-      return await abandonAndStartNew({
-        longText: settings?.longText,
-        hardcoreMode: settings?.hardcoreMode,
-      });
-    } catch (error) {
-      console.error("Error in useGameSession.startNewGame:", error);
-      return { success: false, error };
-    }
-  }, [settings?.longText, settings?.hardcoreMode]);
+  const startNewGame = useCallback(
+    async (options = {}) => {
+      try {
+        // Extract customGameRequested flag if provided
+        const customGameRequested = options.customGameRequested === true;
+
+        // If customGameRequested is set, pass it to the abandon and start function
+        const startOptions = {
+          ...options,
+          customGameRequested,
+        };
+
+        return await abandonAndStartNew(startOptions);
+      } catch (error) {
+        console.error("Error in useGameSession.startNewGame:", error);
+        return { success: false, error };
+      }
+    },
+    [settings?.longText, settings?.hardcoreMode],
+  );
 
   /**
    * Initialize a daily challenge

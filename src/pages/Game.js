@@ -218,10 +218,20 @@ function Game() {
     if (typeof resetAndStart === "function") {
       // Use settings from the store
       const settingsStore = useSettingsStore.getState();
+
+      // Set isResetting flag before the reset
+      useGameStore.getState().resetGame();
+
+      // Force a UI refresh by setting state
+      // setForceRefresh((prevState) => !prevState); // Add this state variable if needed
+
       resetAndStart(
         settingsStore.settings?.longText || false,
         settingsStore.settings?.hardcoreMode || false,
-        { forceRender: true }, // Add a flag we can check for forcing updates
+        {
+          forceRender: true, // Add a flag we can check for forcing updates
+          customGameRequested: true, // Ensure we get a custom game
+        },
       );
     }
   }, []);

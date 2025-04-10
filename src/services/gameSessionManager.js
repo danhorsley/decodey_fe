@@ -304,11 +304,14 @@ const handleLogout = async (options = { startAnonymousGame: true }) => {
 };
 /**
  * Abandon current game and start a new one
- * @param {Object} options Game options
+ * @param {Object} options Game options with optional customGameRequested flag
  * @returns {Promise<Object>} Result
  */
 const abandonAndStartNew = async (options = {}) => {
   try {
+    // Extract customGameRequested flag if provided
+    const customGameRequested = options.customGameRequested === true;
+
     // Get the appropriate strategy for the current user
     const strategy = strategyFactory.getStrategy();
 
@@ -331,22 +334,65 @@ const abandonAndStartNew = async (options = {}) => {
     // Force clear the game ID to ensure a clean slate
     localStorage.removeItem("uncrypt-game-id");
 
-    // Get a fresh strategy with customGameRequested flag to ensure we get the correct type
+    // Get a fresh strategy with customGameRequested flag
     const freshStrategy = strategyFactory.getStrategy({
-      customGameRequested: true,
+      customGameRequested: customGameRequested,
     });
 
-    // Start new game using the fresh strategy - this is the key change
+    // Log the strategy being used (helpful for debugging)
+    console.log(
+      `Using ${freshStrategy.constructor.name} for new game initialization (customGameRequested: ${customGameRequested})`,
+    );
+
+    // Start new game using the fresh strategy
+    let result;
     if (freshStrategy && typeof freshStrategy.initializeGame === "function") {
-      return await freshStrategy.initializeGame(options);
+      result = await freshStrategy.initializeGame(options);
     } else {
       // Last resort fallback - use apiService directly
       console.warn(
         "Strategy missing initializeGame method, using API directly",
       );
       const gameData = await apiService.startGame(options);
-      return { success: !!gameData, gameData };
+      result = { success: !!gameData, gameData };
     }
+
+    // Update game store if initialization succeeded with game data
+    if (result.success && result.gameData) {
+      const gameStore = useGameStore.getState();
+
+      if (typeof gameStore.resetGame === "function") {
+        // First reset the game state to clear any existing game data
+        gameStore.resetGame();
+      }
+
+      if (typeof gameStore.startGame === "function") {
+        console.log("Explicitly starting new game in UI with fresh data");
+        // Force update the UI with the new game data
+        await gameStore.startGame(
+          options.longText || false,
+          options.hardcoreMode || false,
+          true, // Force new
+          result.gameData.is_daily || false, // Check if this is a daily game
+        );
+
+        // If we have specific game data from the server, update further
+        if (result.gameData) {
+          // Force complete the reset operation if it was started
+          if (typeof gameStore.resetComplete === "function") {
+            gameStore.resetComplete();
+          }
+
+          // If we have continueSavedGame function, use that with the new game data
+          if (typeof gameStore.continueSavedGame === "function") {
+            console.log("Applying new game data to UI state");
+            await gameStore.continueSavedGame(result.gameData);
+          }
+        }
+      }
+    }
+
+    return result;
   } catch (error) {
     console.error("Error in abandon and start new:", error);
     // Last resort cleanup

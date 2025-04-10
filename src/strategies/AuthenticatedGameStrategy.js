@@ -12,7 +12,6 @@ class AuthenticatedGameStrategy extends GameStrategy {
     super();
     this.events = events; // Event emitter for notifying about active games
   }
-
   /**
    * Initialize a new game for authenticated user
    * @param {Object} options Game options
@@ -24,31 +23,40 @@ class AuthenticatedGameStrategy extends GameStrategy {
         "AuthenticatedGameStrategy: Checking for active games before starting new one",
       );
 
-      // First check if the user has an active game
-      const activeGameCheck = await this.checkActiveGame();
-
-      if (activeGameCheck.hasActiveGame) {
+      // Skip active game check if customGameRequested is true
+      if (options.customGameRequested === true) {
         console.log(
-          "AuthenticatedGameStrategy: Active game found, emitting event",
+          "AuthenticatedGameStrategy: Custom game requested - skipping active game check",
         );
+      }
+      // Otherwise, check for active games
+      else {
+        // First check if the user has an active game
+        const activeGameCheck = await this.checkActiveGame();
 
-        // Emit event to notify UI about active game
-        if (this.events) {
-          this.events.emit("game:active-game-found", {
+        if (activeGameCheck.hasActiveGame) {
+          console.log(
+            "AuthenticatedGameStrategy: Active game found, emitting event",
+          );
+
+          // Emit event to notify UI about active game
+          if (this.events) {
+            this.events.emit("game:active-game-found", {
+              gameStats: activeGameCheck.gameStats,
+            });
+          }
+
+          return {
+            success: true,
+            activeGameFound: true,
             gameStats: activeGameCheck.gameStats,
-          });
+          };
         }
-
-        return {
-          success: true,
-          activeGameFound: true,
-          gameStats: activeGameCheck.gameStats,
-        };
       }
 
-      // No active game found, start a new one
+      // No active game found, or we're skipping the check - start a new one
       console.log(
-        "AuthenticatedGameStrategy: No active game found, starting new one",
+        "AuthenticatedGameStrategy: No active game found or custom game requested, starting new one",
       );
 
       // Clear any existing game ID
@@ -57,7 +65,7 @@ class AuthenticatedGameStrategy extends GameStrategy {
       // Start game via API Service
       const gameData = await apiService.startGame(options);
 
-      // Store game ID if available
+      // Store game ID if present
       if (gameData?.game_id) {
         localStorage.setItem("uncrypt-game-id", gameData.game_id);
       }
