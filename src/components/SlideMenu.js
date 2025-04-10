@@ -9,6 +9,7 @@ import {
   FaInfoCircle,
   FaCalendarAlt,
   FaHome,
+  FaRandom,
 } from "react-icons/fa";
 import "../Styles/SlideMenu.css";
 import useAuthStore from "../stores/authStore";
@@ -37,7 +38,22 @@ const SlideMenu = ({ isOpen, onClose }) => {
     navigate(path);
     onClose();
   };
+  //start custom game for anon, bring up continue game modal for auth users
+  const handleCustomGame = () => {
+    console.log("Custom Game clicked in SlideMenu");
 
+    // For anonymous users, directly start a custom game
+    if (!isAuthenticated) {
+      gameSession.startNewGame({ customGameRequested: true });
+      onClose();
+      return;
+    }
+
+    // For authenticated users, check for active game first
+    // This will trigger the continue game modal if there's an active game
+    gameSession.initializeGame({ customGameRequested: true });
+    onClose();
+  };
   // Handle auth actions
   const handleLogin = () => {
     openLogin();
@@ -53,7 +69,7 @@ const SlideMenu = ({ isOpen, onClose }) => {
   const handleLogout = async () => {
     console.log("Logout clicked in SlideMenu");
     // Change this to use gameSession.userLogout instead
-    
+
     await gameSession.userLogout(true); // true means start an anonymous game
     console.log("userLogout completed in SlideMenu");
     onClose();
@@ -92,6 +108,11 @@ const SlideMenu = ({ isOpen, onClose }) => {
           <li onClick={() => handleNavigation("/daily")}>
             <FaCalendarAlt className="menu-icon" />
             Daily Challenge
+          </li>
+
+          <li onClick={handleCustomGame}>
+            <FaRandom className="menu-icon" />
+            Custom Game
           </li>
 
           <li onClick={() => handleNavigation("/leaderboard")}>
