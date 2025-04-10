@@ -5,6 +5,7 @@ import "../Styles/Login.css";
 import useSettingsStore from "../stores/settingsStore";
 import useUIStore from "../stores/uiStore";
 import useGameSession from "../hooks/useGameSession";
+import apiService from "../services/apiService"; // Import apiService
 
 function Login({ onClose }) {
   // Get settings and UI actions
@@ -56,8 +57,17 @@ function Login({ onClose }) {
   };
 
   // Handle forgotten password
-  const handleForgotPassword = () => {
-    alert("Password reset functionality will be available soon!");
+  const handleForgotPassword = async () => {
+    const email = prompt("Please enter your email address:");
+    if (!email) return;
+
+    try {
+      const result = await apiService.forgotPassword(email);
+      alert(result.message || "If an account exists with this email, a reset link will be sent");
+    } catch (error) {
+      console.error("Error in forgot password:", error);
+      alert("Failed to process password reset request. Please try again later.");
+    }
   };
 
   // Handle account creation

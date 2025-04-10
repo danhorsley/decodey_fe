@@ -167,6 +167,22 @@ class ApiService {
    * Logout current user
    * @returns {Promise<Object>} Logout result
    */
+  async forgotPassword(email) {
+    try {
+      const response = await this.api.post("/forgot-password", { email });
+      return { 
+        success: true, 
+        message: response.data.message 
+      };
+    } catch (error) {
+      console.error("Forgot password error:", error);
+      return {
+        success: false,
+        error: error.response?.data?.error || "Failed to process request"
+      };
+    }
+  }
+
   async logout() {
     try {
       await this.api.post("/logout");
