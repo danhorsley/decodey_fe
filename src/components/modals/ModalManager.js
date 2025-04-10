@@ -1,5 +1,5 @@
-// src/components/modals/ModalManager.js - Simplified to focus on UI responsibilities
-import React, { useEffect } from "react";
+// src/components/modals/ModalManager.js - Updated to support Daily Challenge button
+import React, { useEffect, useState } from "react";
 import About from "./About";
 import Settings from "./Settings";
 import Login from "../../pages/Login";
@@ -7,13 +7,19 @@ import Signup from "../../pages/Signup";
 import ContinueGamePrompt from "./ContinueGamePrompt";
 import useGameSession from "../../hooks/useGameSession";
 import useUIStore from "../../stores/uiStore";
+import { useNavigate } from "react-router-dom";
 import config from "../../config";
 
 /**
  * ModalManager component - handles rendering of all application modals
- * Reduced to focus purely on UI responsibilities
+ * Updated to check daily challenge completion status
  */
 const ModalManager = ({ children }) => {
+  const navigate = useNavigate();
+
+  // State to track daily challenge completion
+  const [isDailyCompleted, setIsDailyCompleted] = useState(true);
+
   // Get UI state using individual selectors to reduce re-renders
   const isAboutOpen = useUIStore((state) => state.isAboutOpen);
   const isLoginOpen = useUIStore((state) => state.isLoginOpen);
@@ -35,8 +41,35 @@ const ModalManager = ({ children }) => {
   );
 
   // Get game session functions - simplified API
-  const { continueGame, startNewGame, events, subscribeToEvents } =
-    useGameSession();
+  const {
+    continueGame,
+    startNewGame,
+    events,
+    subscribeToEvents,
+    isDailyCompleted: checkDailyCompletion, // Add the daily completion check function
+    startDailyChallenge, // Add the function to start daily challenge
+  } = useGameSession();
+
+  // Check daily challenge completion status when continue game prompt opens
+  useEffect(() => {
+    const checkDailyStatus = async () => {
+      if (isContinueGameOpen) {
+        try {
+          const result = await checkDailyCompletion();
+          setIsDailyCompleted(result.isCompleted || false);
+        } catch (error) {
+          console.warn("Error checking daily completion:", error);
+          // Default to completed (don't show button) on error
+          setIsDailyCompleted(true);
+        }
+      }
+    };
+
+    // Only check for authenticated users
+    if (isContinueGameOpen && config.session.getAuthToken()) {
+      checkDailyStatus();
+    }
+  }, [isContinueGameOpen, checkDailyCompletion]);
 
   // Listen for active game notifications
   useEffect(() => {
@@ -69,6 +102,13 @@ const ModalManager = ({ children }) => {
     closeContinueGamePrompt();
   };
 
+  // New handler for daily challenge button
+  const handleDailyChallenge = async () => {
+    closeContinueGamePrompt();
+    // Navigate to daily challenge page
+    navigate("/daily");
+  };
+
   return (
     <>
       {/* Only render modals when their state is true */}
@@ -87,6 +127,8 @@ const ModalManager = ({ children }) => {
           gameStats={activeGameStats || {}}
           onContinue={handleContinueGame}
           onNewGame={handleNewGame}
+          dailyCompleted={isDailyCompleted}
+          onDailyChallenge={handleDailyChallenge}
         />
       )}
 

@@ -7,6 +7,7 @@ import useGameStore from "../../stores/gameStore";
 
 /**
  * Modal that prompts user to continue an existing game or start a new one
+ * Now with optional Daily Challenge button
  */
 function ContinueGamePrompt({
   isOpen,
@@ -14,6 +15,8 @@ function ContinueGamePrompt({
   gameStats,
   onContinue,
   onNewGame,
+  dailyCompleted = true, // New prop: default to true (don't show button)
+  onDailyChallenge, // New prop: handler for daily challenge button
 }) {
   // Get theme from settings
   const settings = useSettingsStore((state) => state.settings);
@@ -49,10 +52,7 @@ function ContinueGamePrompt({
           &times;
         </button>
         <h2>Active Game Found</h2>
-        <p>
-          You have an active game in progress. Would you like to continue or
-          start a new game?
-        </p>
+        <p>You have an active game in progress. What would you like to do?</p>
 
         <div
           className="game-stats-container"
@@ -105,6 +105,8 @@ function ContinueGamePrompt({
             display: "flex",
             justifyContent: "space-between",
             marginTop: "25px",
+            flexWrap: "wrap", // Allow wrapping for mobile
+            gap: "10px", // Add gap between buttons
           }}
         >
           <button
@@ -116,10 +118,30 @@ function ContinueGamePrompt({
               borderRadius: "4px",
               border: "none",
               cursor: "pointer",
+              flex: !dailyCompleted ? "1 1 30%" : "1 1 45%", // Adjust flex basis based on number of buttons
             }}
           >
-            Start New Game
+            Custom Game
           </button>
+
+          {/* Only show Daily Challenge button if daily not completed and handler provided */}
+          {!dailyCompleted && onDailyChallenge && (
+            <button
+              onClick={onDailyChallenge}
+              style={{
+                backgroundColor: "#FF5722", // Orange color for Daily Challenge
+                color: "white",
+                padding: "8px 16px",
+                borderRadius: "4px",
+                border: "none",
+                cursor: "pointer",
+                flex: "1 1 30%",
+              }}
+            >
+              Daily Challenge
+            </button>
+          )}
+
           <button
             onClick={onContinue}
             style={{
@@ -131,6 +153,7 @@ function ContinueGamePrompt({
               border: "none",
               cursor: "pointer",
               fontWeight: "bold",
+              flex: !dailyCompleted ? "1 1 30%" : "1 1 45%", // Adjust flex basis based on number of buttons
             }}
           >
             Continue Game
