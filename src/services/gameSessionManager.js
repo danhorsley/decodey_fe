@@ -258,13 +258,15 @@ const handleLogout = async (options = { startAnonymousGame: true }) => {
     if (options.startAnonymousGame) {
       // After logout, we need the anonymous strategy
       const strategy = strategyFactory.getStrategyByType("anonymous");
-      const gameResult = await strategy.initializeGame(options.gameOptions || {});
-      
+      const gameResult = await strategy.initializeGame(
+        options.gameOptions || {},
+      );
+
       // Emit event for game state transition
       if (gameResult.success) {
         eventEmitter.emit("game:anonymous-transition", gameResult);
       }
-      
+
       return gameResult;
     }
 
@@ -279,13 +281,15 @@ const handleLogout = async (options = { startAnonymousGame: true }) => {
     if (options.startAnonymousGame) {
       try {
         const strategy = strategyFactory.getStrategyByType("anonymous");
-        const gameResult = await strategy.initializeGame(options.gameOptions || {});
-        
+        const gameResult = await strategy.initializeGame(
+          options.gameOptions || {},
+        );
+
         // Emit event even after error recovery
         if (gameResult.success) {
           eventEmitter.emit("game:anonymous-transition", gameResult);
         }
-        
+
         return gameResult;
       } catch (gameError) {
         console.error("Failed to start game after logout:", gameError);
@@ -298,7 +302,6 @@ const handleLogout = async (options = { startAnonymousGame: true }) => {
     };
   }
 };
-
 /**
  * Abandon current game and start a new one
  * @param {Object} options Game options
@@ -325,10 +328,17 @@ const abandonAndStartNew = async (options = {}) => {
       localStorage.removeItem("uncrypt-game-id");
     }
 
-    // Start new game using the same strategy
-    // This should work as long as initializeGame is implemented
-    if (strategy && typeof strategy.initializeGame === "function") {
-      return await strategy.initializeGame(options);
+    // Force clear the game ID to ensure a clean slate
+    localStorage.removeItem("uncrypt-game-id");
+
+    // Get a fresh strategy with customGameRequested flag to ensure we get the correct type
+    const freshStrategy = strategyFactory.getStrategy({
+      customGameRequested: true,
+    });
+
+    // Start new game using the fresh strategy - this is the key change
+    if (freshStrategy && typeof freshStrategy.initializeGame === "function") {
+      return await freshStrategy.initializeGame(options);
     } else {
       // Last resort fallback - use apiService directly
       console.warn(
