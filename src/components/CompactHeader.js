@@ -52,7 +52,7 @@ const CompactHeader = ({
       </button>
 
       {/* Game title */}
-      <h1 className="game-title">{title}</h1>
+      <h1 className="retro-title">{title}</h1>
 
       {/* Mode badges */}
       {isDailyChallenge && (
