@@ -13,7 +13,7 @@ const getApiUrl = () => {
   if (process.env.NODE_ENV === 'production') {
     return 'https://api.decodey.game';
   }
-  return process.env.REACT_APP_BACKEND_URL || 'https://7264097a-b4a2-42c7-988c-db8c0c9b107a-00-1lx57x7wg68m5.janeway.replit.dev';
+  return 'https://7264097a-b4a2-42c7-988c-db8c0c9b107a-00-1lx57x7wg68m5.janeway.replit.dev';
 };
 
 // Helper function to get storage based on rememberMe preference
