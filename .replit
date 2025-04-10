@@ -9,7 +9,7 @@ build_command = "npm run build"
 run_command = "npx serve -s build -p 3000"
 run = ["sh", "-c", "npx serve -s build -l 3000"]
 build = ["sh", "-c", "npm run build"]
-deploymentTarget = "cloudrun"
+deploymentTarget = "gce"
 
 [[ports]]
 localPort = 3000

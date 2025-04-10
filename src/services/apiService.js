@@ -304,7 +304,6 @@ class ApiService {
       if (options.hardcoreMode) {
         queryParams.append("hardcore", "true");
       }
-
       // Construct full URL
       const url = `${endpoint}${queryParams.toString() ? "?" + queryParams.toString() : ""}`;
 
