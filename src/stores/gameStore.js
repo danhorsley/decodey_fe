@@ -126,9 +126,13 @@ const useGameStore = create((set, get) => ({
     useLongText = false,
     hardcoreMode = false,
     forceNewGame = false,
-    isDailyChallenge = false, // New parameter
+    isDailyChallenge = false,
+    difficultyParam = null, // New parameter
   ) => {
     try {
+      // ...
+
+      // ...
       // If we're forcing a new game, ensure any previous game is fully abandoned
       if (forceNewGame) {
         try {
@@ -147,9 +151,10 @@ const useGameStore = create((set, get) => ({
         get().initializeFromSettings();
       }
 
-      // Get current difficulty and max mistakes from our synchronized state
-      const difficulty = get().difficulty;
-      const maxMistakesValue = get().maxMistakes;
+      // Get current difficulty and max mistakes from parameter or synchronized state
+      const difficulty = difficultyParam || get().difficulty;
+      const maxMistakesValue =
+        MAX_MISTAKES_MAP[difficulty] || get().maxMistakes;
 
       // Hardcore mode can come from parameter or store
       const effectiveHardcoreMode = hardcoreMode || get().hardcoreMode;

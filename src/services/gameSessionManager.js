@@ -374,6 +374,7 @@ const abandonAndStartNew = async (options = {}) => {
           options.hardcoreMode || false,
           true, // Force new
           result.gameData.is_daily || false, // Check if this is a daily game
+          options.difficulty, // Pass difficulty parameter
         );
 
         // If we have specific game data from the server, update further

@@ -116,13 +116,16 @@ const ModalManager = ({ children }) => {
 
   // Updated handler for custom game - now with custom flag
   const handleNewGame = async () => {
-    // Get settings
+    // Get settings with complete properties
     const settingsStore = useSettingsStore.getState();
     const options = {
       longText: settingsStore?.settings?.longText || false,
       hardcoreMode: settingsStore?.settings?.hardcoreMode || false,
+      difficulty: settingsStore?.settings?.difficulty || "medium", // Explicitly include difficulty
       customGameRequested: true, // Add this flag to force custom game
     };
+
+    console.log("Starting new game with settings:", options); // Debug log
 
     // Start new game
     const result = await startNewGame(options);
