@@ -17,7 +17,6 @@ const LetterCell = React.memo(
     <div
       className={`letter-cell ${isSelected ? "selected" : ""} ${isGuessed ? "guessed" : ""} ${isFlashing ? "flash" : ""}`}
       onClick={!disabled ? onClick : undefined}
-      contentEditable="false"
     >
       {letter}
       {typeof frequency !== "undefined" && (
@@ -96,7 +95,6 @@ const GameDashboard = ({
         <div
           className={`crossword-hint-button status-${getStatusColor()} ${isHintInProgress ? "processing" : ""}`}
           onClick={!disableHint ? onHintClick : undefined}
-          contentEditable="false"
         >
           <div className="hint-text-display">
             {hintTexts[remainingMistakes] || hintTexts[0]}

@@ -64,20 +64,31 @@ function Game() {
       );
     };
   }, []);
+
   // Handle logout transition
   useEffect(() => {
     const unsubscribe = subscribeToEvents("auth:logout-transition", () => {
       // Reset any authenticated-user specific state
-      useGameStore.getState().resetState();
+      console.log("auth:logout-transition event received in Game.js");
+      const gameStore = useGameStore.getState();
+      if (typeof gameStore.resetGame === "function") {
+        gameStore.resetGame();
+      }
     });
 
     // Handle anonymous transition
     const unsubscribeAnon = subscribeToEvents(
       "game:anonymous-transition",
       (result) => {
-        if (result.success && result.gameData) {
+        console.log(
+          "game:anonymous-transition event received in Game.js",
+          result,
+        );
+        if (result && result.success && result.gameData) {
           // Start new anonymous game with the received data
-          useGameStore.getState().startGame(
+          const gameStore = useGameStore.getState();
+          console.log("Starting anonymous game after logout");
+          gameStore.startGame(
             false, // longText
             false, // hardcoreMode
             true, // forceNew

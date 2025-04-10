@@ -286,8 +286,42 @@ const handleLogout = async (options = { startAnonymousGame: true }) => {
 
     return { success: true };
   } catch (error) {
-    // Error handling (unchanged)
-    // ...
+    console.error("Error during logout:", error);
+
+    // Still clear session data even on error
+    config.session.clearSession();
+
+    // Emit logout event even during errors
+    eventEmitter.emit("auth:logout-transition");
+
+    // Try to start anonymous game despite the error
+    if (options.startAnonymousGame) {
+      try {
+        const strategy = strategyFactory.getStrategyByType("anonymous");
+        const gameResult = await strategy.initializeGame(
+          options.gameOptions || {},
+        );
+
+        if (gameResult.success) {
+          // Update game store
+          const gameStore = useGameStore.getState();
+          gameStore.resetGame();
+          await gameStore.continueSavedGame(gameResult.gameData);
+
+          // Emit event for UI update
+          eventEmitter.emit("game:anonymous-transition", gameResult);
+
+          return gameResult;
+        }
+      } catch (innerError) {
+        console.error(
+          "Failed to start anonymous game after logout error:",
+          innerError,
+        );
+      }
+    }
+
+    return { success: false, error };
   }
 };
 /**

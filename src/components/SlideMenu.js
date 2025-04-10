@@ -1,12 +1,19 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-  FaTrophy, FaUserCircle, FaSignOutAlt, FaSignInAlt, 
-  FaCog, FaInfoCircle, FaCalendarAlt, FaHome 
+import {
+  FaTrophy,
+  FaUserCircle,
+  FaSignOutAlt,
+  FaSignInAlt,
+  FaCog,
+  FaInfoCircle,
+  FaCalendarAlt,
+  FaHome,
 } from "react-icons/fa";
 import "../Styles/SlideMenu.css";
 import useAuthStore from "../stores/authStore";
 import useUIStore from "../stores/uiStore";
+import useGameSession from "../hooks/useGameSession";
 
 /**
  * SlideMenu - The sidebar menu that opens when the hamburger is clicked
@@ -42,8 +49,13 @@ const SlideMenu = ({ isOpen, onClose }) => {
     onClose();
   };
 
+  const gameSession = useGameSession();
   const handleLogout = async () => {
-    await logout();
+    console.log("Logout clicked in SlideMenu");
+    // Change this to use gameSession.userLogout instead
+    
+    await gameSession.userLogout(true); // true means start an anonymous game
+    console.log("userLogout completed in SlideMenu");
     onClose();
   };
 
@@ -53,10 +65,12 @@ const SlideMenu = ({ isOpen, onClose }) => {
       {isOpen && <div className="menu-backdrop" onClick={onClose}></div>}
 
       {/* The menu itself */}
-      <div className={`slide-menu ${isOpen ? 'open' : ''}`}>
+      <div className={`slide-menu ${isOpen ? "open" : ""}`}>
         {/* Header */}
         <div className="menu-header">
-          <button className="close-menu" onClick={onClose}>&times;</button>
+          <button className="close-menu" onClick={onClose}>
+            &times;
+          </button>
           <h2 className="menu-title">decodey</h2>
         </div>
 
@@ -70,17 +84,17 @@ const SlideMenu = ({ isOpen, onClose }) => {
 
         {/* Menu items */}
         <ul className="menu-items">
-          <li onClick={() => handleNavigation('/')}>
+          <li onClick={() => handleNavigation("/")}>
             <FaHome className="menu-icon" />
             Home
           </li>
 
-          <li onClick={() => handleNavigation('/daily')}>
+          <li onClick={() => handleNavigation("/daily")}>
             <FaCalendarAlt className="menu-icon" />
             Daily Challenge
           </li>
 
-          <li onClick={() => handleNavigation('/leaderboard')}>
+          <li onClick={() => handleNavigation("/leaderboard")}>
             <FaTrophy className="menu-icon" />
             Leaderboard
           </li>
