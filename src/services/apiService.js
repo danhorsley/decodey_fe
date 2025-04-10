@@ -457,6 +457,7 @@ class ApiService {
   async submitGuess(encryptedLetter, guessedLetter) {
     try {
       const gameId = this.getGameId();
+      console.log(`Submitting guess with game ID: ${gameId}`);
 
       // Create request data
       const data = {
@@ -489,6 +490,7 @@ class ApiService {
   async getHint() {
     try {
       const gameId = this.getGameId();
+      console.log(`Requesting hint with game ID: ${gameId}`);
 
       // Create request data
       const data = { game_id: gameId };

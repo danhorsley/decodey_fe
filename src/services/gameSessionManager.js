@@ -309,94 +309,49 @@ const handleLogout = async (options = { startAnonymousGame: true }) => {
  */
 const abandonAndStartNew = async (options = {}) => {
   try {
-    // Extract customGameRequested flag if provided
-    const customGameRequested = options.customGameRequested === true;
-
     // Get the appropriate strategy for the current user
-    const strategy = strategyFactory.getStrategy();
+    const strategy = strategyFactory.getStrategy({
+      customGameRequested: options.customGameRequested === true,
+    });
 
-    // Safety check - only try to abandon if the method exists
-    if (strategy && typeof strategy.abandonGame === "function") {
-      try {
-        // Abandon current game using strategy
+    // First abandon the current game
+    try {
+      if (typeof strategy.abandonGame === "function") {
         await strategy.abandonGame();
-      } catch (abandonError) {
-        console.warn("Error abandoning game:", abandonError);
-        // Fallback: At minimum clear the game ID from localStorage
+      } else {
         localStorage.removeItem("uncrypt-game-id");
       }
-    } else {
-      // Fallback for when the strategy doesn't implement abandonGame
-      console.warn("Strategy missing abandonGame method, using basic cleanup");
+    } catch (abandonError) {
+      console.warn("Error abandoning game:", abandonError);
       localStorage.removeItem("uncrypt-game-id");
     }
 
-    // Force clear the game ID to ensure a clean slate
-    localStorage.removeItem("uncrypt-game-id");
+    // Start a new game using the strategy
+    const result = await strategy.initializeGame(options);
 
-    // Get a fresh strategy with customGameRequested flag
-    const freshStrategy = strategyFactory.getStrategy({
-      customGameRequested: customGameRequested,
-    });
-
-    // Log the strategy being used (helpful for debugging)
-    console.log(
-      `Using ${freshStrategy.constructor.name} for new game initialization (customGameRequested: ${customGameRequested})`,
-    );
-
-    // Start new game using the fresh strategy
-    let result;
-    if (freshStrategy && typeof freshStrategy.initializeGame === "function") {
-      result = await freshStrategy.initializeGame(options);
-    } else {
-      // Last resort fallback - use apiService directly
-      console.warn(
-        "Strategy missing initializeGame method, using API directly",
-      );
-      const gameData = await apiService.startGame(options);
-      result = { success: !!gameData, gameData };
-    }
-
-    // Update game store if initialization succeeded with game data
     if (result.success && result.gameData) {
+      // Store the game ID
+      if (result.gameData.game_id) {
+        localStorage.setItem("uncrypt-game-id", result.gameData.game_id);
+      }
+
+      // Update the game store with the new game data
       const gameStore = useGameStore.getState();
 
+      // Reset the game state first
       if (typeof gameStore.resetGame === "function") {
-        // First reset the game state to clear any existing game data
         gameStore.resetGame();
       }
 
-      if (typeof gameStore.startGame === "function") {
-        console.log("Explicitly starting new game in UI with fresh data");
-        // Force update the UI with the new game data
-        await gameStore.startGame(
-          options.longText || false,
-          options.hardcoreMode || false,
-          true, // Force new
-          result.gameData.is_daily || false, // Check if this is a daily game
-          options.difficulty, // Pass difficulty parameter
-        );
-
-        // If we have specific game data from the server, update further
-        if (result.gameData) {
-          // Force complete the reset operation if it was started
-          if (typeof gameStore.resetComplete === "function") {
-            gameStore.resetComplete();
-          }
-
-          // If we have continueSavedGame function, use that with the new game data
-          if (typeof gameStore.continueSavedGame === "function") {
-            console.log("Applying new game data to UI state");
-            await gameStore.continueSavedGame(result.gameData);
-          }
-        }
+      // Apply the new game data directly without making another API call
+      if (typeof gameStore.continueSavedGame === "function") {
+        await gameStore.continueSavedGame(result.gameData);
       }
     }
 
     return result;
   } catch (error) {
     console.error("Error in abandon and start new:", error);
-    // Last resort cleanup
     localStorage.removeItem("uncrypt-game-id");
     return {
       success: false,

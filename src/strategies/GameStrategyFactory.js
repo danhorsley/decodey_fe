@@ -33,33 +33,31 @@ class GameStrategyFactory {
   getStrategy(options = {}) {
     const isAuthenticated = this._isUserAuthenticated();
     const isDaily = options.daily === true;
+    const customGameRequested = options.customGameRequested === true;
 
-    // Simple check for active daily game when getting strategy
+    // If custom game is explicitly requested, always use the appropriate non-daily strategy
+    if (customGameRequested) {
+      console.log("Custom game explicitly requested - using non-daily strategy");
+      return isAuthenticated 
+        ? this.strategies.authenticated 
+        : this.strategies.anonymous;
+    }
+
+    // Check for active daily game (only if not requesting a custom game)
     const activeGameId = localStorage.getItem("uncrypt-game-id");
     const isActiveDailyGame = activeGameId && activeGameId.includes("-daily-");
 
-    // If we're continuing an active daily and not specifically requesting a custom game,
-    // return the daily strategy
-    if (isActiveDailyGame && !options.customGameRequested) {
+    // For daily games or active daily games
+    if (isDaily || (isActiveDailyGame && !customGameRequested)) {
       return isAuthenticated
         ? this.strategies.dailyAuthenticated
         : this.strategies.dailyAnonymous;
-    }
+    } 
 
-    // Otherwise use normal strategy selection
-    if (!isAuthenticated && !options.customGameRequested) {
-      return this.strategies.dailyAnonymous;
-    }
-
-    if (isDaily) {
-      return isAuthenticated
-        ? this.strategies.dailyAuthenticated
-        : this.strategies.dailyAnonymous;
-    } else {
-      return isAuthenticated
-        ? this.strategies.authenticated
-        : this.strategies.anonymous;
-    }
+    // For standard games
+    return isAuthenticated
+      ? this.strategies.authenticated
+      : this.strategies.anonymous;
   }
 
   /**

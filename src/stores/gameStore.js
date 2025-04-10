@@ -334,13 +334,27 @@ const useGameStore = create((set, get) => ({
 
       // Parse game_id to check if it's a daily challenge
       if (gameData.game_id) {
+        const currentStoredId = localStorage.getItem("uncrypt-game-id");
+        const newId = gameData.game_id;
         const parts = gameData.game_id.split("-");
+        console.log(`Current stored game ID: ${currentStoredId}`);
+        console.log(`New game ID from continueSavedGame: ${newId}`);
+        if (currentStoredId && currentStoredId !== newId) {
+          console.warn(
+            `Game ID mismatch - replacing ${currentStoredId} with ${newId}`,
+          );
+        }
+
+        localStorage.setItem("uncrypt-game-id", newId);
         if (parts.length >= 3 && parts[1] === "daily") {
           console.log("Continuing a daily challenge game");
           isDailyChallenge = true;
 
           // Try to extract date from game data if available
           if (gameData.daily_date) {
+            const gameId = gameData.game_id;
+            localStorage.setItem("uncrypt-game-id", gameId);
+            console.log(`Setting game ID in continueSavedGame: ${gameId}`);
             dailyDate = gameData.daily_date;
           } else {
             // Otherwise use today's date as fallback
