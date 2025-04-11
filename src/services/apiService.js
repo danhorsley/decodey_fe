@@ -213,6 +213,24 @@ class ApiService {
    * Refresh the auth token using refresh token
    * @returns {Promise<Object>} Refresh result
    */
+  /**
+   * Check if a username is available for registration
+   * @param {string} username The username to check
+   * @returns {Promise<Object>} Availability result
+   */
+  async checkUsernameAvailability(username) {
+    try {
+      const response = await this.api.post('/check-username', { username });
+      return response.data;
+    } catch (error) {
+      console.error('Error checking username availability:', error);
+      return {
+        available: false,
+        message: error.response?.data?.message || 'Error checking username'
+      };
+    }
+  }
+
   async refreshToken() {
     // Prevent concurrent refresh attempts
     if (isRefreshing) {
