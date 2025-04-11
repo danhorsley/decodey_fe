@@ -17,15 +17,25 @@ const MobileLayout = ({ children }) => {
   // State for first-time portrait mode notification
   const [showPortraitNotice, setShowPortraitNotice] = useState(false);
 
-  // Check if this is the first time we're showing portrait mode
+  // Check if we should show the portrait warning
   useEffect(() => {
-    // Only show the notice if we're in portrait mode and haven't shown it before
-    if (!isLandscape && !localStorage.getItem("portrait-notice-shown")) {
-      setShowPortraitNotice(true);
-      // Mark as shown so we don't keep showing it
-      localStorage.setItem("portrait-notice-shown", "true");
+    const SHOW_INTERVAL = 1000 * 60 * 30; // Show every 30 minutes
+    const MIN_INTERVAL = 1000 * 60 * 5; // But not more often than 5 minutes
 
-      // Auto-hide after 5 seconds
+    const shouldShowWarning = () => {
+      if (isLandscape) return false;
+      
+      const lastShown = parseInt(localStorage.getItem("portrait-notice-last-shown") || "0");
+      const timeSinceLastShown = Date.now() - lastShown;
+      
+      // Show if never shown or enough time has passed
+      return !lastShown || timeSinceLastShown >= SHOW_INTERVAL;
+    };
+
+    if (shouldShowWarning()) {
+      setShowPortraitNotice(true);
+      localStorage.setItem("portrait-notice-last-shown", Date.now().toString());
+
       const timer = setTimeout(() => {
         setShowPortraitNotice(false);
       }, 5000);
