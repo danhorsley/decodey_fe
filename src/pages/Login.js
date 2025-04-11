@@ -63,10 +63,15 @@ function Login({ onClose }) {
 
     try {
       const result = await apiService.forgotPassword(email);
-      alert(result.message || "If an account exists with this email, a reset link will be sent");
+      alert(
+        result.message ||
+          "If an account exists with this email, a reset link will be sent",
+      );
     } catch (error) {
       console.error("Error in forgot password:", error);
-      alert("Failed to process password reset request. Please try again later.");
+      alert(
+        "Failed to process password reset request. Please try again later.",
+      );
     }
   };
 
@@ -87,7 +92,7 @@ function Login({ onClose }) {
         {error && <p className="login-error">{error}</p>}
         <form onSubmit={handleSubmit} className="login-form">
           <div className="login-field">
-            <label htmlFor="username">Username</label>
+            <label htmlFor="username">Username or Email</label>
             <input
               type="text"
               id="username"
