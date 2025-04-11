@@ -231,6 +231,21 @@ class ApiService {
     }
   }
 
+  /**
+   * Register a new user
+   * @param {Object} data Registration data
+   * @returns {Promise<Object>} Registration result
+   */
+  async signup(data) {
+    try {
+      const response = await this.api.post('/signup', data);
+      return response.data;
+    } catch (error) {
+      console.error('Signup error:', error);
+      throw error;
+    }
+  }
+
   async refreshToken() {
     // Prevent concurrent refresh attempts
     if (isRefreshing) {
