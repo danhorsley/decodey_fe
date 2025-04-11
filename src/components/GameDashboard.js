@@ -116,7 +116,7 @@ const GameDashboard = ({
       className={`game-dashboard ${isDarkTheme ? "dark-theme" : "light-theme"}`}
     >
       {/* Encrypted Grid */}
-      <div className="encrypted-grid">
+      <div className="encrypted-grid" contentEditable="false">
         {sortedEncryptedLetters.map((letter) => (
           <LetterCell
             key={letter}
@@ -135,7 +135,7 @@ const GameDashboard = ({
       <div className="controls-stack">{renderHintOrGameOver()}</div>
 
       {/* Guess Grid */}
-      <div className="guess-grid">
+      <div className="guess-grid" contentEditable="false">
         {originalLetters.map((letter) => (
           <LetterCell
             key={letter}
