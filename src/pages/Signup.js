@@ -13,7 +13,7 @@ function Signup({ onClose }) {
   const settings = useSettingsStore((state) => state.settings);
   const openLogin = useUIStore((state) => state.openLogin);
   // Use the game session hook for login after signup
-  const { handleUserLogin } = useGameSession();
+  const { login: handleUserLogin } = useGameSession();
 
   // Local state
   const [email, setEmail] = useState("");
