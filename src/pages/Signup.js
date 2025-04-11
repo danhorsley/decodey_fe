@@ -54,43 +54,43 @@ function Signup({ onClose }) {
         if (result && result.msg === "User created successfully") {
           console.log("Account created successfully! Attempting auto-login");
 
-          // Auto-login with the credentials just used for signup
-          // Auto-login with credentials
-          const credentials = {
-            username: username,
-            password: password,
-            rememberMe: true, // Default to remember me for better UX
-          };
+          try {
+            // Auto-login with credentials
+            const credentials = {
+              username: username,
+              password: password,
+              rememberMe: true, // Default to remember me for better UX
+            };
 
-          const result = await handleUserLogin(credentials);
+            const loginResult = await handleUserLogin(credentials);
 
-          if (result.success) {
-            console.log("Auto-login successful after signup");
-            // Show success toast message
-            const toast = document.createElement("div");
-            toast.textContent = "Welcome! Your account has been created.";
-            toast.style.cssText = `
-              position: fixed;
-              top: 20px;
-              left: 50%;
-              transform: translateX(-50%);
-              background-color: ${settings.theme === "dark" ? "#333" : "white"};
-              color: ${settings.theme === "dark" ? "#4cc9f0" : "#007bff"};
-              padding: 10px 20px;
-              border-radius: 5px;
-              box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-              z-index: 9999;
-            `;
-            document.body.appendChild(toast);
-            setTimeout(() => document.body.removeChild(toast), 3000);
-            onClose();
-          } else {
-            console.warn("Auto-login failed after signup:", result.error);
-            setError(result.error?.message || "Failed to login after signup");
-            onClose();
-            openLogin();
-          }
-        } catch (loginErr) {
+            if (loginResult.success) {
+              console.log("Auto-login successful after signup");
+              // Show success toast message
+              const toast = document.createElement("div");
+              toast.textContent = "Welcome! Your account has been created.";
+              toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background-color: ${settings.theme === "dark" ? "#333" : "white"};
+                color: ${settings.theme === "dark" ? "#4cc9f0" : "#007bff"};
+                padding: 10px 20px;
+                border-radius: 5px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+                z-index: 9999;
+              `;
+              document.body.appendChild(toast);
+              setTimeout(() => document.body.removeChild(toast), 3000);
+              onClose();
+            } else {
+              console.warn("Auto-login failed after signup:", loginResult.error);
+              setError(loginResult.error?.message || "Failed to login after signup");
+              onClose();
+              openLogin();
+            }
+          } catch (loginErr) {
             console.error("Error during auto-login after signup:", loginErr);
             alert("Account created successfully! You can now log in.");
             onClose();
