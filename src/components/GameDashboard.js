@@ -96,6 +96,7 @@ const GameDashboard = ({
           className={`crossword-hint-button status-${getStatusColor()} ${isHintInProgress ? "processing" : ""}`}
           onClick={!disableHint ? onHintClick : undefined}
         >
+          {/* eslint-disable-next-line react/no-children-prop */}
           <div className="hint-text-display" contentEditable="false">
             {hintTexts[remainingMistakes] || hintTexts[0]}
           </div>
@@ -116,6 +117,7 @@ const GameDashboard = ({
       className={`game-dashboard ${isDarkTheme ? "dark-theme" : "light-theme"}`}
     >
       {/* Encrypted Grid */}
+      {/* eslint-disable-next-line react/no-children-prop */}
       <div className="encrypted-grid" contentEditable="false">
         {sortedEncryptedLetters.map((letter) => (
           <LetterCell
@@ -135,6 +137,7 @@ const GameDashboard = ({
       <div className="controls-stack">{renderHintOrGameOver()}</div>
 
       {/* Guess Grid */}
+      {/* eslint-disable-next-line react/no-children-prop */}
       <div className="guess-grid" contentEditable="false">
         {originalLetters.map((letter) => (
           <LetterCell
