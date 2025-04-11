@@ -162,6 +162,8 @@ const WinCelebration = ({ playSound, winData }) => {
                 {attribution?.major_attribution && (
                   <div className="quote-attribution">
                     — {attribution.major_attribution}
+                    {", "}
+                    {attribution.minor_attribution}
                   </div>
                 )}
               </div>
