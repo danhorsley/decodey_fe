@@ -164,32 +164,27 @@ function Settings({ onCancel }) {
       // Call the API to delete the account
       const response = await apiService.api.delete("/api/delete-account");
 
-      if (response.status === 200) {
-        // Close settings and confirmation
-        setShowDeleteConfirmation(false);
-        onCancel();
+      // Close settings and confirmation
+      setShowDeleteConfirmation(false);
+      onCancel();
 
-        // Log the user out safely
-        try {
-          if (typeof logout === "function") {
-            await logout();
-          }
-        } catch (logoutError) {
-          console.error(
-            "Error during logout after account deletion:",
-            logoutError,
-          );
-          // Continue anyway - account is deleted on the server
+      // Log the user out safely
+      try {
+        if (typeof logout === "function") {
+          await logout();
         }
-
-        // Show a success message
-        alert("Your account has been deleted successfully.");
-
-        // Redirect to home/login page
-        window.location.href = "/";
-      } else {
-        alert("There was a problem deleting your account. Please try again.");
+      } catch (logoutError) {
+        console.error(
+          "Error during logout after account deletion:",
+          logoutError,
+        );
       }
+
+      // Show a success message
+      alert("Your account has been deleted successfully.");
+
+      // Redirect to home/login page
+      window.location.href = "/";
     } catch (error) {
       console.error("Error deleting account:", error);
       alert("There was a problem deleting your account. Please try again.");
