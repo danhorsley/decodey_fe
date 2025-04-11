@@ -22,8 +22,17 @@ const MobileLayout = ({ children }) => {
     const SHOW_INTERVAL = 1000 * 60 * 30; // Show every 30 minutes
     const MIN_INTERVAL = 1000 * 60 * 5; // But not more often than 5 minutes
 
+    const isTablet = () => {
+      return (
+        // Check for iPad specifically
+        /iPad/.test(navigator.userAgent) ||
+        // Check for tablet-sized screen
+        (window.innerWidth >= 768 && window.innerHeight >= 768)
+      );
+    };
+
     const shouldShowWarning = () => {
-      if (isLandscape) return false;
+      if (isLandscape || isTablet()) return false;
       
       const lastShown = parseInt(localStorage.getItem("portrait-notice-last-shown") || "0");
       const timeSinceLastShown = Date.now() - lastShown;
