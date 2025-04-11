@@ -56,7 +56,8 @@
   grid-template-columns: repeat(5, 1fr);
   gap: 0.2rem;
   width: 48%;
-  /* border: 5px solid red !important;  */
+  justify-self: start;
+  margin-left: 0.5rem;
 }
 
 .mobile-mode .guess-grid {
@@ -64,9 +65,18 @@
   grid-template-columns: repeat(5, 1fr);
   gap: 0.2rem;
   width: 48%;
-  /* justify-self: end;
-  padding-right: 0.5rem; */
-  /* border: 5px solid red !important;  */
+  justify-self: start;
+  margin-left: 0.5rem;
+}
+
+/* Portrait-specific grid adjustments */
+@media (orientation: portrait) {
+  .mobile-mode .encrypted-grid,
+  .mobile-mode .guess-grid {
+    width: 95%;
+    margin-left: 0.25rem;
+    justify-self: start;
+  }
 }
 /* Letter cells */
 .mobile-mode .letter-cell {
