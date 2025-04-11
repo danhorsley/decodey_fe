@@ -198,7 +198,7 @@ function Leaderboard() {
                     colspan: "5",
                   }}
                 >
-                  No leaderboard data available.
+                  {isAuthenticated ? "No leaderboard data available." : "You must be logged in to view the leaderboard."}
                 </div>
               </div>
             )}
@@ -477,7 +477,7 @@ function Leaderboard() {
                     colspan: showDates ? "4" : "3",
                   }}
                 >
-                  No streak data available.
+                  {isAuthenticated ? "No streak data available." : "You must be logged in to view the leaderboard."}
                 </div>
               </div>
             )}
