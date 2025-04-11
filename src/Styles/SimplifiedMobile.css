@@ -78,6 +78,18 @@
     justify-self: start;
   }
 }
+
+/* Landscape-specific grid adjustments */
+@media (orientation: landscape) {
+  .mobile-mode .encrypted-grid {
+    justify-self: start;
+    margin-left: 0.25rem;
+  }
+  .mobile-mode .guess-grid {
+    justify-self: end;
+    margin-right: 0.25rem;
+  }
+}
 /* Letter cells */
 .mobile-mode .letter-cell {
   width: auto;
