@@ -90,7 +90,7 @@ function Signup({ onClose }) {
             onClose();
             openLogin();
           }
-          } catch (loginErr) {
+        } catch (loginErr) {
             console.error("Error during auto-login after signup:", loginErr);
             alert("Account created successfully! You can now log in.");
             onClose();
