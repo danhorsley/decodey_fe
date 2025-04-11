@@ -96,7 +96,7 @@ const GameDashboard = ({
           className={`crossword-hint-button status-${getStatusColor()} ${isHintInProgress ? "processing" : ""}`}
           onClick={!disableHint ? onHintClick : undefined}
         >
-          <div className="hint-text-display">
+          <div className="hint-text-display" contentEditable="false">
             {hintTexts[remainingMistakes] || hintTexts[0]}
           </div>
           <div className="hint-label">HINT TOKENS</div>

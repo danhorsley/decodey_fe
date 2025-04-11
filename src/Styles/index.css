@@ -7,6 +7,14 @@
   user-select: none !important;
   -webkit-tap-highlight-color: transparent !important;
   touch-action: manipulation !important;
+  /* Suppress contentEditable console warnings */
+  -webkit-user-modify: read-only !important;
+}
+
+/* Suppress Chrome's touch-to-search */
+*[contenteditable="false"] {
+  -webkit-user-modify: read-only !important;
+  -webkit-user-select: none !important;
 }
 
 /* Chrome-specific rule to prevent touch-to-search */
