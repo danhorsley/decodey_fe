@@ -16,5 +16,8 @@
 /phpmyadmin/*      /404    404
 /mysql/*           /404    404
 
+# Redirect www to non-www
+https://www.decodey.game/*  https://decodey.game/:splat  301!
+
 # Handle all other routes through React
 /*                 /index.html   200
