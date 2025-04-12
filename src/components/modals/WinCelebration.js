@@ -242,6 +242,28 @@ const WinCelebration = ({ playSound, winData }) => {
                   SHARE <FaXTwitter />
                 </div>
               </button>
+
+              <button
+                className="game-over-action-button share"
+                onClick={() => {
+                  const shareText = "I'm enjoying Decodey and I think you'll like it too! Check it out at:";
+                  const url = "https://decodey.game";
+                  if (navigator.share) {
+                    navigator.share({
+                      title: 'Decodey',
+                      text: shareText,
+                      url: url
+                    });
+                  } else {
+                    navigator.clipboard.writeText(`${shareText} ${url}`);
+                    alert('Share link copied to clipboard!');
+                  }
+                }}
+              >
+                <div className="game-over-text-display">
+                  SHARE LINK
+                </div>
+              </button>
             </div>
           </>
         )}
