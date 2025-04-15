@@ -92,12 +92,12 @@
   }
 
   /* Shift encrypted grid to the left */
-  .mobile-mode .encrypted-grid {
-    justify-self: start;
-    /* Align to left edge */
-    margin-left: 0;
-    /* Remove margin for maximum left shift */
-  }
+  /* .mobile-mode .encrypted-grid {
+    justify-self: start; */
+  /* Align to left edge */
+  /* margin-left: 0; */
+  /* Remove margin for maximum left shift */
+  /* } */
 
   /* Shift guess grid to the left too */
   /* .mobile-mode .guess-grid {
@@ -267,23 +267,6 @@
     margin: 1.5px;
   }
 
-  .mobile-mode .controls-stack {
-    position: relative;
-    left: calc(var(--guess-grid-margin) / 20);
-    /* Compensate for the guess grid margin */
-    margin: 0;
-  }
-
-  /* Define the margin variable */
-  .mobile-mode {
-    --guess-grid-margin: 10rem;
-  }
-
-  /* Adjust guess grid with the defined margin */
-  .mobile-mode .guess-grid {
-    margin-right: var(--guess-grid-margin);
-  }
-
   /* More compact text display */
   .mobile-mode .text-container {
     font-size: 0.85rem;
@@ -313,17 +296,13 @@
     --letter-cell-size: 32px;
   }
 
-  .mobile-mode .landscape-mode .encrypted-grid,
+  /* .mobile-mode .landscape-mode .encrypted-grid,
   .mobile-mode .landscape-mode .guess-grid {
     gap: 1px;
     grid-template-columns: repeat(6, 1fr);
     width: 49%;
   }
-
-  .mobile-mode .landscape-mode .guess-grid {
-    margin-right: 15rem;
-  }
-
+ */
   /* Standard letter cells for medium landscape screens */
   .mobile-mode .landscape-mode .letter-cell {
     min-width: 41px;
@@ -335,23 +314,6 @@
 
   .mobile-mode .char-grid {
     font-size: 1.05rem;
-  }
-
-  .mobile-mode .controls-stack {
-    position: relative;
-    left: calc(var(--guess-grid-margin) / 10);
-    /* Compensate for the guess grid margin */
-    margin: 0;
-  }
-
-  /* Define the margin variable */
-  .mobile-mode {
-    --guess-grid-margin: 4rem;
-  }
-
-  /* Adjust guess grid with the defined margin */
-  .mobile-mode .guess-grid {
-    margin-right: var(--guess-grid-margin);
   }
 
   /* Adjusted text container */

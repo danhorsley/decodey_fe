@@ -4,8 +4,8 @@ import ReactDOM from "react-dom/client";
 // Import consolidated CSS files instead of multiple individual ones
 import "./Styles/ConsolidatedMain.css";
 import "./Styles/ConsolidatedDarkTheme.css";
-import "./Styles/SimplifiedMobile.css";
-import "./Styles/MobileResponsive.css";
+// import "./Styles/SimplifiedMobile.css";
+// import "./Styles/MobileResponsive.css";
 // Specialized CSS files remain separate
 import "./Styles/Login.css";
 import "./Styles/About.css";
