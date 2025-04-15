@@ -11,19 +11,30 @@
   -webkit-user-modify: read-only !important;
 }
 
-/* Suppress Chrome's touch-to-search */
+/* Enhanced touch-to-search prevention for Chrome/Android */
 *[contenteditable="false"] {
   -webkit-user-modify: read-only !important;
   -webkit-user-select: none !important;
+  -webkit-touch-callout: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  -webkit-text-size-adjust: none !important;
+  user-select: none !important;
+  pointer-events: none !important;
 }
 
-/* Chrome-specific rule to prevent touch-to-search */
+/* Additional Chrome/Android-specific rules */
 @supports (-webkit-touch-callout: none) {
   * {
     -webkit-touch-callout: none !important;
     -webkit-user-select: none !important;
-    -webkit-tap-highlight-color: rgba(0,0,0,0) !important;
+    -webkit-tap-highlight-color: transparent !important;
     touch-action: manipulation !important;
+    -webkit-text-size-adjust: none !important;
+    user-select: none !important;
+  }
+  
+  .letter-cell, button, input {
+    pointer-events: auto !important;
   }
 }
 
