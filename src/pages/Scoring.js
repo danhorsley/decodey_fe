@@ -29,7 +29,7 @@ const Scoring = () => {
         <section className="privacy-section">
           <h3>Base Formula</h3>
           <p>
-            Your score in Uncrypt is calculated using a formula that takes into
+            Your score in decodey is calculated using a formula that takes into
             account:
           </p>
           <ul>
@@ -50,7 +50,7 @@ const Scoring = () => {
         <section className="privacy-section">
           <h3>Difficulty Levels</h3>
           <p>
-            Uncrypt offers three difficulty levels, each with a different number
+            decodey offers three difficulty levels, each with a different number
             of allowed mistakes and a corresponding multiplier:
           </p>
           <ul>
