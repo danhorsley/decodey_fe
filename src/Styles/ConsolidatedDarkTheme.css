@@ -53,7 +53,7 @@ html.dark-theme {
   background-clip: text;
 
   /* Optional: Add a subtle glow for monitor effect */
-  text-shadow: 0 0 5px rgb(var(--text-color-secondary),0.85);
+  text-shadow: 0 0 5px rgb(var(--text-color-secondary), 0.85);
 }
 
 .dark-theme .text-container {
@@ -63,12 +63,12 @@ html.dark-theme {
 
 .dark-theme .encrypted-line {
   color: var(--text-color-primary);
-  text-shadow: 0 0 8px rgb(var(--text-color-primary),0.75);
+  text-shadow: 0 0 8px rgb(var(--text-color-primary), 0.75);
 }
 
 .dark-theme .display-line {
   color: var(--text-color-secondary);
-  text-shadow: 0 0 8px rgb(var(--text-color-secondary),0.75);
+  text-shadow: 0 0 8px rgb(var(--text-color-secondary), 0.75);
 }
 
 .dark-theme .guessed {
@@ -84,6 +84,7 @@ html.dark-theme {
   color: grey;
   border-color: #7a7a7a;
 }
+
 .dark-theme .encrypted {
   background-color: #222;
 }

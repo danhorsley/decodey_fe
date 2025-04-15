@@ -172,9 +172,12 @@ button:hover:not(:disabled) {
   padding-bottom: 1px;
   padding-top: 1px;
   font-size: 1.10rem;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
 }
+
 /* Chrome, Safari and Opera */
 .text-container::-webkit-scrollbar {
   display: none;
@@ -215,6 +218,7 @@ button:hover:not(:disabled) {
   font-weight: bold;
   z-index: 1;
 }
+
 /* Base badge styles */
 .badge-indicator {
   position: absolute;

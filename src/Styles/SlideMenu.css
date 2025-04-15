@@ -50,6 +50,7 @@
 
 .close-menu {
   background: none;
+  color:black;
   border: none;
   font-size: 1.8rem;
   cursor: pointer;
@@ -63,6 +64,11 @@
   justify-content: center;
   border-radius: 50%;
 }
+
+
+.dark-theme .close-menu {
+  color: #4cc9f0;
+    }
 
 .close-menu:hover {
   background-color: rgba(0, 0, 0, 0.05);
