@@ -7,7 +7,7 @@
   gap: 0.75rem;
   padding: 0.75rem 1rem;
   border-radius: 8px;
-  margin: 0.5rem 0.75rem;
+  margin: 0.1rem 0.1rem;
   max-width: 100%;
   box-sizing: border-box;
 }
@@ -43,7 +43,7 @@
   -ms-user-select: none;
   user-select: none;
   -webkit-user-drag: none;
-  pointer-events: auto; 
+  pointer-events: auto;
   touch-action: manipulation;
 }
 
@@ -91,7 +91,7 @@
   background-color: #222;
   border-color: #666;
   /* color: #33ff33; */
-  color:#4cc9f0;
+  color: #4cc9f0;
 }
 
 .crossword-hint-button:hover:not(:disabled) {
@@ -241,7 +241,7 @@
     font-size: 0.6rem;
   }
 } */
- 
+
 /* Animations */
 @keyframes pulse {
   0% {
@@ -301,15 +301,17 @@
   font-size: 1.5em;
   color: var(--text-color-secondary);
   text-shadow: 0 0 8px var(--text-color-secondary);
-  font-family: monospace; /* Ensure fixed-width font for exact character alignment */
-  letter-spacing: 0.1em; /* Match the spacing of other hint texts */
+  font-family: monospace;
+  /* Ensure fixed-width font for exact character alignment */
+  letter-spacing: 0.1em;
+  /* Match the spacing of other hint texts */
   text-align: center;
 }
 
 .crossword-hint-button.game-over:hover {
   color: var(--text-color-primary);
   text-shadow: 0 0 8px var(--text-color-primary);
-  
+
 }
 
 
@@ -318,23 +320,26 @@
   color: var(--text-color-secondary);
   font-size: 1.1em;
 }
+
 .dark-theme .crossword-hint-button.game-over .hint-label {
   text-shadow: 0 0 8px var(--text-color-secondary);
 }
 
 .dark-theme .crossword-hint-button.game-over .hint-label:hover {
-  color:var(--text-color-primary);
+  color: var(--text-color-primary);
   text-shadow: 0 0 8px var(--text-color-primary);
-  opacity:1;
+  opacity: 1;
 }
 
 @keyframes pulse-game-over {
   0% {
     box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
   }
+
   70% {
     box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
   }
+
   100% {
     box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
   }
@@ -342,11 +347,14 @@
 
 @keyframes pulse-game-over-hover {
   0% {
-    box-shadow: 0 0 0 0 var(--text-color-secondary);;
+    box-shadow: 0 0 0 0 var(--text-color-secondary);
+    ;
   }
+
   70% {
     box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
   }
+
   100% {
     box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
   }
@@ -365,21 +373,26 @@
 .crossword-hint-button.game-over {
   cursor: pointer;
   transition: all 0.3s ease;
-  background-color: #333; /* Similar to normal hint button */
+  background-color: #333;
+  /* Similar to normal hint button */
   border: 1px solid #444;
 }
 
 .crossword-hint-button.game-over:hover {
   transform: scale(1.05);
-  box-shadow: 0 0 15px rgba(76, 201, 240, 0.8); /* Blue glow (4cc9f0) for dark theme */
-  animation: none; /* Stop the red pulsing when hovering */
+  box-shadow: 0 0 15px rgba(76, 201, 240, 0.8);
+  /* Blue glow (4cc9f0) for dark theme */
+  animation: none;
+  /* Stop the red pulsing when hovering */
 }
 
 .crossword-hint-button.game-over .hint-label.question-mark {
   font-weight: bold;
-  font-size: 1.5em; /* Same size as "HINT TOKENS" */
+  font-size: 1.5em;
+  /* Same size as "HINT TOKENS" */
   text-align: center;
-  margin-top: -5px; /* Adjust to align with the middle A */
+  margin-top: -5px;
+  /* Adjust to align with the middle A */
 }
 
 @keyframes pulse-text {
@@ -387,10 +400,12 @@
     opacity: 1;
     text-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
   }
+
   50% {
     opacity: 0.7;
     text-shadow: 0 0 15px rgba(255, 0, 0, 0.8);
   }
+
   100% {
     opacity: 1;
     text-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
@@ -402,10 +417,12 @@
     opacity: 1;
     text-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
   }
+
   50% {
     opacity: 0.7;
     text-shadow: 0 0 15px rgba(255, 0, 0, 0.8);
   }
+
   100% {
     opacity: 1;
     text-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
@@ -414,21 +431,26 @@
 
 /* Let's create a theme-aware version of our styles */
 .dark-theme .crossword-hint-button.game-over:hover {
-  box-shadow: 0 0 15px rgba(76, 201, 240, 0.8); /* Blue glow (4cc9f0) for dark theme */
+  box-shadow: 0 0 15px rgba(76, 201, 240, 0.8);
+  /* Blue glow (4cc9f0) for dark theme */
 }
 
 .light-theme .crossword-hint-button.game-over:hover {
-  box-shadow: 0 0 15px rgba(0, 123, 255, 0.8); /* Standard blue (007bff) for light theme */
+  box-shadow: 0 0 15px rgba(0, 123, 255, 0.8);
+  /* Standard blue (007bff) for light theme */
 }
 
 .crossword-hint-button.game-over .hint-label.question-mark {
   display: block;
   position: relative;
-  margin-top: -2px; /* Fine-tune vertical position */
-  letter-spacing: 0; /* Control spacing */
+  margin-top: -2px;
+  /* Fine-tune vertical position */
+  letter-spacing: 0;
+  /* Control spacing */
   text-align: center;
   width: 100%;
-  transform: translateX(0); /* Center align */
+  transform: translateX(0);
+  /* Center align */
 }
 
 .controls-stack.game-over-state {
@@ -436,9 +458,12 @@
 }
 
 .game-over-text {
-  height: 1.5em; /* Consistent height */
-  margin-bottom: 4px; /* Space between GAME OVER and AGAIN */
-  font-family: monospace; /* Match font for consistent look */
+  height: 1.5em;
+  /* Consistent height */
+  margin-bottom: 4px;
+  /* Space between GAME OVER and AGAIN */
+  font-family: monospace;
+  /* Match font for consistent look */
 }
 
 /* Cryptographic Spinner CSS */
@@ -494,18 +519,24 @@
 }
 
 @keyframes crypto-char-change {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 0.8;
   }
+
   20% {
     content: "Ω";
   }
+
   40% {
     content: "Δ";
   }
+
   60% {
     content: "Σ";
   }
+
   80% {
     content: "Φ";
   }
@@ -520,5 +551,3 @@
   color: #007bff;
   text-shadow: 0 0 8px rgba(0, 123, 255, 0.7);
 }
-
-

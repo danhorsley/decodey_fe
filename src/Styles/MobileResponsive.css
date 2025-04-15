@@ -108,20 +108,6 @@
   /* Center the hint button as that should stay in the middle */
   .mobile-mode .controls-stack {
     justify-self: center;
-    position: relative;
-    left: calc(var(--guess-grid-margin) / 2);
-    /* Compensate for the guess grid margin */
-    margin: 0;
-  }
-
-  /* Define the margin variable */
-  .mobile-mode {
-    --guess-grid-margin: 4rem;
-  }
-
-  /* Adjust guess grid with the defined margin */
-  .mobile-mode .guess-grid {
-    margin-right: var(--guess-grid-margin);
   }
 
   /* Optimize text container for landscape */
@@ -273,14 +259,30 @@
 
   /* Very compact letter cells for small landscape screens */
   .mobile-mode .landscape-mode .letter-cell {
-    min-width: 30px;
-    min-height: 30px;
-    max-width: 35px;
-    max-height: 35px;
-    font-size: 0.85rem;
-    margin: 1px;
+    min-width: 35px;
+    min-height: 35px;
+    max-width: 40px;
+    max-height: 40px;
+    font-size: 1rem;
+    margin: 1.5px;
   }
 
+  .mobile-mode .controls-stack {
+    position: relative;
+    left: calc(var(--guess-grid-margin) / 20);
+    /* Compensate for the guess grid margin */
+    margin: 0;
+  }
+
+  /* Define the margin variable */
+  .mobile-mode {
+    --guess-grid-margin: 10rem;
+  }
+
+  /* Adjust guess grid with the defined margin */
+  .mobile-mode .guess-grid {
+    margin-right: var(--guess-grid-margin);
+  }
 
   /* More compact text display */
   .mobile-mode .text-container {
@@ -314,24 +316,42 @@
   .mobile-mode .landscape-mode .encrypted-grid,
   .mobile-mode .landscape-mode .guess-grid {
     gap: 1px;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(6, 1fr);
     width: 49%;
   }
 
   .mobile-mode .landscape-mode .guess-grid {
-    margin-right: 4rem;
+    margin-right: 15rem;
   }
 
   /* Standard letter cells for medium landscape screens */
   .mobile-mode .landscape-mode .letter-cell {
-    min-width: 45px;
-    min-height: 45px;
+    min-width: 41px;
+    min-height: 41px;
     font-size: 1.75rem;
-    margin: 2.5px;
+    margin: 1.75px;
+    font-weight: 575;
   }
 
   .mobile-mode .char-grid {
     font-size: 1.05rem;
+  }
+
+  .mobile-mode .controls-stack {
+    position: relative;
+    left: calc(var(--guess-grid-margin) / 10);
+    /* Compensate for the guess grid margin */
+    margin: 0;
+  }
+
+  /* Define the margin variable */
+  .mobile-mode {
+    --guess-grid-margin: 4rem;
+  }
+
+  /* Adjust guess grid with the defined margin */
+  .mobile-mode .guess-grid {
+    margin-right: var(--guess-grid-margin);
   }
 
   /* Adjusted text container */
