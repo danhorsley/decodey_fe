@@ -108,6 +108,20 @@
   /* Center the hint button as that should stay in the middle */
   .mobile-mode .controls-stack {
     justify-self: center;
+    position: relative;
+    left: calc(var(--guess-grid-margin) / 2);
+    /* Compensate for the guess grid margin */
+    margin: 0;
+  }
+
+  /* Define the margin variable */
+  .mobile-mode {
+    --guess-grid-margin: 4rem;
+  }
+
+  /* Adjust guess grid with the defined margin */
+  .mobile-mode .guess-grid {
+    margin-right: var(--guess-grid-margin);
   }
 
   /* Optimize text container for landscape */
