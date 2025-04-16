@@ -3,6 +3,7 @@ import useUIStore from "../stores/uiStore";
 import useSettingsStore from "../stores/settingsStore";
 import CryptoSpinner from "./CryptoSpinner";
 import "../Styles/GameDashboard.css";
+import useDeviceDetection from "../hooks/useDeviceDetection";
 
 const LetterCell = React.memo(
   ({
@@ -51,7 +52,7 @@ const GameDashboard = ({
   const isDarkTheme = settings?.theme === "dark";
 
   const remainingMistakes = maxMistakes - mistakes - pendingHints;
-
+  const { isLandscape } = useDeviceDetection();
   // Hint text representations with crossword-style filled squares
   const hintTexts = {
     8: "SEVEN",
@@ -114,8 +115,11 @@ const GameDashboard = ({
 
   return (
     <div
-      className={`game-dashboard ${isDarkTheme ? "dark-theme" : "light-theme"}`}
+      className={`game-dashboard ${isLandscape ? "landscape" : "portrait"} ${isDarkTheme ? "dark-theme" : "light-theme"}`}
     >
+      {/* <div
+        className={`game-dashboard ${isDarkTheme ? "dark-theme" : "light-theme"}`} 
+      > */}
       {/* Encrypted Grid */}
       {/* eslint-disable-next-line react/no-children-prop */}
       <div className="encrypted-grid" contentEditable="false">

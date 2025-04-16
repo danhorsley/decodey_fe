@@ -16,6 +16,15 @@
   justify-items: center;
 }
 
+.game-dashboard.portrait {
+  grid-template-areas:
+    "encrypted"
+    "controls"
+    "guess";
+  grid-template-columns: 1fr;
+  grid-template-rows: auto auto auto;
+}
+
 /* Base variable setup */
 :root {
   --letter-cell-max-size: 50px;
@@ -226,4 +235,17 @@
     font-size: 1.5rem;
     /* Larger font for iPad */
   }
+}
+
+.game-dashboard.portrait .encrypted-grid,
+.game-dashboard.portrait .guess-grid {
+  justify-self: center;
+  width: fit-content;
+  margin: 0 auto;
+  /* Remove any left/right margins */
+}
+
+/* Optional: Adjust spacing for better vertical flow */
+.game-dashboard.portrait .controls-stack {
+  margin: 15px 0;
 }
