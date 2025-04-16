@@ -3,6 +3,9 @@
   width: 90%;
   max-height: 85vh;
   overflow-y: auto;
+  scrollbar-width: thin;
+  /* Firefox */
+  scrollbar-color: rgba(76, 201, 240, 0.6) rgba(0, 0, 0, 0.1);
 }
 
 .privacy-section {

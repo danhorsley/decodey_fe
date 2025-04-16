@@ -40,6 +40,10 @@
   position: relative;
   max-height: 80vh;
   overflow-y: auto;
+  scrollbar-width: thin;
+  /* Firefox */
+  scrollbar-color: rgba(76, 201, 240, 0.6) rgba(0, 0, 0, 0.1);
+  /* Firefox: thumb and track colors */
 }
 
 /* Dark theme specific styling for the About container */
@@ -210,4 +214,61 @@ body:not(.dark-theme) .about-container .right-grid-reference {
 
 .contact-email:hover {
   text-decoration: underline;
+}
+
+.about-container::after,
+.privacy-container::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.1));
+  pointer-events: none;
+  opacity: 0.8;
+  border-radius: 0 0 8px 8px;
+}
+
+.dark-theme .about-container::after,
+.dark-theme .privacy-container::after {
+  background: linear-gradient(to bottom, transparent, rgba(76, 201, 240, 0.1));
+}
+
+/* Mobile-specific enhancements */
+@media (max-width: 768px) {
+
+  .about-container,
+  .privacy-container {
+    /* Override any 'overflow: hidden' that might be present */
+    overflow-y: auto !important;
+
+    /* Additional visual indicator for small screens */
+    padding-bottom: 30px;
+    /* Extra padding at bottom to show more content follows */
+  }
+
+  /* Make scrollbar even more prominent on mobile */
+  .about-container::-webkit-scrollbar,
+  .privacy-container::-webkit-scrollbar {
+    width: 12px;
+  }
+
+  /* Add a subtle bounce animation to the gradient to draw attention */
+  .about-container::after,
+  .privacy-container::after {
+    animation: scroll-indicator 2s ease-in-out infinite;
+  }
+
+  @keyframes scroll-indicator {
+
+    0%,
+    100% {
+      opacity: 0.6;
+    }
+
+    50% {
+      opacity: 1;
+    }
+  }
 }

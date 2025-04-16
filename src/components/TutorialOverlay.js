@@ -4,12 +4,12 @@ import "../Styles/TutorialOverlay.css";
 
 const tutorialSteps = [
   {
-    id: "menu",
-    title: "Slide Menu",
+    id: "welcome",
+    title: "Welcome to decodey!",
     description:
-      "Click the slide menu to create an account, log in, start new games, or view the leaderboard.",
-    targetSelector: ".menu-toggle", // Changed from .game-header to .menu-toggle
-    position: "bottom",
+      "Ready to become a master cryptanalyst? Follow this quick tutorial to learn how to play. We'll show you everything you need to know to start decrypting!",
+    targetSelector: "body", // Target the entire body for a centered modal
+    position: "center", // New position type we'll handle specially
   },
   {
     id: "text-display",
@@ -38,8 +38,16 @@ const tutorialSteps = [
     title: "Hint Button",
     description:
       "Click here to get a hint. Each hint you take or mistake you make costs you one token. You lose if you make a mistake after you run out of tokens.",
-    targetSelector: ".controls-stack",
+    targetSelector: ".crossword-hint-button",
     position: "left",
+  },
+  {
+    id: "menu",
+    title: "Slide Menu",
+    description:
+      "Click the slide menu to create an account, log in, start new games, or view the leaderboard.",
+    targetSelector: ".menu-toggle", // Changed from .game-header to .menu-toggle
+    position: "bottom",
   },
 ];
 
