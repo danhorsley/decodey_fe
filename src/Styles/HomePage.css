@@ -48,9 +48,11 @@
 
 .home-menu {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: auto auto;
   gap: 20px;
   width: 100%;
+  max-width: 600px;
   margin-bottom: 30px;
 }
 
@@ -59,7 +61,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 15px;
   border-radius: 8px;
   border: none;
   background-color: white;
@@ -69,7 +71,8 @@
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  height: 120px;
+  height: 110px;
+  width: 100%;
 }
 
 .dark-theme .home-button {
@@ -149,12 +152,12 @@
 /* Mobile responsive adjustments */
 @media (max-width: 768px) {
   .home-menu {
-    grid-template-columns: 1fr;
-    max-width: 350px;
+    gap: 15px;
+    max-width: 450px;
   }
 
   .home-button {
-    height: 100px;
+    height: 90px;
     padding: 15px;
   }
 
@@ -177,12 +180,18 @@
     font-size: 1.5rem;
   }
 
+  .home-menu {
+    gap: 10px;
+  }
+
   .home-button {
-    padding: 12px;
-    height: 90px;
+    padding: 10px;
+    height: 80px;
+    font-size: 0.9rem;
   }
 
   .button-icon {
     font-size: 1.5rem;
+    margin-bottom: 8px;
   }
 }

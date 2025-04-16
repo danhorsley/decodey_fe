@@ -59,6 +59,7 @@ const HomePage = () => {
         <p className="home-tagline">What would you like to do?</p>
 
         <div className="home-menu">
+          {/* First row: Daily Challenge and Custom Game */}
           <button className="home-button daily" onClick={handleDailyChallenge}>
             <FaCalendarDay className="button-icon" />
             <span>Daily Challenge</span>
@@ -69,6 +70,7 @@ const HomePage = () => {
             <span>Custom Game</span>
           </button>
 
+          {/* Second row: Leaderboard, Settings, About */}
           <button
             className="home-button leaderboard"
             onClick={handleLeaderboard}
@@ -82,6 +84,7 @@ const HomePage = () => {
             <span>Settings</span>
           </button>
 
+          {/* Logout will be on third row if user is authenticated */}
           <button className="home-button about" onClick={openAbout}>
             <FaInfoCircle className="button-icon" />
             <span>About</span>
