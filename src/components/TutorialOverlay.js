@@ -7,9 +7,9 @@ const tutorialSteps = [
     id: "welcome",
     title: "Welcome to decodey!",
     description:
-      "Ready to become a master cryptanalyst? Follow this quick tutorial to learn how to play. We'll show you everything you need to know to start decrypting!",
-    targetSelector: "body", // Target the entire body for a centered modal
-    position: "center", // Explicit center position
+      "Ready to become a master cryptanalyst? Follow this quick tutorial to learn how to play.",
+    targetSelector: "body",
+    position: "center",
   },
   {
     id: "text-display",
@@ -21,32 +21,32 @@ const tutorialSteps = [
   {
     id: "encrypted-grid",
     title: "Encrypted Letters",
-    description: "Click on an encrypted letter here to select it.",
+    description: "Click a letter here to select it.",
     targetSelector: ".encrypted-grid",
-    position: "right",
+    position: "right", // Will be auto-adjusted on small screens
+    smallScreenPosition: "top", // Prefer top on small screens
   },
   {
     id: "guess-grid",
     title: "Original Letters",
-    description:
-      "After selecting an encrypted letter, click a letter here to guess.",
+    description: "After selecting an encrypted letter, click here to guess.",
     targetSelector: ".guess-grid",
-    position: "left",
+    position: "left", // Will be auto-adjusted on small screens
+    smallScreenPosition: "top", // Prefer top on small screens
   },
   {
     id: "hint-button",
     title: "Hint Button",
-    description:
-      "Click here to get a hint. Each hint you take or mistake you make costs you one token. You lose if you make a mistake after you run out of tokens.",
+    description: "Use hints if stuck. Each hint or mistake costs one token.",
     targetSelector: ".crossword-hint-button",
-    position: "left",
+    position: "left", // Will be auto-adjusted on small screens
+    smallScreenPosition: "top", // Prefer top on small screens
   },
   {
     id: "menu",
     title: "Slide Menu",
-    description:
-      "Click the slide menu to create an account, log in, start new games, or view the leaderboard.",
-    targetSelector: ".menu-toggle", // Changed from .game-header to .menu-toggle
+    description: "Access account options, leaderboard, and start new games.",
+    targetSelector: ".menu-toggle",
     position: "bottom",
   },
 ];
@@ -80,6 +80,8 @@ const TutorialOverlay = ({ onComplete }) => {
 
       const targetRect = targetElement.getBoundingClientRect();
       const isPortrait = window.innerHeight > window.innerWidth;
+      const isSmallScreen = window.innerHeight < 700; // Threshold for small screens like S8/SE
+      const isVerySmallScreen = window.innerHeight < 600; // Extra small screens
 
       // Position the highlight
       const highlight = document.querySelector(".tutorial-highlight");
@@ -94,6 +96,24 @@ const TutorialOverlay = ({ onComplete }) => {
       const modal = document.querySelector(".tutorial-modal");
       if (!modal) return;
 
+      // Reset any previous transforms or special styles
+      modal.style.transform = "none";
+      modal.style.opacity = "1";
+
+      // Add a data attribute to track screen size for CSS
+      if (isSmallScreen) {
+        modal.setAttribute("data-small-screen", "true");
+
+        if (isVerySmallScreen) {
+          modal.setAttribute("data-very-small-screen", "true");
+        } else {
+          modal.removeAttribute("data-very-small-screen");
+        }
+      } else {
+        modal.removeAttribute("data-small-screen");
+        modal.removeAttribute("data-very-small-screen");
+      }
+
       // Special case for welcome step - always center
       if (step.id === "welcome") {
         // Center positioning for welcome step
@@ -103,34 +123,86 @@ const TutorialOverlay = ({ onComplete }) => {
         return;
       }
 
-      // In portrait mode, prioritize placing below for all elements except welcome
-      if (isPortrait) {
-        // Always place below in portrait mode
+      // Get viewport dimensions
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+
+      // Calculate available space
+      const spaceAbove = targetRect.top;
+      const spaceBelow = viewportHeight - targetRect.bottom;
+      const spaceLeft = targetRect.left;
+      const spaceRight = viewportWidth - targetRect.right;
+
+      // For small screens, check available space and adjust
+      if (isSmallScreen && isPortrait) {
+        // Check if step has a preferred small screen position
+        const smallScreenPos = step.smallScreenPosition;
+
+        if (smallScreenPos === "top" && spaceAbove > 120) {
+          // Use the preferred top position if there's enough space
+          modal.style.top = `${targetRect.top - modal.offsetHeight - 10}px`;
+          modal.style.left = `${targetRect.left + targetRect.width / 2 - modal.offsetWidth / 2}px`;
+        } else if (smallScreenPos === "bottom" && spaceBelow > 120) {
+          // Use the preferred bottom position if there's enough space
+          modal.style.top = `${targetRect.bottom + 10}px`;
+          modal.style.left = `${targetRect.left + targetRect.width / 2 - modal.offsetWidth / 2}px`;
+        } else {
+          // Make tutorial semi-transparent on small screens for these specific elements
+          if (step.id === "guess-grid" || step.id === "hint-button") {
+            modal.style.opacity = "0.9";
+          }
+
+          // Determine best position based on available space
+          if (spaceBelow > modal.offsetHeight + 10 || spaceBelow > spaceAbove) {
+            // If there's enough space below OR more space below than above
+            modal.style.top = `${targetRect.bottom + 10}px`;
+            modal.style.left = `${targetRect.left + targetRect.width / 2 - modal.offsetWidth / 2}px`;
+          } else if (spaceAbove > 120) {
+            // Minimum reasonable space for the modal
+            // Position above the element
+            modal.style.top = `${targetRect.top - modal.offsetHeight - 10}px`;
+            modal.style.left = `${targetRect.left + targetRect.width / 2 - modal.offsetWidth / 2}px`;
+          } else if (
+            spaceLeft > modal.offsetWidth + 10 ||
+            spaceLeft > spaceRight
+          ) {
+            // Try left side if there's room
+            modal.style.top = `${targetRect.top + targetRect.height / 2 - modal.offsetHeight / 2}px`;
+            modal.style.left = `${targetRect.left - modal.offsetWidth - 10}px`;
+          } else if (spaceRight > modal.offsetWidth + 10) {
+            // Try right side if there's room
+            modal.style.top = `${targetRect.top + targetRect.height / 2 - modal.offsetHeight / 2}px`;
+            modal.style.left = `${targetRect.right + 10}px`;
+          } else {
+            // Fallback - just make it semi-transparent and place below
+            // This ensures user can still see what's being highlighted even if covered
+            modal.style.opacity = "0.85";
+            modal.style.top = `${targetRect.bottom + 5}px`;
+            modal.style.left = `${targetRect.left + targetRect.width / 2 - modal.offsetWidth / 2}px`;
+          }
+        }
+      } else if (isPortrait) {
+        // Regular portrait device - default to below
         modal.style.top = `${targetRect.bottom + 10}px`;
         modal.style.left = `${targetRect.left + targetRect.width / 2 - modal.offsetWidth / 2}px`;
-        modal.style.transform = "none"; // Reset any transforms
       } else {
         // In landscape, use the specified position
         switch (step.position) {
           case "top":
             modal.style.top = `${targetRect.top - modal.offsetHeight - 10}px`;
             modal.style.left = `${targetRect.left + targetRect.width / 2 - modal.offsetWidth / 2}px`;
-            modal.style.transform = "none";
             break;
           case "bottom":
             modal.style.top = `${targetRect.bottom + 10}px`;
             modal.style.left = `${targetRect.left + targetRect.width / 2 - modal.offsetWidth / 2}px`;
-            modal.style.transform = "none";
             break;
           case "left":
             modal.style.top = `${targetRect.top + targetRect.height / 2 - modal.offsetHeight / 2}px`;
             modal.style.left = `${targetRect.left - modal.offsetWidth - 10}px`;
-            modal.style.transform = "none";
             break;
           case "right":
             modal.style.top = `${targetRect.top + targetRect.height / 2 - modal.offsetHeight / 2}px`;
             modal.style.left = `${targetRect.right + 10}px`;
-            modal.style.transform = "none";
             break;
           case "center":
             modal.style.top = "50%";
@@ -140,14 +212,10 @@ const TutorialOverlay = ({ onComplete }) => {
           default:
             modal.style.top = `${targetRect.bottom + 10}px`;
             modal.style.left = `${targetRect.left + targetRect.width / 2 - modal.offsetWidth / 2}px`;
-            modal.style.transform = "none";
         }
       }
 
       // Keep modal within viewport bounds
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-
       if (parseInt(modal.style.left) < 10) {
         modal.style.left = "10px";
       } else if (
@@ -172,13 +240,70 @@ const TutorialOverlay = ({ onComplete }) => {
 
     // Reposition on window resize and orientation change
     window.addEventListener("resize", positionElements);
-    window.addEventListener("orientationchange", positionElements);
+    window.addEventListener("orientationchange", () => {
+      // Add extra delay after orientation change to ensure UI is settled
+      setTimeout(positionElements, 150);
+    });
 
     return () => {
       window.removeEventListener("resize", positionElements);
       window.removeEventListener("orientationchange", positionElements);
     };
   }, [currentStep, tutorialSteps]);
+  // Handle orientation changes
+  useEffect(() => {
+    // Track previous orientation
+    let prevOrientation =
+      window.innerHeight > window.innerWidth ? "portrait" : "landscape";
+
+    const handleOrientationChange = () => {
+      // Get current orientation
+      const currentOrientation =
+        window.innerHeight > window.innerWidth ? "portrait" : "landscape";
+
+      // If orientation has changed, force a reset of positions
+      if (prevOrientation !== currentOrientation) {
+        console.log(
+          `Orientation changed from ${prevOrientation} to ${currentOrientation}`,
+        );
+        prevOrientation = currentOrientation;
+
+        // Use a short delay to ensure the UI has settled after rotation
+        setTimeout(() => {
+          // Force a refresh of the tutorial position
+          const highlight = document.querySelector(".tutorial-highlight");
+          const modal = document.querySelector(".tutorial-modal");
+
+          if (highlight && modal) {
+            // Temporarily hide elements while repositioning
+            highlight.style.opacity = "0";
+            modal.style.opacity = "0";
+
+            // Force recalculation after a brief delay
+            setTimeout(() => {
+              // Trigger the positionElements function by forcing a re-render
+              setCurrentStep(currentStep);
+
+              // Fade elements back in after positioning
+              setTimeout(() => {
+                highlight.style.opacity = "1";
+                modal.style.opacity = "1";
+              }, 50);
+            }, 300);
+          }
+        }, 500);
+      }
+    };
+
+    // Add event listeners for both standard and iOS orientation changes
+    window.addEventListener("resize", handleOrientationChange);
+    window.addEventListener("orientationchange", handleOrientationChange);
+
+    return () => {
+      window.removeEventListener("resize", handleOrientationChange);
+      window.removeEventListener("orientationchange", handleOrientationChange);
+    };
+  }, [currentStep]);
   // wait until game is fully loaded to ensure all elements are available
   useEffect(() => {
     // Mark tutorial as started
