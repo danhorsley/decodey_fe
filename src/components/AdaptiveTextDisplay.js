@@ -45,13 +45,13 @@ const AdaptiveTextDisplay = ({
     // Set appropriate dimensions for monospace fonts
     // Width is typically ~60% of height for monospace
     const minCellWidth = useMobileMode ? 8 : 9; // Much narrower width for monospace
-    const minCellHeight = useMobileMode ? 14 : 16; // Slightly smaller height too
+    const minCellHeight = useMobileMode ? 20 : 26; // Slightly smaller height too
 
-    const maxCellWidth = useMobileMode ? 14 : 16;
-    const maxCellHeight = useMobileMode ? 20 : 24;
+    const maxCellWidth = useMobileMode ? 26 : 30;
+    const maxCellHeight = useMobileMode ? 30 : 34;
 
     // Available width minus some padding
-    const availableWidth = containerWidth - 20;
+    const availableWidth = containerWidth - 30;
 
     // Find longest line for reference
     const lines = encrypted.split("\n");
@@ -176,9 +176,9 @@ const AdaptiveTextDisplay = ({
                   style={{
                     width: `${cellWidth}px`,
                     height: `${cellHeight}px`,
-                    fontSize: `${Math.max(cellHeight * 0.65, 10)}px`,
-                    padding: 0,
-                    margin: 0,
+                    fontSize: `${Math.max(cellHeight * 0.9, 20)}px`,
+                    padding: 0.2,
+                    margin: 0.2,
                     display: "inline-block",
                   }}
                 >
@@ -197,9 +197,9 @@ const AdaptiveTextDisplay = ({
                     style={{
                       width: `${cellWidth}px`,
                       height: `${cellHeight}px`,
-                      fontSize: `${Math.max(cellHeight * 0.65, 10)}px`,
-                      padding: 0,
-                      margin: 0,
+                      fontSize: `${Math.max(cellHeight * 0.9, 20)}px`,
+                      padding: 0.2,
+                      margin: 0.2,
                       display: "inline-block",
                     }}
                   >
