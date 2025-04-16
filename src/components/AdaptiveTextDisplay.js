@@ -3,202 +3,198 @@ import React, { useRef, useEffect, useState } from "react";
 import useUIStore from "../stores/uiStore";
 import useDeviceDetection from "../hooks/useDeviceDetection";
 
-/**
- * A component that adaptively displays encrypted and plaintext with proper formatting
- * - Prevents mid-word breaks
- * - Dynamically adjusts font size based on content and container
- * - Maintains proper alignment between encrypted and plaintext
- * - Handles different screen sizes and orientations
- */
 const AdaptiveTextDisplay = ({
   encrypted = "",
   display = "",
   hardcoreMode = false,
 }) => {
-  // Container and size references
   const containerRef = useRef(null);
   const [containerWidth, setContainerWidth] = useState(0);
-
-  // Device and UI detection
   const useMobileMode = useUIStore((state) => state.useMobileMode);
   const { isLandscape } = useDeviceDetection();
 
-  // Font size state
-  const [fontSize, setFontSize] = useState(1);
-  const [letterSpacing, setLetterSpacing] = useState(2);
-  const [textClass, setTextClass] = useState("");
+  // Character display settings
+  const [cellSize, setCellSize] = useState(22);
+  const [cellGap, setCellGap] = useState(1);
+  const [charsPerLine, setCharsPerLine] = useState(40);
 
-  // Track container size
+  // Update container dimensions
   useEffect(() => {
-    const updateContainerWidth = () => {
+    const updateContainerSize = () => {
       if (containerRef.current) {
         setContainerWidth(containerRef.current.clientWidth);
       }
     };
 
-    // Initial measurement
-    updateContainerWidth();
-
-    // Update on resize
-    window.addEventListener("resize", updateContainerWidth);
-
-    // Listen to orientation changes for better mobile handling
+    updateContainerSize();
+    window.addEventListener("resize", updateContainerSize);
     window.addEventListener("orientationchange", () => {
-      // Delay measurement slightly to let device complete orientation change
-      setTimeout(updateContainerWidth, 100);
+      setTimeout(updateContainerSize, 200);
     });
 
-    // Custom event from our orientation detection system
-    window.addEventListener("app:orientationchange", updateContainerWidth);
-
     return () => {
-      window.removeEventListener("resize", updateContainerWidth);
-      window.removeEventListener("orientationchange", updateContainerWidth);
-      window.removeEventListener("app:orientationchange", updateContainerWidth);
+      window.removeEventListener("resize", updateContainerSize);
+      window.removeEventListener("orientationchange", updateContainerSize);
     };
   }, []);
 
-  // Debug log to verify hardcore mode
-  useEffect(() => {
-    console.log("AdaptiveTextDisplay - hardcoreMode:", hardcoreMode);
-  }, [hardcoreMode]);
-
-  // Adjust font size based on text length and container width
+  // Calculate optimal display parameters
   useEffect(() => {
     if (!encrypted || containerWidth === 0) return;
 
-    // Count unique characters to better estimate complexity
-    const uniqueChars = new Set(encrypted.replace(/[^A-Z]/g, "")).size;
+    // Calculate max chars per line based on container width and minimum cell size
+    const minCellSize = useMobileMode ? 16 : 18;
+    const maxCellSize = useMobileMode ? 24 : 28;
+    const preferredCellGap = useMobileMode ? 0 : 1;
 
-    // Count visible characters
-    const textLength = encrypted.length;
+    // Available width minus some padding
+    const availableWidth = containerWidth - 20;
 
-    // Calculate maximum line length based on actual content
-    const lines = encrypted.split(/[\n\r]+/);
-    const maxLineLength = Math.max(...lines.map((line) => line.trim().length));
+    // Find longest line for reference
+    const lines = encrypted.split('\n');
+    const maxLineLength = Math.max(...lines.map(line => line.length));
 
-    // Base calculation
-    let newFontSize = 1.4; // Increased from 1.25 rem
-    let newLetterSpacing = 2; // Default px
-    let newClass = "";
+    // Calculate how many chars fit per line
+    let newCharsPerLine = Math.floor(availableWidth / (minCellSize + preferredCellGap));
 
-    // Determine class based on text length and unique characters
-    // More unique characters means a more complex quote that needs more space
-    const complexityFactor = uniqueChars / 26; // Percentage of alphabet used
+    // Ensure minimum number of chars per line for readability
+    newCharsPerLine = Math.max(newCharsPerLine, 20);
 
-    if (textLength > 80 || (textLength > 70 && complexityFactor > 0.8)) {
-      newClass = "quote-very-long";
-      newFontSize = 1.15; // Increased from 1.05
-      newLetterSpacing = 0;
-    } else if (textLength > 70 || (textLength > 60 && complexityFactor > 0.8)) {
-      newClass = "quote-long";
-      newFontSize = 1.25; // Increased from 1.15
-      newLetterSpacing = 0.5;
-    } else if (textLength > 60 || (textLength > 50 && complexityFactor > 0.7)) {
-      newClass = "quote-medium";
-      newFontSize = 1.35; // Increased from 1.2
-      newLetterSpacing = 1;
+    // If original text fits, use it
+    if (maxLineLength <= newCharsPerLine) {
+      newCharsPerLine = maxLineLength;
     }
 
-    // Mobile adjustments
-    if (useMobileMode) {
-      // More moderate font size reduction for mobile to maintain readability
-      newFontSize *= 0.95; // Changed from 0.9 (less reduction)
-      newLetterSpacing = Math.max(0, newLetterSpacing - 0.5);
+    // Calculate optimal cell size based on the chars per line
+    let newCellSize = Math.floor(availableWidth / newCharsPerLine) - preferredCellGap;
 
-      // Special handling for landscape mode
-      if (isLandscape) {
-        // Still reduce for landscape mode with long text, but not as aggressively
-        if (textLength > 70) {
-          newFontSize *= 0.9; // Changed from 0.85 (less reduction)
-          newLetterSpacing = 0;
+    // Ensure cell size stays within bounds
+    newCellSize = Math.min(Math.max(newCellSize, minCellSize), maxCellSize);
+
+    // Apply results
+    setCharsPerLine(newCharsPerLine);
+    setCellSize(newCellSize);
+    setCellGap(preferredCellGap);
+
+  }, [encrypted, containerWidth, useMobileMode, isLandscape]);
+
+  // Process text with word-aware line breaks
+  const processTextWithLineBreaks = (text) => {
+    if (!text) return [];
+
+    // Split original text into lines (respecting manual line breaks)
+    const originalLines = text.split('\n');
+    const processedLines = [];
+
+    originalLines.forEach(line => {
+      // If line is shorter than the limit, keep it as is
+      if (line.length <= charsPerLine) {
+        processedLines.push(line);
+        return;
+      }
+
+      // For longer lines, we need to break them
+      const words = line.split(/(\s+)/); // Split by whitespace, keeping separators
+      let currentLine = '';
+
+      words.forEach(word => {
+        // If adding this word would exceed the limit
+        if (currentLine.length + word.length > charsPerLine) {
+          // If current line is not empty, push it
+          if (currentLine.length > 0) {
+            processedLines.push(currentLine);
+            currentLine = '';
+          }
+
+          // If the word itself is longer than the limit, we need to chunk it
+          if (word.length > charsPerLine) {
+            // Break long word into chunks
+            for (let i = 0; i < word.length; i += charsPerLine) {
+              const chunk = word.substring(i, i + charsPerLine);
+              processedLines.push(chunk);
+            }
+          } else {
+            currentLine = word;
+          }
+        } else {
+          // Word fits, add it to current line
+          currentLine += word;
         }
+      });
 
-        // Very limited height in landscape, so smaller text is better
-        if (window.innerHeight < 400) {
-          newFontSize *= 0.92; // Changed from 0.9 (less reduction)
-        }
+      // Don't forget the last line
+      if (currentLine.length > 0) {
+        processedLines.push(currentLine);
       }
-    }
+    });
 
-    // Very small screens (like iPhone SE)
-    if (containerWidth < 320 && textLength > 50) {
-      newFontSize *= 0.9; // Changed from 0.85 (less reduction)
-      newLetterSpacing = 0;
-    }
-
-    // Final adjustments based on line length vs container width
-    // This prevents wrapping in most cases
-    const approxCharWidth = newFontSize * 0.625; // rem to em approximation
-    const spacingInEm = newLetterSpacing / 16; // px to em conversion
-    const approxLineWidth = maxLineLength * (approxCharWidth + spacingInEm);
-
-    if (approxLineWidth > containerWidth && containerWidth > 0) {
-      // Scale down to fit container
-      const scaleFactor = (containerWidth - 10) / approxLineWidth; // 10px buffer
-      newFontSize = Math.max(0.7, newFontSize * scaleFactor);
-      newLetterSpacing = Math.max(0, newLetterSpacing * scaleFactor);
-    }
-
-    // Update states
-    setFontSize(newFontSize);
-    setLetterSpacing(newLetterSpacing);
-    setTextClass(newClass);
-  }, [encrypted, containerWidth, hardcoreMode, useMobileMode, isLandscape]);
-
-  // Format text for display with proper alignment - simplified approach
-  const formatText = () => {
-    if (!encrypted || !display) return { __html: "" };
-
-    // Split both texts into lines
-    const encryptedLines = encrypted.split(/[\n\r]+/);
-    const displayLines = display.split(/[\n\r]+/);
-
-    // Build HTML without complex word wrapping - let CSS handle it
-    const html = [];
-
-    for (
-      let i = 0;
-      i < Math.max(encryptedLines.length, displayLines.length);
-      i++
-    ) {
-      // Add encrypted line (if exists)
-      if (encryptedLines[i]?.trim()) {
-        html.push(
-          `<div class="char-grid encrypted-line">${encryptedLines[i]}</div>`,
-        );
-      }
-
-      // Add display line (if exists)
-      if (displayLines[i]?.trim()) {
-        html.push(
-          `<div class="char-grid display-line">${displayLines[i]}</div>`,
-        );
-      }
-    }
-
-    return { __html: html.join("") };
+    return processedLines;
   };
 
-  return (
-    <div
-      ref={containerRef}
-      className={`text-container ${textClass} ${hardcoreMode ? "hardcore-mode" : ""}`}
-      style={{
-        "--char-font-size": `${fontSize}rem`,
-        "--char-letter-spacing": `${letterSpacing}px`,
-      }}
-    >
-      {/* Hardcore mode indicator - only show this one */}
-      {/* {hardcoreMode && (
-        <div className="badge-indicator hardcore-badge">HARDCORE</div>
-      )} */}
+  // Process encrypted and display text
+  const processedEncrypted = processTextWithLineBreaks(encrypted);
+  const processedDisplay = processTextWithLineBreaks(display);
 
-      {/* Content */}
-      <div
-        className="alternating-text"
-        dangerouslySetInnerHTML={formatText()}
-      />
+  // Create grids from processed text
+  const createCharacterGrid = (lines) => {
+    return lines.map(line => Array.from(line));
+  };
+
+  const encryptedGrid = createCharacterGrid(processedEncrypted);
+  const displayGrid = createCharacterGrid(processedDisplay);
+
+  return (
+    <div 
+      ref={containerRef}
+      className={`text-container ${hardcoreMode ? "hardcore-mode" : ""}`}
+    >
+      {hardcoreMode && (
+        <div className="badge-indicator hardcore-badge">HARDCORE</div>
+      )}
+
+      <div className="grid-text-display">
+        {encryptedGrid.map((line, lineIndex) => (
+          <div key={`block-${lineIndex}`} className="text-line-block">
+            {/* Encrypted line */}
+            <div className="char-line encrypted-line">
+              {line.map((char, charIndex) => (
+                <div 
+                  key={`enc-${lineIndex}-${charIndex}`} 
+                  className="char-cell"
+                  style={{ 
+                    width: `${cellSize}px`, 
+                    height: `${cellSize}px`,
+                    margin: `0 ${cellGap/2}px`,
+                    fontSize: `${Math.max(cellSize * 0.75, 12)}px`
+                  }}
+                >
+                  {char}
+                </div>
+              ))}
+            </div>
+
+            {/* Display line */}
+            {displayGrid[lineIndex] && (
+              <div className="char-line display-line">
+                {displayGrid[lineIndex].map((char, charIndex) => (
+                  <div 
+                    key={`disp-${lineIndex}-${charIndex}`} 
+                    className="char-cell"
+                    style={{ 
+                      width: `${cellSize}px`, 
+                      height: `${cellSize}px`,
+                      margin: `0 ${cellGap/2}px`,
+                      fontSize: `${Math.max(cellSize * 0.75, 12)}px`
+                    }}
+                  >
+                    {char}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
