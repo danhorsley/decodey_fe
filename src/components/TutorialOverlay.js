@@ -4,11 +4,11 @@ import "../Styles/TutorialOverlay.css";
 
 const tutorialSteps = [
   {
-    id: "header",
-    title: "Game Header",
+    id: "menu",
+    title: "Slide Menu",
     description:
-      "This shows the game title and gives you access to settings and information.",
-    targetSelector: ".game-header",
+      "Click the slide menu to create an account, log in, start new games, or view the leaderboard.",
+    targetSelector: ".menu-toggle", // Changed from .game-header to .menu-toggle
     position: "bottom",
   },
   {
@@ -26,18 +26,19 @@ const tutorialSteps = [
     position: "right",
   },
   {
-    id: "hint-button",
-    title: "Hint Button",
-    description: "Click here to get a hint. Each hint counts as a mistake.",
-    targetSelector: ".controls-stack",
-    position: "left",
-  },
-  {
     id: "guess-grid",
     title: "Original Letters",
     description:
       "After selecting an encrypted letter, click a letter here to guess.",
     targetSelector: ".guess-grid",
+    position: "left",
+  },
+  {
+    id: "hint-button",
+    title: "Hint Button",
+    description:
+      "Click here to get a hint. Each hint you take or mistake you make costs you one token. You lose if you make a mistake after you run out of tokens.",
+    targetSelector: ".controls-stack",
     position: "left",
   },
 ];

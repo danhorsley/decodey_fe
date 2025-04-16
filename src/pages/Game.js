@@ -34,10 +34,10 @@ function Game() {
   // Slide menu state - NEW
   const [menuOpen, setMenuOpen] = useState(false);
   const toggleMenu = useCallback(() => setMenuOpen((prev) => !prev), []);
-  const [showTutorial, setShowTutorial] = useState(() => {
-    // Only show tutorial for first-time users who haven't completed it
-    return !localStorage.getItem("tutorial-completed");
-  });
+  // const [showTutorial, setShowTutorial] = useState(() => {
+  //   return !localStorage.getItem("tutorial-completed");
+  // });
+  const [showTutorial, setShowTutorial] = useState(true);
   const handleTutorialComplete = () => {
     setShowTutorial(false);
   };
@@ -498,7 +498,9 @@ function Game() {
           {renderControls()}
           {renderGameOver()}
         </MobileLayout>
-        {showTutorial && <TutorialOverlay onComplete={handleTutorialComplete} />}
+        {showTutorial && (
+          <TutorialOverlay onComplete={handleTutorialComplete} />
+        )}
       </div>
     );
   }
