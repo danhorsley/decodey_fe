@@ -13,10 +13,10 @@ const AdaptiveTextDisplay = ({
   const useMobileMode = useUIStore((state) => state.useMobileMode);
   const { isLandscape } = useDeviceDetection();
 
-  // Character display settings
-  const [cellSize, setCellSize] = useState(22);
-  const [cellGap, setCellGap] = useState(1);
-  const [charsPerLine, setCharsPerLine] = useState(40);
+  // Character display settings - adjusted for monospace
+  const [cellWidth, setCellWidth] = useState(11); // Narrower default width
+  const [cellHeight, setCellHeight] = useState(18); // Slightly taller for aspect ratio
+  const [charsPerLine, setCharsPerLine] = useState(30);
 
   // Update container dimensions
   useEffect(() => {
@@ -38,24 +38,27 @@ const AdaptiveTextDisplay = ({
     };
   }, []);
 
-  // Calculate optimal display parameters
+  // Calculate optimal display parameters with proper monospace dimensions
   useEffect(() => {
     if (!encrypted || containerWidth === 0) return;
 
-    // Calculate max chars per line based on container width and minimum cell size
-    const minCellSize = useMobileMode ? 16 : 18;
-    const maxCellSize = useMobileMode ? 24 : 28;
-    const preferredCellGap = useMobileMode ? 0 : 1;
+    // Set appropriate dimensions for monospace fonts
+    // Width is typically ~60% of height for monospace
+    const minCellWidth = useMobileMode ? 8 : 9; // Much narrower width for monospace
+    const minCellHeight = useMobileMode ? 14 : 16; // Slightly smaller height too
+
+    const maxCellWidth = useMobileMode ? 14 : 16;
+    const maxCellHeight = useMobileMode ? 20 : 24;
 
     // Available width minus some padding
     const availableWidth = containerWidth - 20;
 
     // Find longest line for reference
-    const lines = encrypted.split('\n');
-    const maxLineLength = Math.max(...lines.map(line => line.length));
+    const lines = encrypted.split("\n");
+    const maxLineLength = Math.max(...lines.map((line) => line.length));
 
-    // Calculate how many chars fit per line
-    let newCharsPerLine = Math.floor(availableWidth / (minCellSize + preferredCellGap));
+    // Calculate how many chars fit per line using width
+    let newCharsPerLine = Math.floor(availableWidth / minCellWidth);
 
     // Ensure minimum number of chars per line for readability
     newCharsPerLine = Math.max(newCharsPerLine, 20);
@@ -65,17 +68,26 @@ const AdaptiveTextDisplay = ({
       newCharsPerLine = maxLineLength;
     }
 
-    // Calculate optimal cell size based on the chars per line
-    let newCellSize = Math.floor(availableWidth / newCharsPerLine) - preferredCellGap;
+    // Calculate optimal cell width based on the chars per line
+    let newCellWidth = Math.floor(availableWidth / newCharsPerLine);
 
-    // Ensure cell size stays within bounds
-    newCellSize = Math.min(Math.max(newCellSize, minCellSize), maxCellSize);
+    // Ensure cell width stays within bounds
+    newCellWidth = Math.min(Math.max(newCellWidth, minCellWidth), maxCellWidth);
+
+    // Calculate cell height based on width with proper aspect ratio
+    // Monospace fonts typically have height:width ratio of ~1.6:1
+    let newCellHeight = Math.round(newCellWidth * 1.6);
+
+    // Ensure height is within bounds
+    newCellHeight = Math.min(
+      Math.max(newCellHeight, minCellHeight),
+      maxCellHeight,
+    );
 
     // Apply results
     setCharsPerLine(newCharsPerLine);
-    setCellSize(newCellSize);
-    setCellGap(preferredCellGap);
-
+    setCellWidth(newCellWidth);
+    setCellHeight(newCellHeight);
   }, [encrypted, containerWidth, useMobileMode, isLandscape]);
 
   // Process text with word-aware line breaks
@@ -83,10 +95,10 @@ const AdaptiveTextDisplay = ({
     if (!text) return [];
 
     // Split original text into lines (respecting manual line breaks)
-    const originalLines = text.split('\n');
+    const originalLines = text.split("\n");
     const processedLines = [];
 
-    originalLines.forEach(line => {
+    originalLines.forEach((line) => {
       // If line is shorter than the limit, keep it as is
       if (line.length <= charsPerLine) {
         processedLines.push(line);
@@ -95,15 +107,15 @@ const AdaptiveTextDisplay = ({
 
       // For longer lines, we need to break them
       const words = line.split(/(\s+)/); // Split by whitespace, keeping separators
-      let currentLine = '';
+      let currentLine = "";
 
-      words.forEach(word => {
+      words.forEach((word) => {
         // If adding this word would exceed the limit
         if (currentLine.length + word.length > charsPerLine) {
           // If current line is not empty, push it
           if (currentLine.length > 0) {
             processedLines.push(currentLine);
-            currentLine = '';
+            currentLine = "";
           }
 
           // If the word itself is longer than the limit, we need to chunk it
@@ -137,14 +149,14 @@ const AdaptiveTextDisplay = ({
 
   // Create grids from processed text
   const createCharacterGrid = (lines) => {
-    return lines.map(line => Array.from(line));
+    return lines.map((line) => Array.from(line));
   };
 
   const encryptedGrid = createCharacterGrid(processedEncrypted);
   const displayGrid = createCharacterGrid(processedDisplay);
 
   return (
-    <div 
+    <div
       ref={containerRef}
       className={`text-container ${hardcoreMode ? "hardcore-mode" : ""}`}
     >
@@ -158,14 +170,16 @@ const AdaptiveTextDisplay = ({
             {/* Encrypted line */}
             <div className="char-line encrypted-line">
               {line.map((char, charIndex) => (
-                <div 
-                  key={`enc-${lineIndex}-${charIndex}`} 
+                <div
+                  key={`enc-${lineIndex}-${charIndex}`}
                   className="char-cell"
-                  style={{ 
-                    width: `${cellSize}px`, 
-                    height: `${cellSize}px`,
-                    margin: `0 ${cellGap/2}px`,
-                    fontSize: `${Math.max(cellSize * 0.75, 12)}px`
+                  style={{
+                    width: `${cellWidth}px`,
+                    height: `${cellHeight}px`,
+                    fontSize: `${Math.max(cellHeight * 0.65, 10)}px`,
+                    padding: 0,
+                    margin: 0,
+                    display: "inline-block",
                   }}
                 >
                   {char}
@@ -177,14 +191,16 @@ const AdaptiveTextDisplay = ({
             {displayGrid[lineIndex] && (
               <div className="char-line display-line">
                 {displayGrid[lineIndex].map((char, charIndex) => (
-                  <div 
-                    key={`disp-${lineIndex}-${charIndex}`} 
+                  <div
+                    key={`disp-${lineIndex}-${charIndex}`}
                     className="char-cell"
-                    style={{ 
-                      width: `${cellSize}px`, 
-                      height: `${cellSize}px`,
-                      margin: `0 ${cellGap/2}px`,
-                      fontSize: `${Math.max(cellSize * 0.75, 12)}px`
+                    style={{
+                      width: `${cellWidth}px`,
+                      height: `${cellHeight}px`,
+                      fontSize: `${Math.max(cellHeight * 0.65, 10)}px`,
+                      padding: 0,
+                      margin: 0,
+                      display: "inline-block",
                     }}
                   >
                     {char}

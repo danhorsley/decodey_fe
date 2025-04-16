@@ -15,15 +15,22 @@
   width: fit-content;
 }
 
+/* Eliminate whitespace between inline-block elements */
 .char-line {
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
   justify-content: flex-start;
+  font-size: 0;
+  /* Remove font-size from parent to eliminate whitespace */
+  letter-spacing: 0;
+  /* Explicitly remove letter spacing */
+  word-spacing: 0;
+  /* Explicitly remove word spacing */
 }
 
 .char-cell {
-  display: flex;
+  display: inline-block;
   align-items: center;
   justify-content: center;
   font-family: 'Courier New', monospace;
@@ -31,6 +38,14 @@
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   box-sizing: border-box;
+  vertical-align: top;
+  /* Align to top to prevent inconsistent spacing */
+  text-align: center;
+  /* Center the character horizontally */
+  line-height: 1;
+  /* Keep line height consistent */
+  overflow: visible;
+  /* Allow characters to exceed boundaries if needed */
 }
 
 .encrypted-line {
