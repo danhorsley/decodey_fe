@@ -19,6 +19,7 @@ const Privacy = lazy(() => import("./pages/Privacy"));
 const Scoring = lazy(() => import("./pages/Scoring"));
 const DailyChallenge = lazy(() => import("./pages/DailyChallenge"));
 const WinCelebrationTest = lazy(() => import("./pages/WinCelebrationTest"));
+const HomePage = lazy(() => import("./pages/HomePage"));
 
 // Simple loading component
 const Loading = () => (
@@ -59,6 +60,7 @@ function App() {
             <Route path="/scoring" element={<Scoring />} />
             <Route path="/daily" element={<DailyChallenge />} />
             <Route path="/wintest" element={<WinCelebrationTest />} />
+            <Route path="/home" element={<HomePage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>

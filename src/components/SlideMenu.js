@@ -100,9 +100,9 @@ const SlideMenu = ({ isOpen, onClose }) => {
 
         {/* Menu items */}
         <ul className="menu-items">
-          <li onClick={() => handleNavigation("/")}>
+          <li onClick={() => handleNavigation("/home")}>
             <FaHome className="menu-icon" />
-            Home
+            Home Menu
           </li>
 
           <li onClick={() => handleNavigation("/daily")}>

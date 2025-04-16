@@ -225,6 +225,14 @@ const WinCelebration = ({ playSound, winData }) => {
                 </div>
               </button>
 
+              {/* New Home button to go to the home page */}
+              <button
+                className="game-over-action-button home"
+                onClick={() => (window.location.href = "/home")}
+              >
+                <div className="game-over-text-display">HOME MENU</div>
+              </button>
+
               {hasLost && !showQuote && (
                 <button
                   className="game-over-action-button reveal"
@@ -246,23 +254,22 @@ const WinCelebration = ({ playSound, winData }) => {
               <button
                 className="game-over-action-button share"
                 onClick={() => {
-                  const shareText = "I'm enjoying Decodey and I think you'll like it too! Check it out at:";
+                  const shareText =
+                    "I'm enjoying Decodey and I think you'll like it too! Check it out at:";
                   const url = "https://decodey.game";
                   if (navigator.share) {
                     navigator.share({
-                      title: 'Decodey',
+                      title: "Decodey",
                       text: shareText,
-                      url: url
+                      url: url,
                     });
                   } else {
                     navigator.clipboard.writeText(`${shareText} ${url}`);
-                    alert('Share link copied to clipboard!');
+                    alert("Share link copied to clipboard!");
                   }
                 }}
               >
-                <div className="game-over-text-display">
-                  SHARE LINK
-                </div>
+                <div className="game-over-text-display">SHARE LINK</div>
               </button>
             </div>
           </>
