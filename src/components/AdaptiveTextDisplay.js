@@ -146,51 +146,37 @@ const AdaptiveTextDisplay = ({
     setTextClass(newClass);
   }, [encrypted, containerWidth, hardcoreMode, useMobileMode, isLandscape]);
 
-  // Format text for display with proper alignment and word-break prevention
+  // Format text for display with proper alignment - simplified approach
   const formatText = () => {
     if (!encrypted || !display) return { __html: "" };
 
     // Split both texts into lines
     const encryptedLines = encrypted.split(/[\n\r]+/);
     const displayLines = display.split(/[\n\r]+/);
-    console.log("**encryp & disp:", encryptedLines, displayLines);
 
-    // Build HTML with properly wrapped content
+    // Build HTML without complex word wrapping - let CSS handle it
     const html = [];
-
-    // Process each line to wrap words in spans to prevent mid-word breaks
-    const processWords = (text) => {
-      // Split by spaces while preserving spaces and punctuation
-      return text.replace(/(\S+)(\s*)/g, '<span class="word">$1</span>$2');
-    };
 
     for (
       let i = 0;
       i < Math.max(encryptedLines.length, displayLines.length);
       i++
     ) {
-      // Format encrypted line with word wrapping
+      // Add encrypted line (if exists)
       if (encryptedLines[i]?.trim()) {
-        console.log("trim triggered");
-        const processedLine = hardcoreMode
-          ? encryptedLines[i] // In hardcore mode, don't wrap words since there are no spaces
-          : processWords(encryptedLines[i]);
-
         html.push(
-          `<div class="char-grid encrypted-line">${processedLine}</div>`,
+          `<div class="char-grid encrypted-line">${encryptedLines[i]}</div>`,
         );
       }
 
-      // Format display line with word wrapping
+      // Add display line (if exists)
       if (displayLines[i]?.trim()) {
-        const processedLine = hardcoreMode
-          ? displayLines[i]
-          : processWords(displayLines[i]);
-
-        html.push(`<div class="char-grid display-line">${processedLine}</div>`);
+        html.push(
+          `<div class="char-grid display-line">${displayLines[i]}</div>`,
+        );
       }
     }
-    console.log("**html:", html);
+
     return { __html: html.join("") };
   };
 

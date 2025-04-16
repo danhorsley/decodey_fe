@@ -255,20 +255,31 @@ button:hover:not(:disabled) {
   text-align: center;
 }
 
-/* Grid-based character layout */
+/* Grid-based character layout with improved spacing */
 .char-grid {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: min-content;
+  display: inline-flex;
+  flex-wrap: wrap;
   width: 100%;
   max-width: 100%;
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
   justify-content: center;
-  font-size: var(--char-font-size);
-  letter-spacing: var(--char-letter-spacing);
-}
+  line-height: 1.2;
+  min-height: 1.2em;
+  padding: 0.1em 0;
+  word-spacing: 0.25em;
 
+  /* Enhanced word break prevention */
+  overflow-wrap: break-word;
+  word-break: keep-all;
+  /* Prevent mid-word breaks */
+  white-space: pre-wrap;
+  /* Preserve spaces but allow wrapping */
+  text-align: center;
+  hyphens: none;
+  /* Prevent hyphenation */
+}
+gi
 .char-grid.encrypted-line {
   padding: 4px 0 0 0;
   color: #333;
