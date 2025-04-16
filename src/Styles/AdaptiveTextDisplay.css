@@ -1,0 +1,174 @@
+/* src/Styles/AdaptiveTextDisplay.css */
+
+/* Container styles */
+.text-container {
+  position: relative;
+  margin: 0 auto 10px;
+  border-radius: 8px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  width: 92%;
+  max-width: 800px;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 12px;
+  font-size: var(--char-font-size, 1.25rem);
+  letter-spacing: var(--char-letter-spacing, 2px);
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-scrolling: touch;
+  -webkit-overflow-scrolling: touch;
+  max-height: 30vh;
+  transition: 
+    font-size 0.3s ease,
+    letter-spacing 0.3s ease,
+    padding 0.3s ease;
+}
+
+/* Hide scrollbar but keep functionality */
+.text-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* Dark theme support */
+.dark-theme .text-container {
+  background-color: #222;
+  color: #f8f9fa;
+}
+
+/* Grid-based character layout with improved spacing */
+.char-grid {
+  display: inline-flex;
+  flex-wrap: wrap;
+  width: 100%;
+  max-width: 100%;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  justify-content: center;
+  line-height: 1.2;
+  min-height: 1.2em;
+  padding: 0.1em 0;
+  word-spacing: 0.25em;
+  overflow-wrap: break-word;
+  word-break: keep-all; /* Prevent mid-word breaks */
+  white-space: pre-wrap; /* Preserve spaces but allow wrapping */
+  text-align: center;
+
+  /* Ensure proper wrapping at word boundaries */
+  & span.word {
+    display: inline-block;
+    white-space: nowrap;
+  }
+}
+
+/* Ensure characters don't get cut off by using inline-flex */
+.char-grid.encrypted-line {
+  color: #333;
+  padding: 4px 0 0 0;
+  margin-bottom: 1px;
+}
+
+.char-grid.display-line {
+  color: rgb(0, 66, 170);
+  padding: 0 0 4px 0;
+  margin-top: 1px;
+  margin-bottom: 8px;
+}
+
+/* Dark theme color adjustments */
+.dark-theme .char-grid.encrypted-line {
+  color: var(--text-color-primary, #4cc9f0);
+}
+
+.dark-theme .char-grid.display-line {
+  color: var(--text-color-secondary, #00ED99);
+}
+
+/* Mode indicators */
+.badge-indicator {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 0.7rem;
+  font-weight: bold;
+  padding: 3px 8px;
+  letter-spacing: 1px;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  border-bottom-left-radius: 5px;
+}
+
+.hardcore-badge {
+  background-color: #dc3545;
+  color: white;
+}
+
+.dark-theme .hardcore-badge {
+  background-color: #E53935;
+  color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* Mobile optimizations */
+@media (max-width: 767px) {
+  .text-container {
+    width: 95%;
+    padding: 6px 10px;
+    border-radius: 6px;
+  }
+
+  .badge-indicator {
+    font-size: 0.65rem;
+    padding: 2px 6px;
+  }
+}
+
+/* Ultra-small screens */
+@media (max-width: 320px) {
+  .text-container {
+    width: 98%;
+    padding: 4px 8px;
+  }
+}
+
+/* Special handling for landscape orientation */
+@media (orientation: landscape) and (max-height: 500px) {
+  .text-container {
+    max-height: 25vh;
+    padding: 4px 8px;
+  }
+
+  .char-grid.encrypted-line {
+    padding: 2px 0 0 0;
+  }
+
+  .char-grid.display-line {
+    padding: 0 0 2px 0;
+    margin-bottom: 4px;
+  }
+}
+
+/* Responsive text sizing classes from ResponsiveQuotes.css - Enhanced */
+/* Default quote styling - for quotes under 56 characters */
+.text-container.quote-medium {
+  --char-font-size: 1.2rem;
+  --char-letter-spacing: 1px;
+}
+
+/* Long quotes (63-70 chars) */
+.text-container.quote-long {
+  --char-font-size: 1.15rem;
+  --char-letter-spacing: 0.5px;
+}
+
+/* Very long quotes (71+ chars) */
+.text-container.quote-very-long {
+  --char-font-size: 1.05rem;
+  --char-letter-spacing: 0px;
+}
+
+/* Hardcore mode adjustments */
+.text-container.hardcore-mode .char-grid {
+  letter-spacing: calc(var(--char-letter-spacing) * 0.7);
+  word-spacing: 0.1em;
+}

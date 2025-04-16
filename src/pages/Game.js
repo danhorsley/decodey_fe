@@ -19,6 +19,7 @@ import config from "../config";
 import MobileLayout from "../components/layout/MobileLayout";
 import WinCelebration from "../components/modals/WinCelebration";
 import MatrixRainLoading from "../components/effects/MatrixRainLoading";
+import AdaptiveTextDisplay from "../components/AdaptiveTextDisplay";
 
 // Format the display text
 
@@ -421,14 +422,11 @@ function Game() {
 
   // Text container component - simplified for better mobile display
   const renderTextContainer = () => (
-    <div
-      className={`text-container ${hardcoreMode ? "hardcore-mode" : ""} ${quoteClasses}`}
-    >
-      <div
-        className="alternating-text"
-        dangerouslySetInnerHTML={formattedText}
-      />
-    </div>
+    <AdaptiveTextDisplay
+      encrypted={encrypted}
+      display={display}
+      hardcoreMode={hardcoreMode}
+    />
   );
 
   // Grid components - simplified for both mobile and desktop

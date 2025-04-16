@@ -16,6 +16,7 @@ import "./Styles/Scoring.css";
 import "./Styles/Modal.css";
 import "./Styles/DailyChallenge.css";
 import "./Styles/ResponsiveQuotes.css";
+import "./Styles/AdaptiveTextDisplay.css";
 
 import App from "./App";
 // Import stores needed for initialization
