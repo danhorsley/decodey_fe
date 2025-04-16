@@ -78,7 +78,7 @@ const AdaptiveTextDisplay = ({
     const maxLineLength = Math.max(...lines.map((line) => line.trim().length));
 
     // Base calculation
-    let newFontSize = 1.25; // Default rem
+    let newFontSize = 1.4; // Increased from 1.25 rem
     let newLetterSpacing = 2; // Default px
     let newClass = "";
 
@@ -88,42 +88,42 @@ const AdaptiveTextDisplay = ({
 
     if (textLength > 80 || (textLength > 70 && complexityFactor > 0.8)) {
       newClass = "quote-very-long";
-      newFontSize = 1.05;
+      newFontSize = 1.15; // Increased from 1.05
       newLetterSpacing = 0;
     } else if (textLength > 70 || (textLength > 60 && complexityFactor > 0.8)) {
       newClass = "quote-long";
-      newFontSize = 1.15;
+      newFontSize = 1.25; // Increased from 1.15
       newLetterSpacing = 0.5;
     } else if (textLength > 60 || (textLength > 50 && complexityFactor > 0.7)) {
       newClass = "quote-medium";
-      newFontSize = 1.2;
+      newFontSize = 1.35; // Increased from 1.2
       newLetterSpacing = 1;
     }
 
     // Mobile adjustments
     if (useMobileMode) {
-      // Further reduce sizes for mobile
-      newFontSize *= 0.9;
+      // More moderate font size reduction for mobile to maintain readability
+      newFontSize *= 0.95; // Changed from 0.9 (less reduction)
       newLetterSpacing = Math.max(0, newLetterSpacing - 0.5);
 
       // Special handling for landscape mode
       if (isLandscape) {
-        // Even more aggressive scaling for landscape mode with long text
+        // Still reduce for landscape mode with long text, but not as aggressively
         if (textLength > 70) {
-          newFontSize *= 0.85;
+          newFontSize *= 0.9; // Changed from 0.85 (less reduction)
           newLetterSpacing = 0;
         }
 
         // Very limited height in landscape, so smaller text is better
         if (window.innerHeight < 400) {
-          newFontSize *= 0.9;
+          newFontSize *= 0.92; // Changed from 0.9 (less reduction)
         }
       }
     }
 
     // Very small screens (like iPhone SE)
     if (containerWidth < 320 && textLength > 50) {
-      newFontSize *= 0.85;
+      newFontSize *= 0.9; // Changed from 0.85 (less reduction)
       newLetterSpacing = 0;
     }
 

@@ -13,13 +13,15 @@
   display: flex;
   flex-direction: column;
   padding: 8px 12px;
-  font-size: var(--char-font-size, 1.25rem);
+  font-size: var(--char-font-size, 1.4rem);
+  /* Increased from 1.25rem */
   letter-spacing: var(--char-letter-spacing, 2px);
-  scrollbar-width: none; /* Firefox */
+  scrollbar-width: none;
+  /* Firefox */
   -ms-overflow-scrolling: touch;
   -webkit-overflow-scrolling: touch;
   max-height: 30vh;
-  transition: 
+  transition:
     font-size 0.3s ease,
     letter-spacing 0.3s ease,
     padding 0.3s ease;
@@ -49,16 +51,16 @@
   min-height: 1.2em;
   padding: 0.1em 0;
   word-spacing: 0.25em;
-  overflow-wrap: break-word;
-  word-break: keep-all; /* Prevent mid-word breaks */
-  white-space: pre-wrap; /* Preserve spaces but allow wrapping */
-  text-align: center;
 
-  /* Ensure proper wrapping at word boundaries */
-  & span.word {
-    display: inline-block;
-    white-space: nowrap;
-  }
+  /* Enhanced word break prevention */
+  overflow-wrap: break-word;
+  word-break: keep-all;
+  /* Prevent mid-word breaks */
+  white-space: pre-wrap;
+  /* Preserve spaces but allow wrapping */
+  text-align: center;
+  hyphens: none;
+  /* Prevent hyphenation */
 }
 
 /* Ensure characters don't get cut off by using inline-flex */
@@ -151,19 +153,22 @@
 /* Responsive text sizing classes from ResponsiveQuotes.css - Enhanced */
 /* Default quote styling - for quotes under 56 characters */
 .text-container.quote-medium {
-  --char-font-size: 1.2rem;
+  --char-font-size: 1.35rem;
+  /* Increased from 1.2rem */
   --char-letter-spacing: 1px;
 }
 
 /* Long quotes (63-70 chars) */
 .text-container.quote-long {
-  --char-font-size: 1.15rem;
+  --char-font-size: 1.25rem;
+  /* Increased from 1.15rem */
   --char-letter-spacing: 0.5px;
 }
 
 /* Very long quotes (71+ chars) */
 .text-container.quote-very-long {
-  --char-font-size: 1.05rem;
+  --char-font-size: 1.15rem;
+  /* Increased from 1.05rem */
   --char-letter-spacing: 0px;
 }
 
