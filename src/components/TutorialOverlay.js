@@ -9,7 +9,7 @@ const tutorialSteps = [
     description:
       "Ready to become a master cryptanalyst? Follow this quick tutorial to learn how to play. We'll show you everything you need to know to start decrypting!",
     targetSelector: "body", // Target the entire body for a centered modal
-    position: "center", // New position type we'll handle specially
+    position: "center", // Explicit center position
   },
   {
     id: "text-display",
@@ -70,14 +70,16 @@ const TutorialOverlay = ({ onComplete }) => {
       if (onComplete) onComplete();
     }
   };
+  // Positioning logic
   useEffect(() => {
     const positionElements = () => {
-      const step = tutorialSteps[currentStep]; // Use a different variable name here
+      const step = tutorialSteps[currentStep];
       const targetElement = document.querySelector(step.targetSelector);
 
       if (!targetElement) return;
 
       const targetRect = targetElement.getBoundingClientRect();
+      const isPortrait = window.innerHeight > window.innerWidth;
 
       // Position the highlight
       const highlight = document.querySelector(".tutorial-highlight");
@@ -88,30 +90,58 @@ const TutorialOverlay = ({ onComplete }) => {
         highlight.style.height = `${targetRect.height}px`;
       }
 
-      // Position the modal based on specified position
+      // Position the modal based on specified position and orientation
       const modal = document.querySelector(".tutorial-modal");
       if (!modal) return;
 
-      switch (step.position) {
-        case "top":
-          modal.style.top = `${targetRect.top - modal.offsetHeight - 10}px`;
-          modal.style.left = `${targetRect.left + targetRect.width / 2 - modal.offsetWidth / 2}px`;
-          break;
-        case "bottom":
-          modal.style.top = `${targetRect.bottom + 10}px`;
-          modal.style.left = `${targetRect.left + targetRect.width / 2 - modal.offsetWidth / 2}px`;
-          break;
-        case "left":
-          modal.style.top = `${targetRect.top + targetRect.height / 2 - modal.offsetHeight / 2}px`;
-          modal.style.left = `${targetRect.left - modal.offsetWidth - 10}px`;
-          break;
-        case "right":
-          modal.style.top = `${targetRect.top + targetRect.height / 2 - modal.offsetHeight / 2}px`;
-          modal.style.left = `${targetRect.right + 10}px`;
-          break;
-        default:
-          modal.style.top = `${targetRect.bottom + 10}px`;
-          modal.style.left = `${targetRect.left + targetRect.width / 2 - modal.offsetWidth / 2}px`;
+      // Special case for welcome step - always center
+      if (step.id === "welcome") {
+        // Center positioning for welcome step
+        modal.style.top = "50%";
+        modal.style.left = "50%";
+        modal.style.transform = "translate(-50%, -50%)";
+        return;
+      }
+
+      // In portrait mode, prioritize placing below for all elements except welcome
+      if (isPortrait) {
+        // Always place below in portrait mode
+        modal.style.top = `${targetRect.bottom + 10}px`;
+        modal.style.left = `${targetRect.left + targetRect.width / 2 - modal.offsetWidth / 2}px`;
+        modal.style.transform = "none"; // Reset any transforms
+      } else {
+        // In landscape, use the specified position
+        switch (step.position) {
+          case "top":
+            modal.style.top = `${targetRect.top - modal.offsetHeight - 10}px`;
+            modal.style.left = `${targetRect.left + targetRect.width / 2 - modal.offsetWidth / 2}px`;
+            modal.style.transform = "none";
+            break;
+          case "bottom":
+            modal.style.top = `${targetRect.bottom + 10}px`;
+            modal.style.left = `${targetRect.left + targetRect.width / 2 - modal.offsetWidth / 2}px`;
+            modal.style.transform = "none";
+            break;
+          case "left":
+            modal.style.top = `${targetRect.top + targetRect.height / 2 - modal.offsetHeight / 2}px`;
+            modal.style.left = `${targetRect.left - modal.offsetWidth - 10}px`;
+            modal.style.transform = "none";
+            break;
+          case "right":
+            modal.style.top = `${targetRect.top + targetRect.height / 2 - modal.offsetHeight / 2}px`;
+            modal.style.left = `${targetRect.right + 10}px`;
+            modal.style.transform = "none";
+            break;
+          case "center":
+            modal.style.top = "50%";
+            modal.style.left = "50%";
+            modal.style.transform = "translate(-50%, -50%)";
+            break;
+          default:
+            modal.style.top = `${targetRect.bottom + 10}px`;
+            modal.style.left = `${targetRect.left + targetRect.width / 2 - modal.offsetWidth / 2}px`;
+            modal.style.transform = "none";
+        }
       }
 
       // Keep modal within viewport bounds
@@ -140,11 +170,40 @@ const TutorialOverlay = ({ onComplete }) => {
     // Add a slight delay to ensure DOM is ready
     setTimeout(positionElements, 50);
 
-    // Reposition on window resize
+    // Reposition on window resize and orientation change
     window.addEventListener("resize", positionElements);
-    return () => window.removeEventListener("resize", positionElements);
-  }, [currentStep, tutorialSteps]);
+    window.addEventListener("orientationchange", positionElements);
 
+    return () => {
+      window.removeEventListener("resize", positionElements);
+      window.removeEventListener("orientationchange", positionElements);
+    };
+  }, [currentStep, tutorialSteps]);
+  // wait until game is fully loaded to ensure all elements are available
+  useEffect(() => {
+    // Mark tutorial as started
+    localStorage.setItem("tutorial-started", "true");
+
+    // Let's make sure everything is loaded before showing the initial welcome
+    if (currentStep === 0) {
+      const checkAllElementsExist = () => {
+        // Skip welcome check since it targets body
+        const nextStep = tutorialSteps[1];
+        const element = document.querySelector(nextStep.targetSelector);
+        return !!element;
+      };
+
+      // If next step element doesn't exist yet, try again in a moment
+      if (!checkAllElementsExist()) {
+        const timer = setTimeout(() => {
+          // Force a re-render to try positioning again
+          setCurrentStep(0);
+        }, 300);
+
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [currentStep]);
   const handleSkip = () => {
     // Mark tutorial as completed
     localStorage.setItem("tutorial-completed", "true");

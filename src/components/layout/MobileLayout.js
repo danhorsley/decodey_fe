@@ -19,8 +19,9 @@ const MobileLayout = ({ children }) => {
 
   // Check if we should show the portrait warning
   useEffect(() => {
-    const SHOW_INTERVAL = 1000 * 60 * 30; // Show every 30 minutes
-    const MIN_INTERVAL = 1000 * 60 * 5; // But not more often than 5 minutes
+    // Show much less frequently - once per week instead of every 30 minutes
+    const SHOW_INTERVAL = 1000 * 60 * 60 * 24 * 7; // Show once per week
+    const MIN_INTERVAL = 1000 * 60 * 60 * 24; // But not more often than once per day
 
     const isTablet = () => {
       return (
@@ -33,11 +34,13 @@ const MobileLayout = ({ children }) => {
 
     const shouldShowWarning = () => {
       if (isLandscape || isTablet()) return false;
-      
-      const lastShown = parseInt(localStorage.getItem("portrait-notice-last-shown") || "0");
+
+      const lastShown = parseInt(
+        localStorage.getItem("portrait-notice-last-shown") || "0",
+      );
       const timeSinceLastShown = Date.now() - lastShown;
-      
-      // Show if never shown or enough time has passed
+
+      // Only show if never shown or enough time has passed
       return !lastShown || timeSinceLastShown >= SHOW_INTERVAL;
     };
 

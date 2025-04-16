@@ -107,3 +107,33 @@
   background-color: #4cc9f0;
   color: #222;
 }
+
+/* Portrait-specific styles */
+@media (orientation: portrait) {
+  .tutorial-modal {
+    width: 80%; /* Wider modals for portrait mode */
+    max-width: 300px;
+  }
+
+  /* Ensure the highlight stands out more */
+  .tutorial-highlight::before {
+    border: 3px solid #ff3300; /* Brighter border */
+    box-shadow: 0 0 0 2000px rgba(0, 0, 0, 0.65); /* Darker overlay */
+    animation: pulse-border-portrait 1.5s infinite;
+  }
+}
+  /* Add special animation for portrait mode */
+  @keyframes pulse-border-portrait {
+    0% {
+      border-color: rgba(255, 51, 0, 0.8);
+      box-shadow: 0 0 0 2000px rgba(0, 0, 0, 0.65);
+    }
+    50% {
+      border-color: rgba(255, 51, 0, 1);
+      box-shadow: 0 0 0 2000px rgba(0, 0, 0, 0.75);
+    }
+    100% {
+      border-color: rgba(255, 51, 0, 0.8);
+      box-shadow: 0 0 0 2000px rgba(0, 0, 0, 0.65);
+    }
+  }
