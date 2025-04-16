@@ -20,6 +20,7 @@ import MobileLayout from "../components/layout/MobileLayout";
 import WinCelebration from "../components/modals/WinCelebration";
 import MatrixRainLoading from "../components/effects/MatrixRainLoading";
 import AdaptiveTextDisplay from "../components/AdaptiveTextDisplay";
+import TutorialOverlay from "../components/TutorialOverlay";
 
 // Format the display text
 
@@ -33,7 +34,13 @@ function Game() {
   // Slide menu state - NEW
   const [menuOpen, setMenuOpen] = useState(false);
   const toggleMenu = useCallback(() => setMenuOpen((prev) => !prev), []);
-
+  const [showTutorial, setShowTutorial] = useState(() => {
+    // Only show tutorial for first-time users who haven't completed it
+    return !localStorage.getItem("tutorial-completed");
+  });
+  const handleTutorialComplete = () => {
+    setShowTutorial(false);
+  };
   // Check if this is a daily challenge (passed from DailyChallenge component)
   const isDailyFromRoute = location.state?.dailyChallenge === true;
 
@@ -491,6 +498,7 @@ function Game() {
           {renderControls()}
           {renderGameOver()}
         </MobileLayout>
+        {showTutorial && <TutorialOverlay onComplete={handleTutorialComplete} />}
       </div>
     );
   }
@@ -504,6 +512,7 @@ function Game() {
       {renderTextContainer()}
       {renderControls()}
       {renderGameOver()}
+      {showTutorial && <TutorialOverlay onComplete={handleTutorialComplete} />}
     </div>
   );
 }
