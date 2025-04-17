@@ -271,10 +271,13 @@ button:hover:not(:disabled) {
 
   /* Enhanced word break prevention */
   overflow-wrap: break-word;
-  word-break: keep-all; /* Prevent mid-word breaks */
-  white-space: pre-wrap; /* Preserve spaces but allow wrapping */
+  word-break: keep-all;
+  /* Prevent mid-word breaks */
+  white-space: pre-wrap;
+  /* Preserve spaces but allow wrapping */
   text-align: center;
-  hyphens: none; /* Prevent hyphenation */
+  hyphens: none;
+  /* Prevent hyphenation */
 }
 
 .char-grid.encrypted-line {

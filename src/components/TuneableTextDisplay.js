@@ -32,12 +32,12 @@ const TUNING = {
   landscape: {
     desktop: {
       widthRatio: 0.6, // Width to height ratio
-      fontRatio: 0.65, // Font size as percentage of cell height
-      minCellWidth: 7, // Minimum cell width in pixels
-      maxCellWidth: 14, // Maximum cell width in pixels
-      minCellHeight: 12, // Minimum cell height in pixels
-      maxCellHeight: 18, // Maximum cell height in pixels
-      minCharsPerLine: 40, // Minimum characters per line
+      fontRatio: 1.15, // Font size as percentage of cell height
+      minCellWidth: 17, // Minimum cell width in pixels
+      maxCellWidth: 17, // Maximum cell width in pixels
+      minCellHeight: 20, // Minimum cell height in pixels
+      maxCellHeight: 20, // Maximum cell height in pixels
+      minCharsPerLine: 55, // Minimum characters per line
       maxLines: 2, // Maximum of 2 lines in landscape
     },
     mobile: {
