@@ -312,3 +312,89 @@
   background-color: #4cc9f0;
   color: #222;
 }
+
+/* Cryptographic Spinner CSS */
+.crypto-spinner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: monospace;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #4cc9f0;
+  text-shadow: 0 0 8px rgba(76, 201, 240, 0.7);
+  background-color: rgba(0, 0, 0, 0.7);
+  border-radius: 4px;
+  z-index: 10;
+}
+
+.crypto-spinner-text {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  text-align: center;
+  height: 2rem;
+  overflow: hidden;
+}
+
+.crypto-spinner-char {
+  display: inline-block;
+  width: 1em;
+  text-align: center;
+  animation: crypto-char-change 0.2s infinite;
+}
+
+.crypto-spinner-char:nth-child(2) {
+  animation-delay: 0.05s;
+}
+
+.crypto-spinner-char:nth-child(3) {
+  animation-delay: 0.1s;
+}
+
+.crypto-spinner-char:nth-child(4) {
+  animation-delay: 0.15s;
+}
+
+.crypto-spinner-char:nth-child(5) {
+  animation-delay: 0.2s;
+}
+
+@keyframes crypto-char-change {
+
+  0%,
+  100% {
+    opacity: 0.8;
+  }
+
+  20% {
+    content: "Ω";
+  }
+
+  40% {
+    content: "Δ";
+  }
+
+  60% {
+    content: "Σ";
+  }
+
+  80% {
+    content: "Φ";
+  }
+}
+
+.dark-theme .crypto-spinner {
+  color: #4cc9f0;
+  text-shadow: 0 0 8px rgba(76, 201, 240, 0.7);
+}
+
+.light-theme .crypto-spinner {
+  color: #007bff;
+  text-shadow: 0 0 8px rgba(0, 123, 255, 0.7);
+}

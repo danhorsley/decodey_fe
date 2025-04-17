@@ -58,6 +58,8 @@ class ApiService {
         return Promise.reject(error);
       },
     );
+    // Initialize token refresh strategy
+    this.setupTokenRefreshStrategy();
   }
 
   /**
@@ -170,15 +172,15 @@ class ApiService {
   async forgotPassword(email) {
     try {
       const response = await this.api.post("/forgot-password", { email });
-      return { 
-        success: true, 
-        message: response.data.message 
+      return {
+        success: true,
+        message: response.data.message,
       };
     } catch (error) {
       console.error("Forgot password error:", error);
       return {
         success: false,
-        error: error.response?.data?.error || "Failed to process request"
+        error: error.response?.data?.error || "Failed to process request",
       };
     }
   }
@@ -233,13 +235,13 @@ class ApiService {
    */
   async checkUsernameAvailability(username) {
     try {
-      const response = await this.api.post('/check-username', { username });
+      const response = await this.api.post("/check-username", { username });
       return response.data;
     } catch (error) {
-      console.error('Error checking username availability:', error);
+      console.error("Error checking username availability:", error);
       return {
         available: false,
-        message: error.response?.data?.message || 'Error checking username'
+        message: error.response?.data?.message || "Error checking username",
       };
     }
   }
@@ -251,10 +253,10 @@ class ApiService {
    */
   async signup(data) {
     try {
-      const response = await this.api.post('/signup', data);
+      const response = await this.api.post("/signup", data);
       return response.data;
     } catch (error) {
-      console.error('Signup error:', error);
+      console.error("Signup error:", error);
       throw error;
     }
   }
@@ -777,34 +779,37 @@ class ApiService {
 
   setupTokenRefreshStrategy() {
     // 1. Schedule regular token refresh while the app is running
-    const refreshInterval = 55 * 60 * 1000; // 55 minutes
+    // const refreshInterval = 55 * 60 * 1000; // 55 minutes
+    const refreshInterval = 5 * 60 * 1000; // 55 minutes
 
     // Start the periodic refresh
     this.refreshIntervalId = setInterval(async () => {
       if (this.getToken()) {
         try {
           await this.refreshToken();
-          console.log('Successfully refreshed token on schedule');
+          console.log("Successfully refreshed token on schedule");
         } catch (error) {
-          console.log('Scheduled token refresh failed - will retry on next interval');
+          console.log(
+            "Scheduled token refresh failed - will retry on next interval",
+          );
         }
       }
     }, refreshInterval);
 
     // 2. Listen for online events to handle reconnection
-    window.addEventListener('online', async () => {
-      console.log('Network connection restored, checking authentication');
+    window.addEventListener("online", async () => {
+      console.log("Network connection restored, checking authentication");
 
       // Check if we should try to get a new token
       const accessToken = this.getToken();
-      const refreshToken = localStorage.getItem('refresh_token');
+      const refreshToken = localStorage.getItem("refresh_token");
 
       if (!accessToken && refreshToken) {
         try {
           await this.refreshToken();
-          console.log('Successfully refreshed token after reconnection');
+          console.log("Successfully refreshed token after reconnection");
         } catch (error) {
-          console.error('Failed to refresh token after reconnection:', error);
+          console.error("Failed to refresh token after reconnection:", error);
         }
       }
     });
@@ -817,18 +822,17 @@ class ApiService {
   async checkAuthOnStartup() {
     // If we have a refresh token but no valid access token, try to refresh
     const accessToken = this.getToken();
-    const refreshToken = localStorage.getItem('refresh_token');
+    const refreshToken = localStorage.getItem("refresh_token");
 
     if (!accessToken && refreshToken) {
       try {
         await this.refreshToken();
-        console.log('Successfully restored session on startup');
+        console.log("Successfully restored session on startup");
       } catch (error) {
-        console.error('Could not restore session on startup:', error);
+        console.error("Could not restore session on startup:", error);
       }
     }
   }
-
 
   /**
    * Get current game status
