@@ -53,18 +53,19 @@
 }
 
 .text-line-block {
+  margin-top: 5px;
   margin-bottom: 8px;
   display: flex;
   flex-direction: column;
   width: fit-content;
   position: relative;
   /* Add subtle divider line between pairs */
-  border-bottom: 1px dotted rgba(0, 0, 0, 0.05);
+  /* border-bottom: 1px dotted rgba(0, 0, 0, 0.05); */
   padding-bottom: 2px;
 }
 
 .dark-theme .text-line-block {
-  border-bottom: 1px dotted rgba(255, 255, 255, 0.1);
+  /* border-bottom: 1px dotted rgba(255, 255, 255, 0.1); */
 }
 
 /* Remove bottom border from last block */

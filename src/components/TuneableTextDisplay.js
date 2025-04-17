@@ -38,16 +38,16 @@ const TUNING = {
       minCellHeight: 20, // Minimum cell height in pixels
       maxCellHeight: 20, // Maximum cell height in pixels
       minCharsPerLine: 55, // Minimum characters per line
-      maxLines: 2, // Maximum of 2 lines in landscape
+      maxLines: 3, // Maximum of 2 lines in landscape
     },
     mobile: {
       widthRatio: 0.6, // Width to height ratio
-      fontRatio: 0.65, // Font size as percentage of cell height
-      minCellWidth: 7, // Minimum cell width in pixels
-      maxCellWidth: 10, // Maximum cell width in pixels
-      minCellHeight: 12, // Minimum cell height in pixels
-      maxCellHeight: 16, // Maximum cell height in pixels
-      minCharsPerLine: 40, // Minimum characters per line
+      fontRatio: 1.05, // Font size as percentage of cell height
+      minCellWidth: 15, // Minimum cell width in pixels
+      maxCellWidth: 15, // Maximum cell width in pixels
+      minCellHeight: 18, // Minimum cell height in pixels
+      maxCellHeight: 18, // Maximum cell height in pixels
+      minCharsPerLine: 44, // Minimum characters per line
       maxLines: 2, // Maximum of 2 lines in landscape
     },
   },
