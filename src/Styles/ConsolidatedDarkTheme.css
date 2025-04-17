@@ -57,8 +57,10 @@ html.dark-theme {
 }
 
 .dark-theme .text-container {
-  background-color: #222;
+  background-color: #333;
   color: #f8f9fa;
+  /* border:none;
+  box-shadow:none; */
 }
 
 .dark-theme .encrypted-line {

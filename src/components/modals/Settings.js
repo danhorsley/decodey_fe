@@ -417,7 +417,7 @@ function Settings({ onCancel }) {
                   }
                 />
                 <span className="option-label">
-                  Use Longer Quotes - over 65 characters & over 18 unique
+                  Use Longer Quotes - over 65 characters & over 15 unique
                   letters
                 </span>
               </label>

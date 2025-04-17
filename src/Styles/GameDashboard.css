@@ -125,6 +125,14 @@
   touch-action: manipulation;
 }
 
+@media (orientation: portrait) {
+  .mobile-mode .crossword-hint-button {
+    min-height: 40px;
+    max-height: 61px;
+    max-width: 120px;
+  }
+}
+
 .dark-theme .crossword-hint-button {
   background-color: #222;
   border-color: #666;
