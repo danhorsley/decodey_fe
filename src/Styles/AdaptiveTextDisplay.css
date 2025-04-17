@@ -174,7 +174,7 @@
 
   /* Enhance terminal feel on mobile dark mode */
   .dark-theme.mobile-mode .text-container {
-    background-color: rgba(0, 0, 0, 0.9);
+    background-color: #222;
   }
 
   .dark-theme.mobile-mode .encrypted-line .char-cell {
