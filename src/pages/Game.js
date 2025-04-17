@@ -20,7 +20,7 @@ import MobileLayout from "../components/layout/MobileLayout";
 import WinCelebration from "../components/modals/WinCelebration";
 import MatrixRainLoading from "../components/effects/MatrixRainLoading";
 import AdaptiveTextDisplay from "../components/AdaptiveTextDisplay";
-import TuneableTextDisplay from "../components/TuneableTextDisplay"
+import TuneableTextDisplay from "../components/TuneableTextDisplay";
 import TutorialOverlay from "../components/TutorialOverlay";
 
 // Format the display text
@@ -35,10 +35,10 @@ function Game() {
   // Slide menu state - NEW
   const [menuOpen, setMenuOpen] = useState(false);
   const toggleMenu = useCallback(() => setMenuOpen((prev) => !prev), []);
-  // const [showTutorial, setShowTutorial] = useState(() => {
-  //   return !localStorage.getItem("tutorial-completed");
-  // });
-  const [showTutorial, setShowTutorial] = useState(true);
+  const [showTutorial, setShowTutorial] = useState(() => {
+    return !localStorage.getItem("tutorial-completed");
+  });
+  // const [showTutorial, setShowTutorial] = useState(true);
   const handleTutorialComplete = () => {
     setShowTutorial(false);
   };
