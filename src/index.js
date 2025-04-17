@@ -68,3 +68,11 @@ root.render(
     </React.StrictMode>
   ),
 );
+
+// Add minimal scroll on launch
+window.addEventListener('load', function() {
+  // Delay slightly to ensure everything is loaded
+  setTimeout(function() {
+    window.scrollTo(0, 1);
+  }, 100);
+});
