@@ -20,6 +20,7 @@ import MobileLayout from "../components/layout/MobileLayout";
 import WinCelebration from "../components/modals/WinCelebration";
 import MatrixRainLoading from "../components/effects/MatrixRainLoading";
 import AdaptiveTextDisplay from "../components/AdaptiveTextDisplay";
+import TuneableTextDisplay from "../components/TuneableTextDisplay"
 import TutorialOverlay from "../components/TutorialOverlay";
 
 // Format the display text
@@ -429,7 +430,7 @@ function Game() {
 
   // Text container component - simplified for better mobile display
   const renderTextContainer = () => (
-    <AdaptiveTextDisplay
+    <TuneableTextDisplay
       encrypted={encrypted}
       display={display}
       hardcoreMode={hardcoreMode}

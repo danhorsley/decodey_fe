@@ -92,7 +92,7 @@ const GameDashboard = ({
     // }
 
     return (
-      <div className="controls-stack">
+      // <div className="controls-stack">
         <div
           className={`crossword-hint-button status-${getStatusColor()} ${isHintInProgress ? "processing" : ""}`}
           onClick={!disableHint ? onHintClick : undefined}
@@ -109,7 +109,7 @@ const GameDashboard = ({
             <CryptoSpinner isActive={true} isDarkTheme={isDarkTheme} />
           )}
         </div>
-      </div>
+      // </div>
     );
   };
 

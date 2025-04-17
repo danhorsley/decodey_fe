@@ -1,81 +1,209 @@
-/* Updated AdaptiveTextDisplay.css */
+/* Enhanced AdaptiveTextDisplay.css */
+
+.text-container {
+  margin: 0 auto 10px;
+  border-radius: 8px;
+  overflow: hidden;
+  width: 90%;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 12px;
+  font-size: 1.10rem;
+  overflow-y: auto;
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+/* Chrome, Safari and Opera */
+.text-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* Apply different max heights based on orientation */
+.text-container.landscape {
+  max-height: 25vh;
+}
+
+.text-container.portrait {
+  max-height: 35vh;
+}
+
+/* Dark theme styling */
+.dark-theme .text-container {
+  background-color: #222;
+}
 
 .grid-text-display {
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 5px 0;
+  padding: 0;
 }
 
 .text-line-block {
-  margin-bottom: 0;
+  margin-bottom: 8px;
   display: flex;
   flex-direction: column;
   width: fit-content;
+  position: relative;
+  /* Add subtle divider line between pairs */
+  border-bottom: 1px dotted rgba(0, 0, 0, 0.05);
+  padding-bottom: 2px;
 }
 
-/* Eliminate whitespace between inline-block elements */
+.dark-theme .text-line-block {
+  border-bottom: 1px dotted rgba(255, 255, 255, 0.1);
+}
+
+/* Remove bottom border from last block */
+.text-line-block:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+/* Character line styling */
 .char-line {
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
   justify-content: flex-start;
-  font-size: 0;
-  /* Remove font-size from parent to eliminate whitespace */
   letter-spacing: 0;
-  /* Explicitly remove letter spacing */
   word-spacing: 0;
-  /* Explicitly remove word spacing */
 }
 
+/* Individual character cells */
 .char-cell {
-  display: inline-block;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   font-family: 'Courier New', monospace;
   font-weight: 500;
-  -webkit-text-size-adjust: 100%;
-  text-size-adjust: 100%;
-  box-sizing: border-box;
-  vertical-align: top;
-  /* Align to top to prevent inconsistent spacing */
   text-align: center;
-  /* Center the character horizontally */
   line-height: 1;
-  /* Keep line height consistent */
   overflow: visible;
-  /* Allow characters to exceed boundaries if needed */
+  user-select: none;
+  transition: all 0.1s ease;
 }
 
+/* Line coloring */
 .encrypted-line {
   color: #333;
   margin-bottom: 0;
+  padding-top: 4px;
 }
 
 .display-line {
   color: rgb(0, 66, 170);
-  margin-bottom: 6px;
+  margin-bottom: 2px;
+  padding-bottom: 4px;
 }
 
+/* Dark theme color adjustments */
 .dark-theme .encrypted-line {
-  color: var(--text-color-primary, #4cc9f0);
+  color: #4cc9f0;
+  /* Cyan blue */
 }
 
 .dark-theme .display-line {
-  color: var(--text-color-secondary, #00ED99);
+  color: #00ED99;
+  /* Bright green */
 }
 
-/* Reduce space between pairs of lines */
-.text-line-block+.text-line-block {
-  margin-top: 2px;
+/* Add slight highlighting to character cells for improved readability */
+.char-cell {
+  position: relative;
 }
 
-/* Add special styling for each pair of lines */
-.encrypted-line {
-  padding-top: 2px;
+/* Light theme specific enhancements */
+:not(.dark-theme) .char-cell {
+  border-radius: 2px;
 }
 
-.display-line {
-  padding-bottom: 2px;
+:not(.dark-theme) .encrypted-line .char-cell {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+:not(.dark-theme) .display-line .char-cell {
+  background-color: rgba(0, 102, 255, 0.02);
+}
+
+/* Dark theme specific enhancements */
+.dark-theme .encrypted-line .char-cell {
+  text-shadow: 0 0 5px rgba(76, 201, 240, 0.3);
+}
+
+.dark-theme .display-line .char-cell {
+  text-shadow: 0 0 5px rgba(0, 237, 153, 0.3);
+}
+
+/* Orientation specific adjustments */
+.portrait .char-cell {
+  margin: 0 1px;
+  /* Add slight horizontal spacing in portrait */
+}
+
+.landscape .char-cell {
+  margin: 0;
+  /* Tighter spacing in landscape */
+}
+
+/* Mobile specific enhancements */
+@media (max-width: 768px) {
+  .text-container {
+    padding: 6px 8px;
+  }
+
+  .text-line-block {
+    margin-bottom: -10px;
+    padding-bottom: 2px;
+  }
+
+  /* Enhance terminal feel on mobile dark mode */
+  .dark-theme.mobile-mode .text-container {
+    background-color: rgba(0, 0, 0, 0.9);
+  }
+
+  .dark-theme.mobile-mode .encrypted-line .char-cell {
+    text-shadow: 0 0 8px rgba(76, 201, 240, 0.4);
+  }
+
+  .dark-theme.mobile-mode .display-line .char-cell {
+    text-shadow: 0 0 8px rgba(0, 237, 153, 0.4);
+  }
+}
+
+/* Small screen optimizations */
+@media (max-width: 320px) {
+  .text-container {
+    padding: 4px 6px;
+    width: 95%;
+  }
+
+  .text-line-block {
+    margin-bottom: 0px;
+    padding-bottom: 2px;
+  }
+}
+
+/* Hardcore badge position adjustment */
+.hardcore-badge {
+  background-color: #dc3545;
+  color: white;
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 0.7rem;
+  font-weight: bold;
+  padding: 3px 8px;
+  z-index: 10;
+}
+
+.dark-theme .hardcore-badge {
+  background-color: #E53935;
 }

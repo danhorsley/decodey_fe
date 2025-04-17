@@ -2,6 +2,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import useUIStore from "../stores/uiStore";
 import useDeviceDetection from "../hooks/useDeviceDetection";
+import "../Styles/AdaptiveTextDisplay.css";
 
 const AdaptiveTextDisplay = ({
   encrypted = "",
@@ -13,12 +14,7 @@ const AdaptiveTextDisplay = ({
   const useMobileMode = useUIStore((state) => state.useMobileMode);
   const { isLandscape } = useDeviceDetection();
 
-  // Character display settings - adjusted for monospace
-  const [cellWidth, setCellWidth] = useState(11); // Narrower default width
-  const [cellHeight, setCellHeight] = useState(18); // Slightly taller for aspect ratio
-  const [charsPerLine, setCharsPerLine] = useState(30);
-
-  // Update container dimensions
+  // Track container dimensions
   useEffect(() => {
     const updateContainerSize = () => {
       if (containerRef.current) {
@@ -38,148 +34,143 @@ const AdaptiveTextDisplay = ({
     };
   }, []);
 
-  // Calculate optimal display parameters with proper monospace dimensions
-  useEffect(() => {
-    if (!encrypted || containerWidth === 0) return;
+  // Process the text content into lines and pairs
+  const processText = () => {
+    if (!encrypted || !display) return [];
 
-    // Set appropriate dimensions for monospace fonts
-    // Width is typically ~60% of height for monospace
-    const minCellWidth = useMobileMode ? 8 : 9; // Much narrower width for monospace
-    const minCellHeight = useMobileMode ? 20 : 26; // Slightly smaller height too
+    // Split content by newlines first to respect manual breaks
+    const encryptedLines = encrypted.split("\n");
+    const displayLines = display.split("\n");
 
-    const maxCellWidth = useMobileMode ? 26 : 30;
-    const maxCellHeight = useMobileMode ? 30 : 34;
+    // Determine optimal line length based on orientation and screen size
+    let targetLineLength;
 
-    // Available width minus some padding
-    const availableWidth = containerWidth - 30;
-
-    // Find longest line for reference
-    const lines = encrypted.split("\n");
-    const maxLineLength = Math.max(...lines.map((line) => line.length));
-
-    // Calculate how many chars fit per line using width
-    let newCharsPerLine = Math.floor(availableWidth / minCellWidth);
-
-    // Ensure minimum number of chars per line for readability
-    newCharsPerLine = Math.max(newCharsPerLine, 20);
-
-    // If original text fits, use it
-    if (maxLineLength <= newCharsPerLine) {
-      newCharsPerLine = maxLineLength;
+    if (isLandscape) {
+      // Landscape: longer lines
+      targetLineLength = useMobileMode ? 55 : 65;
+    } else {
+      // Portrait: shorter lines
+      targetLineLength = useMobileMode ? 30 : 45;
     }
 
-    // Calculate optimal cell width based on the chars per line
-    let newCellWidth = Math.floor(availableWidth / newCharsPerLine);
+    // For very small screens, reduce further
+    if (containerWidth < 320) {
+      targetLineLength = Math.max(15, Math.floor(targetLineLength * 0.8));
+    }
 
-    // Ensure cell width stays within bounds
-    newCellWidth = Math.min(Math.max(newCellWidth, minCellWidth), maxCellWidth);
+    const textPairs = [];
 
-    // Calculate cell height based on width with proper aspect ratio
-    // Monospace fonts typically have height:width ratio of ~1.6:1
-    let newCellHeight = Math.round(newCellWidth * 1.6);
+    // Process each line and create pairs
+    for (let i = 0; i < encryptedLines.length; i++) {
+      const encLine = encryptedLines[i] || "";
+      const dispLine = displayLines[i] || "";
 
-    // Ensure height is within bounds
-    newCellHeight = Math.min(
-      Math.max(newCellHeight, minCellHeight),
-      maxCellHeight,
-    );
-
-    // Apply results
-    setCharsPerLine(newCharsPerLine);
-    setCellWidth(newCellWidth);
-    setCellHeight(newCellHeight);
-  }, [encrypted, containerWidth, useMobileMode, isLandscape]);
-
-  // Process text with word-aware line breaks
-  const processTextWithLineBreaks = (text) => {
-    if (!text) return [];
-
-    // Split original text into lines (respecting manual line breaks)
-    const originalLines = text.split("\n");
-    const processedLines = [];
-
-    originalLines.forEach((line) => {
-      // If line is shorter than the limit, keep it as is
-      if (line.length <= charsPerLine) {
-        processedLines.push(line);
-        return;
+      // If line is shorter than target, keep it intact
+      if (encLine.length <= targetLineLength) {
+        textPairs.push({
+          encrypted: encLine,
+          display: dispLine,
+        });
+        continue;
       }
 
-      // For longer lines, we need to break them
-      const words = line.split(/(\s+)/); // Split by whitespace, keeping separators
-      let currentLine = "";
-
-      words.forEach((word) => {
-        // If adding this word would exceed the limit
-        if (currentLine.length + word.length > charsPerLine) {
-          // If current line is not empty, push it
-          if (currentLine.length > 0) {
-            processedLines.push(currentLine);
-            currentLine = "";
+      // For longer lines, break at word boundaries when possible
+      let startIndex = 0;
+      while (startIndex < encLine.length) {
+        // Find the nearest word boundary
+        let endIndex = startIndex + targetLineLength;
+        if (endIndex < encLine.length) {
+          // Look for a space to break at
+          let spaceIndex = encLine.lastIndexOf(" ", endIndex);
+          if (spaceIndex > startIndex && spaceIndex > endIndex - 10) {
+            // Found a good break point
+            endIndex = spaceIndex;
           }
-
-          // If the word itself is longer than the limit, we need to chunk it
-          if (word.length > charsPerLine) {
-            // Break long word into chunks
-            for (let i = 0; i < word.length; i += charsPerLine) {
-              const chunk = word.substring(i, i + charsPerLine);
-              processedLines.push(chunk);
-            }
-          } else {
-            currentLine = word;
-          }
-        } else {
-          // Word fits, add it to current line
-          currentLine += word;
+          // If we're breaking mid-word, go to the exact index
         }
-      });
 
-      // Don't forget the last line
-      if (currentLine.length > 0) {
-        processedLines.push(currentLine);
+        // Don't exceed the string length
+        endIndex = Math.min(endIndex, encLine.length);
+
+        // Create pair with corresponding substrings
+        textPairs.push({
+          encrypted: encLine.substring(startIndex, endIndex),
+          display: dispLine.substring(startIndex, endIndex),
+        });
+
+        // Move to next chunk
+        startIndex = endIndex;
+        // Skip leading space if it exists
+        if (encLine[startIndex] === " ") {
+          startIndex++;
+        }
       }
-    });
+    }
 
-    return processedLines;
+    return textPairs;
   };
 
-  // Process encrypted and display text
-  const processedEncrypted = processTextWithLineBreaks(encrypted);
-  const processedDisplay = processTextWithLineBreaks(display);
+  const textPairs = processText();
 
-  // Create grids from processed text
-  const createCharacterGrid = (lines) => {
-    return lines.map((line) => Array.from(line));
+  // Determine styling for the character cells
+  const getCellStyles = () => {
+    // Base size on container width and target column count
+    const columnCount = isLandscape
+      ? useMobileMode
+        ? 25
+        : 35
+      : useMobileMode
+        ? 30
+        : 45;
+
+    // Minimum size thresholds for readability
+    const minWidth = useMobileMode ? 8 : 10;
+
+    // Calculate size based on available width
+    let cellWidth = Math.max(minWidth, (containerWidth - 350) / columnCount);
+
+    // Adjust for very small screens
+    if (containerWidth < 320) {
+      cellWidth = Math.max(minWidth, cellWidth * 0.9);
+    }
+
+    // Set height with a good aspect ratio for clarity
+    const cellHeight = cellWidth * 1.3;
+
+    // Calculate font size based on cell dimensions
+    const fontSize = cellWidth * 1.4;
+
+    return {
+      cellWidth: `${cellWidth}px`,
+      cellHeight: `${cellHeight}px`,
+      fontSize: `${fontSize}px`,
+    };
   };
 
-  const encryptedGrid = createCharacterGrid(processedEncrypted);
-  const displayGrid = createCharacterGrid(processedDisplay);
+  const cellStyles = getCellStyles();
 
   return (
     <div
       ref={containerRef}
-      className={`text-container ${hardcoreMode ? "hardcore-mode" : ""}`}
+      className={`text-container ${hardcoreMode ? "hardcore-mode" : ""} ${isLandscape ? "landscape" : "portrait"}`}
     >
       {hardcoreMode && (
         <div className="badge-indicator hardcore-badge">HARDCORE</div>
       )}
 
       <div className="grid-text-display">
-        {encryptedGrid.map((line, lineIndex) => (
-          <div key={`block-${lineIndex}`} className="text-line-block">
+        {textPairs.map((pair, pairIndex) => (
+          <div key={`pair-${pairIndex}`} className="text-line-block">
             {/* Encrypted line */}
             <div className="char-line encrypted-line">
-              {line.map((char, charIndex) => (
+              {Array.from(pair.encrypted).map((char, charIndex) => (
                 <div
-                  key={`enc-${lineIndex}-${charIndex}`}
+                  key={`enc-${pairIndex}-${charIndex}`}
                   className="char-cell"
                   style={{
-                    width: `${cellWidth}px`,
-                    height: `${cellHeight}px`,
-                    fontSize: `${Math.max(cellHeight * 0.9, 20)}px`,
-                    padding: 0.2,
-                    margin: 0.2,
-                    display: "inline-block",
+                    width: cellStyles.cellWidth,
+                    height: cellStyles.cellHeight,
+                    fontSize: cellStyles.fontSize,
                   }}
                 >
                   {char}
@@ -188,26 +179,21 @@ const AdaptiveTextDisplay = ({
             </div>
 
             {/* Display line */}
-            {displayGrid[lineIndex] && (
-              <div className="char-line display-line">
-                {displayGrid[lineIndex].map((char, charIndex) => (
-                  <div
-                    key={`disp-${lineIndex}-${charIndex}`}
-                    className="char-cell"
-                    style={{
-                      width: `${cellWidth}px`,
-                      height: `${cellHeight}px`,
-                      fontSize: `${Math.max(cellHeight * 0.9, 20)}px`,
-                      padding: 0.2,
-                      margin: 0.2,
-                      display: "inline-block",
-                    }}
-                  >
-                    {char}
-                  </div>
-                ))}
-              </div>
-            )}
+            <div className="char-line display-line">
+              {Array.from(pair.display).map((char, charIndex) => (
+                <div
+                  key={`disp-${pairIndex}-${charIndex}`}
+                  className="char-cell"
+                  style={{
+                    width: cellStyles.cellWidth,
+                    height: cellStyles.cellHeight,
+                    fontSize: cellStyles.fontSize,
+                  }}
+                >
+                  {char}
+                </div>
+              ))}
+            </div>
           </div>
         ))}
       </div>

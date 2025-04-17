@@ -23,6 +23,8 @@
     "guess";
   grid-template-columns: 1fr;
   grid-template-rows: auto auto auto;
+  gap: 0.15rem;
+  padding: 0.15rem 0.1rem;
 }
 
 /* Base variable setup */
@@ -249,4 +251,3 @@
 .game-dashboard.portrait .controls-stack {
   margin: 15px 0;
 }
-
