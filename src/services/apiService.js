@@ -183,6 +183,7 @@ class ApiService {
     }
   }
 
+  // In your apiService.js file
   async logout() {
     try {
       await this.api.post("/logout");
@@ -191,6 +192,12 @@ class ApiService {
       localStorage.removeItem("uncrypt-token");
       localStorage.removeItem("refresh_token");
       sessionStorage.removeItem("uncrypt-token");
+
+      // Clean up the refresh interval
+      if (this.refreshIntervalId) {
+        clearInterval(this.refreshIntervalId);
+        this.refreshIntervalId = null;
+      }
 
       // Emit logout event
       this.events.emit("auth:logout");
@@ -203,6 +210,12 @@ class ApiService {
       localStorage.removeItem("uncrypt-token");
       localStorage.removeItem("refresh_token");
       sessionStorage.removeItem("uncrypt-token");
+
+      // Clean up the refresh interval even if there was an error
+      if (this.refreshIntervalId) {
+        clearInterval(this.refreshIntervalId);
+        this.refreshIntervalId = null;
+      }
 
       this.events.emit("auth:logout");
 
@@ -761,6 +774,62 @@ class ApiService {
       throw error;
     }
   }
+
+  setupTokenRefreshStrategy() {
+    // 1. Schedule regular token refresh while the app is running
+    const refreshInterval = 55 * 60 * 1000; // 55 minutes
+
+    // Start the periodic refresh
+    this.refreshIntervalId = setInterval(async () => {
+      if (this.getToken()) {
+        try {
+          await this.refreshToken();
+          console.log('Successfully refreshed token on schedule');
+        } catch (error) {
+          console.log('Scheduled token refresh failed - will retry on next interval');
+        }
+      }
+    }, refreshInterval);
+
+    // 2. Listen for online events to handle reconnection
+    window.addEventListener('online', async () => {
+      console.log('Network connection restored, checking authentication');
+
+      // Check if we should try to get a new token
+      const accessToken = this.getToken();
+      const refreshToken = localStorage.getItem('refresh_token');
+
+      if (!accessToken && refreshToken) {
+        try {
+          await this.refreshToken();
+          console.log('Successfully refreshed token after reconnection');
+        } catch (error) {
+          console.error('Failed to refresh token after reconnection:', error);
+        }
+      }
+    });
+
+    // 3. Initial check on startup
+    this.checkAuthOnStartup();
+  }
+
+  // Check and refresh authentication on startup
+  async checkAuthOnStartup() {
+    // If we have a refresh token but no valid access token, try to refresh
+    const accessToken = this.getToken();
+    const refreshToken = localStorage.getItem('refresh_token');
+
+    if (!accessToken && refreshToken) {
+      try {
+        await this.refreshToken();
+        console.log('Successfully restored session on startup');
+      } catch (error) {
+        console.error('Could not restore session on startup:', error);
+      }
+    }
+  }
+
+
   /**
    * Get current game status
    * @returns {Promise<Object>} Game status

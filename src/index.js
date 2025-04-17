@@ -70,16 +70,16 @@ root.render(
 );
 
 // Add minimal scroll on launch
-window.addEventListener('load', function() {
+window.addEventListener("load", function () {
   // Delay slightly to ensure everything is loaded
-  setTimeout(function() {
+  setTimeout(function () {
     window.scrollTo(0, 1);
     // Try to request fullscreen if possible
     if (document.documentElement.requestFullscreen) {
-      document.documentElement.requestFullscreen().catch(err => {
+      document.documentElement.requestFullscreen().catch((err) => {
         // Silently handle any errors since fullscreen isn't critical
-        console.log('Fullscreen request failed:', err);
+        console.log("Fullscreen request failed:", err);
       });
     }
-  }, 100);
+  }, 300);
 });

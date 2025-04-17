@@ -23,8 +23,8 @@
     "guess";
   grid-template-columns: 1fr;
   grid-template-rows: auto auto auto;
-  gap: 0.15rem;
-  padding: 0.15rem 0.1rem;
+  gap: 0.25rem;
+  padding: 0.15rem 0.15rem;
 }
 
 /* Base variable setup */
@@ -32,7 +32,7 @@
   --letter-cell-max-size: 50px;
   --letter-cell-min-size: 30px;
   --letter-cell-padding: 0;
-  --letter-cell-gap: 2.5px;
+  --letter-cell-gap: 4px;
   --letter-cell-font-weight: 500;
   --grid-columns: 5;
 }
@@ -258,4 +258,57 @@
 /* Optional: Adjust spacing for better vertical flow */
 .game-dashboard.portrait .controls-stack {
   margin: 15px 0;
+}
+
+/* Add these styles to src/Styles/GameDashboard.css */
+
+/* Ensure selected letter cells always have good contrast */
+.letter-cell.selected {
+  background-color: #007bff;
+  color: white;
+  border-color: #0062cc;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+  transform: scale(1.05);
+}
+
+/* Browser focus states often override our styling, so we need to be explicit */
+.letter-cell:focus {
+  background-color: #007bff;
+  color: white;
+  outline: none;
+  /* Remove default focus outline */
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+/* Fix for iOS/Safari focus state */
+.letter-cell:focus-visible {
+  background-color: #007bff;
+  color: white;
+  outline: none;
+}
+
+/* Fix for mobile tap states in light mode */
+:not(.dark-theme) .letter-cell:focus,
+:not(.dark-theme) .letter-cell:active {
+  background-color: #0056b3;
+  /* Slightly darker blue for even better contrast */
+  color: white;
+}
+
+/* Make sure focus styling doesn't override "guessed" letters */
+.letter-cell.guessed:focus,
+.letter-cell.guessed:active {
+  background-color: #e9ecef;
+  /* Keep consistent with guessed styling */
+  color: #495057;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Ensure dark theme continues to work correctly */
+.dark-theme .letter-cell.selected,
+.dark-theme .letter-cell:focus,
+.dark-theme .letter-cell:active {
+  background-color: #4cc9f0;
+  color: #222;
 }

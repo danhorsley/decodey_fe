@@ -161,6 +161,7 @@ function Game() {
   const hardcoreMode = useGameStore((state) => state.hardcoreMode);
   const isDailyChallenge = useGameStore((state) => state.isDailyChallenge);
 
+
   // Auto-initialize on first render - the component calls initializeGame
   // once on mount via React.useEffect()
   useEffect(() => {

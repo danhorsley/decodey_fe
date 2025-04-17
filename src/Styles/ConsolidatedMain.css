@@ -48,6 +48,13 @@ body {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
+.mobile-game-container {
+  /* height: 100vh; */
+  /* Additional fallbacks for mobile Chrome */
+  height: -webkit-fill-available;
+  overflow: hidden;
+}
+
 .retro-title {
   position: absolute;
   left: 50%;
