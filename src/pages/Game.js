@@ -201,11 +201,21 @@ function Game() {
         }
 
         submitGuess(selectedEncrypted, guessedLetter).then((result) => {
-          // Existing code...
+          if (result.success) {
+            if (result.isCorrect) {
+              playSound?.("correct");
+            } else if (result.isIncorrect) {
+              playSound?.("incorrect");
+            }
+
+            if (result.hasLost) {
+              playSound?.("lose");
+            }
+          }
         });
       }
     },
-    [selectedEncrypted, submitGuess, playSound, incorrectGuesses]
+    [selectedEncrypted, submitGuess, playSound, incorrectGuesses],
   );
 
   // Handle hint button click
