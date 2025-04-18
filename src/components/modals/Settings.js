@@ -9,7 +9,7 @@ import ReactDOM from "react-dom";
 
 function Settings({ onCancel }) {
   // Get device detection
-  const { isMobile } = useDeviceDetection();
+  const { isMobile, isLandscape } = useDeviceDetection();
 
   // Local component state
   const [userData, setUserData] = useState(null);
@@ -194,7 +194,9 @@ function Settings({ onCancel }) {
   return ReactDOM.createPortal(
     <div className="about-overlay">
       <div
-        className={`about-container settings-container ${localSettings.theme === "dark" ? "dark-theme" : ""} text-${localSettings.textColor}`}
+        className={`about-container settings-container ${
+          settings.theme === "dark" ? "dark-theme" : ""
+        } ${isLandscape ? "landscape-layout" : ""}`}
       >
         <div className="settings-content">
           <div className="settings-actions top">
