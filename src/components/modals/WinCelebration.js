@@ -231,7 +231,7 @@ const WinCelebration = ({ playSound, winData }) => {
               <div className="stat-row">
                 <div className="stat-item">TIME: {formatTime()}</div>
                 <div className="stat-item">
-                  MISTAKES: {mistakes}/{maxMistakes - 1}
+                  HINT TOKENS USED : {mistakes}/{maxMistakes - 1}
                 </div>
               </div>
 
