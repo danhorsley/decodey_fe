@@ -743,6 +743,10 @@ const useGameStore = create((set, get) => ({
         const winData = gameStatus.win_data || gameStatus.winData || {};
         const uniqueLettersSolved = new Set(get().correctlyGuessed || []).size;
 
+        // Log the win data to help diagnose streak issues
+        console.log("Raw win data from server:", winData);
+        console.log("Streak data:", winData.current_daily_streak);
+
         // Get daily challenge status
         const isDailyChallenge = get().isDailyChallenge;
         const dailyDate = get().dailyDate;
@@ -776,7 +780,9 @@ const useGameStore = create((set, get) => ({
           // Add daily challenge info to win data
           isDailyChallenge: isDailyChallenge,
           dailyDate: dailyDate,
-          dailyStats: winData.dailyStats || null,
+
+          // Ensure daily streak data is properly passed through - FIXED
+          current_daily_streak: winData.current_daily_streak || 0,
         };
 
         console.log("Formatted win data:", formattedWinData);

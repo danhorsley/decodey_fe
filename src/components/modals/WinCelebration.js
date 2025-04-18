@@ -1,4 +1,4 @@
-// src/components/modals/WinCelebration.js - Simplified
+// src/components/modals/WinCelebration.js - Updated with streak bonus
 import React, { useState, useEffect } from "react";
 import MatrixRain from "../effects/MatrixRain";
 import CryptoSpinner from "../CryptoSpinner";
@@ -11,11 +11,13 @@ import { FaXTwitter } from "react-icons/fa6";
 /**
  * Convert raw score to percentage rating (50-100%)
  * @param {number} score - The raw score
+ * @param {boolean} isDailyChallenge - Whether this is a daily challenge
  * @return {number} - Percentage score between 50-100
  */
-const calculatePercentageRating = (score) => {
-  // Maximum theoretical score (Hard, Hardcore, 0 mistakes, minimal time)
-  const MAX_THEORETICAL_SCORE = 11250;
+const calculatePercentageRating = (score, isDailyChallenge) => {
+  // Maximum theoretical score depends on game type
+  // Daily challenges use Easy difficulty, so max is lower
+  const MAX_THEORETICAL_SCORE = isDailyChallenge ? 1800 : 11250;
 
   // Calculate percentage (50% minimum for winners)
   const percentage = 50 + (score / MAX_THEORETICAL_SCORE) * 50;
@@ -24,7 +26,30 @@ const calculatePercentageRating = (score) => {
   return Math.min(100, Math.round(percentage));
 };
 
+/**
+ * Calculate the base score from total score and streak
+ * @param {number} totalScore - The final score with streak bonus
+ * @param {number} streak - Current daily streak
+ * @return {Object} - Base score and bonus amount
+ */
+const calculateBaseScore = (totalScore, streak) => {
+  if (!streak || !totalScore) {
+    return { baseScore: totalScore, bonusAmount: 0 };
+  }
+
+  // Calculate streak multiplier: 1 + (min(current_daily_streak, 20) * 0.05)
+  const cappedStreak = Math.min(streak, 20);
+  const multiplier = 1 + cappedStreak * 0.05;
+
+  // Calculate base score by dividing the total score by the multiplier
+  const baseScore = Math.round(totalScore / multiplier);
+  const bonusAmount = totalScore - baseScore;
+
+  return { baseScore, bonusAmount };
+};
+
 const WinCelebration = ({ playSound, winData }) => {
+  console.log("win data", winData);
   // Get auth and settings state
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const openLogin = useUIStore((state) => state.openLogin);
@@ -64,8 +89,15 @@ const WinCelebration = ({ playSound, winData }) => {
         : "Score not recorded - anonymous game",
     },
     isDailyChallenge = false,
-    dailyStats = null,
+    current_daily_streak = 0, // Extract the streak from win data
   } = winData || {};
+
+  // Calculate base score and bonus
+  const { baseScore, bonusAmount } = calculateBaseScore(
+    score,
+    current_daily_streak,
+  );
+  const hasStreakBonus = bonusAmount > 0;
 
   // Format time display - show infinity symbol for losses
   const formatTime = () => {
@@ -111,7 +143,7 @@ const WinCelebration = ({ playSound, winData }) => {
 > D E C O D E Y . G A M E .  .  .  .  .  .  .<`;
     } else {
       const blocks = ["░", "▒", "▓", "█", "⠿", "■", "□"];
-      const ratingNum = calculatePercentageRating(score);
+      const ratingNum = calculatePercentageRating(baseScore, isDailyChallenge);
       const filledBlocks = Math.round(ratingNum / 10);
       const ratingBar =
         blocks[5].repeat(filledBlocks) + blocks[6].repeat(10 - filledBlocks);
@@ -151,7 +183,7 @@ const WinCelebration = ({ playSound, winData }) => {
               <h2 className="status-text">
                 {hasLost
                   ? "GAME OVER"
-                  : `DECODED! Rating: ${calculatePercentageRating(score)}%`}
+                  : `DECODED! Rating: ${calculatePercentageRating(baseScore, isDailyChallenge)}%`}
               </h2>
             </div>
 
@@ -181,9 +213,26 @@ const WinCelebration = ({ playSound, winData }) => {
                     SOLVED: {calculatePercentageSolved()}%
                   </div>
                 ) : (
-                  <div className="stat-item score">SCORE: {score}</div>
+                  <div className="stat-item score">
+                    SCORE: {score}
+                    {hasStreakBonus && (
+                      <span className="streak-bonus-tag">+{bonusAmount}</span>
+                    )}
+                  </div>
                 )}
               </div>
+
+              {/* Display streak bonus info if applicable */}
+              {isDailyChallenge && current_daily_streak > 0 && !hasLost && (
+                <div className="stat-row streak-bonus-row">
+                  <div className="stat-item streak-info">
+                    DAILY STREAK: {current_daily_streak}
+                  </div>
+                  <div className="stat-item streak-bonus">
+                    BONUS: +{Math.min(current_daily_streak, 20) * 5}%
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Login prompt for anonymous users */}
@@ -201,14 +250,11 @@ const WinCelebration = ({ playSound, winData }) => {
             )}
 
             {/* Daily streak info if applicable */}
-            {isDailyChallenge && isAuthenticated && dailyStats && (
+            {isAuthenticated && current_daily_streak > 0 && (
               <div className="retro-daily">
                 <div className="daily-streak-row">
                   <div className="streak-item">
-                    CURRENT STREAK: {dailyStats.currentStreak || 0}
-                  </div>
-                  <div className="streak-item">
-                    BEST STREAK: {dailyStats.bestStreak || 0}
+                    CURRENT STREAK: {current_daily_streak}
                   </div>
                 </div>
               </div>

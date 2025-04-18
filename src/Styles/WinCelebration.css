@@ -133,9 +133,11 @@
   box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
   transform: translateY(-1px);
 }
-.game-over-text-display{
-  --char-font-size:1.05rem;
+
+.game-over-text-display {
+  --char-font-size: 1.05rem;
 }
+
 /* Daily streak info */
 .retro-daily {
   margin: 15px 0;
@@ -177,4 +179,59 @@
   .game-over-action-button {
     width: 100%;
   }
+}
+
+/* Add to src/Styles/WinCelebration.css */
+
+/* Streak bonus tag that appears next to the score */
+.streak-bonus-tag {
+  display: inline-block;
+  margin-left: 5px;
+  color: #4cc9f0;
+  font-weight: bold;
+}
+
+.light-theme .streak-bonus-tag {
+  color: #007bff;
+}
+
+/* Additional styling for streak bonus row */
+.streak-bonus-row {
+  margin-top: 5px;
+  opacity: 0.85;
+  /* Slightly more subtle than the main stats */
+}
+
+.streak-info,
+.streak-bonus {
+  font-size: 0.95rem;
+}
+
+.streak-bonus {
+  color: #4cc9f0;
+  font-weight: bold;
+}
+
+.light-theme .streak-bonus {
+  color: #007bff;
+}
+
+/* Animation for bonus display */
+@keyframes pulse-bonus {
+  0% {
+    opacity: 0.7;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.7;
+  }
+}
+
+.streak-bonus-tag,
+.streak-bonus {
+  animation: pulse-bonus 2s infinite;
 }

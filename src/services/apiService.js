@@ -865,14 +865,23 @@ class ApiService {
         game_complete: data.game_complete || data.gameComplete || false,
         has_won: data.has_won || data.hasWon || false,
 
+        // Ensure streak data is passed through
+        current_daily_streak: data.current_daily_streak || 0,
+
         // Pass through the complete data for further processing
         ...data,
 
         // Ensure win_data exists for consistency
-        win_data: data.win_data || data.winData || null,
+        win_data: {
+          ...(data.win_data || data.winData || {}),
+          // Add streak to win_data if it exists at the top level but not in win_data
+          current_daily_streak: data.current_daily_streak || 
+                               (data.win_data?.current_daily_streak || 
+                                data.winData?.current_daily_streak || 0)
+        }
       };
     } catch (error) {
-      // Handle specific error cases - fixed token reference
+      // Handle specific error cases
       const currentToken = this.getToken(); // Define token in catch block scope
 
       if (error.response?.status === 401 && currentToken) {
@@ -889,6 +898,7 @@ class ApiService {
           "Error getting game status",
         game_complete: false,
         has_won: false,
+        current_daily_streak: 0
       };
     }
   }
