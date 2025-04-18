@@ -15,6 +15,7 @@ const initialState = {
   display: "",
   mistakes: 0,
   correctlyGuessed: [],
+  incorrectGuesses: {},
   selectedEncrypted: null,
   lastCorrectGuess: null,
   letterFrequency: {},
@@ -540,9 +541,11 @@ const useGameStore = create((set, get) => ({
       if (data.error && data.error.includes("Session expired")) {
         return { success: false, sessionExpired: true };
       }
-      const isDailyChallenge = get().isDailyChallenge;
-      // Process display text for hardcore mode
+
       const state = get();
+      const isDailyChallenge = state.isDailyChallenge;
+
+      // Process display text for hardcore mode
       let displayText = data.display;
       if (displayText && state.hardcoreMode && !isDailyChallenge) {
         displayText = displayText.replace(/[^A-Z█]/g, "");
@@ -551,14 +554,35 @@ const useGameStore = create((set, get) => ({
       // Prepare state updates
       const updates = {
         display: displayText || state.display,
-        mistakes:
-          typeof data.mistakes === "number" ? data.mistakes : state.mistakes,
+        mistakes: typeof data.mistakes === "number" ? data.mistakes : state.mistakes,
         selectedEncrypted: null,
       };
 
+      // Handle incorrect_guesses data
+      let updatedIncorrectGuesses = { ...state.incorrectGuesses };
+
+      // If API provides incorrect_guesses, use it
+      if (data.incorrect_guesses && typeof data.incorrect_guesses === 'object') {
+        updatedIncorrectGuesses = data.incorrect_guesses;
+      } 
+      // Otherwise update manually if this guess was incorrect
+      else if (!data.is_correct && encryptedLetter && guessedLetter) {
+        if (!updatedIncorrectGuesses[encryptedLetter]) {
+          updatedIncorrectGuesses[encryptedLetter] = [];
+        }
+        if (!updatedIncorrectGuesses[encryptedLetter].includes(guessedLetter)) {
+          updatedIncorrectGuesses[encryptedLetter] = [
+            ...updatedIncorrectGuesses[encryptedLetter], 
+            guessedLetter
+          ];
+        }
+      }
+
+      // Add to state updates
+      updates.incorrectGuesses = updatedIncorrectGuesses;
+
       // Check if the number of mistakes increased - this means the guess was incorrect
-      const isIncorrectGuess =
-        typeof data.mistakes === "number" && data.mistakes > state.mistakes;
+      const isIncorrectGuess = typeof data.mistakes === "number" && data.mistakes > state.mistakes;
 
       // Check for game lost - this must be checked FIRST
       if (updates.mistakes >= state.maxMistakes) {

@@ -138,6 +138,7 @@ function Game() {
     mistakes,
     maxMistakes,
     correctlyGuessed,
+    incorrectGuesses,
     selectedEncrypted,
     lastCorrectGuess,
     letterFrequency,
@@ -160,7 +161,6 @@ function Game() {
   // Game flag states
   const hardcoreMode = useGameStore((state) => state.hardcoreMode);
   const isDailyChallenge = useGameStore((state) => state.isDailyChallenge);
-
 
   // Auto-initialize on first render - the component calls initializeGame
   // once on mount via React.useEffect()
@@ -194,23 +194,18 @@ function Game() {
   const onGuessClick = useCallback(
     (guessedLetter) => {
       if (selectedEncrypted && typeof submitGuess === "function") {
-        submitGuess(selectedEncrypted, guessedLetter).then((result) => {
-          if (result.success) {
-            console.log("guess result : ", result);
-            if (result.isCorrect) {
-              playSound?.("correct");
-            } else if (result.isIncorrect) {
-              playSound?.("incorrect");
-            }
+        // Check if this would be a repeat guess
+        const previousGuesses = incorrectGuesses[selectedEncrypted] || [];
+        if (previousGuesses.includes(guessedLetter)) {
+          return;
+        }
 
-            if (result.hasLost) {
-              playSound?.("lose");
-            }
-          }
+        submitGuess(selectedEncrypted, guessedLetter).then((result) => {
+          // Existing code...
         });
       }
     },
-    [selectedEncrypted, submitGuess, playSound],
+    [selectedEncrypted, submitGuess, playSound, incorrectGuesses]
   );
 
   // Handle hint button click
@@ -450,6 +445,7 @@ function Game() {
       sortedEncryptedLetters={sortedEncryptedLetters}
       selectedEncrypted={selectedEncrypted}
       correctlyGuessed={correctlyGuessed}
+      incorrectGuesses={incorrectGuesses}
       lastCorrectGuess={lastCorrectGuess}
       letterFrequency={letterFrequency}
       onEncryptedClick={onEncryptedClick}

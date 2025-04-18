@@ -398,3 +398,13 @@
   color: #007bff;
   text-shadow: 0 0 8px rgba(0, 123, 255, 0.7);
 }
+
+.letter-cell.previously-guessed {
+  opacity: 0.5;
+  background-color: rgba(150, 150, 150, 0.3);
+  cursor: not-allowed;
+}
+
+.dark-theme .letter-cell.previously-guessed {
+  background-color: rgba(80, 80, 80, 0.5);
+}

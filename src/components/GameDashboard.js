@@ -37,6 +37,7 @@ const GameDashboard = ({
   sortedEncryptedLetters,
   selectedEncrypted,
   correctlyGuessed,
+  incorrectGuesses = {},
   lastCorrectGuess,
   letterFrequency,
   onEncryptedClick,
@@ -70,7 +71,13 @@ const GameDashboard = ({
     if (remainingMistakes <= maxMistakes / 2) return "warning";
     return "success";
   };
-
+  
+  const isPreviouslyGuessed = (letter) => {
+    if (!selectedEncrypted || !incorrectGuesses[selectedEncrypted]) {
+      return false;
+    }
+    return incorrectGuesses[selectedEncrypted].includes(letter);
+  };
   // Render the hint button or game over message
   const renderHintOrGameOver = () => {
     // if (hasLost) {
@@ -144,13 +151,14 @@ const GameDashboard = ({
       {/* eslint-disable-next-line react/no-children-prop */}
       <div className="guess-grid" contentEditable="false">
         {originalLetters.map((letter) => (
-          <LetterCell
-            key={letter}
-            letter={letter}
-            isGuessed={Object.values(guessedMappings || {}).includes(letter)}
-            onClick={() => onGuessClick(letter)}
-            disabled={!isGameActive || !selectedEncrypted}
-          />
+      <LetterCell
+        key={letter}
+        letter={letter}
+        isGuessed={Object.values(guessedMappings || {}).includes(letter)}
+        isPreviouslyGuessed={isPreviouslyGuessed(letter)}
+        onClick={() => onGuessClick(letter)}
+        disabled={!isGameActive || !selectedEncrypted || isPreviouslyGuessed(letter)}
+      />
         ))}
       </div>
     </div>
