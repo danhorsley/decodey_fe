@@ -338,8 +338,6 @@ const useGameStore = create((set, get) => ({
         const currentStoredId = localStorage.getItem("uncrypt-game-id");
         const newId = gameData.game_id;
         const parts = gameData.game_id.split("-");
-        const incorrectGuesses =
-          gameData.incorrect_guesses || gameData.incorrectGuesses || {};
         console.log(`Current stored game ID: ${currentStoredId}`);
         console.log(`New game ID from continueSavedGame: ${newId}`);
         if (currentStoredId && currentStoredId !== newId) {
@@ -476,7 +474,8 @@ const useGameStore = create((set, get) => ({
       // Determine game state (won/lost)
       const hasWon = gameData.hasWon || gameData.has_won === true;
       const hasLost = gameData.mistakes >= maxMistakesValue;
-
+      const incorrectGuesses =
+        gameData.incorrect_guesses || gameData.incorrectGuesses || {};
       // Create a complete new state object for immutability
       const newGameState = {
         // Core game data
