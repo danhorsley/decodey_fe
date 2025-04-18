@@ -338,6 +338,8 @@ const useGameStore = create((set, get) => ({
         const currentStoredId = localStorage.getItem("uncrypt-game-id");
         const newId = gameData.game_id;
         const parts = gameData.game_id.split("-");
+        const incorrectGuesses =
+          gameData.incorrect_guesses || gameData.incorrectGuesses || {};
         console.log(`Current stored game ID: ${currentStoredId}`);
         console.log(`New game ID from continueSavedGame: ${newId}`);
         if (currentStoredId && currentStoredId !== newId) {
@@ -484,6 +486,7 @@ const useGameStore = create((set, get) => ({
 
         // Derived/processed data with proper immutability
         correctlyGuessed: correctlyGuessed,
+        incorrectGuesses: incorrectGuesses,
         guessedMappings: guessedMappings,
         letterFrequency: letterFrequency,
         originalLetters: Array.isArray(gameData.original_letters)
@@ -554,7 +557,8 @@ const useGameStore = create((set, get) => ({
       // Prepare state updates
       const updates = {
         display: displayText || state.display,
-        mistakes: typeof data.mistakes === "number" ? data.mistakes : state.mistakes,
+        mistakes:
+          typeof data.mistakes === "number" ? data.mistakes : state.mistakes,
         selectedEncrypted: null,
       };
 
@@ -562,9 +566,12 @@ const useGameStore = create((set, get) => ({
       let updatedIncorrectGuesses = { ...state.incorrectGuesses };
 
       // If API provides incorrect_guesses, use it
-      if (data.incorrect_guesses && typeof data.incorrect_guesses === 'object') {
+      if (
+        data.incorrect_guesses &&
+        typeof data.incorrect_guesses === "object"
+      ) {
         updatedIncorrectGuesses = data.incorrect_guesses;
-      } 
+      }
       // Otherwise update manually if this guess was incorrect
       else if (!data.is_correct && encryptedLetter && guessedLetter) {
         if (!updatedIncorrectGuesses[encryptedLetter]) {
@@ -572,8 +579,8 @@ const useGameStore = create((set, get) => ({
         }
         if (!updatedIncorrectGuesses[encryptedLetter].includes(guessedLetter)) {
           updatedIncorrectGuesses[encryptedLetter] = [
-            ...updatedIncorrectGuesses[encryptedLetter], 
-            guessedLetter
+            ...updatedIncorrectGuesses[encryptedLetter],
+            guessedLetter,
           ];
         }
       }
@@ -582,7 +589,8 @@ const useGameStore = create((set, get) => ({
       updates.incorrectGuesses = updatedIncorrectGuesses;
 
       // Check if the number of mistakes increased - this means the guess was incorrect
-      const isIncorrectGuess = typeof data.mistakes === "number" && data.mistakes > state.mistakes;
+      const isIncorrectGuess =
+        typeof data.mistakes === "number" && data.mistakes > state.mistakes;
 
       // Check for game lost - this must be checked FIRST
       if (updates.mistakes >= state.maxMistakes) {
@@ -860,6 +868,7 @@ const useGameStore = create((set, get) => ({
       isResetting: true,
       isHintInProgress: false,
       pendingHints: 0,
+      incorrectGuesses: {},
       // Preserve settings-derived values
       difficulty: get().difficulty,
       maxMistakes: get().maxMistakes,

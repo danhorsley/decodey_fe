@@ -11,12 +11,16 @@ const LetterCell = React.memo(
     isSelected,
     isGuessed,
     isFlashing,
+    isPreviouslyGuessed,
     frequency,
     onClick,
     disabled,
   }) => (
     <div
-      className={`letter-cell ${isSelected ? "selected" : ""} ${isGuessed ? "guessed" : ""} ${isFlashing ? "flash" : ""}`}
+      className={`letter-cell ${isSelected ? "selected" : ""} 
+                ${isGuessed ? "guessed" : ""} 
+                ${isFlashing ? "flash" : ""}
+                ${isPreviouslyGuessed ? "previously-guessed" : ""}`}
       onClick={!disabled ? onClick : undefined}
     >
       {letter}
@@ -71,7 +75,7 @@ const GameDashboard = ({
     if (remainingMistakes <= maxMistakes / 2) return "warning";
     return "success";
   };
-  
+
   const isPreviouslyGuessed = (letter) => {
     if (!selectedEncrypted || !incorrectGuesses[selectedEncrypted]) {
       return false;
@@ -100,22 +104,22 @@ const GameDashboard = ({
 
     return (
       // <div className="controls-stack">
-        <div
-          className={`crossword-hint-button status-${getStatusColor()} ${isHintInProgress ? "processing" : ""}`}
-          onClick={!disableHint ? onHintClick : undefined}
-        >
-          {/* eslint-disable-next-line react/no-children-prop */}
-          <div className="hint-text-display" contentEditable="false">
-            {hintTexts[remainingMistakes] || hintTexts[0]}
-          </div>
-          <div className="hint-label">HINT TOKENS</div>
-          {pendingHints > 0 && (
-            <div className="pending-hint-indicator">-{pendingHints}</div>
-          )}
-          {isHintInProgress && (
-            <CryptoSpinner isActive={true} isDarkTheme={isDarkTheme} />
-          )}
+      <div
+        className={`crossword-hint-button status-${getStatusColor()} ${isHintInProgress ? "processing" : ""}`}
+        onClick={!disableHint ? onHintClick : undefined}
+      >
+        {/* eslint-disable-next-line react/no-children-prop */}
+        <div className="hint-text-display" contentEditable="false">
+          {hintTexts[remainingMistakes] || hintTexts[0]}
         </div>
+        <div className="hint-label">HINT TOKENS</div>
+        {pendingHints > 0 && (
+          <div className="pending-hint-indicator">-{pendingHints}</div>
+        )}
+        {isHintInProgress && (
+          <CryptoSpinner isActive={true} isDarkTheme={isDarkTheme} />
+        )}
+      </div>
       // </div>
     );
   };
@@ -151,14 +155,16 @@ const GameDashboard = ({
       {/* eslint-disable-next-line react/no-children-prop */}
       <div className="guess-grid" contentEditable="false">
         {originalLetters.map((letter) => (
-      <LetterCell
-        key={letter}
-        letter={letter}
-        isGuessed={Object.values(guessedMappings || {}).includes(letter)}
-        isPreviouslyGuessed={isPreviouslyGuessed(letter)}
-        onClick={() => onGuessClick(letter)}
-        disabled={!isGameActive || !selectedEncrypted || isPreviouslyGuessed(letter)}
-      />
+          <LetterCell
+            key={letter}
+            letter={letter}
+            isGuessed={Object.values(guessedMappings || {}).includes(letter)}
+            isPreviouslyGuessed={isPreviouslyGuessed(letter)}
+            onClick={() => onGuessClick(letter)}
+            disabled={
+              !isGameActive || !selectedEncrypted || isPreviouslyGuessed(letter)
+            }
+          />
         ))}
       </div>
     </div>
