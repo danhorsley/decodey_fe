@@ -16,7 +16,8 @@
 .slide-menu {
   position: fixed;
   top: 0;
-  left: -280px; /* Start off-screen */
+  left: -280px;
+  /* Start off-screen */
   width: 280px;
   height: 100vh;
   background-color: var(--bg-color, #fff);
@@ -50,7 +51,7 @@
 
 .close-menu {
   background: none;
-  color:black;
+  color: black;
   border: none;
   font-size: 1.8rem;
   cursor: pointer;
@@ -68,7 +69,7 @@
 
 .dark-theme .close-menu {
   color: #4cc9f0;
-    }
+}
 
 .close-menu:hover {
   background-color: rgba(0, 0, 0, 0.05);
@@ -171,7 +172,78 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
+  }
+}
+
+/* Add these CSS rules to styles related to the SlideMenu component */
+
+/* Make slide menu scrollable in landscape mode */
+@media (orientation: landscape) and (max-height: 500px) {
+  .slide-menu {
+    overflow-y: auto;
+    max-height: 100vh;
+    padding-bottom: 60px;
+    /* Add extra padding at bottom to ensure all items are accessible */
+  }
+
+  /* Reduce vertical spacing in menu items */
+  .menu-items li {
+    padding: 10px 16px;
+    margin-bottom: 5px;
+  }
+
+  /* Make the user icon smaller */
+  .user-icon {
+    font-size: 1.2rem;
+  }
+
+  /* Reduce padding in header */
+  .menu-header {
+    padding: 10px 16px;
+    margin-bottom: 10px;
+  }
+
+  /* Make menu title smaller */
+  .menu-title {
+    font-size: 1.3rem;
+  }
+
+  /* Optimize menu icons */
+  .menu-icon {
+    margin-right: 8px;
+    font-size: 0.9rem;
+  }
+
+  /* Make footer smaller */
+  .menu-footer {
+    padding: 8px 16px;
+    font-size: 0.8rem;
+  }
+
+  /* Ensure content doesn't exceed viewport */
+  .menu-items {
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+  }
+}
+
+/* Add enhanced scroll indicator for landscape small screens */
+@media (orientation: landscape) and (max-height: 450px) {
+  .slide-menu:after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 30px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.2), transparent);
+    pointer-events: none;
+  }
+
+  .dark-theme .slide-menu:after {
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.5), transparent);
   }
 }

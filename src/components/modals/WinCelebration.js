@@ -181,9 +181,21 @@ const WinCelebration = ({ playSound, winData }) => {
             {/* Simple header */}
             <div className="retro-header">
               <h2 className="status-text">
-                {hasLost
-                  ? "GAME OVER"
-                  : `DECODED! Rating: ${calculatePercentageRating(baseScore, isDailyChallenge)}%`}
+                {hasLost ? (
+                  "GAME OVER"
+                ) : (
+                  <span className="rating-tooltip">
+                    DECODED! Rating:{" "}
+                    {calculatePercentageRating(baseScore, isDailyChallenge)}%
+                    <span className="tooltip-text">
+                      Rating is calculated based on your score relative to the
+                      theoretical maximum. Factors include difficulty, hardcore
+                      mode, mistakes made, and time taken. Higher ratings are
+                      achieved with harder difficulty, fewer mistakes, and
+                      faster times.
+                    </span>
+                  </span>
+                )}
               </h2>
             </div>
 
@@ -215,25 +227,36 @@ const WinCelebration = ({ playSound, winData }) => {
 
             {/* Stats in monospace grid */}
             <div className="retro-stats">
+              {/* Top row with time and mistakes */}
               <div className="stat-row">
                 <div className="stat-item">TIME: {formatTime()}</div>
                 <div className="stat-item">
                   MISTAKES: {mistakes}/{maxMistakes - 1}
                 </div>
+              </div>
+
+              {/* Score row - now separate from time/mistakes */}
+              <div className="stat-row score-row" style={{ marginTop: "8px" }}>
                 {hasLost ? (
                   <div className="stat-item score">
                     SOLVED: {calculatePercentageSolved()}%
                   </div>
                 ) : (
-                  <div className="stat-item score">
-                    SCORE: {baseScore}
-                    {hasStreakBonus && (
-                      <span className="streak-bonus-tag">+{bonusAmount}</span>
-                    )}
-                    {hasStreakBonus && (
-                      <span className="streak-bonus-tag">={score}</span>
-                    )}
-                  </div>
+                  <>
+                    {/* Score as sole item */}
+                    <div
+                      className="stat-item score"
+                      style={{ width: "100%", textAlign: "center" }}
+                    >
+                      SCORE: {baseScore}
+                      {hasStreakBonus && (
+                        <span className="streak-bonus-tag">+{bonusAmount}</span>
+                      )}
+                      {hasStreakBonus && (
+                        <span className="streak-bonus-tag">={score}</span>
+                      )}
+                    </div>
+                  </>
                 )}
               </div>
 

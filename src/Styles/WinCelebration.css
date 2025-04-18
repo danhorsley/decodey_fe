@@ -235,3 +235,88 @@
 .streak-bonus {
   animation: pulse-bonus 2s infinite;
 }
+
+.score-row {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.score-row .stat-item.score {
+  font-size: 1.2rem;
+  padding: 8px 15px;
+  min-width: 200px;
+  text-align: center;
+  background-color: rgba(0, 0, 0, 0.4);
+  border-radius: 4px;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme .score-row .stat-item.score {
+  background-color: rgba(76, 201, 240, 0.15);
+  box-shadow: 0 0 8px rgba(76, 201, 240, 0.3);
+}
+
+/* Improved streak bonus tags */
+.streak-bonus-tag {
+  display: inline-block;
+  margin-left: 8px;
+  color: #4cc9f0;
+  font-weight: bold;
+  animation: pulse-bonus 2s infinite;
+}
+
+/* Add tooltip styles for rating explanation */
+.rating-tooltip {
+  position: relative;
+  display: inline-block;
+  cursor: help;
+}
+
+.rating-tooltip .tooltip-text {
+  visibility: hidden;
+  width: 250px;
+  background-color: rgba(0, 0, 0, 0.9);
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 10px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-size: 0.8rem;
+  line-height: 1.3;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.rating-tooltip:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+.dark-theme .rating-tooltip .tooltip-text {
+  background-color: rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(76, 201, 240, 0.3);
+}
+
+/* Enhanced stat items for better contrast */
+.stat-item {
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+}
+
+/* Mobile adjustments */
+@media (max-width: 480px) {
+  .score-row .stat-item.score {
+    font-size: 1.1rem;
+    min-width: 180px;
+  }
+
+  .streak-bonus-tag {
+    margin-left: 5px;
+  }
+}
