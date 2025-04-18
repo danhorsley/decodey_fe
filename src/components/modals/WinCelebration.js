@@ -201,6 +201,18 @@ const WinCelebration = ({ playSound, winData }) => {
               </div>
             )}
 
+            {/* Daily streak info if applicable */}
+            {isAuthenticated && current_daily_streak > 0 && !hasLost && (
+              <div className="stat-row streak-bonus-row">
+                <div className="stat-item streak-info">
+                  <span>
+                    DAILY STREAK: {current_daily_streak} (+5% per day, max 100%)
+                  </span>
+                </div>
+                <div className="stat-item streak-bonus"></div>
+              </div>
+            )}
+
             {/* Stats in monospace grid */}
             <div className="retro-stats">
               <div className="stat-row">
@@ -214,16 +226,19 @@ const WinCelebration = ({ playSound, winData }) => {
                   </div>
                 ) : (
                   <div className="stat-item score">
-                    SCORE: {score}
+                    SCORE: {baseScore}
                     {hasStreakBonus && (
                       <span className="streak-bonus-tag">+{bonusAmount}</span>
+                    )}
+                    {hasStreakBonus && (
+                      <span className="streak-bonus-tag">={score}</span>
                     )}
                   </div>
                 )}
               </div>
 
               {/* Display streak bonus info if applicable */}
-              {isDailyChallenge && current_daily_streak > 0 && !hasLost && (
+              {/* {isDailyChallenge && current_daily_streak > 0 && !hasLost && (
                 <div className="stat-row streak-bonus-row">
                   <div className="stat-item streak-info">
                     DAILY STREAK: {current_daily_streak}
@@ -232,7 +247,7 @@ const WinCelebration = ({ playSound, winData }) => {
                     BONUS: +{Math.min(current_daily_streak, 20) * 5}%
                   </div>
                 </div>
-              )}
+              )} */}
             </div>
 
             {/* Login prompt for anonymous users */}
@@ -246,17 +261,6 @@ const WinCelebration = ({ playSound, winData }) => {
                 >
                   <div className="game-over-text-display">LOGIN</div>
                 </button>
-              </div>
-            )}
-
-            {/* Daily streak info if applicable */}
-            {isAuthenticated && current_daily_streak > 0 && (
-              <div className="retro-daily">
-                <div className="daily-streak-row">
-                  <div className="streak-item">
-                    CURRENT STREAK: {current_daily_streak}
-                  </div>
-                </div>
               </div>
             )}
 
