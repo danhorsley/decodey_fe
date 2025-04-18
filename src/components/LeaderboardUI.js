@@ -46,13 +46,27 @@ const LeaderboardUI = ({ type = "loading", message, onRetry }) => {
   return (
     <div
       className={`leaderboard-ui loading ${isDarkTheme ? "dark-theme" : "light-theme"}`}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        width: "100%",
+        textAlign: "center",
+      }}
     >
-      <h3 className="loading-title">
+      <h3
+        className="loading-title"
+        style={{ textAlign: "center", width: "100%" }}
+      >
         {displayMessage}
         <span className="loading-dots"></span>
       </h3>
 
-      <div className="loading-animation">
+      <div
+        className="loading-animation"
+        style={{ width: "100%", maxWidth: "700px", margin: "0 auto" }}
+      >
         <MatrixRainLoading
           active={true}
           color={isDarkTheme ? "#4cc9f0" : "#00ff41"}
