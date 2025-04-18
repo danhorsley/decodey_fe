@@ -54,6 +54,55 @@ function Game() {
     subscribeToEvents,
   } = useGameSession();
 
+  //if lines don't match rerender
+  useEffect(() => {
+    // Safety check for length mismatches or space misalignment
+    if (encrypted && display) {
+      if (encrypted.length !== display.length) {
+        console.error("Length mismatch detected in renderer");
+        triggerRecovery();
+      } else {
+        // Check space alignment
+        let misaligned = false;
+        for (let i = 0; i < encrypted.length; i++) {
+          if (
+            (encrypted[i] === " " && display[i] !== " ") ||
+            (encrypted[i] !== " " && display[i] === " ")
+          ) {
+            console.error(`Space misalignment at position ${i}`);
+            misaligned = true;
+            break;
+          }
+        }
+
+        if (misaligned) triggerRecovery();
+      }
+    }
+
+    function triggerRecovery() {
+      console.log("Triggering game state recovery due to text misalignment");
+      const gameStore = useGameStore.getState();
+
+      // If we have a verifyWinAndGetData function, that's perfect because it fetches game state
+      if (typeof gameStore.verifyWinAndGetData === "function") {
+        gameStore.verifyWinAndGetData().then((result) => {
+          if (result && result.verified) {
+            console.log("Game state successfully recovered");
+          } else {
+            // If verification didn't work, try continueSavedGame without parameters
+            // This will make it fetch from the server
+            if (typeof gameStore.continueSavedGame === "function") {
+              gameStore.continueSavedGame();
+            }
+          }
+        });
+      } else if (typeof gameStore.continueSavedGame === "function") {
+        // Direct approach - just try to continue the saved game
+        gameStore.continueSavedGame();
+      }
+    }
+  }, [encrypted, display]);
+
   useEffect(() => {
     const handleOrientationChange = () => {
       // Force a re-render by updating a local state
