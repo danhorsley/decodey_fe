@@ -263,12 +263,12 @@ const TunableTextDisplay = ({
       ref={containerRef}
       className={`text-container ${hardcoreMode ? "hardcore-mode" : ""}`}
     >
-      {hardcoreMode && (
+      {/* {hardcoreMode && (
         <div className="badge-indicator hardcore-badge">HARDCORE</div>
-      )}
+      )} */}
 
       {/* Debug info - comment out when not needed */}
-      <div
+      {/* <div
         style={{
           position: "absolute",
           bottom: 0,
@@ -281,7 +281,7 @@ const TunableTextDisplay = ({
         }}
       >
         {JSON.stringify(debugInfo, null, 2)}
-      </div>
+      </div> */}
 
       <div className="grid-text-display">
         {encryptedGrid.map((line, lineIndex) => (
