@@ -63,7 +63,6 @@ const HomePage = () => {
     >
       <div className="home-content">
         <h1 className="retro-title">decodey</h1>
-
         <div className={`home-menu ${isLandscape ? "landscape-grid" : ""}`}>
           {/* Daily Challenge */}
           <button className="home-button daily" onClick={handleDailyChallenge}>
