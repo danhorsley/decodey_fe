@@ -1,4 +1,4 @@
-// src/pages/HomePage.js
+// In src/pages/HomePage.js
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -8,12 +8,12 @@ import {
   FaInfoCircle,
   FaTrophy,
   FaSignOutAlt,
+  FaBookOpen, // Add this import for tutorial icon
 } from "react-icons/fa";
 import useSettingsStore from "../stores/settingsStore";
 import useAuthStore from "../stores/authStore";
 import useUIStore from "../stores/uiStore";
 import useGameSession from "../hooks/useGameSession";
-import HeaderControls from "../components/HeaderControls";
 import "../Styles/HomePage.css";
 
 const HomePage = () => {
@@ -48,12 +48,18 @@ const HomePage = () => {
     window.location.href = "/"; // Full page refresh to ensure clean state
   };
 
+  // New function to reset tutorial
+  const handleRewatchTutorial = () => {
+    localStorage.removeItem("tutorial-completed");
+    localStorage.removeItem("tutorial-started");
+    navigate("/"); // Navigate to game to show tutorial
+  };
+
   return (
     <div
       className={`home-page ${settings?.theme === "dark" ? "dark-theme" : ""}`}
     >
-      <HeaderControls title="decodey" />
-
+      {/* Remove HeaderControls component completely */}
       <div className="home-content">
         <h1 className="home-welcome">Welcome to Decodey</h1>
         <p className="home-tagline">What would you like to do?</p>
@@ -84,12 +90,22 @@ const HomePage = () => {
             <span>Settings</span>
           </button>
 
-          {/* Logout will be on third row if user is authenticated */}
+          {/* New button for rewatching tutorial */}
+          <button
+            className="home-button tutorial"
+            onClick={handleRewatchTutorial}
+          >
+            <FaBookOpen className="button-icon" />
+            <span>Rewatch Tutorial</span>
+          </button>
+
+          {/* About button */}
           <button className="home-button about" onClick={openAbout}>
             <FaInfoCircle className="button-icon" />
             <span>About</span>
           </button>
 
+          {/* Logout button if authenticated */}
           {isAuthenticated && (
             <button className="home-button logout" onClick={handleLogout}>
               <FaSignOutAlt className="button-icon" />
