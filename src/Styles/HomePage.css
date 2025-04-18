@@ -1,14 +1,14 @@
-/* src/Styles/HomePage.css */
+/* Add to src/Styles/HomePage.css */
 
+/* Base container */
 .home-page {
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8f8f8;
   padding: 20px;
-  font-family: 'Courier New', monospace;
-  background-color: #f8f9fa;
-  color: #212529;
-  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .dark-theme.home-page {
@@ -16,63 +16,68 @@
   color: #f8f9fa;
 }
 
+/* Content container */
 .home-content {
+  width: 100%;
   max-width: 800px;
-  margin: 0 auto;
-  padding: 20px;
+  text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  flex: 1;
 }
 
-.home-welcome {
-  font-size: 2rem;
-  margin-bottom: 10px;
-  text-align: center;
+/* Title styling to match other components */
+.home-content .retro-title {
+  position: top;
+  margin-bottom: 40px;
+  font-family: 'Courier New', monospace;
+  font-size: 2.5rem;
+  letter-spacing: 2px;
+  text-transform: lowercase;
   font-weight: bold;
-  letter-spacing: 1px;
 }
 
-.dark-theme .home-welcome {
-  color: #4cc9f0;
-  text-shadow: 0 0 8px rgba(76, 201, 240, 0.5);
-}
-
-.home-tagline {
-  font-size: 1.2rem;
-  margin-bottom: 30px;
-  opacity: 0.8;
-  text-align: center;
-}
-
+/* Menu grid layout - default is column for portrait */
 .home-menu {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: auto auto;
-  gap: 20px;
+  grid-template-columns: 1fr;
+  gap: 10px;
   width: 100%;
-  max-width: 600px;
   margin-bottom: 30px;
 }
 
+/* Landscape grid layout - 4x2 */
+.home-menu.landscape-grid {
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  width: 100%;
+}
+
+/* Button styling */
 .home-button {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 15px;
-  border-radius: 8px;
-  border: none;
   background-color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 20px;
+  font-family: 'Courier New', monospace;
+  font-size: 1rem;
+  font-weight: bold;
   color: #333;
-  font-family: inherit;
-  font-size: 1.1rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: transform 0.2s, box-shadow 0.2s;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  height: 110px;
+  min-height: 100px;
   width: 100%;
+  height: 100%;
+}
+
+.home-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
 }
 
 .dark-theme .home-button {
@@ -81,117 +86,104 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 }
 
-.home-button:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+.dark-theme .home-button:hover {
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.5);
 }
 
+/* Button icons */
 .button-icon {
-  font-size: 2rem;
+  font-size: 1.5rem;
   margin-bottom: 10px;
 }
 
-/* Button-specific colors */
+/* Button variants */
 .home-button.daily {
-  border-left: 4px solid #FF5722;
+  background-color: #4cc9f0;
+  color: #333;
 }
 
 .home-button.custom {
-  border-left: 4px solid #007bff;
+  background-color: #4361ee;
+  color: white;
 }
 
 .home-button.leaderboard {
-  border-left: 4px solid #E5B80B;
+  background-color: #f72585;
+  color: white;
+  width: 100%;
+  height: 100%;
+}
+
+.home-button.tutorial {
+  background-color: #7209b7;
+  color: white;
 }
 
 .home-button.settings {
-  border-left: 4px solid #6c757d;
+  background-color: #3a0ca3;
+  color: white;
 }
 
 .home-button.about {
-  border-left: 4px solid #17a2b8;
+  background-color: #4cc9f0;
+  color: #333;
 }
 
 .home-button.logout {
-  border-left: 4px solid #dc3545;
+  background-color: #f72585;
+  color: white;
 }
 
-/* Icon-specific colors */
-.dark-theme .home-button.daily .button-icon {
-  color: #FF7043;
+/* Empty placeholder for grid balance */
+.home-button.placeholder {
+  visibility: hidden;
+  background: none;
+  box-shadow: none;
 }
 
-.dark-theme .home-button.custom .button-icon {
-  color: #4cc9f0;
-}
-
-.dark-theme .home-button.leaderboard .button-icon {
-  color: #E5B80B;
-}
-
-.dark-theme .home-button.settings .button-icon {
-  color: #adb5bd;
-}
-
-.dark-theme .home-button.about .button-icon {
-  color: #4cc9f0;
-}
-
-.dark-theme .home-button.logout .button-icon {
-  color: #f77;
-}
-
+/* Footer */
 .home-footer {
-  margin-top: auto;
-  text-align: center;
+  margin-top: 20px;
+  font-family: 'Courier New', monospace;
   font-size: 0.9rem;
-  opacity: 0.7;
-  padding: 20px 0;
+  opacity: 0.8;
 }
 
-/* Mobile responsive adjustments */
+/* Responsive tweaks for smaller screens */
 @media (max-width: 768px) {
-  .home-menu {
-    gap: 15px;
-    max-width: 450px;
+  .home-content .retro-title {
+    font-size: 2rem;
+    margin-bottom: 30px;
   }
 
   .home-button {
-    height: 90px;
     padding: 15px;
+    min-height: 90px;
   }
 
-  .home-welcome {
-    font-size: 1.75rem;
-  }
-
-  .home-tagline {
-    font-size: 1.1rem;
+  .button-icon {
+    font-size: 1.3rem;
   }
 }
 
-/* Very small screens */
-@media (max-width: 400px) {
-  .home-content {
-    padding: 10px;
-  }
-
-  .home-welcome {
-    font-size: 1.5rem;
-  }
-
-  .home-menu {
+/* For very small landscape screens */
+@media (max-height: 500px) and (orientation: landscape) {
+  .home-menu.landscape-grid {
     gap: 10px;
   }
 
   .home-button {
     padding: 10px;
-    height: 80px;
-    font-size: 0.9rem;
+    min-height: 70px;
   }
 
   .button-icon {
-    font-size: 1.5rem;
-    margin-bottom: 8px;
+    font-size: 1.1rem;
+    margin-bottom: 5px;
+  }
+
+  .home-content .retro-title {
+    /* margin-bottom: 15px; */
+    margin-top: 5px;
   }
 }
