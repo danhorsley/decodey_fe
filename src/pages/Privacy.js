@@ -116,6 +116,17 @@ const Privacy = () => {
           </p>
         </section>
         <section className="privacy-section">
+          <h3>Quote Usage Disclaimer</h3>
+          <p>
+            All quotes used in this game are attributed where known and are intended for educational and entertainment purposes only. No endorsement by the original authors or rights holders is implied. If you would like to request the removal of a specific quote, please contact us at{" "}
+            <a href="mailto:quotes@mail.decodey.game" className="privacy-email">
+              quotes@mail.decodey.game
+            </a>
+            . We will review all removal requests and take appropriate action within a reasonable timeframe.
+          </p>
+        </section>
+
+        <section className="privacy-section">
           <h3>Your Rights</h3>
           <p>You have the right to:</p>
           <ul>
