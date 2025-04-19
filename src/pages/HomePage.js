@@ -69,31 +69,15 @@ const HomePage = () => {
 
     const mailtoLink = `mailto:quote@mail.decodey.game?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
-    try {
-      // First try the most compatible approach by setting location.href directly
-      const previousUrl = window.location.href;
-      window.location.href = mailtoLink;
-
-      // Check if the location changed - if not, the mailto wasn't handled
-      setTimeout(() => {
-        if (window.location.href === previousUrl) {
-          // Try fallback: open in new window/tab
-          const newWindow = window.open(mailtoLink, "_blank");
-
-          // If that didn't work, use clipboard fallback
-          if (
-            !newWindow ||
-            newWindow.closed ||
-            typeof newWindow.closed === "undefined"
-          ) {
-            copyEmailToClipboard();
-          }
-        }
-      }, 500);
-    } catch (e) {
-      // If any error occurs (security restrictions, etc.), use clipboard fallback
+    // Create and click a temporary link
+    const link = document.createElement('a');
+    link.href = mailtoLink;
+    link.click();
+    
+    // Fallback to clipboard if needed
+    setTimeout(() => {
       copyEmailToClipboard();
-    }
+    }, 300);
   };
 
   // Helper function to provide clipboard fallback
