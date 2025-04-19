@@ -25,7 +25,6 @@ const SlideMenu = ({ isOpen, onClose }) => {
   // Get auth state and actions
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const user = useAuthStore((state) => state.user);
-  const logout = useAuthStore((state) => state.logout);
 
   // Get UI actions
   const openLogin = useUIStore((state) => state.openLogin);
@@ -33,12 +32,16 @@ const SlideMenu = ({ isOpen, onClose }) => {
   const openSettings = useUIStore((state) => state.openSettings);
   const openAbout = useUIStore((state) => state.openAbout);
 
+  // Get game session functions
+  const gameSession = useGameSession();
+
   // Handle navigation
   const handleNavigation = (path) => {
     navigate(path);
     onClose();
   };
-  //start custom game for anon, bring up continue game modal for auth users
+
+  // Handle custom game
   const handleCustomGame = () => {
     console.log("Custom Game clicked in SlideMenu");
 
@@ -54,6 +57,7 @@ const SlideMenu = ({ isOpen, onClose }) => {
     gameSession.initializeGame({ customGameRequested: true });
     onClose();
   };
+
   // Handle auth actions
   const handleLogin = () => {
     openLogin();
@@ -65,11 +69,8 @@ const SlideMenu = ({ isOpen, onClose }) => {
     onClose();
   };
 
-  const gameSession = useGameSession();
   const handleLogout = async () => {
     console.log("Logout clicked in SlideMenu");
-    // Change this to use gameSession.userLogout instead
-
     await gameSession.userLogout(true); // true means start an anonymous game
     console.log("userLogout completed in SlideMenu");
     onClose();
