@@ -72,6 +72,9 @@ function About({ isOpen, onClose }) {
               Contact Support
             </a>
           </div>
+          <p style={{ fontSize: '0.8rem', marginTop: '15px', opacity: '0.8' }}>
+            Disclaimer: All quotes used in this game are attributed where known and are intended for educational and entertainment purposes only. No endorsement by the original authors or rights holders is implied.
+          </p>
         </div>
       </div>
     </div>
