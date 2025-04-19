@@ -59,7 +59,8 @@ const HomePage = () => {
   };
 
   // Handle quote feedback with robust fallback
-  const handleQuoteFeedback = () => {
+  const handleQuoteFeedback = (e) => {
+    e.preventDefault();
     const subject = "decodey Quote Feedback";
     const body =
       "I'd like to provide feedback about a quote:\n\n" +
@@ -67,17 +68,7 @@ const HomePage = () => {
       "Quote: \n" +
       "Reason: \n";
 
-    const mailtoLink = `mailto:quote@mail.decodey.game?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-
-    // Create and click a temporary link
-    const link = document.createElement('a');
-    link.href = mailtoLink;
-    link.click();
-    
-    // Fallback to clipboard if needed
-    setTimeout(() => {
-      copyEmailToClipboard();
-    }, 300);
+    window.open(`mailto:quote@mail.decodey.game?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
   };
 
   // Helper function to provide clipboard fallback
