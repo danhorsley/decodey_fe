@@ -1,7 +1,47 @@
-// src/components/TunableTextDisplay.js
+// src/components/TuneableTextDisplay.js
 import React, { useRef, useEffect, useState } from "react";
 import useUIStore from "../stores/uiStore";
 import useDeviceDetection from "../hooks/useDeviceDetection";
+
+// Additional CSS for tiny screens
+const tinyScreenStyles = `
+  .tiny-screen .grid-text-display {
+    margin: 0 -5px; /* Reduce margins */
+  }
+
+  .tiny-screen .text-line-block {
+    margin-bottom: 2px; /* Reduce space between blocks */
+  }
+
+  .tiny-screen .char-line {
+    line-height: 1; /* Tighter line height */
+  }
+
+  @media (max-width: 380px) and (max-height: 670px) {
+    .text-container {
+      padding: 6px !important; /* Reduce padding */
+    }
+
+    .text-container .char-cell {
+      letter-spacing: -0.02em; /* Slightly tighter letter spacing */
+    }
+  }
+
+  /* Extremely tiny screens */
+  @media (max-width: 330px) and (max-height: 600px) {
+    .text-container {
+      padding: 3px !important; /* Minimal padding */
+    }
+
+    .text-container .char-cell {
+      letter-spacing: -0.05em; /* Tighter letter spacing */
+    }
+
+    .text-line-block {
+      margin-bottom: 1px !important; /* Minimal space between blocks */
+    }
+  }
+`;
 
 // Tuning parameters - TWEAK THESE VALUES
 const TUNING = {
@@ -20,11 +60,11 @@ const TUNING = {
     mobile: {
       widthRatio: 0.6, // Width to height ratio
       fontRatio: 1, // Font size as percentage of cell height
-      minCellWidth: 15, // Minimum cell width in pixels
+      minCellWidth: 14, // Minimum cell width in pixels (reduced for very small screens)
       maxCellWidth: 15, // Maximum cell width in pixels
-      minCellHeight: 22, // Minimum cell height in pixels
+      minCellHeight: 20, // Minimum cell height in pixels (slightly reduced)
       maxCellHeight: 22, // Maximum cell height in pixels
-      minCharsPerLine: 22, // Minimum characters per line
+      minCharsPerLine: 20, // Reduced min chars for very small screens
       maxLines: 999, // No practical limit on lines
     },
   },
@@ -38,22 +78,22 @@ const TUNING = {
       minCellHeight: 20, // Minimum cell height in pixels
       maxCellHeight: 20, // Maximum cell height in pixels
       minCharsPerLine: 55, // Minimum characters per line
-      maxLines: 3, // Maximum of 2 lines in landscape
+      maxLines: 3, // Maximum of 3 lines in landscape
     },
     mobile: {
       widthRatio: 0.6, // Width to height ratio
       fontRatio: 1.05, // Font size as percentage of cell height
-      minCellWidth: 15, // Minimum cell width in pixels
+      minCellWidth: 13, // Reduced for very small screens
       maxCellWidth: 15, // Maximum cell width in pixels
-      minCellHeight: 18, // Minimum cell height in pixels
+      minCellHeight: 16, // Reduced for very small screens
       maxCellHeight: 18, // Maximum cell height in pixels
-      minCharsPerLine: 44, // Minimum characters per line
+      minCharsPerLine: 40, // Reduced for very small screens
       maxLines: 2, // Maximum of 2 lines in landscape
     },
   },
 };
 
-const TunableTextDisplay = ({
+const TuneableTextDisplay = ({
   encrypted = "",
   display = "",
   hardcoreMode = false,
@@ -138,6 +178,46 @@ const TunableTextDisplay = ({
       params.maxCellHeight,
     );
 
+    // Special handling for very small screens (≤380x670)
+    // Apply proportional scaling to maintain readability
+    const isTinyScreen = window.innerWidth <= 380 && window.innerHeight <= 670;
+    const isExtremelyTinyScreen =
+      window.innerWidth <= 330 && window.innerHeight <= 600;
+
+    if (isTinyScreen) {
+      // Calculate scaling factor based on screen size
+      // We'll use a gentle scaling that's proportional to screen dimensions
+      let scaleFactor;
+
+      if (isExtremelyTinyScreen) {
+        // More aggressive scaling for extremely tiny screens
+        scaleFactor = Math.max(
+          0.75,
+          Math.min(0.9, (window.innerWidth / 330) * 0.85),
+        );
+        // Further reduce chars per line for readability
+        newCharsPerLine = Math.max(
+          newCharsPerLine - 4,
+          params.minCharsPerLine - 4,
+        );
+      } else {
+        // Normal tiny screen scaling
+        scaleFactor = Math.max(
+          0.85,
+          Math.min(1.0, (window.innerWidth / 380) * 0.95),
+        );
+        // Slightly reduce chars per line if needed
+        newCharsPerLine = Math.max(
+          newCharsPerLine - 2,
+          params.minCharsPerLine - 2,
+        );
+      }
+
+      // Scale all dimensions proportionally
+      newCellWidth = Math.floor(newCellWidth * scaleFactor);
+      newCellHeight = Math.floor(newCellHeight * scaleFactor);
+    }
+
     // Apply results
     setCharsPerLine(newCharsPerLine);
     setCellWidth(newCellWidth);
@@ -153,6 +233,7 @@ const TunableTextDisplay = ({
       charsPerLine: newCharsPerLine,
       fontSize: Math.max(newCellHeight * params.fontRatio, 10),
       ratio: params.widthRatio,
+      isTinyScreen: isTinyScreen || false,
     });
   }, [encrypted, containerWidth, useMobileMode, isLandscape]);
 
@@ -258,11 +339,38 @@ const TunableTextDisplay = ({
   const device = useMobileMode ? "mobile" : "desktop";
   const params = TUNING[orientation][device];
 
+  // Detect tiny screens and adjust font ratio if needed
+  const isTinyScreen = window.innerWidth <= 380 && window.innerHeight <= 670;
+  const isExtremelyTinyScreen =
+    window.innerWidth <= 330 && window.innerHeight <= 600;
+
+  // Adjust font ratio for tiny screens to maintain readability
+  let effectiveFontRatio;
+
+  if (isExtremelyTinyScreen) {
+    // More aggressive font scaling for extremely tiny screens
+    effectiveFontRatio =
+      params.fontRatio *
+      Math.max(0.8, Math.min(0.9, (window.innerWidth / 330) * 0.85));
+  } else if (isTinyScreen) {
+    // Normal tiny screen font scaling
+    effectiveFontRatio =
+      params.fontRatio * Math.max(0.9, Math.min(1.0, window.innerWidth / 380));
+  } else {
+    // Default font ratio for normal screens
+    effectiveFontRatio = params.fontRatio;
+  }
+
   return (
     <div
       ref={containerRef}
-      className={`text-container ${hardcoreMode ? "hardcore-mode" : ""}`}
+      className={`text-container ${hardcoreMode ? "hardcore-mode" : ""} 
+        ${isTinyScreen ? "tiny-screen" : ""} 
+        ${isExtremelyTinyScreen ? "extremely-tiny-screen" : ""}`}
     >
+      {/* Inject tiny screen styles */}
+      <style>{tinyScreenStyles}</style>
+
       {/* {hardcoreMode && (
         <div className="badge-indicator hardcore-badge">HARDCORE</div>
       )} */}
@@ -295,10 +403,11 @@ const TunableTextDisplay = ({
                   style={{
                     width: `${cellWidth}px`,
                     height: `${cellHeight}px`,
-                    fontSize: `${Math.max(cellHeight * params.fontRatio, 10)}px`,
+                    fontSize: `${Math.max(cellHeight * effectiveFontRatio, 9)}px`,
                     padding: 0,
                     margin: 0,
                     display: "inline-block",
+                    lineHeight: isTinyScreen ? "1" : "inherit", // Tighter line height for tiny screens
                   }}
                 >
                   {char}
@@ -316,10 +425,11 @@ const TunableTextDisplay = ({
                     style={{
                       width: `${cellWidth}px`,
                       height: `${cellHeight}px`,
-                      fontSize: `${Math.max(cellHeight * params.fontRatio, 10)}px`,
+                      fontSize: `${Math.max(cellHeight * effectiveFontRatio, 9)}px`,
                       padding: 0,
                       margin: 0,
                       display: "inline-block",
+                      lineHeight: isTinyScreen ? "1" : "inherit", // Tighter line height for tiny screens
                     }}
                   >
                     {char}
@@ -334,4 +444,4 @@ const TunableTextDisplay = ({
   );
 };
 
-export default TunableTextDisplay;
+export default TuneableTextDisplay;
