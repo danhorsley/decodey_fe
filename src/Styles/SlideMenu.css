@@ -1,98 +1,89 @@
-/* Slide Menu CSS */
+/* Add this to your SlideMenu.css file */
+
+/* Base slide menu styling - kept the same */
+.slide-menu {
+  position: fixed;
+  top: 0;
+  left: -300px;
+  width: 280px;
+  height: 100%;
+  background-color: #f5f5f5;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+  transition: left 0.3s ease;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.dark-theme .slide-menu {
+  background-color: #222;
+  color: #eee;
+}
+
+.slide-menu.open {
+  left: 0;
+}
 
 /* Backdrop for closing when clicking outside */
 .menu-backdrop {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.4);
-  z-index: 998;
-  animation: fade-in 0.3s ease-out;
-}
-
-/* Menu container */
-.slide-menu {
-  position: fixed;
-  top: 0;
-  left: -280px;
-  /* Start off-screen */
-  width: 280px;
-  height: 100vh;
-  background-color: var(--bg-color, #fff);
-  transition: left 0.3s ease-out;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
   z-index: 999;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-}
-
-/* Open state */
-.slide-menu.open {
-  left: 0;
 }
 
 /* Menu header */
 .menu-header {
   display: flex;
   align-items: center;
-  padding: 1rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  justify-content: space-between;
+  padding: 15px;
+  border-bottom: 1px solid #ddd;
+}
+
+.dark-theme .menu-header {
+  border-bottom-color: #444;
 }
 
 .menu-title {
-  flex: 1;
   margin: 0;
   font-size: 1.5rem;
-  text-align: center;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  /* text-transform: uppercase; */
 }
 
 .close-menu {
   background: none;
-  color: black;
   border: none;
-  font-size: 1.8rem;
+  font-size: 24px;
   cursor: pointer;
-  padding: 0;
-  margin-right: 10px;
-  line-height: 1;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
+  color: inherit;
 }
 
-
-.dark-theme .close-menu {
-  color: #4cc9f0;
-}
-
-.close-menu:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-}
-
-/* User info section (when logged in) */
+/* User info section */
 .user-info {
   display: flex;
   align-items: center;
-  padding: 1rem;
-  background-color: rgba(0, 0, 0, 0.05);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  border-bottom: 1px solid #ddd;
+}
+
+.dark-theme .user-info {
+  border-bottom-color: #444;
 }
 
 .user-icon {
+  font-size: 24px;
   margin-right: 10px;
-  font-size: 1.2rem;
-  color: var(--primary-color, #007bff);
 }
 
 .username {
   font-weight: bold;
-  font-size: 1rem;
 }
 
 /* Menu items */
@@ -104,146 +95,157 @@
 }
 
 .menu-items li {
-  padding: 1rem;
   display: flex;
   align-items: center;
+  padding: 12px 15px;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s;
 }
 
 .menu-items li:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: #e0e0e0;
+}
+
+.dark-theme .menu-items li:hover {
+  background-color: #333;
 }
 
 .menu-icon {
-  margin-right: 15px;
-  font-size: 1.2rem;
-  min-width: 20px;
-  color: var(--primary-color, #007bff);
+  margin-right: 10px;
+  font-size: 18px;
 }
 
-/* Special styling for action items like login/logout */
 .menu-action-item {
-  margin-top: 20px;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  margin-top: 5px;
+  border-top: 1px solid #ddd;
+  padding-top: 15px;
+}
+
+.dark-theme .menu-action-item {
+  border-top-color: #444;
 }
 
 /* Menu footer */
 .menu-footer {
-  padding: 1rem;
-  text-align: center;
+  padding: 10px 15px;
+  border-top: 1px solid #ddd;
   font-size: 0.8rem;
   color: #777;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  text-align: center;
 }
 
+.dark-theme .menu-footer {
+  border-top-color: #444;
+  color: #999;
+}
+
+/* Version number */
 .version {
   margin: 0;
 }
 
-/* Dark theme overrides */
-.dark-theme .slide-menu {
-  background-color: var(--bg-color-dark, #333);
-  color: var(--text-color-dark, #f8f9fa);
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
-}
+/* NEW RESPONSIVE STYLES FOR MOBILE LANDSCAPE */
+@media (max-height: 450px) {
 
-.dark-theme .menu-header,
-.dark-theme .user-info,
-.dark-theme .menu-action-item,
-.dark-theme .menu-footer {
-  border-color: rgba(255, 255, 255, 0.1);
-}
-
-.dark-theme .menu-items li:hover {
-  background-color: rgba(255, 255, 255, 0.05);
-}
-
-.dark-theme .close-menu:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
-.dark-theme .user-info {
-  background-color: rgba(255, 255, 255, 0.05);
-}
-
-/* Animation */
-@keyframes fade-in {
-  from {
-    opacity: 0;
+  /* Reduce overall padding */
+  .menu-header {
+    padding: 8px 15px;
   }
 
-  to {
-    opacity: 1;
-  }
-}
-
-/* Add these CSS rules to styles related to the SlideMenu component */
-
-/* Make slide menu scrollable in landscape mode */
-@media (orientation: landscape) and (max-height: 500px) {
-  .slide-menu {
-    overflow-y: auto;
-    max-height: 100vh;
-    padding-bottom: 60px;
-    /* Add extra padding at bottom to ensure all items are accessible */
-  }
-
-  /* Reduce vertical spacing in menu items */
-  .menu-items li {
-    padding: 10px 16px;
-    margin-bottom: 5px;
-  }
-
-  /* Make the user icon smaller */
-  .user-icon {
+  .menu-title {
     font-size: 1.2rem;
   }
 
-  /* Reduce padding in header */
-  .menu-header {
-    padding: 10px 16px;
-    margin-bottom: 10px;
+  .user-info {
+    padding: 6px 15px;
   }
 
-  /* Make menu title smaller */
-  .menu-title {
-    font-size: 1.3rem;
+  /* Compress menu items */
+  .menu-items li {
+    padding: 8px 15px;
   }
 
-  /* Optimize menu icons */
   .menu-icon {
-    margin-right: 8px;
-    font-size: 0.9rem;
+    font-size: 16px;
   }
 
-  /* Make footer smaller */
+  /* Smaller footer */
   .menu-footer {
-    padding: 8px 16px;
-    font-size: 0.8rem;
-  }
-
-  /* Ensure content doesn't exceed viewport */
-  .menu-items {
-    max-height: calc(100vh - 120px);
-    overflow-y: auto;
+    padding: 5px 15px;
+    font-size: 0.7rem;
   }
 }
 
-/* Add enhanced scroll indicator for landscape small screens */
-@media (orientation: landscape) and (max-height: 450px) {
-  .slide-menu:after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 30px;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.2), transparent);
-    pointer-events: none;
+/* EXTRA COMPRESSION FOR VERY SMALL SCREENS */
+@media (max-height: 350px) {
+  .menu-header {
+    padding: 5px 15px;
   }
 
-  .dark-theme .slide-menu:after {
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.5), transparent);
+  .menu-title {
+    font-size: 1.1rem;
+  }
+
+  .user-info {
+    padding: 4px 15px;
+  }
+
+  /* Even more compressed menu items */
+  .menu-items li {
+    padding: 5px 15px;
+  }
+
+  /* Reduce spacing between items */
+  .menu-action-item {
+    margin-top: 2px;
+    padding-top: 7px;
+  }
+
+  /* Minimal footer */
+  .menu-footer {
+    padding: 3px 15px;
+  }
+
+  /* Ensure no unnecessary margins on any elements */
+  .slide-menu * {
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+}
+
+/* EXTREME COMPRESSION FOR TINY SCREENS */
+@media (max-height: 300px) {
+
+  /* Convert to a more compact 2-column grid layout for extremely small heights */
+  .menu-items {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 5px;
+  }
+
+  .menu-items li {
+    padding: 4px 8px;
+    font-size: 0.9rem;
+    line-height: 1;
+    border-radius: 4px;
+    margin: 2px;
+  }
+
+  /* Adjust icon size */
+  .menu-icon {
+    font-size: 14px;
+    margin-right: 5px;
+  }
+
+  /* Hide the footer on extremely small screens */
+  .menu-footer {
+    display: none;
+  }
+
+  /* Reset the action item styling */
+  .menu-action-item {
+    margin-top: 0;
+    border-top: none;
+    padding-top: 4px;
   }
 }

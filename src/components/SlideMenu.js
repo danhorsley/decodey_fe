@@ -1,3 +1,4 @@
+// src/components/SlideMenu.js
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -41,7 +42,7 @@ const SlideMenu = ({ isOpen, onClose }) => {
     onClose();
   };
 
-  // Handle custom game
+  // Handle custom game - UPDATED to ensure continue modal appears when needed
   const handleCustomGame = () => {
     console.log("Custom Game clicked in SlideMenu");
 
@@ -53,8 +54,13 @@ const SlideMenu = ({ isOpen, onClose }) => {
     }
 
     // For authenticated users, check for active game first
-    // This will trigger the continue game modal if there's an active game
-    gameSession.initializeGame({ customGameRequested: true });
+    // We OMIT the customGameRequested flag here to ensure the continue prompt shows
+    gameSession.initializeGame();
+
+    // The continue game modal will appear if there's an active game
+    // If the user chooses "Custom Game" in that modal, the customGameRequested
+    // flag will be added there by the modal's handler
+
     onClose();
   };
 
@@ -153,7 +159,7 @@ const SlideMenu = ({ isOpen, onClose }) => {
 
         {/* Footer */}
         <div className="menu-footer">
-          <p className="version">Version 1.0.0</p>
+          <p className="version">Version 1.0.1</p>
         </div>
       </div>
     </>
