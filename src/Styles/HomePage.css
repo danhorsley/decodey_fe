@@ -258,3 +258,76 @@
 .dark-theme .home-button:hover {
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
 }
+
+.home-menu.landscape-grid.seven-items {
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+}
+
+.home-menu.landscape-grid.eight-items {
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+}
+
+/* For portrait mode, still use single column */
+.home-menu.seven-items,
+.home-menu.eight-items {
+  grid-template-columns: 1fr;
+}
+
+/* Quote button styling */
+.home-button.quote {
+  background-color: #e0f7fa;
+  /* Very light cyan-blue */
+  color: #00838f;
+  /* Teal-like color */
+  border: 1px solid #b2ebf2;
+}
+
+/* Dark theme version */
+.dark-theme .home-button.quote {
+  background-color: #00838f;
+  /* Teal color */
+  color: white;
+  border: none;
+}
+
+/* Improve hover effects for quote button */
+.home-button.quote:hover {
+  background-color: #b2ebf2;
+}
+
+.dark-theme .home-button.quote:hover {
+  background-color: #006064;
+}
+
+/* Responsive adjustments for small screens */
+@media (max-width: 480px) {
+  .button-icon {
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+  }
+
+  .home-button {
+    padding: 12px;
+    min-height: 80px;
+  }
+
+  .home-button span {
+    font-size: 0.9rem;
+  }
+}
+
+/* For very small screens in landscape */
+@media (max-height: 480px) and (orientation: landscape) {
+  .landscape-grid.eight-items {
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .home-button {
+    padding: 8px;
+    min-height: 60px;
+  }
+}
