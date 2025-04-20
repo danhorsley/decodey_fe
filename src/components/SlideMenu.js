@@ -51,14 +51,17 @@ const SlideMenu = ({ isOpen, onClose }) => {
 
     // For authenticated users, check for active game and show continue modal if found
     if (isAuthenticated) {
-      const { hasActiveGame, activeGameStats } = useAuthStore.getState();
-      if (hasActiveGame) {
-        // If active game exists, show the continue modal
-        openContinueGamePrompt(activeGameStats);
-      } else {
-        // No active game, navigate to game page which will start a new game
-        navigate("/");
-      }
+      const { hasActiveGame, activeGameStats, checkActiveGame } = useAuthStore.getState();
+      // First check for active game status
+      checkActiveGame().then(result => {
+        if (result && result.hasActiveGame) {
+          // If active game exists, show the continue modal with the stats
+          openContinueGamePrompt(result.gameStats);
+        } else {
+          // No active game, navigate to game page which will start a new game
+          navigate("/");
+        }
+      });
     } else {
       // For anonymous users, just navigate to game page
       navigate("/");
