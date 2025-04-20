@@ -1,12 +1,16 @@
-// src/stores/uiStore.js
+// src/stores/uiStore.js - Optimized for performance
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-// Add a flag to force mobile mode during development
-// You can turn this on/off in the browser console with:
-// localStorage.setItem('force_mobile_debug', 'true')
-const DEBUG_FORCE_MOBILE =
-  localStorage.getItem("force_mobile_debug") === "true";
+// Development mode flag to control logging
+const isDev = process.env.NODE_ENV !== 'production';
+
+// Add a flag to force mobile mode during development - only evaluate once
+const DEBUG_FORCE_MOBILE = localStorage.getItem("force_mobile_debug") === "true";
+
+// Track event throttling
+let lastOrientationEventTime = 0;
+const EVENT_THROTTLE_MS = 200; // Minimum time between orientation events
 
 // Improved mobile detection that works with emulators
 const detectMobileDevice = () => {
@@ -27,16 +31,17 @@ const detectMobileDevice = () => {
   const urlParams = new URLSearchParams(window.location.search);
   const hasMobileParam = urlParams.get("mobile") === "true";
 
-  // Log detection factors
-  console.log("[Mobile Detection]", {
-    userAgent: userAgent.substring(0, 50) + "...",
-    isMobileUserAgent,
-    screenSize: { width: window.innerWidth, height: window.innerHeight },
-    isMobileScreenSize,
-    isTouchDevice,
-    hasMobileParam,
-    DEBUG_FORCE_MOBILE,
-  });
+  // Only log in development
+  if (isDev) {
+    console.log("[Mobile Detection]", {
+      screenSize: { width: window.innerWidth, height: window.innerHeight },
+      isMobileUserAgent,
+      isMobileScreenSize,
+      isTouchDevice,
+      hasMobileParam,
+      DEBUG_FORCE_MOBILE,
+    });
+  }
 
   // Return true if ANY detection method indicates mobile
   return (
@@ -48,7 +53,7 @@ const detectMobileDevice = () => {
   );
 };
 
-// Create the UI store
+// Create the UI store with optimized state management
 const useUIStore = create(
   persist(
     (set, get) => ({
@@ -104,7 +109,7 @@ const useUIStore = create(
         });
       },
 
-      // Modal actions
+      // Modal actions - consolidated to reduce repetitive code
       openAbout: () => set({ isAboutOpen: true }),
       closeAbout: () => set({ isAboutOpen: false }),
 
@@ -136,127 +141,133 @@ const useUIStore = create(
           activeGameStats: null,
         }),
 
-      // Enhanced device detection update
-      updateDeviceInfo: (deviceInfo) => {
-        const isActuallyMobile =
-          typeof deviceInfo.isMobile === "boolean"
-            ? deviceInfo.isMobile
-            : detectMobileDevice();
+      // Enhanced device detection update - optimized with debouncing
+      updateDeviceInfo: (() => {
+        // Use closure for debounce state
+        let debounceTimeout = null;
 
-        // Get accurate orientation info
-        const newIsLandscape = 
-          typeof deviceInfo.isLandscape === "boolean"
-            ? deviceInfo.isLandscape
-            : (deviceInfo.screenWidth > deviceInfo.screenHeight);
+        return (deviceInfo) => {
+          // Clear any pending debounce
+          if (debounceTimeout) clearTimeout(debounceTimeout);
 
-        console.log(
-          `[uiStore] updateDeviceInfo: Detected ${isActuallyMobile ? "MOBILE" : "DESKTOP"} device, orientation: ${newIsLandscape ? "landscape" : "portrait"}`,
-        );
+          // Set debounce for device updates (100ms feels responsive but prevents excessive updates)
+          debounceTimeout = setTimeout(() => {
+            const isActuallyMobile =
+              typeof deviceInfo.isMobile === "boolean"
+                ? deviceInfo.isMobile
+                : detectMobileDevice();
 
-        // Update device info
-        set({
-          isMobile: isActuallyMobile,
-          isLandscape: newIsLandscape,
-          screenWidth: deviceInfo.screenWidth || window.innerWidth,
-          screenHeight: deviceInfo.screenHeight || window.innerHeight,
-        });
+            // Get accurate orientation info
+            const newIsLandscape = 
+              typeof deviceInfo.isLandscape === "boolean"
+                ? deviceInfo.isLandscape
+                : (deviceInfo.screenWidth > deviceInfo.screenHeight);
 
-        // Also update mobile mode if it's set to "auto"
-        const mobileMode = get().mobileModeSetting;
-        console.log(`[uiStore] Current mobile setting: ${mobileMode}`);
-
-        if (mobileMode === "auto") {
-          console.log(
-            `[uiStore] Auto mode: setting useMobileMode to ${isActuallyMobile}`,
-          );
-          set({ useMobileMode: isActuallyMobile });
-        }
-
-        // Dispatch a custom event that components can listen for
-        // This helps with orientation-aware components that need to update
-        try {
-          const orientationEvent = new CustomEvent('app:orientationchange', { 
-            detail: { 
-              isLandscape: newIsLandscape,
-              isMobile: isActuallyMobile
+            // More concise logging in development only
+            if (isDev) {
+              console.log(
+                `[uiStore] Updating device: ${isActuallyMobile ? "mobile" : "desktop"}, ${newIsLandscape ? "landscape" : "portrait"}`
+              );
             }
-          });
-          window.dispatchEvent(orientationEvent);
-        } catch (e) {
-          console.warn('[uiStore] Could not dispatch orientation event:', e);
-        }
-      },
 
-      // Update mobile mode based on settings
+            // Get current state for comparison
+            const currentState = get();
+            const stateChanged = 
+              currentState.isMobile !== isActuallyMobile || 
+              currentState.isLandscape !== newIsLandscape ||
+              currentState.screenWidth !== (deviceInfo.screenWidth || window.innerWidth) ||
+              currentState.screenHeight !== (deviceInfo.screenHeight || window.innerHeight);
+
+            // Only update if state actually changed
+            if (stateChanged) {
+              // Consolidated state update - single set call with all changes
+              const updates = {
+                isMobile: isActuallyMobile,
+                isLandscape: newIsLandscape,
+                screenWidth: deviceInfo.screenWidth || window.innerWidth,
+                screenHeight: deviceInfo.screenHeight || window.innerHeight,
+              };
+
+              // If we're on auto mode, update useMobileMode too
+              if (currentState.mobileModeSetting === "auto") {
+                updates.useMobileMode = isActuallyMobile;
+              }
+
+              // Update state in a single operation
+              set(updates);
+
+              // Throttled event dispatch - only if it's been long enough since last event
+              const now = Date.now();
+              if (now - lastOrientationEventTime > EVENT_THROTTLE_MS) {
+                lastOrientationEventTime = now;
+
+                try {
+                  const orientationEvent = new CustomEvent('app:orientationchange', { 
+                    detail: { 
+                      isLandscape: newIsLandscape,
+                      isMobile: isActuallyMobile
+                    }
+                  });
+                  window.dispatchEvent(orientationEvent);
+                } catch (e) {
+                  if (isDev) {
+                    console.warn('[uiStore] Could not dispatch orientation event:', e);
+                  }
+                }
+              }
+            }
+          }, 100); // 100ms debounce is responsive yet reduces redundant updates
+        };
+      })(),
+
+      // Update mobile mode based on settings - optimized version
       updateMobileMode: (mobileModeSetting) => {
-        console.log(
-          `[uiStore] Updating mobile mode setting to: ${mobileModeSetting}`,
-        );
-
-        // First update the setting value
-        set({ mobileModeSetting });
-
-        // Log it for verification
-        const updatedMode = get().mobileModeSetting;
-        console.log(
-          `[uiStore] Verified: mobile mode setting is now: ${updatedMode}`,
-        );
-
-        // Then apply the appropriate useMobileMode based on the setting
-        if (mobileModeSetting === "always") {
-          console.log("[uiStore] Setting useMobileMode to true (always)");
-          set({ useMobileMode: true });
-        } else if (mobileModeSetting === "never") {
-          console.log("[uiStore] Setting useMobileMode to false (never)");
-          set({ useMobileMode: false });
-        } else {
-          // Auto mode - use device detection
-          const isMobile = get().isMobile || detectMobileDevice();
-          console.log(
-            `[uiStore] Auto mode: setting useMobileMode to ${isMobile}`,
-          );
-          set({ useMobileMode: isMobile });
+        if (isDev) {
+          console.log(`[uiStore] Updating mobile mode setting to: ${mobileModeSetting}`);
         }
 
-        // Verify the final state
-        setTimeout(() => {
-          const state = get();
-          console.log(
-            `[uiStore] After update: mobileModeSetting=${state.mobileModeSetting}, useMobileMode=${state.useMobileMode}`,
-          );
-        }, 0);
+        // Get current state
+        const currentState = get();
+        const isMobile = currentState.isMobile || detectMobileDevice();
+
+        // Determine the appropriate mobile mode value
+        const useMobileMode = 
+          mobileModeSetting === "always" ? true :
+          mobileModeSetting === "never" ? false :
+          isMobile;
+
+        // Consolidated state update with a single set call
+        set({ 
+          mobileModeSetting, 
+          useMobileMode 
+        });
       },
 
-      // Initialize mobile mode on app start
+      // Initialize mobile mode on app start - optimized
       initMobileMode: () => {
         const state = get();
-        console.log(
-          `[uiStore] Initializing with mobileModeSetting: ${state.mobileModeSetting}`,
-        );
 
         // Force mobile detection again to be sure
         const isMobile = detectMobileDevice();
-        console.log(`[uiStore] Fresh mobile detection: ${isMobile}`);
 
-        // Update isMobile state with the fresh detection
-        set({ isMobile });
+        // Determine appropriate useMobileMode value based on settings and detection
+        const useMobileMode = 
+          state.mobileModeSetting === "always" || DEBUG_FORCE_MOBILE ? true :
+          state.mobileModeSetting === "never" ? false :
+          isMobile;
 
-        // Apply the mobile mode setting
-        if (state.mobileModeSetting === "always" || DEBUG_FORCE_MOBILE) {
+        // Simplified log for development
+        if (isDev) {
           console.log(
-            "[uiStore] Init: Setting useMobileMode to true (always or debug)",
+            `[uiStore] Initializing mobile: setting=${state.mobileModeSetting}, detected=${isMobile}, using=${useMobileMode}`
           );
-          set({ useMobileMode: true });
-        } else if (state.mobileModeSetting === "never") {
-          console.log("[uiStore] Init: Setting useMobileMode to false (never)");
-          set({ useMobileMode: false });
-        } else {
-          // For auto mode, use the fresh detection
-          console.log(
-            `[uiStore] Init: Auto mode, using fresh detection: ${isMobile}`,
-          );
-          set({ useMobileMode: isMobile });
         }
+
+        // Consolidated update with a single set call
+        set({ 
+          isMobile, 
+          useMobileMode
+        });
       },
     }),
     {
@@ -269,11 +280,6 @@ const useUIStore = create(
       // Add onRehydrate callback to initialize mobile mode after store is rehydrated
       onRehydrateStorage: () => (state) => {
         if (state) {
-          console.log("[uiStore] Store rehydrated with settings:", {
-            mobileModeSetting: state.mobileModeSetting,
-            useMobileMode: state.useMobileMode,
-          });
-
           // Call initMobileMode in the next tick to ensure state is fully available
           setTimeout(() => {
             state.initMobileMode();
@@ -284,23 +290,9 @@ const useUIStore = create(
   ),
 );
 
-// Initialization - run at startup
+// Initialization - run at startup with reduced timeout sequencing
 setTimeout(() => {
-  const state = useUIStore.getState();
-  console.log(
-    `[uiStore] Startup check - mobileModeSetting: ${state.mobileModeSetting}, useMobileMode: ${state.useMobileMode}`,
-  );
-
-  // Always initialize to ensure proper mobile detection
-  state.initMobileMode();
-
-  // Re-check after a short delay to make sure settings took effect
-  setTimeout(() => {
-    const updatedState = useUIStore.getState();
-    console.log(
-      `[uiStore] After init - mobileModeSetting: ${updatedState.mobileModeSetting}, useMobileMode: ${updatedState.useMobileMode}`,
-    );
-  }, 50);
+  useUIStore.getState().initMobileMode();
 }, 100);
 
 export default useUIStore;

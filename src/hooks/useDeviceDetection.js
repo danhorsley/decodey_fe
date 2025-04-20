@@ -1,6 +1,9 @@
-// src/hooks/useDeviceDetection.js
-import { useState, useEffect, useCallback } from "react";
+// src/hooks/useDeviceDetection.js - Optimized version
+import { useState, useEffect, useCallback, useRef } from "react";
 import useUIStore from "../stores/uiStore";
+
+// Development mode flag to control logging
+const isDev = process.env.NODE_ENV !== "production";
 
 /**
  * Enhanced hook to detect mobile devices and orientation
@@ -19,22 +22,60 @@ const useDeviceDetection = () => {
   const useMobileMode = useUIStore((state) => state.useMobileMode);
   const mobileModeSetting = useUIStore((state) => state.mobileModeSetting);
 
-  // Detect orientation change handler
+  // Use refs to track last detected state and avoid duplicate logs
+  const lastLoggedState = useRef({
+    width: window.innerWidth,
+    height: window.innerHeight,
+    isLandscape: window.innerWidth > window.innerHeight,
+  });
+
+  // Debounce helper
+  const useDebounce = (fn, ms) => {
+    const timerRef = useRef(null);
+
+    return useCallback(
+      (...args) => {
+        if (timerRef.current) {
+          clearTimeout(timerRef.current);
+        }
+
+        timerRef.current = setTimeout(() => {
+          fn(...args);
+          timerRef.current = null;
+        }, ms);
+      },
+      [fn, ms],
+    );
+  };
+
+  // Detect orientation change handler with debouncing
   const handleOrientationChange = useCallback(() => {
     const newIsLandscape = window.innerWidth > window.innerHeight;
-    setIsLandscape(newIsLandscape);
 
-    // Update UI store with new orientation
-    updateDeviceInfo({
-      isLandscape: newIsLandscape,
-      screenWidth: window.innerWidth,
-      screenHeight: window.innerHeight,
-    });
+    // Only update if orientation actually changed
+    if (isLandscape !== newIsLandscape) {
+      setIsLandscape(newIsLandscape);
 
-    console.log(
-      `[DeviceDetection] Orientation changed to: ${newIsLandscape ? "landscape" : "portrait"}`,
-    );
-  }, [updateDeviceInfo]);
+      // Update UI store with new orientation
+      updateDeviceInfo({
+        isLandscape: newIsLandscape,
+        screenWidth: window.innerWidth,
+        screenHeight: window.innerHeight,
+      });
+
+      if (isDev) {
+        console.log(
+          `[DeviceDetection] Orientation changed to: ${newIsLandscape ? "landscape" : "portrait"}`,
+        );
+      }
+    }
+  }, [updateDeviceInfo, isLandscape]);
+
+  // Debounced version for better performance
+  const debouncedHandleOrientationChange = useDebounce(
+    handleOrientationChange,
+    150,
+  );
 
   // Detect mobile on mount and window resize
   useEffect(() => {
@@ -70,21 +111,43 @@ const useDeviceDetection = () => {
 
       // Get accurate orientation
       const newIsLandscape = window.innerWidth > window.innerHeight;
-      setIsLandscape(newIsLandscape);
 
-      // Log detailed detection information
-      console.log("[DeviceDetection]", {
-        userAgent: userAgent.substring(0, 50) + "...",
-        width: window.innerWidth,
-        height: window.innerHeight,
-        isRealMobileDevice,
-        isSmallScreen,
-        isTouchDevice,
-        hasMobileParam,
-        debugForceMobile,
-        isLandscape: newIsLandscape,
-        isMobileDetected,
-      });
+      // Only update UI state if orientation actually changed
+      if (isLandscape !== newIsLandscape) {
+        setIsLandscape(newIsLandscape);
+      }
+
+      // Check if state has changed enough to log
+      const hasSignificantChange =
+        Math.abs(window.innerWidth - lastLoggedState.current.width) > 10 ||
+        Math.abs(window.innerHeight - lastLoggedState.current.height) > 10 ||
+        lastLoggedState.current.isLandscape !== newIsLandscape;
+
+      // Only log when something notable changes
+      if (isDev && hasSignificantChange) {
+        // Only show part of the user agent to avoid console clutter
+        const shortUserAgent = userAgent.substring(0, 50) + "...";
+
+        console.log("[DeviceDetection]", {
+          userAgent: shortUserAgent,
+          width: window.innerWidth,
+          height: window.innerHeight,
+          isRealMobileDevice,
+          isSmallScreen,
+          isTouchDevice,
+          hasMobileParam,
+          debugForceMobile,
+          isLandscape: newIsLandscape,
+          isMobileDetected,
+        });
+
+        // Update last logged state
+        lastLoggedState.current = {
+          width: window.innerWidth,
+          height: window.innerHeight,
+          isLandscape: newIsLandscape,
+        };
+      }
 
       // Update UI store with result (state is centralized in the store)
       updateDeviceInfo({
@@ -95,10 +158,10 @@ const useDeviceDetection = () => {
       });
     };
 
-    // Run detection immediately
+    // Run detection immediately, once
     detectMobile();
 
-    // More responsive resize listener with throttling for better performance
+    // More responsive resize listener with improved throttling
     let resizeTimeout;
     const handleResize = () => {
       if (resizeTimeout) {
@@ -106,9 +169,21 @@ const useDeviceDetection = () => {
       }
 
       resizeTimeout = setTimeout(() => {
-        console.log("[DeviceDetection] Window resized, rechecking...");
-        detectMobile();
-        handleOrientationChange();
+        // Only run detection if the size actually changed significantly
+        const widthDiff = Math.abs(
+          window.innerWidth - lastLoggedState.current.width,
+        );
+        const heightDiff = Math.abs(
+          window.innerHeight - lastLoggedState.current.height,
+        );
+
+        if (widthDiff > 5 || heightDiff > 5) {
+          if (isDev) {
+            console.log("[DeviceDetection] Window resized, rechecking...");
+          }
+          detectMobile();
+          debouncedHandleOrientationChange();
+        }
       }, 250); // Reasonable throttle time
     };
 
@@ -116,17 +191,25 @@ const useDeviceDetection = () => {
 
     // Also detect on orientation change for mobile devices
     window.addEventListener("orientationchange", () => {
-      console.log("[DeviceDetection] Orientation change event fired");
+      if (isDev) {
+        console.log("[DeviceDetection] Orientation change event fired");
+      }
       // Wait a moment for dimensions to update after orientation change
-      setTimeout(handleOrientationChange, 50);
+      setTimeout(debouncedHandleOrientationChange, 50);
     });
 
     // Cleanup
     return () => {
       window.removeEventListener("resize", handleResize);
-      window.removeEventListener("orientationchange", handleOrientationChange);
+      window.removeEventListener(
+        "orientationchange",
+        debouncedHandleOrientationChange,
+      );
+      if (resizeTimeout) {
+        clearTimeout(resizeTimeout);
+      }
     };
-  }, [updateDeviceInfo, handleOrientationChange]);
+  }, [updateDeviceInfo, debouncedHandleOrientationChange, isLandscape]);
 
   // Return comprehensive info about mobile state including orientation
   return {
