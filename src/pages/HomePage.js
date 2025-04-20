@@ -1,5 +1,5 @@
 // src/pages/HomePage.js
-import React, { useEffect } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FaCalendarDay,
@@ -26,13 +26,9 @@ const HomePage = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const { userLogout } = useGameSession();
   const { isLandscape } = useDeviceDetection();
-  const gameSession = useGameSession();
   // UI actions
   const openSettings = useUIStore((state) => state.openSettings);
   const openAbout = useUIStore((state) => state.openAbout);
-
-  // Game session for starting new games
-  const { startNewGame, startDailyChallenge } = useGameSession();
 
   // Navigation handlers
   const handleDailyChallenge = () => {
@@ -114,48 +110,6 @@ const HomePage = () => {
     window.open(
       `mailto:quote@mail.decodey.game?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
     );
-  };
-
-  // Helper function to provide clipboard fallback
-  const copyEmailToClipboard = () => {
-    const emailAddress = "quote@mail.decodey.game";
-
-    // Modern clipboard API
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard
-        .writeText(emailAddress)
-        .then(() => {
-          alert(
-            `Email address "${emailAddress}" copied to clipboard.\n\nPlease send your quote feedback to this address.`,
-          );
-        })
-        .catch(() => {
-          alert(`Please send your quote feedback to:\n${emailAddress}`);
-        });
-    } else {
-      // Older fallback using textarea
-      try {
-        const textArea = document.createElement("textarea");
-        textArea.value = emailAddress;
-        textArea.style.position = "fixed"; // Avoid scrolling to bottom
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-
-        const successful = document.execCommand("copy");
-        document.body.removeChild(textArea);
-
-        if (successful) {
-          alert(
-            `Email address "${emailAddress}" copied to clipboard.\n\nPlease send your quote feedback to this address.`,
-          );
-        } else {
-          alert(`Please send your quote feedback to:\n${emailAddress}`);
-        }
-      } catch (err) {
-        alert(`Please send your quote feedback to:\n${emailAddress}`);
-      }
-    }
   };
 
   return (

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 // Import our new UI components
 import SlideMenu from "../components/SlideMenu";
@@ -10,7 +10,7 @@ import GameDashboard from "../components/GameDashboard";
 import useGameStore from "../stores/gameStore";
 import useGameSession from "../hooks/useGameSession";
 import useSettingsStore from "../stores/settingsStore";
-import useAuthStore from "../stores/authStore";
+// import useAuthStore from "../stores/authStore";
 import useUIStore from "../stores/uiStore";
 import useSound from "../services/WebAudioSoundManager";
 import useKeyboardInput from "../hooks/KeyboardController";
@@ -25,8 +25,8 @@ import TutorialOverlay from "../components/TutorialOverlay";
 
 function Game() {
   // Navigation hook
-  const navigate = useNavigate();
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  // const navigate = useNavigate();
+  // const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   // Location hook to get state from routing
   const location = useLocation();
   const isWinVerificationInProgress = useGameStore((state) => state.isWinVerificationInProgress);

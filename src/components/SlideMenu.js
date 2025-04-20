@@ -32,9 +32,9 @@ const SlideMenu = ({ isOpen, onClose }) => {
   const openSignup = useUIStore((state) => state.openSignup);
   const openSettings = useUIStore((state) => state.openSettings);
   const openAbout = useUIStore((state) => state.openAbout);
-  const openContinueGamePrompt = useUIStore(
-    (state) => state.openContinueGamePrompt,
-  );
+  // const openContinueGamePrompt = useUIStore(
+  //   (state) => state.openContinueGamePrompt,
+  // );
 
   // Get game session functions
   const gameSession = useGameSession();

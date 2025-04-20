@@ -105,19 +105,17 @@ const WinCelebration = ({ playSound, winData }) => {
     mistakes = 0,
     maxMistakes = 4,
     gameTimeSeconds = 0,
-    rating = 50,
     encrypted = "",
     display = "",
     correctlyGuessed = [],
-    hardcoreMode = false,
     hasLost = false,
     attribution = {},
-    scoreStatus = {
-      recorded: isAuthenticated,
-      message: isAuthenticated
-        ? "Score recorded successfully!"
-        : "Score not recorded - anonymous game",
-    },
+    // scoreStatus = {
+    //   recorded: isAuthenticated,
+    //   message: isAuthenticated
+    //     ? "Score recorded successfully!"
+    //     : "Score not recorded - anonymous game",
+    // },
     isDailyChallenge = false,
     current_daily_streak = 0, // Extract the streak from win data
   } = winData || {};
@@ -162,7 +160,7 @@ const WinCelebration = ({ playSound, winData }) => {
   // Share URL for Twitter
   const getShareUrl = (score) => {
     let message;
-    const url = "https://decodey.game";
+    // const url = "https://decodey.game";
 
     if (hasLost) {
       const solvePercentage = calculatePercentageSolved();

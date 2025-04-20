@@ -31,7 +31,6 @@ const initialState = {
   hardcoreMode: false,
   isLocalWinDetected: false,
   isWinVerificationInProgress: false,
-  isWinVerificationInProgress: false,
   difficulty: "easy", // Default, will be updated from settings
   maxMistakes: 8, // Default, will be updated from settings
   isResetting: false,
@@ -896,8 +895,8 @@ const useGameStore = create((set, get) => ({
       const activeGameId = localStorage.getItem("uncrypt-game-id");
       const isActiveDailyGame =
         activeGameId && activeGameId.includes("-daily-");
-      const isActiveCustomGame =
-        activeGameId && !activeGameId.includes("-daily-");
+      // const isActiveCustomGame =
+      //   activeGameId && !activeGameId.includes("-daily-");
 
       // If we have a daily game and we're trying to start a new daily, don't abandon
       if (isActiveDailyGame && window.location.pathname.includes("/daily")) {
