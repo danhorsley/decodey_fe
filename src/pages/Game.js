@@ -173,31 +173,20 @@ function Game() {
 
       console.log("Starting game initialization in Game.js useEffect");
 
-      try {
-        // Check if this is explicitly a daily challenge from route state
-        if (isDailyFromRoute) {
-          console.log("Initializing daily challenge from route params");
-          await startDailyChallenge();
-          return;
-        }
+      // Determine if this should be a daily challenge
+      const isAnonymous = !config.session.getAuthToken();
+      const shouldStartDaily = isDailyFromRoute || (isAnonymous && !options?.customGameRequested);
 
-        // Check if user is anonymous
-        const isAnonymous = !config.session.getAuthToken();
-        const options = { customGameRequested: false }; // Default options
-
-        // If daily challenge is requested or user is anonymous, start daily
-        if (isDailyFromRoute || isAnonymous) {
-          console.log("Starting daily challenge");
-          await startDailyChallenge();
-          return; // Important: return to prevent additional game initialization
-        }
-        
-        // Only authenticated users get standard initialization
-        console.log("Authenticated user - using standard initialization");
-        await initializeGame(options);
-      } catch (err) {
-        console.error("Game initialization failed:", err);
+      if (shouldStartDaily) {
+        console.log("Starting daily challenge");
+        await startDailyChallenge();
+        return;
       }
+
+      // For non-daily games, use standard initialization
+      console.log("Starting standard game");
+      const options = { customGameRequested: false };
+      await initializeGame(options);
     };
 
     performInitialization();
