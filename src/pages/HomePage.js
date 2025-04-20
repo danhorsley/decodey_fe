@@ -24,7 +24,7 @@ const HomePage = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const { userLogout } = useGameSession();
   const { isLandscape } = useDeviceDetection();
-
+  const gameSession = useGameSession();
   // UI actions
   const openSettings = useUIStore((state) => state.openSettings);
   const openAbout = useUIStore((state) => state.openAbout);
@@ -38,7 +38,16 @@ const HomePage = () => {
   };
 
   const handleCustomGame = async () => {
-    await startNewGame({ customGameRequested: true });
+    // For anonymous users, directly start a custom game
+    if (!isAuthenticated) {
+      gameSession.startNewGame({ customGameRequested: true });
+      navigate("/");
+      return;
+    }
+
+    // For authenticated users, run initializeGame instead
+    // This will check for active games and show the continue modal if needed
+    gameSession.initializeGame();
     navigate("/");
   };
 
@@ -68,7 +77,9 @@ const HomePage = () => {
       "Quote: \n" +
       "Reason: \n";
 
-    window.open(`mailto:quote@mail.decodey.game?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
+    window.open(
+      `mailto:quote@mail.decodey.game?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
+    );
   };
 
   // Helper function to provide clipboard fallback

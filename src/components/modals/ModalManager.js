@@ -121,11 +121,12 @@ const ModalManager = ({ children }) => {
     const options = {
       longText: settingsStore?.settings?.longText || false,
       hardcoreMode: settingsStore?.settings?.hardcoreMode || false,
-      difficulty: settingsStore?.settings?.difficulty || "medium", // Explicitly include difficulty
-      customGameRequested: true, // Add this flag to force custom game
+      difficulty: settingsStore?.settings?.difficulty || "medium",
+      customGameRequested: true, // This tells the system to start a custom game
+      preserveExistingGame: false, // This explicitly says to abandon the current game
     };
 
-    console.log("Starting new game with settings:", options); // Debug log
+    console.log("Starting new game with settings:", options);
 
     // Start new game
     const result = await startNewGame(options);

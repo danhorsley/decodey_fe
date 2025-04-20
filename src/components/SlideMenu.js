@@ -43,26 +43,22 @@ const SlideMenu = ({ isOpen, onClose }) => {
   };
 
   // Handle custom game - UPDATED to ensure continue modal appears when needed
-  const handleCustomGame = () => {
-    console.log("Custom Game clicked in SlideMenu");
+const handleCustomGame = () => {
+  console.log("Custom Game clicked in SlideMenu");
 
-    // For anonymous users, directly start a custom game
-    if (!isAuthenticated) {
-      gameSession.startNewGame({ customGameRequested: true });
-      onClose();
-      return;
-    }
-
-    // For authenticated users, check for active game first
-    // We OMIT the customGameRequested flag here to ensure the continue prompt shows
-    gameSession.initializeGame();
-
-    // The continue game modal will appear if there's an active game
-    // If the user chooses "Custom Game" in that modal, the customGameRequested
-    // flag will be added there by the modal's handler
-
+  // For anonymous users, directly start a custom game
+  if (!isAuthenticated) {
+    gameSession.startNewGame({ customGameRequested: true });
     onClose();
-  };
+    return;
+  }
+
+  // For authenticated users, check for active game first
+  gameSession.initializeGame();
+  
+  // The continue game modal will appear if there's an active game
+  onClose();
+};
 
   // Handle auth actions
   const handleLogin = () => {

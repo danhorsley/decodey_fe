@@ -336,42 +336,52 @@ const abandonAndStartNew = async (options = {}) => {
       customGameRequested: options.customGameRequested === true,
     });
 
-    // First abandon the current game
-    try {
-      if (typeof strategy.abandonGame === "function") {
-        await strategy.abandonGame();
-      } else {
+    // Only abandon the game if this is explicitly a new game request
+    // If we're coming from the continue flow, we'll have a special flag
+    const shouldAbandon = options.customGameRequested === true && 
+                         !options.preserveExistingGame;
+
+    if (shouldAbandon) {
+      // First abandon the current game
+      try {
+        if (typeof strategy.abandonGame === "function") {
+          await strategy.abandonGame();
+        } else {
+          localStorage.removeItem("uncrypt-game-id");
+        }
+      } catch (abandonError) {
+        console.warn("Error abandoning game:", abandonError);
         localStorage.removeItem("uncrypt-game-id");
       }
-    } catch (abandonError) {
-      console.warn("Error abandoning game:", abandonError);
-      localStorage.removeItem("uncrypt-game-id");
+
+      // Start a new game using the strategy
+      const result = await strategy.initializeGame(options);
+
+      if (result.success && result.gameData) {
+        // Store the game ID
+        if (result.gameData.game_id) {
+          localStorage.setItem("uncrypt-game-id", result.gameData.game_id);
+        }
+
+        // Update the game store with the new game data
+        const gameStore = useGameStore.getState();
+
+        // Reset the game state first
+        if (typeof gameStore.resetGame === "function") {
+          gameStore.resetGame();
+        }
+
+        // Apply the new game data directly without making another API call
+        if (typeof gameStore.continueSavedGame === "function") {
+          await gameStore.continueSavedGame(result.gameData);
+        }
+      }
+
+      return result;
+    } else {
+      // If we're not abandoning, just continue the existing game
+      return await continueSavedGame();
     }
-
-    // Start a new game using the strategy
-    const result = await strategy.initializeGame(options);
-
-    if (result.success && result.gameData) {
-      // Store the game ID
-      if (result.gameData.game_id) {
-        localStorage.setItem("uncrypt-game-id", result.gameData.game_id);
-      }
-
-      // Update the game store with the new game data
-      const gameStore = useGameStore.getState();
-
-      // Reset the game state first
-      if (typeof gameStore.resetGame === "function") {
-        gameStore.resetGame();
-      }
-
-      // Apply the new game data directly without making another API call
-      if (typeof gameStore.continueSavedGame === "function") {
-        await gameStore.continueSavedGame(result.gameData);
-      }
-    }
-
-    return result;
   } catch (error) {
     console.error("Error in abandon and start new:", error);
     localStorage.removeItem("uncrypt-game-id");
