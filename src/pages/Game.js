@@ -162,40 +162,36 @@ function Game() {
 
   // Auto-initialize on first render - the component calls initializeGame
   // once on mount via React.useEffect()
-  // Auto-initialize on first render with simple but effective locking
-  // Auto-initialize on first render with explicit daily game ID check
   useEffect(() => {
+    // Use a flag to prevent double initialization
+    let hasInitialized = false;
+
     const performInitialization = async () => {
-      console.log("Starting game initialization check in Game.js");
+      // Prevent double initialization
+      if (hasInitialized) return;
+      hasInitialized = true;
 
-      // Check if we're an anonymous user
-      const isAnonymous = !config.session.getAuthToken();
-
-      // Always use the existingGameId to determine what to do
-      const existingGameId = localStorage.getItem("uncrypt-game-id");
+      console.log("Starting game initialization in Game.js useEffect");
 
       try {
-        // If we have an existing game ID, continue that game instead of starting new
-        if (existingGameId) {
-          console.log("Found existing game ID, continuing game");
-          const gameStore = useGameStore.getState();
-          if (typeof gameStore.continueSavedGame === "function") {
-            await gameStore.continueSavedGame();
-            return;
-          }
+        // Check if this is explicitly a daily challenge from route state
+        if (isDailyFromRoute) {
+          console.log("Initializing daily challenge from route params");
+          await startDailyChallenge();
+          return;
         }
 
-        // No existing game, determine what type to start
-        if (isDailyFromRoute) {
-          console.log("Starting new daily challenge from route");
-          await startDailyChallenge();
-        } else if (isAnonymous) {
-          // Anonymous users without existing games get daily challenges by default
-          console.log("Anonymous user without existing game - starting daily");
+        // Check for anonymous user with no existing game
+        const isAnonymous = !config.session.getAuthToken();
+        const hasExistingGameId = localStorage.getItem("uncrypt-game-id");
+
+        if (isAnonymous) {
+          // For anonymous users, explicitly start daily challenge
+          console.log("Anonymous user - explicitly starting daily challenge");
           await startDailyChallenge();
         } else {
-          // Authenticated users get standard games unless daily is requested
-          console.log("Starting standard game");
+          // For all other cases, use standard initialization
+          console.log(`Standard initialization: isAnonymous=${isAnonymous}, hasExistingGameId=${!!hasExistingGameId}`);
           await initializeGame();
         }
       } catch (err) {

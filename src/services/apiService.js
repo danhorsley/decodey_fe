@@ -565,7 +565,6 @@ class ApiService {
     }
   }
 
-
   /**
    * Start a daily challenge for the given date
    * @param {string} dateString Date string in YYYY-MM-DD format
@@ -591,47 +590,8 @@ class ApiService {
       );
 
       try {
-        // For anonymous users, ALWAYS use direct fetch to avoid any auth issues
-        // Anonymous users NEVER have persistent state
-        if (isAnonymousStart) {
-          console.log("Anonymous user - using direct fetch for daily challenge with guaranteed fresh state");
-
-          // Clear any existing game ID to ensure fresh state for anonymous users
-          localStorage.removeItem("uncrypt-game-id");
-
-          // Create a direct fetch request that won't include any auth headers
-          const fetchResponse = await fetch(
-            `${this.api.defaults.baseURL}${url}`,
-            {
-              method: "GET",
-              headers: {
-                Accept: "application/json",
-                "Content-Type": "application/json",
-              },
-              // Explicitly disable credentials for anonymous users
-              credentials: "omit",
-            }
-          );
-
-          if (!fetchResponse.ok) {
-            throw new Error(
-              `HTTP error ${fetchResponse.status}: ${fetchResponse.statusText}`
-            );
-          }
-
-          const data = await fetchResponse.json();
-
-          // Store temporary game ID for current session only
-          if (data.game_id) {
-            localStorage.setItem("uncrypt-game-id", data.game_id);
-            console.log(`Anonymous daily challenge with temporary ID: ${data.game_id}`);
-          }
-
-          return data;
-        }
-
-        // Authenticated user path - these users can have persistence
-        console.log("Authenticated user - using normal API for daily challenge");
+        // Make the request through our normal API instance
+        console.log("***url daily***", url);
         const response = await this.api.get(url);
 
         // If there's a game ID in the response, store it

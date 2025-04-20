@@ -12,24 +12,18 @@ class AnonymousDailyStrategy extends DailyChallengeInterface {
    * Start today's daily challenge for anonymous user
    * @returns {Promise<Object>} Result object with success flag and game data
    */
-  /**
-   * Start today's daily challenge for anonymous user
-   * @returns {Promise<Object>} Result object with success flag and game data
-   */
   async startDailyChallenge() {
-
     try {
       console.log("AnonymousDailyStrategy: Starting daily challenge");
 
-      // ALWAYS clear any existing game ID for anonymous users
-      // Anonymous users NEVER have persistent state
+      // Clear any existing game ID first
       localStorage.removeItem("uncrypt-game-id");
 
       // Get today's date string
       const dateString = this.getTodayDateString();
-      console.log(`Starting fresh daily challenge for date: ${dateString}`);
+      console.log(`Starting daily challenge for date: ${dateString}`);
 
-      // Start daily game via API Service with guaranteed fresh state
+      // Start daily game via API Service
       const gameData = await apiService.startDailyChallenge(dateString);
       console.log("Received game data from API:", gameData ? "success" : "failure");
 

@@ -30,58 +30,34 @@ class GameStrategyFactory {
    * @param {boolean} options.daily Whether to get daily challenge strategy
    * @returns {GameStrategy} The selected strategy
    */
-
-
-  /**
-   * Get the appropriate strategy for the current user state
-   * @param {Object} options Options to determine strategy
-   * @param {boolean} options.daily Whether to get daily challenge strategy
-   * @returns {GameStrategy} The selected strategy
-   */
   getStrategy(options = {}) {
     const isAuthenticated = this._isUserAuthenticated();
     const isDaily = options.daily === true;
     const customGameRequested = options.customGameRequested === true;
 
-    // Anonymous users NEVER have state persistence - they only get:
-    // 1. Daily challenges (default) 
-    // 2. Custom games (only when explicitly requested)
-    if (!isAuthenticated) {
-      // For anonymous users, always clear any existing game ID to ensure fresh state
-      localStorage.removeItem("uncrypt-game-id");
-
-      // For anonymous users, respect the explicit daily flag first
-      if (isDaily) {
-        console.log("Anonymous user with daily flag - using daily anonymous strategy");
-        return this.strategies.dailyAnonymous;
-      }
-      
-      // Otherwise use anonymous strategy (prevents unintended daily defaulting)
-      console.log("Anonymous user - using standard anonymous strategy");
-      return this.strategies.anonymous;
-    }
-
-    // For authenticated users, follow normal flow
-
-    // If custom game is explicitly requested, use authenticated strategy
+    // If custom game is explicitly requested, always use the appropriate non-daily strategy
     if (customGameRequested) {
-      console.log("Authenticated user with custom game request - using authenticated strategy");
-      return this.strategies.authenticated;
+      console.log("Custom game explicitly requested - using non-daily strategy");
+      return isAuthenticated 
+        ? this.strategies.authenticated 
+        : this.strategies.anonymous;
     }
 
-    // Check for active daily game
+    // Check for active daily game (only if not requesting a custom game)
     const activeGameId = localStorage.getItem("uncrypt-game-id");
     const isActiveDailyGame = activeGameId && activeGameId.includes("-daily-");
 
-    // For daily games or active daily games (authenticated users only)
-    if (isDaily || isActiveDailyGame) {
-      console.log("Authenticated user with daily game request or active daily game");
-      return this.strategies.dailyAuthenticated;
-    }
+    // For daily games or active daily games
+    if (isDaily || (isActiveDailyGame && !customGameRequested)) {
+      return isAuthenticated
+        ? this.strategies.dailyAuthenticated
+        : this.strategies.dailyAnonymous;
+    } 
 
-    // For standard authenticated games
-    console.log("Authenticated user with standard game request");
-    return this.strategies.authenticated;
+    // For standard games
+    return isAuthenticated
+      ? this.strategies.authenticated
+      : this.strategies.anonymous;
   }
 
   /**
