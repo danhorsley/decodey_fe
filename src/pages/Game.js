@@ -171,27 +171,33 @@ function Game() {
       // Check if we're an anonymous user
       const isAnonymous = !config.session.getAuthToken();
 
-      // Check if we already have a daily game ID in localStorage
+      // Always use the existingGameId to determine what to do
       const existingGameId = localStorage.getItem("uncrypt-game-id");
-      const hasDailyGameId = existingGameId && existingGameId.includes("-daily-");
-
-      // If anonymous user already has a daily game ID, skip initialization
-      if (isAnonymous && hasDailyGameId) {
-        console.log("Anonymous user already has a daily game ID, skipping initialization");
-        return;
-      }
 
       try {
-        // Check if this is explicitly a daily challenge from route state
-        if (isDailyFromRoute) {
-          console.log("Initializing daily challenge from route params");
-          await startDailyChallenge();
-          return;
+        // If we have an existing game ID, continue that game instead of starting new
+        if (existingGameId) {
+          console.log("Found existing game ID, continuing game");
+          const gameStore = useGameStore.getState();
+          if (typeof gameStore.continueSavedGame === "function") {
+            await gameStore.continueSavedGame();
+            return;
+          }
         }
 
-        // Use standard initialization (will use the proper strategy)
-        console.log("Using standard initialization with strategy selection");
-        await initializeGame();
+        // No existing game, determine what type to start
+        if (isDailyFromRoute) {
+          console.log("Starting new daily challenge from route");
+          await startDailyChallenge();
+        } else if (isAnonymous) {
+          // Anonymous users without existing games get daily challenges by default
+          console.log("Anonymous user without existing game - starting daily");
+          await startDailyChallenge();
+        } else {
+          // Authenticated users get standard games unless daily is requested
+          console.log("Starting standard game");
+          await initializeGame();
+        }
       } catch (err) {
         console.error("Game initialization failed:", err);
       }
