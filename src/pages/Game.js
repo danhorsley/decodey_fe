@@ -181,17 +181,16 @@ function Game() {
           return;
         }
 
-        // Check for anonymous user with no existing game
+        // Check if user is anonymous
         const isAnonymous = !config.session.getAuthToken();
-        const hasExistingGameId = localStorage.getItem("uncrypt-game-id");
 
         if (isAnonymous) {
-          // For anonymous users, explicitly start daily challenge
-          console.log("Anonymous user - explicitly starting daily challenge");
+          // Anonymous users always get daily challenge
+          console.log("Anonymous user - starting daily challenge");
           await startDailyChallenge();
         } else {
-          // For all other cases, use standard initialization
-          console.log(`Standard initialization: isAnonymous=${isAnonymous}, hasExistingGameId=${!!hasExistingGameId}`);
+          // Authenticated users get standard initialization
+          console.log("Authenticated user - using standard initialization");
           await initializeGame();
         }
       } catch (err) {
