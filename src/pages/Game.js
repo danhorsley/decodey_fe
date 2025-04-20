@@ -183,15 +183,16 @@ function Game() {
 
         // Check if user is anonymous
         const isAnonymous = !config.session.getAuthToken();
+        const options = { customGameRequested: false }; // Default options
 
-        if (isAnonymous) {
-          // Anonymous users always get daily challenge
+        if (isAnonymous && !options.customGameRequested) {
+          // Anonymous users get daily challenge by default, unless custom game requested
           console.log("Anonymous user - starting daily challenge");
           await startDailyChallenge();
         } else {
-          // Authenticated users get standard initialization
-          console.log("Authenticated user - using standard initialization");
-          await initializeGame();
+          // Authenticated users or custom game requests get standard initialization
+          console.log("Standard initialization for authenticated user or custom game request");
+          await initializeGame(options);
         }
       } catch (err) {
         console.error("Game initialization failed:", err);
