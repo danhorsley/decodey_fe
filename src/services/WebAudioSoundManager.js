@@ -15,6 +15,12 @@ const useSound = () => {
   );
   const audioContextRef = useRef(null);
   const initializedRef = useRef(false);
+  const DEBUG_AUDIO = false;
+  const logDebug = (message) => {
+    if (DEBUG_AUDIO) {
+      console.log(message);
+    }
+  };
 
   // Keep local state in sync with settings
   useEffect(() => {
@@ -42,7 +48,7 @@ const useSound = () => {
         }
 
         initializedRef.current = true;
-        console.log("Audio context initialized successfully");
+        logDebug("Audio context initialized successfully");
         return true;
       } catch (error) {
         console.warn("Failed to initialize audio context:", error);
@@ -659,7 +665,7 @@ const useSound = () => {
         ...settings,
         soundEnabled: newSoundState,
       });
-      console.log(
+      logDebug(
         `Sound ${newSoundState ? "enabled" : "disabled"} - Updated settings context`,
       );
     } else {
