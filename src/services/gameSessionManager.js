@@ -399,12 +399,84 @@ const onGameSessionEvent = (event, callback) => {
 };
 
 /**
- * Initialize a daily challenge
+ * Initialize a daily challenge with improved error handling
  * @returns {Promise<Object>} Result of daily challenge initialization
  */
 const initializeDailyChallenge = async () => {
-  // Simply call initializeGameSession with daily flag
-  return await initializeGameSession({ daily: true });
+  // Get session store state
+  const sessionStore = useGameSessionStore.getState();
+
+  // Prevent multiple simultaneous initialization attempts
+  if (sessionStore.isInitializing) {
+    return { success: false, reason: "already-initializing" };
+  }
+
+  // Mark as initializing
+  sessionStore.setInitializing(true);
+
+  try {
+    // Get the appropriate strategy for daily challenges
+    const strategy = strategyFactory.getDailyStrategy();
+    console.log(`Using ${strategy.constructor.name} for daily challenge initialization`);
+
+    // Start the daily challenge
+    const result = await strategy.startDailyChallenge();
+
+    // IMPROVED HANDLING: If already completed but there's an active game,
+    // ensure we handle this gracefully
+    if (result.success && result.alreadyCompleted) {
+      console.log("Daily challenge already completed - handling appropriately");
+
+      // The user already completed today's challenge
+      // Emit a notification about daily completion
+      eventEmitter.emit("daily:already-completed", {
+        completionData: result.completionData,
+      });
+
+      // If there's also an active game, emit that event too
+      if (result.hasActiveGame && result.gameStats) {
+        // This will trigger the continue game modal
+        eventEmitter.emit("game:active-game-found", {
+          gameStats: result.gameStats,
+        });
+      }
+
+      // Clear initialization state
+      sessionStore.setInitializing(false);
+
+      // Return result indicating we've handled the scenario
+      return result;
+    }
+
+    // Normal handling for successful initialization with game data
+    if (result.success && result.gameData) {
+      const gameStore = useGameStore.getState();
+      if (typeof gameStore.startGame === "function") {
+        await gameStore.startGame(
+          false, // longText
+          false, // hardcoreMode
+          true, // Force new
+          true, // Pass daily flag to game store
+        );
+      }
+    }
+
+    // Update initialization status
+    if (!result.success) {
+      sessionStore.setInitError(result.error);
+    } else {
+      sessionStore.setInitializing(false);
+    }
+
+    return result;
+  } catch (error) {
+    console.error("Error in daily challenge initialization:", error);
+    sessionStore.setInitError(error);
+    return {
+      success: false,
+      error,
+    };
+  }
 };
 
 /**
@@ -482,4 +554,7 @@ export {
 export const GameSessionEvents = {
   ACTIVE_GAME_FOUND: "game:active-game-found",
   DAILY_ALREADY_COMPLETED: "daily:already-completed",
+  LOGOUT_TRANSITION: "auth:logout-transition",
+  ANONYMOUS_TRANSITION: "game:anonymous-transition",
+  STATE_CHANGED: "game:state-changed",
 };

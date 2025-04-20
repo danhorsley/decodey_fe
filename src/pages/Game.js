@@ -163,16 +163,26 @@ function Game() {
   // Auto-initialize on first render - the component calls initializeGame
   // once on mount via React.useEffect()
   useEffect(() => {
-    // Check if this is a daily challenge from route state or anonymous user
-    const isAnonymous = !config.session.getAuthToken();
+    // Use a flag to prevent double initialization
+    let hasInitialized = false;
 
-    if (isDailyFromRoute || isAnonymous) {
-      console.log("Initializing daily challenge");
+    // Check if this is a daily challenge from route state
+    if (isDailyFromRoute && !hasInitialized) {
+      console.log("Initializing daily challenge from route params");
       startDailyChallenge();
-    } else {
-      // Standard game initialization for authenticated users
+      hasInitialized = true;
+    } 
+    // Check for anonymous user (needs separate initialization)
+    else if (!config.session.getAuthToken() && !hasInitialized) {
+      console.log("Initializing game for anonymous user");
+      initializeGame();
+      hasInitialized = true;
+    }
+    // Standard game initialization for authenticated users
+    else if (!hasInitialized) {
       console.log("Initializing standard game");
       initializeGame();
+      hasInitialized = true;
     }
   }, [initializeGame, startDailyChallenge, isDailyFromRoute]);
   //if lines don't match rerender

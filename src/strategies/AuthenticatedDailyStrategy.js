@@ -2,6 +2,7 @@
 import DailyChallengeInterface from "./DailyChallengeInterface";
 import apiService from "../services/apiService";
 import { ApiError, AuthenticationError } from "../errors/GameErrors";
+import AuthenticatedGameStrategy from "./AuthenticatedGameStrategy";
 
 /**
  * Daily challenge strategy for authenticated users
@@ -19,17 +20,13 @@ class AuthenticatedDailyStrategy extends DailyChallengeInterface {
    */
   async startDailyChallenge() {
     try {
-      console.log(
-        "AuthenticatedDailyStrategy: Checking daily completion before starting",
-      );
+      console.log("AuthenticatedDailyStrategy: Checking daily completion before starting");
 
       // First check if user has already completed today's challenge
       const completionCheck = await this.checkDailyCompletion();
 
       if (completionCheck.isCompleted) {
-        console.log(
-          "AuthenticatedDailyStrategy: User already completed today's challenge",
-        );
+        console.log("AuthenticatedDailyStrategy: User already completed today's challenge");
 
         // Emit event to notify UI about already completed daily
         if (this.events) {
@@ -38,9 +35,44 @@ class AuthenticatedDailyStrategy extends DailyChallengeInterface {
           });
         }
 
+        // IMPORTANT FIX: Check for active game to ensure we don't fail loading
+        // Instead of just returning early, check if there's any active game we can continue
+        try {
+          // We can borrow the check from AuthenticatedGameStrategy
+          const strategy = new AuthenticatedGameStrategy(this.events);
+          const activeGameCheck = await strategy.checkActiveGame();
+
+          if (activeGameCheck.hasActiveGame) {
+            console.log("AuthenticatedDailyStrategy: Found active game to continue");
+
+            // Emit event to notify UI about active game
+            if (this.events) {
+              this.events.emit("game:active-game-found", {
+                gameStats: activeGameCheck.gameStats,
+              });
+            }
+
+            // Return a consistent response that won't cause loading failures
+            return {
+              success: true,
+              alreadyCompleted: true,
+              hasActiveGame: true,
+              gameStats: activeGameCheck.gameStats,
+              completionData: completionCheck.completionData,
+              daily: true,
+            };
+          }
+        } catch (activeGameError) {
+          console.warn("Error checking for active game when daily already completed:", activeGameError);
+          // Continue normal flow - we still need to return something valid
+        }
+
+        // FALLBACK: If there's no active game, return a response that indicates success
+        // but with special flags so UI knows daily is completed but no game is active
         return {
           success: true,
           alreadyCompleted: true,
+          hasActiveGame: false,
           completionData: completionCheck.completionData,
           daily: true,
         };
@@ -69,10 +101,7 @@ class AuthenticatedDailyStrategy extends DailyChallengeInterface {
         daily: true,
       };
     } catch (error) {
-      console.error(
-        "AuthenticatedDailyStrategy: Error starting daily challenge:",
-        error,
-      );
+      console.error("AuthenticatedDailyStrategy: Error starting daily challenge:", error);
 
       // Special handling for auth errors
       if (error.response?.status === 401) {
