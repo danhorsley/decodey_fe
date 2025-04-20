@@ -212,17 +212,32 @@ const useGameStore = create((set, get) => ({
 
       // For daily challenges, ensure we use daily game data
       let result;
-      if (settingsToUse.isDailyChallenge) {
-        // Use existing daily game data from session
-        const gameId = localStorage.getItem("uncrypt-game-id");
-        if (gameId && gameId.includes("daily")) {
-          console.log("Using existing daily challenge game data");
-          return {
-            success: true,
-            gameId: gameId,
-            difficulty: 'easy'
-          };
-        }
+      if (settingsToUse.isDailyChallenge && result && result.gameData) {
+        console.log("Using existing daily challenge game data");
+        
+        // Update state with daily challenge data
+        set({
+          gameInProgress: true,
+          isAnonymous: true,
+          display: result.gameData.display,
+          encrypted: result.gameData.encrypted_paragraph,
+          letterFrequency: result.gameData.letter_frequency,
+          errors: 0,
+          hasLost: false,
+          hasWon: false,
+          gameId: result.gameData.game_id,
+          originalLetters: result.gameData.original_letters,
+          incorrectGuesses: {},
+          isInitializing: false,
+          difficulty: 'easy',
+          maxMistakes: 8
+        });
+
+        return {
+          success: true,
+          gameId: result.gameData.game_id,
+          difficulty: 'easy'
+        };
       }
 
       // Make API call for new game if not using existing daily
