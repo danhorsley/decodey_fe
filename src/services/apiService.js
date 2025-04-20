@@ -656,15 +656,25 @@ class ApiService {
       const gameId = this.getGameId();
       console.log(`Submitting guess with game ID: ${gameId}`);
 
-      // Create request data
+      if (!gameId) {
+        console.warn('No game ID available for guess');
+        return { error: 'No active game' };
+      }
+
+      // Create request data and headers
       const data = {
         encrypted_letter: encryptedLetter,
         guessed_letter: guessedLetter,
         game_id: gameId,
       };
+      const config = {
+        headers: {
+          'X-Game-ID': gameId
+        }
+      };
 
-      // Make the request
-      const response = await this.api.post("/api/guess", data);
+      // Make the request with both body and headers containing game ID
+      const response = await this.api.post("/api/guess", data, config);
 
       return response.data;
     } catch (error) {
