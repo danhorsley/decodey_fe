@@ -202,16 +202,6 @@ const useGameStore = create((set, get) => ({
 
       console.log("Starting new game with settings:", settingsToUse);
 
-      // If this is a daily challenge, use the existing game data and skip API call
-      if (settingsToUse.isDailyChallenge && result && result.encrypted_paragraph) {
-        console.log("Using existing daily challenge game data");
-        return {
-          success: true,
-          gameId: result.game_id,
-          difficulty: 'easy'
-        };
-      }
-
       // Hard-coded max mistakes based on difficulty
       // (These are also set server-side but we set here for UI consistency)
       const maxMistakesByDifficulty = {
@@ -220,7 +210,23 @@ const useGameStore = create((set, get) => ({
         hard: 3,
       };
 
-      const result = await apiService.startGame(
+      // For daily challenges, ensure we use daily game data
+      let result;
+      if (settingsToUse.isDailyChallenge) {
+        // Use existing daily game data from session
+        const gameId = localStorage.getItem("uncrypt-game-id");
+        if (gameId && gameId.includes("daily")) {
+          console.log("Using existing daily challenge game data");
+          return {
+            success: true,
+            gameId: gameId,
+            difficulty: 'easy'
+          };
+        }
+      }
+
+      // Make API call for new game if not using existing daily
+      result = await apiService.startGame(
         settingsToUse.longText,
         settingsToUse.difficulty,
         settingsToUse.hardcoreMode
