@@ -91,7 +91,11 @@ const DailyChallenge = () => {
       <div
         className={`App-container ${settings?.theme === "dark" ? "dark-theme" : "light-theme"}`}
       >
-        <HeaderControls title="decodey" />
+        {/* Just use a simple title without the full HeaderControls */}
+        <div className="game-header">
+          <h1 className="retro-title">decodey</h1>
+        </div>
+
         <div className="loading-container">
           <h2 className="loading-title">Loading Today's Challenge</h2>
           <div className="loading-animation">
