@@ -202,6 +202,12 @@ const useGameStore = create((set, get) => ({
 
       console.log("Starting new game with settings:", settingsToUse);
 
+      // Don't make another API call if this is a daily challenge
+      if (settingsToUse.isDailyChallenge) {
+        console.log("Daily challenge already initialized, skipping additional game start");
+        return { success: true };
+      }
+
       // Hard-coded max mistakes based on difficulty
       // (These are also set server-side but we set here for UI consistency)
       const maxMistakesByDifficulty = {
