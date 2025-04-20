@@ -173,9 +173,12 @@ function Game() {
 
       console.log("Starting game initialization in Game.js useEffect");
 
+      // Define options first
+      const options = { customGameRequested: false };
+      
       // Determine if this should be a daily challenge
       const isAnonymous = !config.session.getAuthToken();
-      const shouldStartDaily = isDailyFromRoute || (isAnonymous && !options?.customGameRequested);
+      const shouldStartDaily = isDailyFromRoute || (isAnonymous && !options.customGameRequested);
 
       if (shouldStartDaily) {
         console.log("Starting daily challenge");
@@ -185,7 +188,6 @@ function Game() {
 
       // For non-daily games, use standard initialization
       console.log("Starting standard game");
-      const options = { customGameRequested: false };
       await initializeGame(options);
     };
 
