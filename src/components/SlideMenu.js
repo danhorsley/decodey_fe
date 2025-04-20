@@ -32,7 +32,9 @@ const SlideMenu = ({ isOpen, onClose }) => {
   const openSignup = useUIStore((state) => state.openSignup);
   const openSettings = useUIStore((state) => state.openSettings);
   const openAbout = useUIStore((state) => state.openAbout);
-  const openContinueGamePrompt = useUIStore((state) => state.openContinueGamePrompt);
+  const openContinueGamePrompt = useUIStore(
+    (state) => state.openContinueGamePrompt,
+  );
 
   // Get game session functions
   const gameSession = useGameSession();
@@ -50,9 +52,9 @@ const SlideMenu = ({ isOpen, onClose }) => {
     // For authenticated users, check for active game and show continue modal if found
     if (isAuthenticated) {
       // Check for active game using the auth store method
-      const checkActiveGame = useAuthStore.getState().checkActiveGame;
-      if (typeof checkActiveGame === 'function') {
-        checkActiveGame().then(result => {
+      const checkActiveGame = useAuthStore.getState().activeGameCheck;
+      if (typeof checkActiveGame === "function") {
+        checkActiveGame().then((result) => {
           if (result && result.hasActiveGame) {
             // If active game exists, show the continue modal
             openContinueGamePrompt(result.gameStats);
