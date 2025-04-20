@@ -74,18 +74,14 @@ const ModalManager = ({ children }) => {
 
   // Listen for active game notifications
   useEffect(() => {
-    // Subscribe to the active game found event
+    // Subscribe to the active game found event - only for authenticated users
     const unsubscribe = subscribeToEvents(events.ACTIVE_GAME_FOUND, (data) => {
-      // Only show continue game prompt for authenticated users
-      const isAuthenticated = !!config.session.getAuthToken();
-
-      if (isAuthenticated && data && data.gameStats) {
+      if (!config.session.getAuthToken()) {
+        return; // Never show continue prompt for anonymous users
+      }
+      
+      if (data && data.gameStats) {
         openContinueGamePrompt(data.gameStats);
-      } else {
-        console.log(
-          "Active game found but user is not authenticated - bypassing continue prompt",
-        );
-        // For anonymous users, we don't show the modal at all
       }
     });
 

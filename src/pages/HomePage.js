@@ -38,22 +38,24 @@ const HomePage = () => {
   const handleCustomGame = async () => {
     console.log("Custom Game clicked in HomePage");
 
-    // For authenticated users, check for active game first
-    if (isAuthenticated) {
-      try {
-        // Check active game - but here's the key difference:
-        // We'll use apiService directly to check without triggering any side effects
-        const response = await apiService.checkActiveGame();
+    if (!isAuthenticated) {
+      // Anonymous users always get a new game
+      window.location.href = "/";
+      return;
+    }
 
-        if (response && response.has_active_game) {
-          // If active game exists, simply navigate to "/" which will detect
-          // and show the continue prompt through the normal flow
-          navigate("/");
-          return;
-        }
-      } catch (error) {
-        console.error("Error checking for active game:", error);
+    try {
+      // Check active game using apiService directly
+      const response = await apiService.checkActiveGame();
+
+      if (response && response.has_active_game) {
+        // If active game exists, simply navigate to "/" which will detect
+        // and show the continue prompt through the normal flow
+        navigate("/");
+        return;
       }
+    } catch (error) {
+      console.error("Error checking for active game:", error);
     }
 
     // No active game or error checking - use the WinCelebration approach
