@@ -689,11 +689,21 @@ class ApiService {
       const gameId = this.getGameId();
       console.log(`Requesting hint with game ID: ${gameId}`);
 
-      // Create request data
-      const data = { game_id: gameId };
+      if (!gameId) {
+        console.warn('No game ID available for hint request');
+        return { error: 'No active game' };
+      }
 
-      // Make the request
-      const response = await this.api.post("/api/hint", data);
+      // Create request data and headers
+      const data = { game_id: gameId };
+      const config = {
+        headers: {
+          'X-Game-ID': gameId
+        }
+      };
+
+      // Make the request with both body and headers containing game ID
+      const response = await this.api.post("/api/hint", data, config);
 
       return response.data;
     } catch (error) {
