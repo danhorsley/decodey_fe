@@ -185,19 +185,16 @@ function Game() {
         const isAnonymous = !config.session.getAuthToken();
         const options = { customGameRequested: false }; // Default options
 
-        // Check if this is explicitly a daily challenge
-        if (isDailyFromRoute) {
-          console.log("Starting daily challenge from route");
+        // If daily challenge is requested or user is anonymous, start daily
+        if (isDailyFromRoute || isAnonymous) {
+          console.log("Starting daily challenge");
           await startDailyChallenge();
-        } else if (isAnonymous) {
-          // Anonymous users without explicit game type get daily challenge
-          console.log("Anonymous user - starting daily challenge by default");
-          await startDailyChallenge();
-        } else {
-          // Authenticated users get standard initialization
-          console.log("Authenticated user - using standard initialization");
-          await initializeGame(options);
+          return; // Important: return to prevent additional game initialization
         }
+        
+        // Only authenticated users get standard initialization
+        console.log("Authenticated user - using standard initialization");
+        await initializeGame(options);
       } catch (err) {
         console.error("Game initialization failed:", err);
       }
