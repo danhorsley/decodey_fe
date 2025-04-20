@@ -197,42 +197,39 @@ root.render(
 );
 
 // Add mobile scroll handling to hide address bar
-window.addEventListener("load", function() {
-  // Delay to ensure everything is loaded
-  setTimeout(function() {
-    // For iOS Safari
-    window.scrollTo(0, 1);
-
-    // More reliable technique for modern mobile browsers
-    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-      // Try multiple scroll techniques
+window.addEventListener("load", function () {
+  // Only apply this on mobile devices
+  if (
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent,
+    )
+  ) {
+    // Attempt to hide the address bar
+    const hideAddressBar = () => {
+      // Most effective method is just scrolling to position 1
       window.scrollTo(0, 1);
 
-      // Add a tiny bit of extra document height
-      const body = document.body;
-      const html = document.documentElement;
+      // For iOS Safari, sometimes a small delay helps
+      setTimeout(() => {
+        window.scrollTo(0, 1);
+      }, 50);
+    };
 
-      // Create a small invisible div to allow scrolling
-      const filler = document.createElement('div');
-      filler.style.height = '101vh';
-      filler.style.overflow = 'hidden';
-      filler.style.position = 'absolute';
-      filler.style.top = '0';
-      filler.style.left = '0';
-      filler.style.width = '1px';
-      filler.style.opacity = '0';
-      document.body.appendChild(filler);
+    // Try immediately and after a short delay
+    hideAddressBar();
+    setTimeout(hideAddressBar, 300);
 
-      // Scroll after each resize (orientation change)
-      window.addEventListener('resize', function() {
-        // Delay scroll to after resize completes
-        setTimeout(function() {
-          window.scrollTo(0, 1);
-        }, 100);
-      });
-    }
+    // Also hide on resize events
+    window.addEventListener("resize", () => {
+      setTimeout(hideAddressBar, 100);
+    });
 
-    // Apply touch selection prevention for mobile
-    disableTouchSelection();
-  }, 500); // Increased timeout for better reliability
+    // Also hide after any orientation change
+    window.addEventListener("orientationchange", () => {
+      setTimeout(hideAddressBar, 100);
+    });
+  }
+
+  // Apply touch selection prevention for mobile
+  disableTouchSelection();
 });

@@ -31,18 +31,35 @@ body {
   height: 100%;
   width: 100%;
   overflow-x: hidden;
+  margin: 0;
+  padding: 0;
 }
+
+html {
+  height: -webkit-fill-available;
+}
+
 body {
-  position: fixed;
-  overflow: hidden;
-  -webkit-overflow-scrolling: touch;
+  min-height: 100vh;
+  /* mobile viewport bug fix */
+  min-height: -webkit-fill-available;
+  overscroll-behavior-y: none;
 }
+
+.App-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  width: 100%;
+}
+
 /* For iOS Safari */
 @supports (-webkit-overflow-scrolling: touch) {
+
+  /* Use these styles instead of position: fixed */
   body {
-    /* Prevent elastic scrolling on iOS */
-    position: fixed;
-    width: 100%;
+    overscroll-behavior-y: none;
   }
 }
 
