@@ -50,15 +50,15 @@ class GameStrategyFactory {
       // For anonymous users, always clear any existing game ID to ensure fresh state
       localStorage.removeItem("uncrypt-game-id");
 
-      // Only use custom game strategy when explicitly requested
-      if (customGameRequested) {
-        console.log("Anonymous user with explicit custom game request - using anonymous strategy");
-        return this.strategies.anonymous;
-      } else {
-        // By default, anonymous users ALWAYS get daily challenges
-        console.log("Anonymous user - defaulting to daily challenge strategy");
+      // For anonymous users, respect the explicit daily flag first
+      if (daily) {
+        console.log("Anonymous user with daily flag - using daily anonymous strategy");
         return this.strategies.dailyAnonymous;
       }
+      
+      // Otherwise use anonymous strategy (prevents unintended daily defaulting)
+      console.log("Anonymous user - using standard anonymous strategy");
+      return this.strategies.anonymous;
     }
 
     // For authenticated users, follow normal flow
