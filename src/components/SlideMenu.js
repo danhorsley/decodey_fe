@@ -51,7 +51,8 @@ const SlideMenu = ({ isOpen, onClose }) => {
 
     // For authenticated users, check for active game and show continue modal if found
     if (isAuthenticated) {
-      const { hasActiveGame, activeGameStats, checkActiveGame } = useAuthStore.getState();
+      const { hasActiveGame, checkActiveGame } = useAuthStore.getState();
+      const { openContinueGamePrompt } = useUIStore.getState();
       // First check for active game status
       checkActiveGame().then(result => {
         if (result && result.hasActiveGame) {
