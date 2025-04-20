@@ -108,7 +108,7 @@ const HomePage = () => {
       "Reason: \n";
 
     window.open(
-      `mailto:quote@mail.decodey.game?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
+      `mailto:quotes@mail.decodey.game?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`,
     );
   };
 

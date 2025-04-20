@@ -185,9 +185,9 @@ function Game() {
         const isAnonymous = !config.session.getAuthToken();
         const hasExistingGameId = localStorage.getItem("uncrypt-game-id");
 
-        if (isAnonymous && !hasExistingGameId) {
-          // For anonymous users with no existing game, explicitly start daily challenge
-          console.log("Anonymous user with no game ID - explicitly starting daily challenge");
+        if (isAnonymous) {
+          // For anonymous users, explicitly start daily challenge
+          console.log("Anonymous user - explicitly starting daily challenge");
           await startDailyChallenge();
         } else {
           // For all other cases, use standard initialization
