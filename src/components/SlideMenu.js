@@ -32,6 +32,7 @@ const SlideMenu = ({ isOpen, onClose }) => {
   const openSignup = useUIStore((state) => state.openSignup);
   const openSettings = useUIStore((state) => state.openSettings);
   const openAbout = useUIStore((state) => state.openAbout);
+  const openContinueGamePrompt = useUIStore((state) => state.openContinueGamePrompt);
 
   // Get game session functions
   const gameSession = useGameSession();
@@ -43,22 +44,35 @@ const SlideMenu = ({ isOpen, onClose }) => {
   };
 
   // Handle custom game - UPDATED to ensure continue modal appears when needed
-const handleCustomGame = () => {
-  console.log("Custom Game clicked in SlideMenu");
+  const handleCustomGame = () => {
+    console.log("Custom Game clicked in SlideMenu");
 
-  // For anonymous users, directly start a custom game
-  if (!isAuthenticated) {
-    gameSession.startNewGame({ customGameRequested: true });
+    // For authenticated users, check for active game and show continue modal if found
+    if (isAuthenticated) {
+      // Check for active game using the auth store method
+      const checkActiveGame = useAuthStore.getState().checkActiveGame;
+      if (typeof checkActiveGame === 'function') {
+        checkActiveGame().then(result => {
+          if (result && result.hasActiveGame) {
+            // If active game exists, show the continue modal
+            useUIStore.getState().openContinueGamePrompt(result.gameStats);
+          } else {
+            // No active game, navigate to game page which will start a new game
+            navigate("/");
+          }
+        });
+      } else {
+        // Fallback if method not available
+        navigate("/");
+      }
+    } else {
+      // For anonymous users, just navigate to game page
+      navigate("/");
+    }
+
+    // Close the menu
     onClose();
-    return;
-  }
-
-  // For authenticated users, check for active game first
-  gameSession.initializeGame();
-  
-  // The continue game modal will appear if there's an active game
-  onClose();
-};
+  };
 
   // Handle auth actions
   const handleLogin = () => {

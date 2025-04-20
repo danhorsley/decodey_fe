@@ -37,17 +37,8 @@ const HomePage = () => {
     navigate("/daily");
   };
 
-  const handleCustomGame = async () => {
-    // For anonymous users, directly start a custom game
-    if (!isAuthenticated) {
-      gameSession.startNewGame({ customGameRequested: true });
-      navigate("/");
-      return;
-    }
-
-    // For authenticated users, run initializeGame instead
-    // This will check for active games and show the continue modal if needed
-    gameSession.initializeGame();
+  const handleCustomGame = () => {
+    // Simply navigate to the game page and let Game.js handle initialization
     navigate("/");
   };
 
