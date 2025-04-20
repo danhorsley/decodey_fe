@@ -320,3 +320,89 @@
     margin-left: 5px;
   }
 }
+
+/* Add these styles to your WinCelebration.css file */
+
+/* Ensure the stats section has proper relative positioning for the spinner overlay */
+.retro-stats {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden; /* Keep the spinner within the rounded borders */
+}
+
+/* Container for spinner and text */
+.stats-spinner-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(2px);
+  border-radius: 8px;
+  z-index: 5;
+  animation: spinner-fade 0.3s ease-in-out;
+}
+
+/* Style for "CALCULATING SCORE" text */
+.calculating-text {
+  font-family: monospace;
+  font-size: 1.2rem;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 10px;
+  color: #4cc9f0;
+  text-shadow: 0 0 8px rgba(76, 201, 240, 0.7);
+}
+
+.dark-theme .calculating-text {
+  color: #4cc9f0;
+}
+
+.light-theme .calculating-text {
+  color: #00ff41;
+}
+
+/* Customize crypto spinner appearance when in stats section */
+.retro-stats .crypto-spinner {
+  background-color: transparent; /* Remove background since container has it */
+  position: relative; /* Change from absolute to relative */
+  height: auto; /* Let it size naturally */
+  width: auto;
+  margin-bottom: 10px;
+}
+
+.dark-theme .stats-spinner-container {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+.light-theme .stats-spinner-container {
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+/* Make the spinner text a bit smaller when in the stats section */
+.retro-stats .crypto-spinner-text {
+  font-size: 1.5rem;
+}
+
+/* Add a subtle fade-in/out animation */
+@keyframes spinner-fade {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+/* Style for the streak bonus tag */
+.streak-bonus-tag {
+  display: inline-block;
+  margin-left: 6px;
+  color: #4cc9f0;
+  font-weight: bold;
+}
+
+.light-theme .streak-bonus-tag {
+  color: #007bff;
+}

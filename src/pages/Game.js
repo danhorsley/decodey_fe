@@ -29,7 +29,7 @@ function Game() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   // Location hook to get state from routing
   const location = useLocation();
-
+  const isWinVerificationInProgress = useGameStore((state) => state.isWinVerificationInProgress);
   // Slide menu state - NEW
   const [menuOpen, setMenuOpen] = useState(false);
   const toggleMenu = useCallback(() => setMenuOpen((prev) => !prev), []);
@@ -523,6 +523,7 @@ function Game() {
         hardcoreMode: hardcoreMode,
         // Add callback for Play Again button
         onPlayAgain: handleStartNewGame,
+        statsLoading: isWinVerificationInProgress, 
       };
 
       return <WinCelebration playSound={playSound} winData={gameOverData} />;

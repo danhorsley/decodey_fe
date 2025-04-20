@@ -31,6 +31,7 @@ const initialState = {
   hardcoreMode: false,
   isLocalWinDetected: false,
   isWinVerificationInProgress: false,
+  isWinVerificationInProgress: false,
   difficulty: "easy", // Default, will be updated from settings
   maxMistakes: 8, // Default, will be updated from settings
   isResetting: false,
@@ -602,7 +603,8 @@ const useGameStore = create((set, get) => ({
         updates.hasWon = true;
         updates.hasLost = false; // Explicitly set hasLost to false to avoid conflicts
         updates.completionTime = Date.now();
-
+        // Set verification in progress flag to show loading spinner
+        updates.isWinVerificationInProgress = true;
         // First update state with what we know
         set(updates);
 
@@ -755,11 +757,15 @@ const useGameStore = create((set, get) => ({
    */
   verifyWinAndGetData: async () => {
     try {
+      // Set flag to indicate verification is in progress
+      set({ isWinVerificationInProgress: true });
+
       // Get fresh status from backend
       const gameStatus = await apiService.getGameStatus();
 
       if (gameStatus.error) {
         console.error("Error verifying win:", gameStatus.error);
+        set({ isWinVerificationInProgress: false });
         return { verified: false };
       }
 
@@ -818,11 +824,13 @@ const useGameStore = create((set, get) => ({
 
         console.log("Formatted win data:", formattedWinData);
 
+        // Update state with win data and clear verification flag
         set({
           hasWon: true,
           hasLost: false,
           completionTime: Date.now(),
           winData: formattedWinData,
+          isWinVerificationInProgress: false
         });
 
         return {

@@ -1,4 +1,4 @@
-// src/components/modals/WinCelebration.js - Updated with streak bonus
+// src/components/modals/WinCelebration.js - Updated with stats loading spinner
 import React, { useState, useEffect } from "react";
 import MatrixRain from "../effects/MatrixRain";
 import CryptoSpinner from "../CryptoSpinner";
@@ -57,17 +57,47 @@ const WinCelebration = ({ playSound, winData }) => {
 
   // State for showing quote (for loss state)
   const [showQuote, setShowQuote] = useState(true);
-  // State for loading data
-  const [isLoading, setIsLoading] = useState(false);
+  // State for loading data - set to true initially if we're waiting for stats
+  const [isLoading, setIsLoading] = useState(winData?.statsLoading || false);
+  // State to track if we specifically need the stats spinner
+  const [showStatsSpinner, setShowStatsSpinner] = useState(
+    winData?.statsLoading || false,
+  );
   // Store anonymous state at mount time
   const [wasAnonymous] = useState(!isAuthenticated);
 
-  // Play sound effect on mount
+  // Play sound effect on mount and handle loading state
   useEffect(() => {
+    // Play win sound
     if (typeof playSound === "function") {
       playSound("win");
     }
-  }, [playSound]);
+
+    // Update loading state when winData changes
+    setIsLoading(winData?.statsLoading || false);
+    setShowStatsSpinner(winData?.statsLoading || false);
+
+    // If winData has statsLoading=true, set up a timeout to hide the spinner
+    // after a reasonable time even if the backend doesn't respond
+    if (winData?.statsLoading) {
+      const timeout = setTimeout(() => {
+        setShowStatsSpinner(false);
+        setIsLoading(false);
+      }, 5000); // 5 second maximum loading time
+
+      return () => clearTimeout(timeout);
+    }
+  }, [playSound, winData?.statsLoading]);
+
+  // Effect to handle winData updates - to clear the loading state
+  // when complete data arrives
+  useEffect(() => {
+    if (winData && !winData.statsLoading && showStatsSpinner) {
+      // Data has arrived and is no longer loading, but spinner is showing
+      setShowStatsSpinner(false);
+      setIsLoading(false);
+    }
+  }, [winData, showStatsSpinner]);
 
   // Safely extract win data with defaults
   const {
@@ -225,8 +255,20 @@ const WinCelebration = ({ playSound, winData }) => {
               </div>
             )}
 
-            {/* Stats in monospace grid */}
-            <div className="retro-stats">
+            {/* Stats in monospace grid - with loading spinner overlay */}
+            <div className="retro-stats" style={{ position: "relative" }}>
+              {/* CryptoSpinner overlay for stats section */}
+              {showStatsSpinner && (
+                <div className="stats-spinner-container">
+                  <CryptoSpinner 
+                    isActive={true} 
+                    isDarkTheme={settings.theme === "dark"} 
+                    inStatsContainer={true}
+                  />
+                  <div className="calculating-text">CALCULATING SCORE</div>
+                </div>
+              )}
+
               {/* Top row with time and mistakes */}
               <div className="stat-row">
                 <div className="stat-item">TIME: {formatTime()}</div>
