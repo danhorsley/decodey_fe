@@ -14,12 +14,10 @@ import useAuthStore from "../stores/authStore";
 import useUIStore from "../stores/uiStore";
 import useSound from "../services/WebAudioSoundManager";
 import useKeyboardInput from "../hooks/KeyboardController";
-import { formatAlternatingLines } from "../utils/utils";
 import config from "../config";
 import MobileLayout from "../components/layout/MobileLayout";
 import WinCelebration from "../components/modals/WinCelebration";
 import MatrixRainLoading from "../components/effects/MatrixRainLoading";
-import AdaptiveTextDisplay from "../components/AdaptiveTextDisplay";
 import TuneableTextDisplay from "../components/TuneableTextDisplay";
 import TutorialOverlay from "../components/TutorialOverlay";
 
@@ -525,7 +523,7 @@ function Game() {
   // ===== MAIN RENDER =====
   // Determine if we should use mobile layout - UPDATED VERSION
   if (useMobileMode) {
-    console.log("Rendering mobile layout"); // Debug log
+    // console.log("Rendering mobile layout"); // Debug log
     return (
       <div className="App-container mobile-mode">
         <MobileLayout>

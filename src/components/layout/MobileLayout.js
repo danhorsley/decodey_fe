@@ -87,4 +87,4 @@ const MobileLayout = ({ children }) => {
   );
 };
 
-export default MobileLayout;
+export default React.memo(MobileLayout);
