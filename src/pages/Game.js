@@ -384,24 +384,6 @@ function Game() {
     playSound,
   });
 
-  const formattedText = React.useMemo(() => {
-    if (!encrypted || !display) return { __html: "" };
-    return formatAlternatingLines(encrypted, display, true);
-  }, [encrypted, display]);
-
-  // Determine quote length class for responsive text sizing
-  const quoteClasses = React.useMemo(() => {
-    if (!encrypted) return "";
-
-    // Count visible characters in the encrypted text (ignoring spaces and punctuation)
-    const visibleCharCount = encrypted.length;
-
-    if (visibleCharCount > 70) return "quote-very-long";
-    if (visibleCharCount > 60) return "quote-long";
-    if (visibleCharCount > 50) return "quote-medium";
-    return "";
-  }, [encrypted]);
-
   // ===== RENDER HELPERS =====
   // If loading, show loading screen
   if (isInitializing || isResetting) {

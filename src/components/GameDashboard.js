@@ -109,7 +109,7 @@ const GameDashboard = ({
         onClick={!disableHint ? onHintClick : undefined}
       >
         {/* eslint-disable-next-line react/no-children-prop */}
-        <div className="hint-text-display" contentEditable="false">
+        <div className="hint-text-display">
           {hintTexts[remainingMistakes] || hintTexts[0]}
         </div>
         <div className="hint-label">HINT TOKENS</div>
@@ -133,7 +133,7 @@ const GameDashboard = ({
       > */}
       {/* Encrypted Grid */}
       {/* eslint-disable-next-line react/no-children-prop */}
-      <div className="encrypted-grid" contentEditable="false">
+      <div className="encrypted-grid">
         {sortedEncryptedLetters.map((letter) => (
           <LetterCell
             key={letter}
@@ -153,7 +153,7 @@ const GameDashboard = ({
 
       {/* Guess Grid */}
       {/* eslint-disable-next-line react/no-children-prop */}
-      <div className="guess-grid" contentEditable="false">
+      <div className="guess-grid">
         {originalLetters.map((letter) => (
           <LetterCell
             key={letter}

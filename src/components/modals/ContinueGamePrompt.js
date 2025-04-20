@@ -119,9 +119,23 @@ function ContinueGamePrompt({
               border: "none",
               cursor: "pointer",
               flex: !dailyCompleted ? "1 1 30%" : "1 1 45%", // Adjust flex basis based on number of buttons
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
             Custom Game
+            <span
+              style={{
+                fontSize: "0.7rem",
+                color: "#ffcccc",
+                marginTop: "4px",
+                fontWeight: "normal",
+              }}
+            >
+              Abandons game & resets streak
+            </span>
           </button>
 
           {/* Only show Daily Challenge button if daily not completed and handler provided */}
