@@ -91,7 +91,6 @@ const WinCelebration = ({ playSound, winData }) => {
     if (winData && !winData.statsLoading && showStatsSpinner) {
       // Data has arrived and is no longer loading, but spinner is showing
       setShowStatsSpinner(false);
-      setIsLoading(false);
     }
   }, [winData, showStatsSpinner]);
 
