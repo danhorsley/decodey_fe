@@ -1,51 +1,56 @@
 // src/pages/Leaderboard.js
-import React, { useCallback } from "react";
-import { IconContext } from "react-icons";
-import { useNavigate } from "react-router-dom";
-import { FaArrowLeft, FaTrophy, FaMedal, FaFire, FaUser } from "react-icons/fa";
+import React, { useCallback, useState } from "react";
+import { FaTrophy, FaFire, FaUser } from "react-icons/fa";
 import useLeaderboard from "../hooks/useLeaderboard";
 import useUIStore from "../stores/uiStore";
 import useSettingsStore from "../stores/settingsStore";
 import LeaderboardUI from "../components/LeaderboardUI";
 import "../Styles/Leaderboard.css";
+import SlideMenu from "../components/SlideMenu"; // Add SlideMenu import
+import CompactHeader from "../components/CompactHeader"; // Add CompactHeader import
 
 // Component for when data is loading
-const LeaderboardLoading = ({ theme, type }) => {
-  // Customize loading message based on the type of data being loaded
-  let message = "Loading leaderboard data...";
+// const LeaderboardLoading = ({ theme, type }) => {
+//   // Customize loading message based on the type of data being loaded
+//   let message = "Loading leaderboard data...";
 
-  if (type === "streaks") {
-    message = "Loading streak data...";
-  } else if (type === "personal") {
-    message = "Loading your stats...";
-  }
+//   if (type === "streaks") {
+//     message = "Loading streak data...";
+//   } else if (type === "personal") {
+//     message = "Loading your stats...";
+//   }
 
-  return (
-    <div className="leaderboard-loading">
-      <h2 className="loading-title">{message}</h2>
-      <div className="leaderboard-loading-animation">
-        {/* Use MatrixRainLoading for a consistent look with the rest of the app */}
-        <div style={{ height: "300px", width: "100%" }}>
-          {/* Could use MatrixRainLoading here if imported */}
-        </div>
-      </div>
-    </div>
-  );
-};
+//   return (
+//     <div className="leaderboard-loading">
+//       <h2 className="loading-title">{message}</h2>
+//       <div className="leaderboard-loading-animation">
+//         {/* Use MatrixRainLoading for a consistent look with the rest of the app */}
+//         <div style={{ height: "300px", width: "100%" }}>
+//           {/* Could use MatrixRainLoading here if imported */}
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
 
-// Component for error state
-const LeaderboardError = ({ error, onRetry, theme }) => (
-  <div className="error-message">
-    <p>{error}</p>
-    <button onClick={onRetry}>Try Again</button>
-  </div>
-);
+// // Component for error state
+// const LeaderboardError = ({ error, onRetry, theme }) => (
+//   <div className="error-message">
+//     <p>{error}</p>
+//     <button onClick={onRetry}>Try Again</button>
+//   </div>
+// );
 
 // Leaderboard page component
 function Leaderboard() {
-  const navigate = useNavigate();
   const { openLogin } = useUIStore();
   const settings = useSettingsStore((state) => state.settings);
+
+  // Add state for menu toggle
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // Toggle menu function
+  const toggleMenu = useCallback(() => setMenuOpen(prev => !prev), []);
 
   // Use our custom hook for all leaderboard functionality
   const {
@@ -68,11 +73,6 @@ function Leaderboard() {
     isAuthenticated,
   } = useLeaderboard();
 
-  // Navigate back to game
-  const handleBack = useCallback(() => {
-    navigate("/");
-  }, [navigate]);
-
   // Handle login click
   const handleLoginClick = useCallback(() => {
     openLogin();
@@ -88,14 +88,6 @@ function Leaderboard() {
       <>
         {/* Main navigation tabs */}
         <div className="tabs-container">
-          <button
-            className="back-button"
-            onClick={handleBack}
-            aria-label="Back"
-          >
-            <FaArrowLeft />
-          </button>
-
           <div className="tabs">
             <button
               className={`tab ${leaderboardType === "scores" ? "active" : ""}`}
@@ -329,7 +321,6 @@ function Leaderboard() {
     leaderboardType,
     page,
     isAuthenticated,
-    handleBack,
     handlePeriodChange,
     handleTypeChange,
     handlePageChange,
@@ -346,14 +337,6 @@ function Leaderboard() {
       <>
         {/* Main navigation tabs */}
         <div className="tabs-container">
-          <button
-            className="back-button"
-            onClick={handleBack}
-            aria-label="Back"
-          >
-            <FaArrowLeft />
-          </button>
-
           <div className="tabs">
             <button
               className={`tab ${leaderboardType === "scores" ? "active" : ""}`}
@@ -605,7 +588,6 @@ function Leaderboard() {
     leaderboardType,
     page,
     isAuthenticated,
-    handleBack,
     handleTypeChange,
     handleStreakTypeChange,
     handleStreakPeriodChange,
@@ -640,14 +622,6 @@ function Leaderboard() {
       <div className="personal-stats-container">
         {/* Main navigation tabs */}
         <div className="tabs-container">
-          <button
-            className="back-button leaderboard-back-button"
-            onClick={handleBack}
-            aria-label="Back to Game"
-          >
-            <FaArrowLeft />
-          </button>
-
           <div className="tabs">
             <button
               className={`tab ${leaderboardType === "scores" ? "active" : ""}`}
@@ -774,7 +748,6 @@ function Leaderboard() {
     isAuthenticated,
     personalStats,
     leaderboardType,
-    handleBack,
     handleLoginClick,
     handleTypeChange,
   ]);
@@ -784,6 +757,13 @@ function Leaderboard() {
     <div
       className={`leaderboard ${settings?.theme === "dark" ? "dark-theme" : ""}`}
     >
+      {/* Add CompactHeader and SlideMenu here */}
+      <CompactHeader 
+        title="decodey" 
+        toggleMenu={toggleMenu} 
+      />
+      <SlideMenu isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
+
       {/* Show loading state */}
       {isLoading && <LeaderboardUI type={leaderboardType} />}
 

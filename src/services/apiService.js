@@ -454,92 +454,113 @@ class ApiService {
    * @param {Object} options Game options
    * @returns {Promise<Object>} Game data
    */
+  // Modified startGame method to handle rate limiting and prevent duplicate calls
   async startGame(options = {}) {
     try {
-      // Ensure difficulty is valid
-      let difficulty = options.difficulty || "medium";
-
-      // Ensure difficulty is valid
-      if (!["easy", "medium", "hard"].includes(difficulty)) {
-        console.warn(
-          `Invalid difficulty value: ${difficulty}, defaulting to medium`,
-        );
-        difficulty = "medium";
+      // If a call is already in progress, return that promise
+      if (this._startGameInProgress) {
+        console.log("startGame: Using existing in-progress request");
+        return this._startGamePromise;
       }
 
-      // Determine endpoint based on longText option
-      const endpoint = "/api/start";
+      // Set lock
+      this._startGameInProgress = true;
 
-      // Build query parameters
-      const queryParams = new URLSearchParams();
-      queryParams.append("difficulty", difficulty);
-      // Add longText parameter to query string
-      if (options.longText) {
-        queryParams.append("longText", "true");
-      }
-      // Add hardcore mode parameter to query string
-      if (options.hardcoreMode) {
-        queryParams.append("hardcore", "true");
-      }
-      // Construct full URL
-      const url = `${endpoint}${queryParams.toString() ? "?" + queryParams.toString() : ""}`;
+      // Start with creating the actual request promise
+      this._startGamePromise = (async () => {
+        try {
+          // Ensure difficulty is valid
+          const difficulty = ["easy", "medium", "hard"].includes(
+            options.difficulty,
+          )
+            ? options.difficulty
+            : "medium";
 
-      // Check if we have a token (authenticated user)
-      const token = this.getToken();
-      const isAnonymousStart = !token;
+          // Build query parameters
+          const queryParams = new URLSearchParams();
+          queryParams.append("difficulty", difficulty);
+          if (options.longText) queryParams.append("longText", "true");
+          if (options.hardcoreMode) queryParams.append("hardcore", "true");
 
-      // Log the request for debugging
-      console.log(
-        `Starting game with URL: ${url}, difficulty: ${difficulty}, anonymous: ${isAnonymousStart}`,
-      );
+          const endpoint = "/api/start";
+          const url = `${endpoint}${queryParams.toString() ? "?" + queryParams.toString() : ""}`;
 
-      try {
-        // Make the request through our normal API instance
-        const response = await this.api.get(url);
+          // Check if we're anonymous or authenticated
+          const token = this.getToken();
+          const isAnonymousStart = !token;
 
-        // If there's a game ID in the response, store it
-        if (response.data.game_id) {
-          localStorage.setItem("uncrypt-game-id", response.data.game_id);
-          console.log(`Game started with ID: ${response.data.game_id}`);
-        }
+          console.log(
+            `Starting game with URL: ${url}, difficulty: ${difficulty}, anonymous: ${isAnonymousStart}`,
+          );
 
-        return response.data;
-      } catch (error) {
-        // If we get a 401 error, try an anonymous start
-        if (error.response?.status === 401) {
-          console.log("Auth error in startGame, trying anonymous start");
+          let response;
 
-          // For anonymous start, create a request config without auth headers
-          const config = {
-            url: url,
-            method: "get",
-            baseURL: this.api.defaults.baseURL,
-            headers: {
-              Accept: "application/json",
-              "Content-Type": "application/json",
-            },
-            // Do not include auth headers
-          };
-
-          // Use our API instance but with a custom config that doesn't trigger the auth interceptor
-          const anonResponse = await this.api.request(config);
-
-          // If there's a game ID in the response, store it
-          if (anonResponse.data.game_id) {
-            localStorage.setItem("uncrypt-game-id", anonResponse.data.game_id);
-            console.log(
-              `Anonymous game started with ID: ${anonResponse.data.game_id}`,
+          // For anonymous users, ensure we don't send any auth tokens
+          if (isAnonymousStart) {
+            // Use fetch API for anonymous requests to avoid axios defaults
+            const fetchResponse = await fetch(
+              `${this.api.defaults.baseURL}${url}`,
+              {
+                method: "GET",
+                headers: {
+                  Accept: "application/json",
+                  "Content-Type": "application/json",
+                },
+                // Explicitly disable credentials
+                credentials: "omit",
+              },
             );
+
+            // Handle 429 errors specifically
+            if (fetchResponse.status === 429) {
+              const data = await fetchResponse.json();
+              console.warn(
+                `Rate limited: ${data.error}, cooldown: ${data.cooldown_remaining}s`,
+              );
+              throw new Error(
+                `Rate limited: Please wait ${data.cooldown_remaining}s before trying again`,
+              );
+            }
+
+            if (!fetchResponse.ok) {
+              throw new Error(
+                `HTTP error ${fetchResponse.status}: ${fetchResponse.statusText}`,
+              );
+            }
+
+            const data = await fetchResponse.json();
+            response = { data };
+          } else {
+            // For authenticated users, use the API instance with auth
+            response = await this.api.get(url);
           }
 
-          return anonResponse.data;
-        }
+          // Store game ID if present
+          if (response.data.game_id) {
+            localStorage.setItem("uncrypt-game-id", response.data.game_id);
+            console.log(`Game started with ID: ${response.data.game_id}`);
+          }
 
-        // Rethrow the error if it's not a 401
-        throw error;
-      }
+          return response.data;
+        } catch (error) {
+          // Simply rethrow the error - we'll handle it in the outer catch
+          throw error;
+        } finally {
+          // Clear the lock in the finally block to ensure it's always cleared
+          setTimeout(() => {
+            this._startGameInProgress = false;
+          }, 2000); // Clear the lock after 2s to prevent rapid retries
+        }
+      })();
+
+      // Return the promise
+      return await this._startGamePromise;
     } catch (error) {
       console.error("Error in startGame:", error);
+      // Ensure lock is cleared on error
+      setTimeout(() => {
+        this._startGameInProgress = false;
+      }, 2000);
       throw error;
     }
   }

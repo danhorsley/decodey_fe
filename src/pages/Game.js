@@ -166,24 +166,40 @@ function Game() {
     // Use a flag to prevent double initialization
     let hasInitialized = false;
 
-    // Check if this is a daily challenge from route state
-    if (isDailyFromRoute && !hasInitialized) {
-      console.log("Initializing daily challenge from route params");
-      startDailyChallenge();
+    const performInitialization = async () => {
+      // Prevent double initialization
+      if (hasInitialized) return;
       hasInitialized = true;
-    } 
-    // Check for anonymous user (needs separate initialization)
-    else if (!config.session.getAuthToken() && !hasInitialized) {
-      console.log("Initializing game for anonymous user");
-      initializeGame();
-      hasInitialized = true;
-    }
-    // Standard game initialization for authenticated users
-    else if (!hasInitialized) {
-      console.log("Initializing standard game");
-      initializeGame();
-      hasInitialized = true;
-    }
+
+      console.log("Starting game initialization in Game.js useEffect");
+
+      try {
+        // Check if this is explicitly a daily challenge from route state
+        if (isDailyFromRoute) {
+          console.log("Initializing daily challenge from route params");
+          await startDailyChallenge();
+          return;
+        }
+
+        // Check for anonymous user with no existing game
+        const isAnonymous = !config.session.getAuthToken();
+        const hasExistingGameId = localStorage.getItem("uncrypt-game-id");
+
+        if (isAnonymous && !hasExistingGameId) {
+          // For anonymous users with no existing game, explicitly start daily challenge
+          console.log("Anonymous user with no game ID - explicitly starting daily challenge");
+          await startDailyChallenge();
+        } else {
+          // For all other cases, use standard initialization
+          console.log(`Standard initialization: isAnonymous=${isAnonymous}, hasExistingGameId=${!!hasExistingGameId}`);
+          await initializeGame();
+        }
+      } catch (err) {
+        console.error("Game initialization failed:", err);
+      }
+    };
+
+    performInitialization();
   }, [initializeGame, startDailyChallenge, isDailyFromRoute]);
   //if lines don't match rerender
   useEffect(() => {

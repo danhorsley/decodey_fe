@@ -37,12 +37,14 @@ export const useGameSessionStore = create((set) => ({
  * @param {boolean} options.daily Whether to initialize a daily challenge
  * @returns {Promise<Object>} Initialization result
  */
+
 const initializeGameSession = async (options = {}) => {
   // Get session store state
   const sessionStore = useGameSessionStore.getState();
 
   // Prevent multiple simultaneous initialization attempts
   if (sessionStore.isInitializing) {
+    console.log("Game initialization already in progress, returning early");
     return { success: false, reason: "already-initializing" };
   }
 
@@ -50,6 +52,17 @@ const initializeGameSession = async (options = {}) => {
   sessionStore.setInitializing(true);
 
   try {
+    // Check if we're anonymous and have no existing game
+    const isAnonymous = !config.session.getAuthToken();
+    const hasExistingGame = localStorage.getItem("uncrypt-game-id");
+
+    // For anonymous users with no existing game, default to daily challenge
+    // unless explicitly requesting a custom game
+    if (isAnonymous && !hasExistingGame && !options.customGameRequested) {
+      console.log("Anonymous user with no existing game - defaulting to daily challenge");
+      options.daily = true;
+    }
+
     // Get the appropriate strategy for the current user and game type
     const isDaily = options.daily === true;
     const customGameRequested = options.customGameRequested === true;
@@ -57,8 +70,9 @@ const initializeGameSession = async (options = {}) => {
       daily: isDaily,
       customGameRequested: customGameRequested,
     });
+
     console.log(
-      `Using ${strategy.constructor.name} for game initialization (${isDaily ? "daily" : "standard"})`,
+      `Using ${strategy.constructor.name} for game initialization (${isDaily ? "daily" : "standard"})`
     );
 
     // Initialize game using the selected strategy
@@ -413,11 +427,14 @@ const onGameSessionEvent = (event, callback) => {
  * @returns {Promise<Object>} Result of daily challenge initialization
  */
 const initializeDailyChallenge = async () => {
+  console.log("initializeDailyChallenge called");
+
   // Get session store state
   const sessionStore = useGameSessionStore.getState();
 
   // Prevent multiple simultaneous initialization attempts
   if (sessionStore.isInitializing) {
+    console.log("Daily challenge initialization already in progress, returning early");
     return { success: false, reason: "already-initializing" };
   }
 
@@ -431,35 +448,11 @@ const initializeDailyChallenge = async () => {
 
     // Start the daily challenge
     const result = await strategy.startDailyChallenge();
+    console.log("Daily challenge initialization result:", result.success ? "Success" : "Failed");
 
-    // IMPROVED HANDLING: If already completed but there's an active game,
-    // ensure we handle this gracefully
-    if (result.success && result.alreadyCompleted) {
-      console.log("Daily challenge already completed - handling appropriately");
-
-      // The user already completed today's challenge
-      // Emit a notification about daily completion
-      eventEmitter.emit("daily:already-completed", {
-        completionData: result.completionData,
-      });
-
-      // If there's also an active game, emit that event too
-      if (result.hasActiveGame && result.gameStats) {
-        // This will trigger the continue game modal
-        eventEmitter.emit("game:active-game-found", {
-          gameStats: result.gameStats,
-        });
-      }
-
-      // Clear initialization state
-      sessionStore.setInitializing(false);
-
-      // Return result indicating we've handled the scenario
-      return result;
-    }
-
-    // Normal handling for successful initialization with game data
+    // Handle cases appropriately...
     if (result.success && result.gameData) {
+      console.log("Daily challenge has game data, updating game store");
       const gameStore = useGameStore.getState();
       if (typeof gameStore.startGame === "function") {
         await gameStore.startGame(

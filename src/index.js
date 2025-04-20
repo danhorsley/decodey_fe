@@ -196,20 +196,43 @@ root.render(
   ),
 );
 
-// Add minimal scroll on launch and disable touch selection
-window.addEventListener("load", function () {
-  // Delay slightly to ensure everything is loaded
-  setTimeout(function () {
+// Add mobile scroll handling to hide address bar
+window.addEventListener("load", function() {
+  // Delay to ensure everything is loaded
+  setTimeout(function() {
+    // For iOS Safari
     window.scrollTo(0, 1);
-    // Try to request fullscreen if possible
-    if (document.documentElement.requestFullscreen) {
-      document.documentElement.requestFullscreen().catch((err) => {
-        // Silently handle any errors since fullscreen isn't critical
-        console.log("Fullscreen request failed:", err);
+
+    // More reliable technique for modern mobile browsers
+    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+      // Try multiple scroll techniques
+      window.scrollTo(0, 1);
+
+      // Add a tiny bit of extra document height
+      const body = document.body;
+      const html = document.documentElement;
+
+      // Create a small invisible div to allow scrolling
+      const filler = document.createElement('div');
+      filler.style.height = '101vh';
+      filler.style.overflow = 'hidden';
+      filler.style.position = 'absolute';
+      filler.style.top = '0';
+      filler.style.left = '0';
+      filler.style.width = '1px';
+      filler.style.opacity = '0';
+      document.body.appendChild(filler);
+
+      // Scroll after each resize (orientation change)
+      window.addEventListener('resize', function() {
+        // Delay scroll to after resize completes
+        setTimeout(function() {
+          window.scrollTo(0, 1);
+        }, 100);
       });
     }
 
     // Apply touch selection prevention for mobile
     disableTouchSelection();
-  }, 300);
+  }, 500); // Increased timeout for better reliability
 });

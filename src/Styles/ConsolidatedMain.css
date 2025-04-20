@@ -28,8 +28,23 @@
 html,
 body {
   font-family: var(--font-primary);
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden;
 }
-
+body {
+  position: fixed;
+  overflow: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+/* For iOS Safari */
+@supports (-webkit-overflow-scrolling: touch) {
+  body {
+    /* Prevent elastic scrolling on iOS */
+    position: fixed;
+    width: 100%;
+  }
+}
 
 
 

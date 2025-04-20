@@ -21,13 +21,16 @@ class AnonymousDailyStrategy extends DailyChallengeInterface {
 
       // Get today's date string
       const dateString = this.getTodayDateString();
+      console.log(`Starting daily challenge for date: ${dateString}`);
 
       // Start daily game via API Service
       const gameData = await apiService.startDailyChallenge(dateString);
+      console.log("Received game data from API:", gameData ? "success" : "failure");
 
       // Store game ID if available
       if (gameData?.game_id) {
         localStorage.setItem("uncrypt-game-id", gameData.game_id);
+        console.log(`Daily challenge started with ID: ${gameData.game_id}`);
       }
 
       return {
