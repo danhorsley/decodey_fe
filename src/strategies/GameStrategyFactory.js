@@ -51,7 +51,7 @@ class GameStrategyFactory {
       localStorage.removeItem("uncrypt-game-id");
 
       // For anonymous users, respect the explicit daily flag first
-      if (daily) {
+      if (isDaily) {
         console.log("Anonymous user with daily flag - using daily anonymous strategy");
         return this.strategies.dailyAnonymous;
       }
