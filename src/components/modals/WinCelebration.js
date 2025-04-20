@@ -57,8 +57,6 @@ const WinCelebration = ({ playSound, winData }) => {
 
   // State for showing quote (for loss state)
   const [showQuote, setShowQuote] = useState(true);
-  // State for loading data - set to true initially if we're waiting for stats
-  const [isLoading, setIsLoading] = useState(winData?.statsLoading || false);
   // State to track if we specifically need the stats spinner
   const [showStatsSpinner, setShowStatsSpinner] = useState(
     winData?.statsLoading || false,
@@ -73,8 +71,7 @@ const WinCelebration = ({ playSound, winData }) => {
       playSound("win");
     }
 
-    // Update loading state when winData changes
-    setIsLoading(winData?.statsLoading || false);
+    // Update spinner state when winData changes
     setShowStatsSpinner(winData?.statsLoading || false);
 
     // If winData has statsLoading=true, set up a timeout to hide the spinner
@@ -82,7 +79,6 @@ const WinCelebration = ({ playSound, winData }) => {
     if (winData?.statsLoading) {
       const timeout = setTimeout(() => {
         setShowStatsSpinner(false);
-        setIsLoading(false);
       }, 5000); // 5 second maximum loading time
 
       return () => clearTimeout(timeout);
