@@ -54,12 +54,13 @@ const initializeGameSession = async (options = {}) => {
   try {
     // Check if we're anonymous and have no existing game
     const isAnonymous = !config.session.getAuthToken();
-    const hasExistingGame = localStorage.getItem("uncrypt-game-id");
+    const hasExistingGameId = localStorage.getItem("uncrypt-game-id");
+    const isExistingDailyGame = hasExistingGameId && hasExistingGameId.includes("-daily-");
 
-    // For anonymous users with no existing game, default to daily challenge
+    // For anonymous users with no existing game or with a daily game, default to daily challenge
     // unless explicitly requesting a custom game
-    if (isAnonymous && !hasExistingGame && !options.customGameRequested) {
-      console.log("Anonymous user with no existing game - defaulting to daily challenge");
+    if (isAnonymous && (!hasExistingGameId || isExistingDailyGame) && !options.customGameRequested) {
+      console.log("Anonymous user with no existing game or existing daily game - defaulting to daily challenge");
       options.daily = true;
     }
 

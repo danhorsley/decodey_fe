@@ -49,12 +49,14 @@ class GameStrategyFactory {
 
     // For daily games or active daily games
     if (isDaily || (isActiveDailyGame && !customGameRequested)) {
+      console.log("Using daily strategy - isDaily:", isDaily, "isActiveDailyGame:", isActiveDailyGame);
       return isAuthenticated
         ? this.strategies.dailyAuthenticated
         : this.strategies.dailyAnonymous;
     } 
 
     // For standard games
+    console.log("Using standard strategy - authenticated:", isAuthenticated);
     return isAuthenticated
       ? this.strategies.authenticated
       : this.strategies.anonymous;

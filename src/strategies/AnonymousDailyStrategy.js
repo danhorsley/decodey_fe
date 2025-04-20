@@ -16,8 +16,34 @@ class AnonymousDailyStrategy extends DailyChallengeInterface {
     try {
       console.log("AnonymousDailyStrategy: Starting daily challenge");
 
-      // Clear any existing game ID first
-      localStorage.removeItem("uncrypt-game-id");
+      // Check if there's already a daily challenge active
+      const existingGameId = localStorage.getItem("uncrypt-game-id");
+      const isExistingDailyGame = existingGameId && existingGameId.includes("-daily-");
+
+      if (isExistingDailyGame) {
+        console.log(`AnonymousDailyStrategy: Found existing daily game: ${existingGameId}`);
+        // Instead of starting a new one, return the existing one's data
+        try {
+          // Try to get state of the existing game
+          console.log("Fetching current state of existing daily game");
+          const gameData = await apiService.api.get("/api/game-status");
+          return {
+            success: true,
+            gameData: gameData.data,
+            anonymous: true,
+            daily: true,
+            existingDailyGame: true
+          };
+        } catch (err) {
+          console.warn("Error getting existing daily game, will start a new one:", err);
+          // Continue to start a new daily if we couldn't get the existing one
+        }
+      }
+
+      // Clear any existing game ID first (only if not already a daily)
+      if (!isExistingDailyGame) {
+        localStorage.removeItem("uncrypt-game-id");
+      }
 
       // Get today's date string
       const dateString = this.getTodayDateString();
