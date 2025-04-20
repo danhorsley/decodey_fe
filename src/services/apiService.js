@@ -59,6 +59,7 @@ class ApiService {
       },
     );
     // Initialize token refresh strategy
+    console.log("DEBUG: Calling setupTokenRefreshStrategy from constructor");
     this.setupTokenRefreshStrategy();
   }
 
@@ -136,31 +137,102 @@ class ApiService {
    */
   async login(credentials) {
     try {
+      console.log("DEBUG: Login attempt with credentials:", {
+        username: credentials.username,
+        password: credentials.password ? "[REDACTED]" : undefined,
+        rememberMe: credentials.rememberMe,
+      });
+
+      // Log existing tokens before login
+      console.log("DEBUG: BEFORE LOGIN - Storage check:");
+      console.log(
+        "- localStorage.uncrypt-token:",
+        !!localStorage.getItem("uncrypt-token"),
+      );
+      console.log(
+        "- localStorage.refresh_token:",
+        !!localStorage.getItem("refresh_token"),
+      );
+      console.log(
+        "- sessionStorage.uncrypt-token:",
+        !!sessionStorage.getItem("uncrypt-token"),
+      );
+
       const response = await this.api.post("/login", credentials);
+
+      // Log full response for debugging (except sensitive data)
+      console.log("DEBUG: RAW LOGIN RESPONSE:", {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers,
+        data: {
+          ...response.data,
+          access_token: response.data.access_token ? "[PRESENT]" : "[MISSING]",
+          refresh_token: response.data.refresh_token
+            ? "[PRESENT]"
+            : "[MISSING]",
+        },
+      });
 
       if (response.data.access_token) {
         // Store access token based on remember me preference
         if (credentials.rememberMe) {
           localStorage.setItem("uncrypt-token", response.data.access_token);
+          console.log(
+            "DEBUG: ✅ Saved access token to localStorage (rememberMe=true)",
+          );
         } else {
           sessionStorage.setItem("uncrypt-token", response.data.access_token);
+          console.log(
+            "DEBUG: ✅ Saved access token to sessionStorage (rememberMe=false)",
+          );
         }
 
-        // Store refresh token if provided
+        // Store refresh token if provided - ALWAYS in localStorage regardless of rememberMe
         if (response.data.refresh_token) {
           localStorage.setItem("refresh_token", response.data.refresh_token);
+          console.log("DEBUG: ✅ Saved refresh token to localStorage");
+        } else {
+          console.warn("DEBUG: ⚠️ NO REFRESH TOKEN PROVIDED IN LOGIN RESPONSE");
         }
+
+        // Also store remember_me preference for future token operations
+        localStorage.setItem(
+          "uncrypt-remember-me",
+          credentials.rememberMe ? "true" : "false",
+        );
+        console.log(
+          "DEBUG: ✅ Saved remember-me preference:",
+          credentials.rememberMe,
+        );
 
         // Emit login event with all data
         this.events.emit("auth:login", {
           ...response.data,
           hasActiveGame: response.data.has_active_game || false,
         });
+
+        // Log storage after login
+        console.log("DEBUG: AFTER LOGIN - Storage check:");
+        console.log(
+          "- localStorage.uncrypt-token:",
+          !!localStorage.getItem("uncrypt-token"),
+        );
+        console.log(
+          "- localStorage.refresh_token:",
+          !!localStorage.getItem("refresh_token"),
+        );
+        console.log(
+          "- sessionStorage.uncrypt-token:",
+          !!sessionStorage.getItem("uncrypt-token"),
+        );
+      } else {
+        console.warn("DEBUG: ⚠️ LOGIN RESPONSE MISSING ACCESS TOKEN");
       }
 
       return response.data;
     } catch (error) {
-      console.error("Login error:", error);
+      console.error("DEBUG: Login error:", error);
       throw error;
     }
   }
@@ -262,56 +334,85 @@ class ApiService {
   }
 
   async refreshToken() {
+    // Reset isRefreshing if it's been set for more than 30 seconds
+    // This prevents stuck state if a previous refresh attempt never completed
+    if (isRefreshing) {
+      const refreshingTime = Date.now() - refreshFailureTime;
+      if (refreshingTime > 30000) {
+        // 30 seconds
+        console.log("Resetting stuck isRefreshing flag after 30 seconds");
+        isRefreshing = false;
+      }
+    }
+
     // Prevent concurrent refresh attempts
     if (isRefreshing) {
       console.log("Token refresh already in progress, skipping");
       return Promise.reject(new Error("Refresh already in progress"));
     }
 
-    // Check if we have a refresh token
-    const refreshToken = localStorage.getItem("refresh_token");
-    if (!refreshToken) {
-      console.warn("No refresh token available - proceeding as anonymous user");
-
-      // We'll handle this as a specific kind of "success: false" that indicates
-      // we should continue as anonymous without throwing an error
-      return {
-        success: false,
-        anonymous: true,
-        message: "No refresh token available",
-      };
-    }
+    // Set refreshing flag
+    isRefreshing = true;
 
     try {
-      console.log("Attempting to refresh token...");
-      isRefreshing = true;
+      // Check if we have a refresh token
+      const refreshToken = localStorage.getItem("refresh_token");
+      console.log("Refresh token exists:", !!refreshToken);
 
-      // Make refresh request with refresh token in auth header
-      const response = await this.api.post(
-        "/refresh",
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${refreshToken}`,
-          },
+      if (!refreshToken) {
+        console.warn(
+          "No refresh token available - proceeding as anonymous user",
+        );
+        isRefreshing = false; // Reset flag before returning
+
+        return {
+          success: false,
+          anonymous: true,
+          message: "No refresh token available",
+        };
+      }
+
+      console.log("Attempting to refresh token");
+
+      // Create a direct axios request to bypass interceptors that might add access token
+      const response = await axios({
+        method: "post",
+        url: `${this.api.defaults.baseURL}/refresh`,
+        headers: {
+          Authorization: `Bearer ${refreshToken}`,
+          Accept: "application/json",
+          "Content-Type": "application/json",
         },
-      );
+        timeout: 10000,
+      });
 
       if (response.data.access_token) {
         console.log("Successfully refreshed access token");
 
-        // Store the new token
+        // Store the new token based on remember me preference
         const rememberMe =
           localStorage.getItem("uncrypt-remember-me") === "true";
+
         if (rememberMe) {
           localStorage.setItem("uncrypt-token", response.data.access_token);
         } else {
           sessionStorage.setItem("uncrypt-token", response.data.access_token);
         }
 
-        isRefreshing = false;
-        return response.data;
+        // Handle new refresh token if provided
+        if (response.data.refresh_token) {
+          localStorage.setItem("refresh_token", response.data.refresh_token);
+        }
+
+        isRefreshing = false; // Reset flag on success
+        return {
+          success: true,
+          access_token: response.data.access_token,
+          ...response.data,
+        };
       } else {
+        console.log("Invalid response - no access_token in data");
+        isRefreshing = false; // Reset flag before throwing
         throw new Error("Invalid response from refresh endpoint");
       }
     } catch (error) {
@@ -319,11 +420,23 @@ class ApiService {
 
       // Record the failure time for potential cooldown implementation
       refreshFailureTime = Date.now();
+
+      // Always reset the flag
       isRefreshing = false;
 
       // Handle 401 error by returning a clean object instead of throwing
       if (error.response && error.response.status === 401) {
-        console.warn("Refresh token is invalid or expired");
+        console.warn("Refresh token is invalid or expired (401 response)");
+
+        // Check if we should clear the refresh token on unauthorized
+        if (
+          error.response.data &&
+          error.response.data.msg === "Token has been revoked"
+        ) {
+          console.warn("Clearing invalid refresh token from storage");
+          localStorage.removeItem("refresh_token");
+        }
+
         return {
           success: false,
           expired: true,
@@ -779,20 +892,36 @@ class ApiService {
 
   setupTokenRefreshStrategy() {
     // 1. Schedule regular token refresh while the app is running
-    // const refreshInterval = 55 * 60 * 1000; // 55 minutes
-    const refreshInterval = 5 * 60 * 1000; // 55 minutes
+    const refreshInterval = 55 * 60 * 1000; // 55 minutes for production
+    // DEBUG: Setting very short interval for testing
+    // const refreshInterval = 10 * 1000; // 10 seconds for debugging
+
+    console.log(
+      "DEBUG: Setting up token refresh with interval:",
+      refreshInterval,
+      "ms",
+    );
 
     // Start the periodic refresh
     this.refreshIntervalId = setInterval(async () => {
-      if (this.getToken()) {
+      console.log("DEBUG: Token refresh interval triggered");
+
+      const token = this.getToken();
+      console.log("DEBUG: Current token exists:", !!token);
+
+      if (token) {
         try {
+          console.log("DEBUG: Attempting to refresh token...");
           await this.refreshToken();
-          console.log("Successfully refreshed token on schedule");
+          console.log("DEBUG: Successfully refreshed token on schedule");
         } catch (error) {
           console.log(
-            "Scheduled token refresh failed - will retry on next interval",
+            "DEBUG: Scheduled token refresh failed - will retry on next interval",
+            error,
           );
         }
+      } else {
+        console.log("DEBUG: No token found, skipping refresh");
       }
     }, refreshInterval);
 
@@ -875,10 +1004,12 @@ class ApiService {
         win_data: {
           ...(data.win_data || data.winData || {}),
           // Add streak to win_data if it exists at the top level but not in win_data
-          current_daily_streak: data.current_daily_streak || 
-                               (data.win_data?.current_daily_streak || 
-                                data.winData?.current_daily_streak || 0)
-        }
+          current_daily_streak:
+            data.current_daily_streak ||
+            data.win_data?.current_daily_streak ||
+            data.winData?.current_daily_streak ||
+            0,
+        },
       };
     } catch (error) {
       // Handle specific error cases
@@ -898,7 +1029,7 @@ class ApiService {
           "Error getting game status",
         game_complete: false,
         has_won: false,
-        current_daily_streak: 0
+        current_daily_streak: 0,
       };
     }
   }
