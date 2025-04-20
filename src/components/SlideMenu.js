@@ -46,26 +46,36 @@ const SlideMenu = ({ isOpen, onClose }) => {
   };
 
   // Handle custom game - UPDATED to ensure continue modal appears when needed
-  const handleCustomGame = () => {
+  const handleCustomGame = async () => {
     console.log("Custom Game clicked in SlideMenu");
 
-    // For authenticated users, check for active game and show continue modal if found
+    // For authenticated users, check for active game
     if (isAuthenticated) {
-      const { hasActiveGame, checkActiveGame } = useAuthStore.getState();
-      const { openContinueGamePrompt } = useUIStore.getState();
-      // First check for active game status
-      checkActiveGame().then(result => {
-        if (result && result.hasActiveGame) {
-          // If active game exists, show the continue modal with the stats
-          openContinueGamePrompt(result.gameStats);
+      try {
+        // We already have the gameSession from the hook
+        const { events } = gameSession;
+
+        // The gameSession may already have a method to check active games
+        const result = await gameSession.continueGame();
+
+        // If result has activeGameFound flag, emit the event ModalManager is listening for
+        if (result.activeGameFound && result.gameStats) {
+          // This is the event that ModalManager listens for
+          events.emit("game:active-game-found", {
+            gameStats: result.gameStats
+          });
         } else {
-          // No active game, navigate to game page which will start a new game
-          navigate("/");
+          // No active game, force refresh to start a new game
+          window.location.href = "/";
         }
-      });
+      } catch (error) {
+        console.error("Error checking for active game:", error);
+        // On error, just refresh the page to start fresh
+        window.location.href = "/";
+      }
     } else {
-      // For anonymous users, just navigate to game page
-      navigate("/");
+      // For anonymous users, refresh the page to start a new game
+      window.location.href = "/";
     }
 
     // Close the menu

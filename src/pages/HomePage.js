@@ -17,6 +17,8 @@ import useUIStore from "../stores/uiStore";
 import useGameSession from "../hooks/useGameSession";
 import useDeviceDetection from "../hooks/useDeviceDetection";
 import "../Styles/HomePage.css";
+import useGameStore from "../stores/gameStore";
+import apiService from "../services/apiService";
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -37,9 +39,50 @@ const HomePage = () => {
     navigate("/daily");
   };
 
-  const handleCustomGame = () => {
-    // Simply navigate to the game page and let Game.js handle initialization
-    navigate("/");
+  const handleCustomGame = async () => {
+    console.log("Custom Game clicked in HomePage");
+
+    // For authenticated users, check for active game first
+    if (isAuthenticated) {
+      try {
+        // Check active game - but here's the key difference:
+        // We'll use apiService directly to check without triggering any side effects
+        const response = await apiService.checkActiveGame();
+
+        if (response && response.has_active_game) {
+          // If active game exists, simply navigate to "/" which will detect
+          // and show the continue prompt through the normal flow
+          navigate("/");
+          return;
+        }
+      } catch (error) {
+        console.error("Error checking for active game:", error);
+      }
+    }
+
+    // No active game or error checking - use the WinCelebration approach
+    const resetAndStart = useGameStore.getState().resetAndStartNewGame;
+
+    if (typeof resetAndStart === "function") {
+      // First reset the game
+      useGameStore.getState().resetGame();
+
+      // Then start a new game with the exact same parameters used in WinCelebration
+      resetAndStart(
+        settings?.longText || false,
+        settings?.hardcoreMode || false,
+        {
+          forceRender: true,
+          customGameRequested: true,
+        },
+      );
+
+      // Navigate to the game page
+      navigate("/");
+    } else {
+      // Fallback to simple navigation
+      navigate("/");
+    }
   };
 
   const handleLeaderboard = () => {
