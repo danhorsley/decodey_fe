@@ -202,10 +202,10 @@ const useGameStore = create((set, get) => ({
 
       console.log("Starting new game with settings:", settingsToUse);
 
-      // Don't make another API call if this is a daily challenge
+      // If this is a daily challenge, ensure we use the correct difficulty
       if (settingsToUse.isDailyChallenge) {
-        console.log("Daily challenge already initialized, skipping additional game start");
-        return { success: true };
+        settingsToUse.difficulty = 'easy';
+        console.log("Using settings for daily challenge:", settingsToUse);
       }
 
       // Hard-coded max mistakes based on difficulty
