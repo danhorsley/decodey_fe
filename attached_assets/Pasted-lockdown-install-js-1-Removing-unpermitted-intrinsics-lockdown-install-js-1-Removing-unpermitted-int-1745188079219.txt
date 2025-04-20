@@ -1,0 +1,55 @@
+lockdown-install.js:1 Removing unpermitted intrinsics
+lockdown-install.js:1 Removing unpermitted intrinsics
+
+                
+          
+          
+          
+         Chrome is moving towards a new experience that allows users to choose to browse without third-party cookies.
+lockdown-install.js:1 Removing unpermitted intrinsics
+bootstrap:22 Download the React DevTools for a better development experience: https://react.dev/link/react-devtools
+uiStore.js:36 [Mobile Detection] {screenSize: {…}, isMobileUserAgent: false, isMobileScreenSize: true, isTouchDevice: false, hasMobileParam: false, …}
+apiService.js:62 DEBUG: Calling setupTokenRefreshStrategy from constructor
+apiService.js:920 DEBUG: Setting up token refresh with interval: 3300000 ms
+uiStore.js:36 [Mobile Detection] {screenSize: {…}, isMobileUserAgent: false, isMobileScreenSize: true, isTouchDevice: false, hasMobileParam: false, …}
+uiStore.js:261 [uiStore] Initializing mobile: setting=auto, detected=true, using=true
+uiStore.js:36 [Mobile Detection] {screenSize: {…}, isMobileUserAgent: false, isMobileScreenSize: true, isTouchDevice: false, hasMobileParam: false, …}
+uiStore.js:261 [uiStore] Initializing mobile: setting=auto, detected=true, using=true
+Game.js:174 Starting game initialization in Game.js useEffect
+Game.js:184 Starting daily challenge
+gameSessionManager.js:430 initializeDailyChallenge called
+gameSessionManager.js:447 Using AnonymousDailyStrategy for daily challenge initialization
+AnonymousDailyStrategy.js:17 AnonymousDailyStrategy: Starting daily challenge
+AnonymousDailyStrategy.js:24 Starting daily challenge for date: 2025-04-20
+apiService.js:588 Starting daily challenge for date: 2025-04-20, anonymous: true
+apiService.js:594 ***url daily*** /api/daily/2025-04-20
+Game.js:174 Starting game initialization in Game.js useEffect
+Game.js:184 Starting daily challenge
+gameSessionManager.js:430 initializeDailyChallenge called
+gameSessionManager.js:437 Daily challenge initialization already in progress, returning early
+bootstrap:22 WebSocket connection to 'wss://f59a0a10-1712-4a08-821f-e6a8198ef815-00-pwp2q7nwy70f.riker.replit.dev:3000/ws' failed: 
+WebSocketClient @ WebSocketClient.js:13
+initSocket @ socket.js:27
+./node_modules/webpack-dev-server/client/index.js?protocol=ws%3A&hostname=0.0.0.0&port=3000&pathname=%2Fws&logging=none&overlay=%7B%22errors%22%3Atrue%2C%22warnings%22%3Afalse%7D&reconnect=10&hot=true&live-reload=true @ index.js:320
+__webpack_require__ @ bootstrap:22
+(anonymous) @ startup:4
+(anonymous) @ startup:6
+apiService.js:600 Daily challenge started with ID: easy-daily-2025-04-20-69671214-ebed-4a6c-bad3-4ff14758ba09
+AnonymousDailyStrategy.js:28 Received game data from API: success
+AnonymousDailyStrategy.js:33 Daily challenge started with ID: easy-daily-2025-04-20-69671214-ebed-4a6c-bad3-4ff14758ba09
+gameSessionManager.js:451 Daily challenge initialization result: Success
+gameSessionManager.js:455 Daily challenge has game data, updating game store
+gameStore.js:203 Starting new game with settings: {longText: false, hardcoreMode: false, difficulty: 'easy', maxMistakes: 5, isDailyChallenge: true}
+gameStore.js:207 Daily challenge already initialized, skipping additional game start
+WebSocketClient.js:13 WebSocket connection to 'wss://f59a0a10-1712-4a08-821f-e6a8198ef815-00-pwp2q7nwy70f.riker.replit.dev:3000/ws' failed: 
+WebSocketClient @ WebSocketClient.js:13
+initSocket @ socket.js:27
+(anonymous) @ socket.js:51
+WebSocketClient.js:13 WebSocket connection to 'wss://f59a0a10-1712-4a08-821f-e6a8198ef815-00-pwp2q7nwy70f.riker.replit.dev:3000/ws' failed: 
+WebSocketClient @ WebSocketClient.js:13
+initSocket @ socket.js:27
+(anonymous) @ socket.js:51
+WebSocketClient.js:13 WebSocket connection to 'wss://f59a0a10-1712-4a08-821f-e6a8198ef815-00-pwp2q7nwy70f.riker.replit.dev:3000/ws' failed: 
+WebSocketClient @ WebSocketClient.js:13
+initSocket @ socket.js:27
+(anonymous) @ socket.js:51
