@@ -55,7 +55,7 @@ const SlideMenu = ({ isOpen, onClose }) => {
         checkActiveGame().then(result => {
           if (result && result.hasActiveGame) {
             // If active game exists, show the continue modal
-            useUIStore.getState().openContinueGamePrompt(result.gameStats);
+            openContinueGamePrompt(result.gameStats);
           } else {
             // No active game, navigate to game page which will start a new game
             navigate("/");
