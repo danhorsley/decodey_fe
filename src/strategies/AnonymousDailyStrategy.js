@@ -12,44 +12,24 @@ class AnonymousDailyStrategy extends DailyChallengeInterface {
    * Start today's daily challenge for anonymous user
    * @returns {Promise<Object>} Result object with success flag and game data
    */
+  /**
+   * Start today's daily challenge for anonymous user
+   * @returns {Promise<Object>} Result object with success flag and game data
+   */
   async startDailyChallenge() {
+
     try {
       console.log("AnonymousDailyStrategy: Starting daily challenge");
 
-      // Check if there's already a daily challenge active
-      const existingGameId = localStorage.getItem("uncrypt-game-id");
-      const isExistingDailyGame = existingGameId && existingGameId.includes("-daily-");
-
-      if (isExistingDailyGame) {
-        console.log(`AnonymousDailyStrategy: Found existing daily game: ${existingGameId}`);
-        // Instead of starting a new one, return the existing one's data
-        try {
-          // Try to get state of the existing game
-          console.log("Fetching current state of existing daily game");
-          const gameData = await apiService.api.get("/api/game-status");
-          return {
-            success: true,
-            gameData: gameData.data,
-            anonymous: true,
-            daily: true,
-            existingDailyGame: true
-          };
-        } catch (err) {
-          console.warn("Error getting existing daily game, will start a new one:", err);
-          // Continue to start a new daily if we couldn't get the existing one
-        }
-      }
-
-      // Clear any existing game ID first (only if not already a daily)
-      if (!isExistingDailyGame) {
-        localStorage.removeItem("uncrypt-game-id");
-      }
+      // ALWAYS clear any existing game ID for anonymous users
+      // Anonymous users NEVER have persistent state
+      localStorage.removeItem("uncrypt-game-id");
 
       // Get today's date string
       const dateString = this.getTodayDateString();
-      console.log(`Starting daily challenge for date: ${dateString}`);
+      console.log(`Starting fresh daily challenge for date: ${dateString}`);
 
-      // Start daily game via API Service
+      // Start daily game via API Service with guaranteed fresh state
       const gameData = await apiService.startDailyChallenge(dateString);
       console.log("Received game data from API:", gameData ? "success" : "failure");
 

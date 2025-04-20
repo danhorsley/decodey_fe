@@ -38,30 +38,51 @@ export const useGameSessionStore = create((set) => ({
  * @returns {Promise<Object>} Initialization result
  */
 
+
 const initializeGameSession = async (options = {}) => {
   // Get session store state
   const sessionStore = useGameSessionStore.getState();
 
-  // Prevent multiple simultaneous initialization attempts
+  // Prevent multiple simultaneous initialization attempts with better locking
   if (sessionStore.isInitializing) {
     console.log("Game initialization already in progress, returning early");
+    // Track attempts to catch race conditions
+    console.log(`Attempted path: ${options.daily ? "daily" : "standard"}, custom requested: ${!!options.customGameRequested}`);
     return { success: false, reason: "already-initializing" };
   }
 
-  // Mark as initializing
+  // Mark as initializing immediately before any async operations
   sessionStore.setInitializing(true);
 
-  try {
-    // Check if we're anonymous and have no existing game
-    const isAnonymous = !config.session.getAuthToken();
-    const hasExistingGameId = localStorage.getItem("uncrypt-game-id");
-    const isExistingDailyGame = hasExistingGameId && hasExistingGameId.includes("-daily-");
+  // For anonymous users, ALWAYS clear any existing game ID before proceeding
+  const isAnonymous = !config.session.getAuthToken();
+  if (isAnonymous) {
+    console.log("Anonymous user - clearing any existing game IDs");
+    localStorage.removeItem("uncrypt-game-id");
+  }
 
-    // For anonymous users with no existing game or with a daily game, default to daily challenge
-    // unless explicitly requesting a custom game
-    if (isAnonymous && (!hasExistingGameId || isExistingDailyGame) && !options.customGameRequested) {
-      console.log("Anonymous user with no existing game or existing daily game - defaulting to daily challenge");
-      options.daily = true;
+  try {
+    // Check if we're anonymous
+    const isAnonymous = !config.session.getAuthToken();
+
+    // For anonymous users:
+    // 1. We NEVER consider existing games (they don't get persistence)
+    // 2. We always default to daily challenge unless explicitly requesting custom
+    if (isAnonymous) {
+      // Clear any game ID that might be in local storage for anonymous users
+      // Anonymous users should never have persistent state
+      localStorage.removeItem("uncrypt-game-id");
+
+      if (!options.customGameRequested) {
+        console.log("Anonymous user - always defaulting to fresh daily challenge");
+        options.daily = true;
+      } else {
+        console.log("Anonymous user requested custom game");
+      }
+    } else {
+      // For authenticated users, check for existing games normally
+      const hasExistingGame = localStorage.getItem("uncrypt-game-id");
+      console.log(`Authenticated user with${hasExistingGame ? "" : " no"} existing game`);
     }
 
     // Get the appropriate strategy for the current user and game type

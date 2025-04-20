@@ -162,16 +162,24 @@ function Game() {
 
   // Auto-initialize on first render - the component calls initializeGame
   // once on mount via React.useEffect()
+  // Auto-initialize on first render with simple but effective locking
+  // Auto-initialize on first render with explicit daily game ID check
   useEffect(() => {
-    // Use a flag to prevent double initialization
-    let hasInitialized = false;
-
     const performInitialization = async () => {
-      // Prevent double initialization
-      if (hasInitialized) return;
-      hasInitialized = true;
+      console.log("Starting game initialization check in Game.js");
 
-      console.log("Starting game initialization in Game.js useEffect");
+      // Check if we're an anonymous user
+      const isAnonymous = !config.session.getAuthToken();
+
+      // Check if we already have a daily game ID in localStorage
+      const existingGameId = localStorage.getItem("uncrypt-game-id");
+      const hasDailyGameId = existingGameId && existingGameId.includes("-daily-");
+
+      // If anonymous user already has a daily game ID, skip initialization
+      if (isAnonymous && hasDailyGameId) {
+        console.log("Anonymous user already has a daily game ID, skipping initialization");
+        return;
+      }
 
       try {
         // Check if this is explicitly a daily challenge from route state
@@ -181,21 +189,9 @@ function Game() {
           return;
         }
 
-        // Check for anonymous user with no existing game
-        const isAnonymous = !config.session.getAuthToken();
-        const hasExistingGameId = localStorage.getItem("uncrypt-game-id");
-        const isExistingDailyGame = hasExistingGameId && hasExistingGameId.includes("-daily-");
-
-        // For anonymous users with no existing game or with a daily game, default to daily challenge
-        if (isAnonymous && (!hasExistingGameId || isExistingDailyGame)) {
-          // For anonymous users, explicitly start daily challenge
-          console.log("Anonymous user - explicitly starting daily challenge");
-          await startDailyChallenge();
-        } else {
-          // For all other cases, use standard initialization
-          console.log(`Standard initialization: isAnonymous=${isAnonymous}, hasExistingGameId=${!!hasExistingGameId}`);
-          await initializeGame();
-        }
+        // Use standard initialization (will use the proper strategy)
+        console.log("Using standard initialization with strategy selection");
+        await initializeGame();
       } catch (err) {
         console.error("Game initialization failed:", err);
       }
