@@ -122,184 +122,159 @@ const useGameStore = create((set, get) => ({
     };
   },
 
-  // Start a new game with data integrity checks
+  /**
+   * Start a new game with configured settings
+   * @param {boolean} longText Whether to use long text
+   * @param {boolean} hardcoreMode Whether hardcore mode is enabled
+   * @param {boolean} forceNew Whether to force a new game even if one exists
+   * @param {boolean} isDaily Whether this is a daily challenge
+   * @returns {Promise<Object>} Game start response
+   */
   startGame: async (
-    useLongText = false,
+    longText = false,
     hardcoreMode = false,
-    forceNewGame = false,
-    isDailyChallenge = false,
-    difficultyParam = null, // New parameter
+    forceNew = false,
+    isDaily = false
   ) => {
     try {
-      // ...
+      const state = get();
+      const isAuthenticated = !!config.session.getAuthToken();
 
-      // ...
-      // If we're forcing a new game, ensure any previous game is fully abandoned
-      if (forceNewGame) {
+      // Only try to abandon existing game if:
+      // 1. We're forcing a new game
+      // 2. AND there's an actual game in progress
+      // 3. AND we're authenticated (anonymous games don't need abandoning)
+      if (forceNew && state.gameInProgress && isAuthenticated) {
+        console.log("Forcing new game, abandoning current game first");
         try {
+          // Add a delay to prevent race condition with server
+          await new Promise(resolve => setTimeout(resolve, 500));
           await get().abandonGame();
-        } catch (err) {
-          console.warn("Abandonment before new game failed:", err);
-          // Continue anyway - we'll still try to start a new game
+
+          // Add another delay after abandoning to let the server process
+          await new Promise(resolve => setTimeout(resolve, 500));
+        } catch (abandonError) {
+          console.warn("Error abandoning game, continuing anyway:", abandonError);
+          // Continue with new game regardless of abandon result
         }
       }
 
-      // Clear any existing game ID for a fresh start
-      localStorage.removeItem("uncrypt-game-id");
-
-      // Make sure we've initialized settings
-      if (!get().settingsInitialized) {
-        get().initializeFromSettings();
-      }
-
-      // Get current difficulty and max mistakes from parameter or synchronized state
-      const difficulty = difficultyParam || get().difficulty;
-      const maxMistakesValue =
-        MAX_MISTAKES_MAP[difficulty] || get().maxMistakes;
-
-      // Hardcore mode can come from parameter or store
-      const effectiveHardcoreMode = hardcoreMode || get().hardcoreMode;
-
-      console.log("Starting new game with settings:", {
-        longText: useLongText,
-        hardcoreMode: effectiveHardcoreMode,
-        difficulty,
-        maxMistakes: maxMistakesValue,
-        isDailyChallenge,
+      // Reset local game state
+      set({
+        // Instead of using getInitialState, reset the state directly
+        gameInProgress: false,
+        isInitializing: true,
+        hasError: false,
+        errorMessage: null,
+        display: "",
+        encrypted: "",
+        selectedEncrypted: null,
+        letterFrequency: {},
+        correctlyGuessed: [],
+        incorrectGuesses: {},
+        guessedMappings: {},
+        lastCorrectGuess: null,
+        mistakes: 0,
+        maxMistakes: 5,
+        difficulty: "medium",
+        pendingHints: 0,
+        isHintInProgress: false,
+        hasLost: false,
+        hasWon: false,
+        gameId: null,
+        originalLetters: [],
+        completionTime: null,
+        isAnonymous: false,
+        // Preserve these specific settings from parameters
+        isAuthenticated,
+        hardcoreMode,
+        isDailyChallenge: isDaily,
       });
 
-      // Request new game from API
-      let data;
+      // IMPORTANT: Use settings explicitly passed to this function
+      const settingsToUse = {
+        longText,
+        hardcoreMode,
+        difficulty: useSettingsStore.getState().settings?.difficulty || "medium",
+        maxMistakes: 5, // Default, will be overridden by server
+        isDailyChallenge: isDaily,
+      };
 
-      if (isDailyChallenge) {
-        // For daily challenges, use the daily API endpoint
-        const todayDate = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
-        data = await apiService.startDailyChallenge(todayDate);
-      } else {
-        // For regular games, use the standard startGame
-        data = await apiService.startGame({
-          longText: useLongText,
-          difficulty: difficulty,
-          hardcoreMode: effectiveHardcoreMode,
-        });
+      console.log("Starting new game with settings:", settingsToUse);
+
+      // Hard-coded max mistakes based on difficulty
+      // (These are also set server-side but we set here for UI consistency)
+      const maxMistakesByDifficulty = {
+        easy: 8,
+        medium: 5,
+        hard: 3,
+      };
+
+      const result = await apiService.startGame(
+        settingsToUse.longText,
+        settingsToUse.difficulty,
+        settingsToUse.hardcoreMode
+      );
+
+      // Handle error response
+      if (result.error) {
+        console.error("Error starting game:", result.error);
+        return { success: false, error: result.error };
       }
 
       console.log("Game start response received");
 
-      // Validate essential data
-      if (!data || !data.encrypted_paragraph || !data.display) {
-        console.error("Invalid game data received:", data);
-        return false;
-      }
-
-      // Process for hardcore mode
-      let processedEncrypted = data.encrypted_paragraph;
-      let processedDisplay = data.display;
-
-      // if (effectiveHardcoreMode) {
-      //   processedEncrypted = processedEncrypted.replace(/[^A-Z]/g, "");
-      //   processedDisplay = processedDisplay.replace(/[^A-Z█]/g, "");
-      // }
-
-      // DATA INTEGRITY CHECK: Ensure encrypted and display text are correctly aligned
-      if (processedEncrypted.length !== processedDisplay.length) {
-        console.error("Data integrity error: Text length mismatch", {
-          encryptedLength: processedEncrypted.length,
-          displayLength: processedDisplay.length,
-        });
-
-        // Attempt to fix by re-processing from original
-        if (data.encrypted_paragraph && data.display) {
-          console.log("Attempting to fix length mismatch");
-
-          processedEncrypted = effectiveHardcoreMode
-            ? data.encrypted_paragraph.replace(/[^A-Z]/g, "")
-            : data.encrypted_paragraph;
-
-          processedDisplay = effectiveHardcoreMode
-            ? data.display.replace(/[^A-Z█]/g, "")
-            : data.display;
-
-          // Check if fix worked
-          if (processedEncrypted.length !== processedDisplay.length) {
-            console.error(
-              "Failed to fix length mismatch - aborting game start",
-            );
-            return false;
-          }
-        } else {
-          return false;
-        }
-      }
-
-      // Store game ID if present
-      if (data.game_id) {
-        localStorage.setItem("uncrypt-game-id", data.game_id);
-
-        // If game_id contains difficulty info, log it for debugging
-        // Game IDs have format: "{difficulty}-{daily/custom}-{uuid}"
-        try {
-          const parts = data.game_id.split("-");
-          if (parts.length >= 3) {
-            const gameDifficultyPrefix = parts[0];
-            const gameTypePrefix = parts[1]; // Could be "daily" or "custom"
-            console.log(
-              `Game returned with difficulty: ${gameDifficultyPrefix}, type: ${gameTypePrefix}`,
-            );
-          }
-        } catch (e) {
-          console.warn("Could not parse game_id:", e);
-        }
-      }
-
-      // Create a clean, complete new state object
-      const newGameState = {
-        encrypted: processedEncrypted,
-        display: processedDisplay,
-        mistakes: data.mistakes || 0,
-        correctlyGuessed: Array.isArray(data.correctly_guessed)
-          ? [...data.correctly_guessed]
-          : [],
-        selectedEncrypted: null,
-        lastCorrectGuess: null,
-        letterFrequency: data.letter_frequency
-          ? { ...data.letter_frequency }
-          : {},
-        guessedMappings: {},
-        originalLetters: Array.isArray(data.original_letters)
-          ? [...data.original_letters]
-          : [],
-        startTime: Date.now(),
-        gameId: data.game_id,
-        hasGameStarted: true,
-        hardcoreMode: effectiveHardcoreMode,
-        // Override difficulty for daily challenges
-        difficulty: isDailyChallenge ? "easy" : difficulty,
-        // Override maxMistakes for daily challenges
-        maxMistakes: isDailyChallenge ? 8 : maxMistakesValue,
-        hasWon: false,
+      // Set state with game data
+      const updates = {
+        gameInProgress: true,
+        isAnonymous: result.is_anonymous,
+        display: result.display,
+        encrypted: result.encrypted_paragraph,
+        letterFrequency: result.letter_frequency,
+        errors: 0,
         hasLost: false,
-        winData: null,
-        isResetting: false,
-
-        // Set daily challenge flags
-        isDailyChallenge: isDailyChallenge,
-        dailyDate: isDailyChallenge
-          ? new Date().toISOString().split("T")[0]
-          : null,
+        hasWon: false,
+        gameId: result.game_id,
+        originalLetters: result.original_letters,
+        incorrectGuesses: {}, // Reset incorrect guesses
+        isInitializing: false, // Explicitly mark as not initializing
       };
 
-      // Update state in a single operation
-      set(newGameState);
+      // Extract difficulty from game_id
+      let difficulty = "medium"; // Default
+      if (result.game_id && result.game_id.includes("-")) {
+        const parts = result.game_id.split("-");
+        if (["easy", "medium", "hard"].includes(parts[0])) {
+          difficulty = parts[0];
+        }
+      }
 
-      return true;
+      // Log the difficulty extracted from the game id
+      console.log(
+        `Game returned with difficulty: ${difficulty}, type: ${
+          result.game_id ? result.game_id.split("-")[1].substring(0, 8) : "unknown"
+        }`
+      );
+
+      // Override with server values when available
+      updates.difficulty = result.difficulty || difficulty;
+      updates.maxMistakes =
+        result.max_mistakes ||
+        maxMistakesByDifficulty[updates.difficulty] ||
+        maxMistakesByDifficulty.medium;
+      updates.mistakes = result.mistakes || 0;
+
+      set(updates);
+
+      return {
+        success: true,
+        gameId: result.game_id,
+        difficulty: updates.difficulty,
+      };
     } catch (error) {
-      console.error("Error starting game:", error);
-
-      // Make sure we're not left in a resetting state
-      set((state) => ({ ...state, isResetting: false }));
-
-      return false;
+      console.error("Error in startGame:", error);
+      set({ isInitializing: false, hasError: true, errorMessage: error.message });
+      return { success: false, error: error.message };
     }
   },
 
