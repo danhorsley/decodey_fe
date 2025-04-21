@@ -145,10 +145,13 @@ const ModalManager = ({ children }) => {
         setHasActiveDailyGame(hasActiveDailyGame);
 
         // Open the continue game prompt if we have ANY active game type
-        // Fixed: Now checks for either regular game OR daily game
+        // Now correctly passing both game stats and hasActiveDailyGame flag
         if (regularGameStats || (hasActiveDailyGame && dailyGameStats)) {
-          // Always call openContinueGamePrompt even if only daily game exists
-          openContinueGamePrompt(regularGameStats || {});
+          console.log('Opening continue prompt with hasActiveDailyGame:', hasActiveDailyGame);
+          openContinueGamePrompt(regularGameStats || {}, {
+            hasActiveDailyGame,
+            dailyGameStats
+          });
         }
       } else {
         console.log(
