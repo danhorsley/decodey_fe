@@ -255,7 +255,9 @@ const gameService = {
 
       // If forceNew is specified, explicitly abandon any current game
       if (options.forceNew === true) {
-        console.log("Force new flag detected - explicitly abandoning current game");
+        console.log(
+          "Force new flag detected - explicitly abandoning current game",
+        );
 
         // Clear any existing game ID first
         localStorage.removeItem("uncrypt-game-id");
@@ -267,12 +269,15 @@ const gameService = {
             await apiService.abandonAndResetGame();
             console.log("Successfully abandoned current game on server");
           } catch (abandonError) {
-            console.warn("Error abandoning current game, continuing anyway:", abandonError);
+            console.warn(
+              "Error abandoning current game, continuing anyway:",
+              abandonError,
+            );
             // Continue with daily challenge regardless
           }
 
           // Add a small delay to ensure abandon request is processed
-          await new Promise(resolve => setTimeout(resolve, 300));
+          await new Promise((resolve) => setTimeout(resolve, 300));
         }
       }
 
@@ -302,7 +307,10 @@ const gameService = {
           }
         } catch (error) {
           // If the completion check fails, just log and continue
-          console.warn("Daily completion check failed, continuing anyway:", error);
+          console.warn(
+            "Daily completion check failed, continuing anyway:",
+            error,
+          );
         }
       }
 
@@ -310,10 +318,13 @@ const gameService = {
       const today = new Date().toISOString().split("T")[0];
 
       // Check for force-daily-challenge flag - if present, we're coming from continue modal
-      const forceDailyChallenge = localStorage.getItem("force-daily-challenge") === "true";
+      const forceDailyChallenge =
+        localStorage.getItem("force-daily-challenge") === "true";
 
       if (forceDailyChallenge) {
-        console.log("Force daily challenge flag detected - ensuring clean state");
+        console.log(
+          "Force daily challenge flag detected - ensuring clean state",
+        );
         localStorage.removeItem("force-daily-challenge");
       }
 
@@ -328,7 +339,7 @@ const gameService = {
 
         // Update the game store with the daily challenge data
         const gameStore = useGameStore.getState();
-        if (gameStore && typeof gameStore.startDailyChallenge === 'function') {
+        if (gameStore && typeof gameStore.startDailyChallenge === "function") {
           gameStore.startDailyChallenge(gameData);
         }
 
@@ -387,9 +398,16 @@ const gameService = {
    * Continue a saved game (auth users only)
    * @returns {Promise<Object>} Result with success flag
    */
-  async continueGame() {
+  /**
+   * Continue a saved game (auth users only)
+   * @param {Object} options - Options for continuing game
+   * @param {boolean} options.isDaily - Whether to continue daily challenge game
+   * @returns {Promise<Object>} Result with success flag
+   */
+  async continueGame(options = {}) {
     try {
       const isAuthenticated = !!config.session.getAuthToken();
+      const { isDaily = false } = options;
 
       // Anonymous users cannot continue games
       if (!isAuthenticated) {
@@ -400,8 +418,8 @@ const gameService = {
         };
       }
 
-      // Call API to continue the game
-      const gameData = await apiService.continueGame();
+      // Call API to continue the game with isDaily flag
+      const gameData = await apiService.continueGame(isDaily);
 
       // Store game ID if available
       if (gameData.game_id) {
@@ -410,15 +428,17 @@ const gameService = {
 
       // FIXED: Update game store directly with proper options
       const isDailyChallenge =
-        gameData.game_id && gameData.game_id.includes("-daily-");
+        isDaily || (gameData.game_id && gameData.game_id.includes("-daily-"));
+
       this._updateGameState(gameData, { isDaily: isDailyChallenge });
 
       events.emit(this.events.GAME_INITIALIZED, {
         resumed: true,
         gameData,
+        isDaily: isDailyChallenge,
       });
 
-      return { success: true, gameData };
+      return { success: true, gameData, isDaily: isDailyChallenge };
     } catch (error) {
       console.error("Error continuing game:", error);
       return { success: false, error };
@@ -432,20 +452,35 @@ const gameService = {
    */
   async abandonAndStartNew(options = {}) {
     try {
+      // Extract options (no need for isDaily anymore)
+      const { 
+        customGameRequested = true,
+        ...otherOptions
+      } = options;
+
+      console.log("Abandoning regular game and starting new game");
+
       // Only call abandon API for authenticated users
       const isAuthenticated = !!config.session.getAuthToken();
 
       if (isAuthenticated) {
         try {
+          // Abandon regular game only
           await apiService.abandonAndResetGame();
+          console.log("Successfully abandoned regular game");
         } catch (error) {
-          console.warn("Error abandoning game:", error);
+          console.warn("Error abandoning regular game:", error);
           // Continue anyway - the important part is starting a new game
         }
-      }
+      } else {
+        // For anonymous users, just clear the game ID if it's not a daily game
+        const activeGameId = localStorage.getItem("uncrypt-game-id");
+        const isActiveDailyGame = activeGameId && activeGameId.includes("-daily-");
 
-      // Always clear local storage
-      localStorage.removeItem("uncrypt-game-id");
+        if (!isActiveDailyGame) {
+          localStorage.removeItem("uncrypt-game-id");
+        }
+      }
 
       // Reset game state explicitly here
       const gameStore = useGameStore.getState();
@@ -455,7 +490,7 @@ const gameService = {
 
       // Start new game
       return await this.initializeGame({
-        ...options,
+        ...otherOptions,
         customGameRequested: true, // Force as custom game
       });
     } catch (error) {
@@ -474,19 +509,50 @@ const gameService = {
 
       // Anonymous users cannot have active games between sessions
       if (!isAuthenticated) {
-        return { hasActiveGame: false, anonymous: true };
+        return {
+          hasActiveGame: false,
+          hasActiveDailyGame: false,
+          anonymous: true,
+        };
       }
 
       // Call API to check for active game
       const result = await apiService.checkActiveGame();
 
+      // Check for both game types from the updated API response
+      const hasActiveGame = result.has_active_game || false;
+      const hasActiveDailyGame = result.has_active_daily_game || false;
+      const gameStats = result.game_stats || null;
+      const dailyStats = result.daily_stats || null;
+
+      // Emit event if ANY game type is found
+      if (hasActiveGame || hasActiveDailyGame) {
+        events.emit(this.events.ACTIVE_GAME_FOUND, {
+          hasActiveGame,
+          hasActiveDailyGame,
+          gameStats,
+          dailyStats,
+        });
+      }
+      console.log("Active game check result:", {
+        hasActiveGame,
+        hasActiveDailyGame,
+        gameStats,
+        dailyStats,
+      });
       return {
-        hasActiveGame: result.has_active_game || false,
-        gameStats: result.game_stats || null,
+        hasActiveGame,
+        hasActiveDailyGame,
+        gameStats,
+        dailyStats,
       };
     } catch (error) {
       console.error("Error checking for active game:", error);
-      return { hasActiveGame: false, error };
+      return {
+        hasActiveGame: false,
+        hasActiveDailyGame: false,
+        error,
+      };
     }
   },
 

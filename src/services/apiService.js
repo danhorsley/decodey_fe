@@ -747,38 +747,56 @@ class ApiService {
    */
   async abandonAndResetGame() {
     try {
-      // Check if user is authenticated
-      const token = this.getToken();
+      // Daily games get purged automatically on the backend, so we only abandon regular games
+      const isDaily = false;
 
-      // For anonymous users, skip the server call completely
-      if (!token) {
-        console.log("Anonymous user - skipping server-side abandon call");
+      console.log("Abandoning regular game only (daily games handled by backend)");
 
-        // Just remove game ID locally - no need for server call
+      // Check if we have a daily game ID - preserve it
+      const activeGameId = localStorage.getItem("uncrypt-game-id");
+      const isActiveDailyGame = activeGameId && activeGameId.includes("-daily-");
+
+      // Only clear game ID if it's a regular game
+      if (!isActiveDailyGame) {
         localStorage.removeItem("uncrypt-game-id");
-
-        return true;
+      } else {
+        console.log("Preserving daily game ID in localStorage");
       }
 
-      // For authenticated users, perform the normal server-side abandon
-      try {
-        // Try to explicitly abandon on server
-        await this.api.delete("/api/abandon-game");
-      } catch (serverError) {
-        console.warn("Error in server-side game abandonment:", serverError);
-        // Continue anyway - the important part is clearing local state
-      }
+      // Get auth status to determine appropriate abandonment approach
+      const token = this.getToken();
+      const isAuthenticated = !!token;
 
-      // Remove game ID locally
-      localStorage.removeItem("uncrypt-game-id");
+      if (isAuthenticated) {
+        // For authenticated users, make a server-side cleanup of regular games
+        try {
+          // Always use isDaily=false to only abandon regular games
+          const url = "/api/abandon-game";
+
+          console.log("Making API call to abandon regular game");
+
+          // Make direct call to abandon endpoint 
+          await this.api.delete(url, {
+            headers: {
+              // Ensure authentication headers are included
+              ...this.getHeaders(),
+            },
+          });
+          console.log("Successfully abandoned regular game");
+        } catch (err) {
+          // Log but continue - we'll still reset local state
+          console.warn("Server-side game abandonment failed:", err);
+        }
+      } else {
+        // For anonymous users, just clear the game ID if it's not a daily game
+        if (!isActiveDailyGame) {
+          localStorage.removeItem("uncrypt-game-id");
+        }
+      }
 
       return true;
     } catch (error) {
-      console.error("Error in abandonAndResetGame:", error);
-
-      // Still remove the game ID locally on error
-      localStorage.removeItem("uncrypt-game-id");
-
+      console.error("Error abandoning regular game:", error);
       return false;
     }
   }
@@ -924,16 +942,25 @@ class ApiService {
 
   /**
    * Continue an existing saved game
+   * @param {boolean} isDaily - Whether to continue daily challenge game
    * @returns {Promise<Object>} Continued game data
    */
-  async continueGame() {
+  async continueGame(isDaily = false) {
     try {
+      // Build URL with query parameter for isDaily
+      const url = isDaily 
+        ? "/api/continue-game?isDaily=true" 
+        : "/api/continue-game";
+
+      console.log(`Continuing game with isDaily=${isDaily}`);
+
       // Make request to continue existing game
-      const response = await this.api.get("/api/continue-game");
+      const response = await this.api.get(url);
 
       // If there's a game ID in the response, store it
       if (response.data.game_id) {
         localStorage.setItem("uncrypt-game-id", response.data.game_id);
+        console.log(`Continuing game with ID: ${response.data.game_id}`);
       }
 
       return response.data;

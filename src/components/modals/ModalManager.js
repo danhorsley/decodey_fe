@@ -27,13 +27,17 @@ const ModalManager = ({ children }) => {
   const isSignupOpen = useUIStore((state) => state.isSignupOpen);
   const isSettingsOpen = useUIStore((state) => state.isSettingsOpen);
   const isContinueGameOpen = useUIStore((state) => state.isContinueGameOpen);
-  const activeGameStats = useUIStore((state) => state.activeGameStats);
+  const [activeGameStats, setActiveGameStats] = useState(null);
+  const [activeDailyStats, setActiveDailyStats] = useState(null);
+  const [hasActiveDailyGame, setHasActiveDailyGame] = useState(false);
+  const showDailyButton = !isDailyCompleted || hasActiveDailyGame;
 
   // Get UI actions
   const closeAbout = useUIStore((state) => state.closeAbout);
   const closeLogin = useUIStore((state) => state.closeLogin);
   const closeSignup = useUIStore((state) => state.closeSignup);
   const closeSettings = useUIStore((state) => state.closeSettings);
+
   const closeContinueGamePrompt = useUIStore(
     (state) => state.closeContinueGamePrompt,
   );
@@ -79,8 +83,21 @@ const ModalManager = ({ children }) => {
       // Only show continue game prompt for authenticated users
       const isAuthenticated = !!config.session.getAuthToken();
 
-      if (isAuthenticated && data && data.gameStats) {
-        openContinueGamePrompt(data.gameStats);
+      if (isAuthenticated) {
+        // Store both regular and daily game stats if available
+        const regularGameStats = data.gameStats || null;
+        const dailyGameStats = data.dailyStats || null;
+        const hasActiveDailyGame = data.hasActiveDailyGame || false;
+
+        // Update state with both game types
+        setActiveGameStats(regularGameStats);
+        setActiveDailyStats(dailyGameStats);
+        setHasActiveDailyGame(hasActiveDailyGame);
+
+        // Open the continue game prompt if we have any active game
+        if (regularGameStats || (hasActiveDailyGame && dailyGameStats)) {
+          openContinueGamePrompt(regularGameStats);
+        }
       } else {
         console.log(
           "Active game found but user is not authenticated - bypassing continue prompt",
@@ -93,13 +110,17 @@ const ModalManager = ({ children }) => {
   }, [onEvent, events, openContinueGamePrompt]);
 
   // Simple handlers that delegate to game service
-  const handleContinueGame = async () => {
+  const handleContinueGame = async (isDaily = false) => {
     try {
-      const result = await continueGame();
+      // Use the isDaily flag to determine which game to continue
+      const result = await continueGame({ isDaily });
       closeContinueGamePrompt();
       return result;
     } catch (error) {
-      console.error("Error continuing game:", error);
+      console.error(
+        `Error continuing ${isDaily ? "daily" : "regular"} game:`,
+        error,
+      );
       closeContinueGamePrompt();
       return { success: false, error };
     }
@@ -108,13 +129,32 @@ const ModalManager = ({ children }) => {
   // Listen for game state changes
   useEffect(() => {
     // Subscribe to game state changes
-    const unsubscribe = onEvent(events.STATE_CHANGED, () => {
-      console.log(
-        "Game state changed detected - closing continue prompt if open",
-      );
-      // Close the continue prompt if it's open
-      if (isContinueGameOpen) {
-        closeContinueGamePrompt();
+    const unsubscribe = onEvent(events.ACTIVE_GAME_FOUND, (data) => {
+      // Only show continue game prompt for authenticated users
+      const isAuthenticated = !!config.session.getAuthToken();
+
+      if (isAuthenticated) {
+        // Store both regular and daily game stats if available
+        const regularGameStats = data.gameStats || null;
+        const dailyGameStats = data.dailyStats || null;
+        const hasActiveDailyGame = data.hasActiveDailyGame || false;
+
+        // Update state with both game types
+        setActiveGameStats(regularGameStats);
+        setActiveDailyStats(dailyGameStats);
+        setHasActiveDailyGame(hasActiveDailyGame);
+
+        // Open the continue game prompt if we have ANY active game type
+        // Fixed: Now checks for either regular game OR daily game
+        if (regularGameStats || (hasActiveDailyGame && dailyGameStats)) {
+          // Always call openContinueGamePrompt even if only daily game exists
+          openContinueGamePrompt(regularGameStats || {});
+        }
+      } else {
+        console.log(
+          "Active game found but user is not authenticated - bypassing continue prompt",
+        );
+        // For anonymous users, we don't show the modal at all
       }
     });
 
@@ -124,10 +164,12 @@ const ModalManager = ({ children }) => {
   // Handler for custom game
   const handleNewGame = async () => {
     try {
+      console.log("Custom Game button clicked - abandoning regular game only");
+
       // Delegate to startNewGame through gameService
+      // No need to specify isDaily anymore - always abandons regular games only
       const result = await startNewGame({
         customGameRequested: true, // This tells the system to start a custom game
-        preserveExistingGame: false, // This explicitly says to abandon the current game
       });
 
       // Close the modal
@@ -142,12 +184,23 @@ const ModalManager = ({ children }) => {
   };
 
   // Handler for daily challenge button - now directly starts the challengee
-  const handleDailyChallenge = async () => {
+  const handleDailyChallenge = async (hasActiveDaily = false) => {
     // Close the modal first for better UX
     closeContinueGamePrompt();
 
     try {
-      console.log("Starting daily challenge from modal");
+      console.log(
+        `Handling daily challenge button click, hasActiveDaily=${hasActiveDaily}`,
+      );
+
+      // If we have an active daily game, continue it
+      if (hasActiveDaily) {
+        console.log("Continuing existing daily challenge");
+        return await continueGame({ isDaily: true });
+      }
+
+      // Otherwise, follow standard daily challenge flow
+      console.log("Starting new daily challenge from modal");
 
       // 1. IMPORTANT: Clear the existing game ID from localStorage
       //    This prevents the continue game logic from triggering
@@ -247,10 +300,12 @@ const ModalManager = ({ children }) => {
           isOpen={true}
           onClose={closeContinueGamePrompt}
           gameStats={activeGameStats || {}}
+          dailyGameStats={activeDailyStats || null}
           onContinue={handleContinueGame}
           onNewGame={handleNewGame}
           dailyCompleted={isDailyCompleted}
           onDailyChallenge={handleDailyChallenge}
+          hasActiveDailyGame={hasActiveDailyGame}
         />
       )}
 
