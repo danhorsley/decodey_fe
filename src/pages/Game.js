@@ -181,14 +181,10 @@ const Game = () => {
 
   // Auto-initialize on first render
   useEffect(() => {
-    // Track initialization to prevent multiple calls
-    let isInitialized = false;
+    // Skip if already loading or initialized
+    if (isLoading || gameDataLoaded) return;
 
     const performInitialization = async () => {
-      // Skip if already initialized
-      if (isInitialized) return;
-      isInitialized = true;
-
       console.log("Starting game initialization in Game.js useEffect");
 
       try {
