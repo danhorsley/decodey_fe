@@ -252,14 +252,6 @@ const gameService = {
     try {
       console.log("Starting daily challenge");
 
-      // Force any in-progress initialization to complete/fail
-      if (isInitializing) {
-        console.log(
-          "Waiting for existing initialization to complete before starting daily",
-        );
-        await new Promise((resolve) => setTimeout(resolve, 500));
-      }
-
       // Only authenticated users can have completed a daily challenge
       const isAuthenticated = !!config.session.getAuthToken();
 
@@ -298,6 +290,14 @@ const gameService = {
           daily: true,
           gameData,
         });
+
+        // Update the game store
+        const gameStore = useGameStore.getState();
+        if (gameStore && typeof gameStore.startDailyChallenge === 'function') {
+          gameStore.startDailyChallenge(gameData);
+        } else {
+          console.error("Game store method not available");
+        }
 
         return { success: true, gameData, daily: true };
       } else {

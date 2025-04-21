@@ -26,6 +26,7 @@ const Game = () => {
   const location = useLocation();
 
   // Get game state from store - use specific selectors to avoid unnecessary rerenders
+  // Get game state from store - use specific selectors to avoid unnecessary rerenders
   const encrypted = useGameStore((state) => state.encrypted);
   const display = useGameStore((state) => state.display);
   const mistakes = useGameStore((state) => state.mistakes);
@@ -179,67 +180,62 @@ const Game = () => {
     return [...uniqueLetters].sort();
   }, [encrypted, settings?.gridSorting]);
 
-  // Auto-initialize on first render
+  const [hasInitialized, setHasInitialized] = useState(false);
+
   useEffect(() => {
+    // Only run initialization once to prevent loops
+    if (hasInitialized) return;
+
     const performInitialization = async () => {
-      if (isLoading) return;
-      
-      setIsLoading(true);
       console.log("Starting game initialization in Game.js useEffect");
+      setIsLoading(true);
+      setHasInitialized(true); // Mark as initialized immediately
 
       try {
-        setIsLoading(true);
-
-        // Check if we're dealing with daily completion notification
+        // Check specific cases for initialization
         if (dailyCompleted) {
-          console.log(
-            "Daily challenge already completed - initializing standard game",
-          );
+          console.log("Daily challenge already completed - initializing standard game");
           await initializeGame({ skipDailyCheck: true });
-          return;
         }
-
-        // Handle explicit daily challenge requests
-        else {
+        else if (isDailyFromRoute) {
           console.log("Explicitly requested daily challenge - initializing");
           await startDailyChallenge();
-          return;
         }
-
-        // For everything else, let the service handle the logic
-        console.log("Initializing with standard flow");
-        await initializeGame();
+        else {
+          console.log("Initializing with standard flow");
+          await initializeGame();
+        }
       } catch (err) {
         console.error("Game initialization failed:", err);
+        setIsLoading(false);
       }
     };
 
     performInitialization();
-  }, [initializeGame, startDailyChallenge, dailyCompleted, isDailyFromRoute, isLoading]);
+  }, []);
 
   // Listen for game initialized events from the service
   useEffect(() => {
-    // Subscribe to game initialized events
-    const unsubscribe = onEvent(events.GAME_INITIALIZED, (data) => {
-      console.log("Game initialized event received:", data);
-
-      // Game service now handles the store update directly - we just need to update UI state
+    // Simple event handlers without any setState inside useEffect dependencies
+    const handleGameInitialized = () => {
       setIsLoading(false);
       setGameDataLoaded(true);
-    });
+    };
 
-    // Also listen for state changed events
-    const unsubscribeStateChanged = onEvent(events.STATE_CHANGED, () => {
-      console.log("Game state changed event received");
+    const handleStateChanged = () => {
       setIsLoading(false);
       setGameDataLoaded(true);
-    });
+    };
+
+    // Subscribe to events
+    const unsubscribe = onEvent(events.GAME_INITIALIZED, handleGameInitialized);
+    const unsubscribeStateChanged = onEvent(events.STATE_CHANGED, handleStateChanged);
 
     return () => {
       unsubscribe();
       unsubscribeStateChanged();
     };
-  }, [onEvent, events]);
+  }, [onEvent, events]); 
 
   // Effect to handle daily completion notification
   useEffect(() => {
