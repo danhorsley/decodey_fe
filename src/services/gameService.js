@@ -248,7 +248,7 @@ const gameService = {
    * Start today's daily challenge
    * @returns {Promise<Object>} Result with success flag
    */
-  startDailyChallenge: async () => {
+  async startDailyChallenge() {
     try {
       console.log("Starting daily challenge");
 
