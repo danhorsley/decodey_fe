@@ -182,6 +182,15 @@ const Game = () => {
 
   const [hasInitialized, setHasInitialized] = useState(false);
 
+  //cleanup routine that runs when Game.js mounts
+  useEffect(() => {
+    // Check for any stuck transition flags and clean them up
+    if (localStorage.getItem("force-daily-challenge") === "true") {
+      console.log("Found stuck force-daily-challenge flag, cleaning up");
+      localStorage.removeItem("force-daily-challenge");
+    }
+  }, []);
+  
   useEffect(() => {
     // Only run initialization once to prevent loops
     if (hasInitialized) return;
@@ -194,14 +203,14 @@ const Game = () => {
       try {
         // Check specific cases for initialization
         if (dailyCompleted) {
-          console.log("Daily challenge already completed - initializing standard game");
+          console.log(
+            "Daily challenge already completed - initializing standard game",
+          );
           await initializeGame({ skipDailyCheck: true });
-        }
-        else if (isDailyFromRoute) {
+        } else if (isDailyFromRoute) {
           console.log("Explicitly requested daily challenge - initializing");
           await startDailyChallenge();
-        }
-        else {
+        } else {
           console.log("Initializing with standard flow");
           await initializeGame();
         }
@@ -229,13 +238,16 @@ const Game = () => {
 
     // Subscribe to events
     const unsubscribe = onEvent(events.GAME_INITIALIZED, handleGameInitialized);
-    const unsubscribeStateChanged = onEvent(events.STATE_CHANGED, handleStateChanged);
+    const unsubscribeStateChanged = onEvent(
+      events.STATE_CHANGED,
+      handleStateChanged,
+    );
 
     return () => {
       unsubscribe();
       unsubscribeStateChanged();
     };
-  }, [onEvent, events]); 
+  }, [onEvent, events]);
 
   // Effect to handle daily completion notification
   useEffect(() => {
@@ -355,8 +367,29 @@ const Game = () => {
         onStartNewGame={resetAndStartNewGame}
       />
 
-      {hasWon && winData && (
-        <WinCelebration playSound={playSound} winData={winData} />
+      {(hasWon || hasLost) && (
+        <WinCelebration
+          playSound={playSound}
+          winData={{
+            ...(winData || {}), // Use empty object as fallback if winData is null
+            hasLost, // Explicitly pass hasLost flag
+            hasWon, // Explicitly pass hasWon flag
+            encrypted,
+            display,
+            correctlyGuessed,
+            mistakes,
+            maxMistakes,
+            gameTimeSeconds: hasWon
+              ? winData?.gameTimeSeconds || 0
+              : Math.floor(
+                  (Date.now() -
+                    (useGameStore.getState().startTime || Date.now())) /
+                    1000,
+                ),
+            attribution: winData?.attribution || {},
+            onPlayAgain: resetAndStartNewGame, // Add the callback for the Play Again button
+          }}
+        />
       )}
 
       {showDailyCompletionNotice && dailyCompletionData && (

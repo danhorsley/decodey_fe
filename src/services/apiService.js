@@ -565,6 +565,7 @@ class ApiService {
     }
   }
 
+  // In apiService.js - Updated startDailyChallenge method
   /**
    * Start a daily challenge for the given date
    * @param {string} dateString Optional date string in YYYY-MM-DD format (defaults to today)
@@ -572,6 +573,10 @@ class ApiService {
    */
   async startDailyChallenge(dateString) {
     try {
+      // Explicitly clear any existing game ID from localStorage
+      // This is crucial to prevent the continue game flow from triggering
+      localStorage.removeItem("uncrypt-game-id");
+
       // If no dateString provided, use today's date
       if (!dateString) {
         const today = new Date();
@@ -584,7 +589,7 @@ class ApiService {
         throw new Error("Invalid date format. Use YYYY-MM-DD");
       }
 
-      console.log(`Starting daily challenge for date: ${dateString}`);
+      console.log(`Starting daily challenge for date: ${dateString} with clean game ID state`);
 
       // Build the URL - must use /daily/YYYY-MM-DD format
       const url = `/api/daily/${dateString}`;

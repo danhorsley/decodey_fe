@@ -251,7 +251,30 @@ const gameService = {
    */
   async startDailyChallenge(options = {}) {
     try {
-      console.log("Starting daily challenge");
+      console.log("Starting daily challenge with options:", options);
+
+      // If forceNew is specified, explicitly abandon any current game
+      if (options.forceNew === true) {
+        console.log("Force new flag detected - explicitly abandoning current game");
+
+        // Clear any existing game ID first
+        localStorage.removeItem("uncrypt-game-id");
+
+        // If we're authenticated, explicitly abandon the current game on the server
+        const isAuthenticated = !!config.session.getAuthToken();
+        if (isAuthenticated) {
+          try {
+            await apiService.abandonAndResetGame();
+            console.log("Successfully abandoned current game on server");
+          } catch (abandonError) {
+            console.warn("Error abandoning current game, continuing anyway:", abandonError);
+            // Continue with daily challenge regardless
+          }
+
+          // Add a small delay to ensure abandon request is processed
+          await new Promise(resolve => setTimeout(resolve, 300));
+        }
+      }
 
       // Skip completion check if requested (speeds up loading and avoids CORS issues)
       const skipCompletionCheck = options.skipCompletionCheck === true;
@@ -279,7 +302,6 @@ const gameService = {
           }
         } catch (error) {
           // If the completion check fails, just log and continue
-          // This avoids blocking play due to CORS issues
           console.warn("Daily completion check failed, continuing anyway:", error);
         }
       }
@@ -287,15 +309,12 @@ const gameService = {
       // Get today's date in YYYY-MM-DD format
       const today = new Date().toISOString().split("T")[0];
 
-      // If this is an authenticated user with active game, store that game ID
-      // so it can be restored later if needed
-      let existingGameId = null;
-      if (isAuthenticated) {
-        existingGameId = localStorage.getItem("uncrypt-game-id");
-        if (existingGameId) {
-          console.log("Authenticated user with active game:", existingGameId);
-          // We could store this in a browser storage key if we want to restore it later
-        }
+      // Check for force-daily-challenge flag - if present, we're coming from continue modal
+      const forceDailyChallenge = localStorage.getItem("force-daily-challenge") === "true";
+
+      if (forceDailyChallenge) {
+        console.log("Force daily challenge flag detected - ensuring clean state");
+        localStorage.removeItem("force-daily-challenge");
       }
 
       // Start daily challenge - always force 'easy' difficulty

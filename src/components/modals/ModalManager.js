@@ -9,6 +9,7 @@ import ContinueGamePrompt from "./ContinueGamePrompt";
 import useGameService from "../../hooks/useGameService"; // Updated to use gameService hook
 import useUIStore from "../../stores/uiStore";
 import config from "../../config";
+import useGameStore from "../../stores/gameStore";
 
 /**
  * ModalManager component - handles rendering of all application modals
@@ -148,19 +149,55 @@ const ModalManager = ({ children }) => {
     try {
       console.log("Starting daily challenge from modal");
 
-      // For authenticated users with active game, use skipCompletionCheck option
-      // This makes the process faster and more reliable
+      // 1. IMPORTANT: Clear the existing game ID from localStorage
+      //    This prevents the continue game logic from triggering
+      localStorage.removeItem("uncrypt-game-id");
+
+      // 2. Reset the game state in the store to avoid any lingering state
+      //    This ensures we have a clean slate for the daily challenge
+      //    - Using the resetGame method from gameStore if available
+      try {
+        const gameStore = useGameStore.getState();
+        if (typeof gameStore.resetGame === "function") {
+          gameStore.resetGame();
+        }
+      } catch (resetError) {
+        console.warn("Non-critical error resetting game state:", resetError);
+        // Continue anyway as localStorage clear is the most important part
+      }
+
+      // 3. Now start daily challenge with the cleaned state
       const isAuthenticated = !!config.session.getAuthToken();
       const hasActiveGame = activeGameStats !== null;
 
       if (isAuthenticated && hasActiveGame) {
-        console.log("Authenticated user with active game - using optimized daily start");
-        const result = await startDailyChallenge({ 
-          skipCompletionCheck: true 
+        console.log(
+          "Authenticated user with active game - explicit game ID reset performed",
+        );
+        console.log("Starting fresh daily challenge with clean state");
+
+        // Set a flag to prevent continue game from triggering
+        localStorage.setItem("force-daily-challenge", "true");
+
+        const result = await startDailyChallenge({
+          skipCompletionCheck: true,
+          forceNew: true, // Add this flag to signal we want a fresh start
         });
+
+        // Remove the flag once daily challenge is started
+        localStorage.removeItem("force-daily-challenge");
 
         if (result.success) {
           console.log("Daily challenge started successfully");
+          return result;
+        } else if (result.alreadyCompleted) {
+          console.log("Daily challenge already completed");
+          navigate("/", {
+            state: {
+              dailyCompleted: true,
+              completionData: result.completionData,
+            },
+          });
           return result;
         }
       } else {
@@ -172,19 +209,22 @@ const ModalManager = ({ children }) => {
           return result;
         } else if (result.alreadyCompleted) {
           console.log("Daily challenge already completed");
-          navigate("/", { 
-            state: { 
+          navigate("/", {
+            state: {
               dailyCompleted: true,
-              completionData: result.completionData 
-            }
+              completionData: result.completionData,
+            },
           });
           return result;
         }
-
-        // Handle error for normal flow
-        console.error("Error starting daily challenge:", result.error);
-        return result;
       }
+
+      // Handle error for normal flow
+      console.error("Error starting daily challenge - unhandled case");
+      return {
+        success: false,
+        error: "Unhandled case in daily challenge start",
+      };
     } catch (error) {
       console.error("Error handling daily challenge:", error);
       return { success: false, error };
