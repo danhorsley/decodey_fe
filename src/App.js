@@ -1,15 +1,9 @@
-// src/App.js (Updated with Daily Challenge)
+// src/App.js (Updated - Remove Daily Challenge route)
 import React, { Suspense, lazy } from "react";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  useLocation,
-} from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 // Import ModalManager
 import ModalManager from "./components/modals/ModalManager";
-// import AccountButtonWrapper from "./components/AccountButtonWrapper";
 import NotFound from "./pages/NotFound";
 
 // Lazy load components for code splitting
@@ -17,7 +11,6 @@ const Game = lazy(() => import("./pages/Game"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Scoring = lazy(() => import("./pages/Scoring"));
-const DailyChallenge = lazy(() => import("./pages/DailyChallenge"));
 const WinCelebrationTest = lazy(() => import("./pages/WinCelebrationTest"));
 const HomePage = lazy(() => import("./pages/HomePage"));
 
@@ -35,15 +28,6 @@ const Loading = () => (
     Loading...
   </div>
 );
-
-// Create a wrapper component that conditionally renders the AccountButtonWrapper
-// function GlobalUIElements() {
-//   const location = useLocation();
-//   // Don't render the account button on the leaderboard page
-//   const isLeaderboardPage = location.pathname === "/leaderboard";
-
-//   return !isLeaderboardPage ? <AccountButtonWrapper /> : null;
-// }
 
 // Main App component using Router
 function App() {
@@ -63,9 +47,6 @@ function App() {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
-
-        {/* Global fixed UI elements with conditional rendering */}
-        {/* <GlobalUIElements /> */}
       </ModalManager>
     </Router>
   );

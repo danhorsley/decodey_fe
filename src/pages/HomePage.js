@@ -1,4 +1,4 @@
-// src/pages/HomePage.js
+// src/pages/HomePage.js - Updated daily challenge handling
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -9,7 +9,7 @@ import {
   FaTrophy,
   FaSignOutAlt,
   FaBookOpen,
-  FaQuoteRight, // Added icon for quotes
+  FaQuoteRight,
 } from "react-icons/fa";
 import useSettingsStore from "../stores/settingsStore";
 import useAuthStore from "../stores/authStore";
@@ -31,17 +31,17 @@ const HomePage = () => {
   const openSettings = useUIStore((state) => state.openSettings);
   const openAbout = useUIStore((state) => state.openAbout);
 
-  // Navigation handlers
+  // Navigation handlers - updated daily challenge to start directly
   const handleDailyChallenge = async () => {
-    // Start a daily challenge directly without navigating
     try {
+      console.log("Starting daily challenge from HomePage");
       const result = await startDailyChallenge();
 
       if (result.success) {
-        // If successful, navigate to main game route
+        // Just navigate to the game - daily challenge is already initialized
         navigate("/");
       } else if (result.alreadyCompleted) {
-        // If already completed, still navigate to main game with a state flag
+        // If already completed, navigate with state to show notification
         navigate("/", {
           state: {
             dailyCompleted: true,
@@ -49,12 +49,16 @@ const HomePage = () => {
           },
         });
       } else {
-        // On error, still navigate back to home
+        // On error, show error message
         console.error("Failed to start daily challenge:", result.error);
+        alert("Could not start daily challenge. Please try again.");
+        // Still navigate to main game as fallback
         navigate("/");
       }
     } catch (error) {
       console.error("Error starting daily challenge:", error);
+      alert("Error starting daily challenge. Please try again.");
+      // Still navigate to main game as fallback
       navigate("/");
     }
   };

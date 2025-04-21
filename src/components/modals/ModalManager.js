@@ -1,4 +1,4 @@
-// src/components/modals/ModalManager.js - Updated with gameService approach
+// src/components/modals/ModalManager.js - Updated daily challenge handling
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import About from "./About";
@@ -13,7 +13,7 @@ import config from "../../config";
 
 /**
  * ModalManager component - handles rendering of all application modals
- * Updated to use gameService for game management
+ * Updated to directly start daily challenge instead of navigating
  */
 const ModalManager = ({ children }) => {
   const navigate = useNavigate();
@@ -34,12 +34,8 @@ const ModalManager = ({ children }) => {
   const closeLogin = useUIStore((state) => state.closeLogin);
   const closeSignup = useUIStore((state) => state.closeSignup);
   const closeSettings = useUIStore((state) => state.closeSettings);
-  const closeContinueGamePrompt = useUIStore(
-    (state) => state.closeContinueGamePrompt,
-  );
-  const openContinueGamePrompt = useUIStore(
-    (state) => state.openContinueGamePrompt,
-  );
+  const closeContinueGamePrompt = useUIStore((state) => state.closeContinueGamePrompt);
+  const openContinueGamePrompt = useUIStore((state) => state.openContinueGamePrompt);
 
   // Get game service functions and events
   const {
@@ -48,7 +44,7 @@ const ModalManager = ({ children }) => {
     isDailyCompleted: checkDailyCompletion,
     startDailyChallenge,
     onEvent,
-    events,
+    events
   } = useGameService();
 
   // Check daily challenge completion status when continue game prompt opens
@@ -83,7 +79,7 @@ const ModalManager = ({ children }) => {
         openContinueGamePrompt(data.gameStats);
       } else {
         console.log(
-          "Active game found but user is not authenticated - bypassing continue prompt",
+          "Active game found but user is not authenticated - bypassing continue prompt"
         );
         // For anonymous users, we don't show the modal at all
       }
@@ -110,7 +106,7 @@ const ModalManager = ({ children }) => {
     // Subscribe to game state changes
     const unsubscribe = onEvent(events.STATE_CHANGED, () => {
       console.log(
-        "Game state changed detected - closing continue prompt if open",
+        "Game state changed detected - closing continue prompt if open"
       );
       // Close the continue prompt if it's open
       if (isContinueGameOpen) {
@@ -144,11 +140,38 @@ const ModalManager = ({ children }) => {
     return result;
   };
 
-  // Handler for daily challenge button
+  // Updated handler for daily challenge button - now directly starts the challenge
+  // instead of navigating to a separate route
   const handleDailyChallenge = async () => {
+    // Close the modal first for better UX
     closeContinueGamePrompt();
-    // Navigate to daily challenge page
-    navigate("/daily");
+
+    try {
+      console.log("Starting daily challenge directly");
+      const result = await startDailyChallenge();
+
+      if (result.success) {
+        console.log("Daily challenge started successfully");
+        // Stay on the current page - the game has been initialized with daily challenge
+        return result;
+      } else if (result.alreadyCompleted) {
+        console.log("Daily challenge already completed");
+        // For already completed daily, update the route state to show notification
+        navigate("/", { 
+          state: { 
+            dailyCompleted: true,
+            completionData: result.completionData 
+          }
+        });
+        return result;
+      } else {
+        console.error("Error starting daily challenge:", result.error);
+        return result;
+      }
+    } catch (error) {
+      console.error("Error handling daily challenge:", error);
+      return { success: false, error };
+    }
   };
 
   return (

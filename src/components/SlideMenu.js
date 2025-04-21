@@ -1,4 +1,4 @@
-// src/components/SlideMenu.js
+// src/components/SlideMenu.js - Updated for direct daily challenge
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -19,6 +19,7 @@ import useGameService from "../hooks/useGameService";
 
 /**
  * SlideMenu - The sidebar menu that opens when the hamburger is clicked
+ * Updated to directly start daily challenge instead of navigating
  */
 const SlideMenu = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
@@ -34,7 +35,8 @@ const SlideMenu = ({ isOpen, onClose }) => {
   const openAbout = useUIStore((state) => state.openAbout);
 
   // Get game service functions
-  const { continueGame, logout, startDailyChallenge, events, onEvent } = useGameService();
+  const { continueGame, logout, startDailyChallenge, events, onEvent } =
+    useGameService();
 
   // Handle navigation
   const handleNavigation = (path) => {
@@ -68,34 +70,34 @@ const SlideMenu = ({ isOpen, onClose }) => {
     }
   };
 
-  // Handle daily challenge - simplified direct approach
+  // Updated handler for daily challenge - now starts directly rather than navigating
   const handleDailyChallenge = async () => {
     console.log("Daily Challenge clicked in SlideMenu");
     onClose(); // Close menu first
 
     try {
-      // Start daily challenge and navigate based on result
+      // Start daily challenge directly
       const result = await startDailyChallenge();
 
       if (result.success) {
-        // Navigate to main game if successful
-        navigate("/");
+        // No need to navigate - the game is already initialized with daily challenge
+        console.log("Daily challenge started successfully");
       } else if (result.alreadyCompleted) {
-        // If already completed, navigate with state
-        navigate("/", { 
-          state: { 
+        // If already completed, navigate with state to show notification
+        navigate("/", {
+          state: {
             dailyCompleted: true,
-            completionData: result.completionData 
-          }
+            completionData: result.completionData,
+          },
         });
       } else {
-        // On error, still navigate to main route
+        // On error, show a message and stay on current page
         console.error("Failed to start daily challenge:", result.error);
-        navigate("/");
+        alert("Could not start daily challenge. Please try again.");
       }
     } catch (error) {
       console.error("Error starting daily challenge:", error);
-      navigate("/");
+      alert("Error starting daily challenge. Please try again.");
     }
   };
 
@@ -199,6 +201,6 @@ const SlideMenu = ({ isOpen, onClose }) => {
       </div>
     </>
   );
-  };
+};
 
-  export default SlideMenu;
+export default SlideMenu;

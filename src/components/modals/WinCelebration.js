@@ -1,4 +1,4 @@
-// src/components/modals/WinCelebration.js - Updated with stats loading spinner
+// src/components/modals/WinCelebration.js - Updated with proper Play Again behavior
 import React, { useState, useEffect } from "react";
 import MatrixRain from "../effects/MatrixRain";
 import CryptoSpinner from "../CryptoSpinner";
@@ -6,6 +6,7 @@ import "../../Styles/WinCelebration.css";
 import useAuthStore from "../../stores/authStore";
 import useUIStore from "../../stores/uiStore";
 import useSettingsStore from "../../stores/settingsStore";
+import useGameService from "../../hooks/useGameService"; // Add gameService
 import { FaXTwitter } from "react-icons/fa6";
 
 /**
@@ -49,11 +50,13 @@ const calculateBaseScore = (totalScore, streak) => {
 };
 
 const WinCelebration = ({ playSound, winData }) => {
-  console.log("win data", winData);
   // Get auth and settings state
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const openLogin = useUIStore((state) => state.openLogin);
   const settings = useSettingsStore((state) => state.settings);
+
+  // Get gameService for starting new games
+  const { startNewGame } = useGameService();
 
   // State for showing quote (for loss state)
   const [showQuote, setShowQuote] = useState(true);
@@ -94,6 +97,34 @@ const WinCelebration = ({ playSound, winData }) => {
     }
   }, [winData, showStatsSpinner]);
 
+  // Handler for Play Again button - different behavior for anonymous vs authenticated users
+  const handlePlayAgain = async () => {
+    // For anonymous users, start a custom game with current settings
+    if (!isAuthenticated) {
+      try {
+        // Use current settings but start a custom game
+        await startNewGame({
+          longText: settings?.longText || false,
+          hardcoreMode: settings?.hardcoreMode || false,
+          difficulty: settings?.difficulty || "medium",
+          customGameRequested: true, // Ensure it's a custom game
+        });
+      } catch (error) {
+        console.error("Error starting new game:", error);
+        // Fallback - just reload the page if the API call fails
+        window.location.reload();
+      }
+    } else {
+      // For authenticated users, use the onPlayAgain callback from winData
+      if (winData.onPlayAgain && typeof winData.onPlayAgain === "function") {
+        winData.onPlayAgain();
+      } else {
+        // Fallback if callback is missing
+        window.location.reload();
+      }
+    }
+  };
+
   // Safely extract win data with defaults
   const {
     score = 0,
@@ -105,12 +136,6 @@ const WinCelebration = ({ playSound, winData }) => {
     correctlyGuessed = [],
     hasLost = false,
     attribution = {},
-    // scoreStatus = {
-    //   recorded: isAuthenticated,
-    //   message: isAuthenticated
-    //     ? "Score recorded successfully!"
-    //     : "Score not recorded - anonymous game",
-    // },
     isDailyChallenge = false,
     current_daily_streak = 0, // Extract the streak from win data
   } = winData || {};
@@ -306,7 +331,7 @@ const WinCelebration = ({ playSound, winData }) => {
         <div className="retro-actions">
           <button
             className="game-over-action-button play-again"
-            onClick={winData.onPlayAgain}
+            onClick={handlePlayAgain}
           >
             <div className="game-over-text-display">
               {hasLost ? "TRY AGAIN" : "PLAY AGAIN"}
