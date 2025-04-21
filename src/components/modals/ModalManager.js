@@ -140,7 +140,7 @@ const ModalManager = ({ children }) => {
     }
   };
 
-  // Handler for daily challenge button - now directly starts the challenge
+  // Handler for daily challenge button - now directly starts the challengee
   const handleDailyChallenge = async () => {
     // Close the modal first for better UX
     closeContinueGamePrompt();
@@ -148,22 +148,40 @@ const ModalManager = ({ children }) => {
     try {
       console.log("Starting daily challenge from modal");
 
-      // Start the daily challenge - this will overwrite any existing game ID
-      const result = await startDailyChallenge();
+      // For authenticated users with active game, use skipCompletionCheck option
+      // This makes the process faster and more reliable
+      const isAuthenticated = !!config.session.getAuthToken();
+      const hasActiveGame = activeGameStats !== null;
 
-      if (result.success) {
-        console.log("Daily challenge started successfully");
-        return result;
-      } else if (result.alreadyCompleted) {
-        console.log("Daily challenge already completed");
-        navigate("/", { 
-          state: { 
-            dailyCompleted: true,
-            completionData: result.completionData 
-          }
+      if (isAuthenticated && hasActiveGame) {
+        console.log("Authenticated user with active game - using optimized daily start");
+        const result = await startDailyChallenge({ 
+          skipCompletionCheck: true 
         });
-        return result;
+
+        if (result.success) {
+          console.log("Daily challenge started successfully");
+          return result;
+        }
       } else {
+        // Normal flow for users without active game
+        const result = await startDailyChallenge();
+
+        if (result.success) {
+          console.log("Daily challenge started successfully");
+          return result;
+        } else if (result.alreadyCompleted) {
+          console.log("Daily challenge already completed");
+          navigate("/", { 
+            state: { 
+              dailyCompleted: true,
+              completionData: result.completionData 
+            }
+          });
+          return result;
+        }
+
+        // Handle error for normal flow
         console.error("Error starting daily challenge:", result.error);
         return result;
       }

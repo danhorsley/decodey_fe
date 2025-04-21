@@ -246,35 +246,57 @@ const gameService = {
 
   /**
    * Start today's daily challenge
+   * @param {Object} options - Optional settings
    * @returns {Promise<Object>} Result with success flag
    */
-  async startDailyChallenge() {
+  async startDailyChallenge(options = {}) {
     try {
       console.log("Starting daily challenge");
+
+      // Skip completion check if requested (speeds up loading and avoids CORS issues)
+      const skipCompletionCheck = options.skipCompletionCheck === true;
 
       // Only authenticated users can have completed a daily challenge
       const isAuthenticated = !!config.session.getAuthToken();
 
       // For authenticated users, check if today's challenge is already completed
-      if (isAuthenticated) {
-        const dailyCompletion = await this.checkDailyCompletion();
+      // But only if we haven't explicitly asked to skip this check
+      if (isAuthenticated && !skipCompletionCheck) {
+        try {
+          const dailyCompletion = await this.checkDailyCompletion();
 
-        if (dailyCompletion.isCompleted) {
-          console.log("Daily challenge already completed");
-          events.emit(this.events.DAILY_ALREADY_COMPLETED, {
-            completionData: dailyCompletion.completionData,
-          });
+          if (dailyCompletion.isCompleted) {
+            console.log("Daily challenge already completed");
+            events.emit(this.events.DAILY_ALREADY_COMPLETED, {
+              completionData: dailyCompletion.completionData,
+            });
 
-          return {
-            success: false,
-            alreadyCompleted: true,
-            completionData: dailyCompletion.completionData,
-          };
+            return {
+              success: false,
+              alreadyCompleted: true,
+              completionData: dailyCompletion.completionData,
+            };
+          }
+        } catch (error) {
+          // If the completion check fails, just log and continue
+          // This avoids blocking play due to CORS issues
+          console.warn("Daily completion check failed, continuing anyway:", error);
         }
       }
 
       // Get today's date in YYYY-MM-DD format
       const today = new Date().toISOString().split("T")[0];
+
+      // If this is an authenticated user with active game, store that game ID
+      // so it can be restored later if needed
+      let existingGameId = null;
+      if (isAuthenticated) {
+        existingGameId = localStorage.getItem("uncrypt-game-id");
+        if (existingGameId) {
+          console.log("Authenticated user with active game:", existingGameId);
+          // We could store this in a browser storage key if we want to restore it later
+        }
+      }
 
       // Start daily challenge - always force 'easy' difficulty
       console.log("Making API call to start daily challenge");
@@ -285,19 +307,17 @@ const gameService = {
         console.log("Daily challenge started with game ID:", gameData.game_id);
         localStorage.setItem("uncrypt-game-id", gameData.game_id);
 
+        // Update the game store with the daily challenge data
+        const gameStore = useGameStore.getState();
+        if (gameStore && typeof gameStore.startDailyChallenge === 'function') {
+          gameStore.startDailyChallenge(gameData);
+        }
+
         // Emit game initialized event
         events.emit(this.events.GAME_INITIALIZED, {
           daily: true,
           gameData,
         });
-
-        // Update the game store
-        const gameStore = useGameStore.getState();
-        if (gameStore && typeof gameStore.startDailyChallenge === 'function') {
-          gameStore.startDailyChallenge(gameData);
-        } else {
-          console.error("Game store method not available");
-        }
 
         return { success: true, gameData, daily: true };
       } else {
