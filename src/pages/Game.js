@@ -68,19 +68,35 @@ const Game = () => {
   }, []);
 
   // Function to update the game state with API data
-  const updateGameState = useCallback((gameData) => {
+  // In Game.js, update the updateGameState function
+  const updateGameState = useCallback((gameData, options = {}) => {
     if (!gameData) return;
 
+    const { isNewGame = false, isDaily = false } = options;
     const gameStore = useGameStore.getState();
 
     // Check if we need to actually update the state
     // Only update if we have valid game data
     if (gameData.encrypted_paragraph && gameData.display) {
-      console.log("Updating game state with API data");
+      console.log(
+        `Updating game state with API data - isNewGame: ${isNewGame}, isDaily: ${isDaily}`,
+      );
 
-      // Call continueGame directly on the gameStore to update the state
-      if (typeof gameStore.continueSavedGame === "function") {
-        gameStore.continueSavedGame(gameData);
+      // For daily challenges, use the dedicated daily challenge method
+      if (isDaily) {
+        console.log("Processing as daily challenge - using dedicated method");
+        if (typeof gameStore.startDailyChallenge === "function") {
+          gameStore.startDailyChallenge(gameData);
+        } else {
+          // Fallback if method doesn't exist
+          console.warn("startDailyChallenge not available");
+          gameStore.continueSavedGame(gameData);
+        }
+      } else {
+        // For regular continuation, use continueSavedGame as before
+        if (typeof gameStore.continueSavedGame === "function") {
+          gameStore.continueSavedGame(gameData);
+        }
       }
 
       // Mark game data as loaded
@@ -227,7 +243,9 @@ const Game = () => {
 
         // Check if we're dealing with daily completion notification
         if (dailyCompleted) {
-          console.log("Daily challenge already completed - initializing standard game");
+          console.log(
+            "Daily challenge already completed - initializing standard game",
+          );
           await initializeGame({ skipDailyCheck: true });
           return;
         }
@@ -242,7 +260,6 @@ const Game = () => {
         // For everything else, let the service handle the logic
         console.log("Initializing with standard flow");
         await initializeGame();
-
       } catch (err) {
         console.error("Game initialization failed:", err);
       }
@@ -251,12 +268,36 @@ const Game = () => {
     performInitialization();
 
     // Listen for game initialized events
+    // In Game.js - fix the event handler for GAME_INITIALIZED
     const unsubscribe = onEvent(events.GAME_INITIALIZED, (data) => {
       console.log("Game initialized event received:", data);
 
       // Update game state with the received data
       if (data && data.gameData) {
-        updateGameState(data.gameData);
+        // Check if this is a daily challenge
+        const isDaily = data.daily === true;
+
+        console.log(`Processing game initialized event - isDaily: ${isDaily}`);
+
+        // Get the game store directly
+        const gameStore = useGameStore.getState();
+
+        // Directly use the appropriate method based on the event type
+        if (isDaily) {
+          console.log("Initializing daily challenge with dedicated method");
+
+          // Use our new method specifically for daily challenges
+          if (typeof gameStore.startDailyChallenge === 'function') {
+            gameStore.startDailyChallenge(data.gameData);
+          } else {
+            console.warn("startDailyChallenge not available, using fallback");
+            // Fallback if method doesn't exist
+            updateGameState(data.gameData);
+          }
+        } else {
+          // For regular games, use the standard updateGameState
+          updateGameState(data.gameData);
+        }
       }
 
       // Set loading to false after a short delay

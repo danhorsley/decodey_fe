@@ -8,6 +8,7 @@ import Signup from "../../pages/Signup";
 import ContinueGamePrompt from "./ContinueGamePrompt";
 import useGameService from "../../hooks/useGameService"; // Updated to use gameService
 import useUIStore from "../../stores/uiStore";
+import useGameStore from "../../stores/gameStore"
 import useSettingsStore from "../../stores/settingsStore";
 import config from "../../config";
 
@@ -147,16 +148,30 @@ const ModalManager = ({ children }) => {
     closeContinueGamePrompt();
 
     try {
-      console.log("Starting daily challenge directly");
+      console.log("Starting daily challenge directly - ensuring clean game state");
+
+      // 1. Clear the game ID from localStorage
+      localStorage.removeItem("uncrypt-game-id");
+
+      // 2. Reset the game state in the store before starting daily challenge
+      const gameStore = useGameStore.getState();
+      if (typeof gameStore.resetGame === 'function') {
+        gameStore.resetGame();
+        console.log("Game state reset before starting daily challenge");
+      }
+
+      // 3. Add a small delay to ensure state changes are processed
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      // 4. Start the daily challenge with clean state
+      console.log("Starting daily challenge with clean state");
       const result = await startDailyChallenge();
 
       if (result.success) {
         console.log("Daily challenge started successfully");
-        // Stay on the current page - the game has been initialized with daily challenge
         return result;
       } else if (result.alreadyCompleted) {
         console.log("Daily challenge already completed");
-        // For already completed daily, update the route state to show notification
         navigate("/", { 
           state: { 
             dailyCompleted: true,

@@ -63,7 +63,7 @@ const useGameStore = create((set, get) => ({
       hardcoreMode: settings.hardcoreMode || false,
       settingsInitialized: true,
     });
-
+    
     // Set up subscription to settings changes - difficulty
     const unsubscribe = useSettingsStore.subscribe(
       (state) => state.settings?.difficulty, // Select difficulty from settings
@@ -277,7 +277,50 @@ const useGameStore = create((set, get) => ({
       return { success: false, error: error.message };
     }
   },
+  
+  // Add this function to gameStore.js
+  startDailyChallenge: async (gameData) => {
+    if (!gameData) return false;
 
+    console.log("Starting daily challenge with clean state");
+
+    // First reset the state to clear any existing game
+    set({
+      ...initialState,
+      isResetting: false, // Ensure this is false to avoid loading states
+      // Daily challenges are always easy difficulty and never hardcore
+      difficulty: "easy",
+      maxMistakes: MAX_MISTAKES_MAP["easy"] || 8,
+      hardcoreMode: false, // Daily challenges are never hardcore
+      settingsInitialized: get().settingsInitialized,
+    });
+
+    // Now apply the daily challenge data
+    let processedEncrypted = gameData.encrypted_paragraph || "";
+    let processedDisplay = gameData.display || "";
+
+    // Set up daily challenge state
+    set({
+      encrypted: processedEncrypted,
+      display: processedDisplay,
+      mistakes: gameData.mistakes || 0,
+      correctlyGuessed: Array.isArray(gameData.correctly_guessed) 
+        ? [...gameData.correctly_guessed] 
+        : [],
+      letterFrequency: gameData.letter_frequency || {},
+      originalLetters: Array.isArray(gameData.original_letters)
+        ? [...gameData.original_letters]
+        : [],
+      gameId: gameData.game_id,
+      startTime: Date.now(),
+      hasGameStarted: true,
+      isDailyChallenge: true,
+      dailyDate: gameData.daily_date || new Date().toISOString().split('T')[0]
+    });
+
+    console.log("Daily challenge state initialized");
+    return true;
+  },
   // Continue a saved game
   continueSavedGame: async (gameData) => {
     try {

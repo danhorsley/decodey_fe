@@ -189,6 +189,15 @@ const gameService = {
     try {
       console.log("Starting daily challenge");
 
+      // Clear any existing game ID first to avoid state conflicts
+      localStorage.removeItem("uncrypt-game-id");
+
+      // Force any in-progress initialization to complete/fail
+      if (isInitializing) {
+        console.log("Waiting for existing initialization to complete before starting daily");
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+
       // Only authenticated users can have completed a daily challenge
       const isAuthenticated = !!config.session.getAuthToken();
 
@@ -212,9 +221,6 @@ const gameService = {
 
       // Get today's date in YYYY-MM-DD format
       const today = new Date().toISOString().split("T")[0];
-
-      // Clear any existing game ID first
-      localStorage.removeItem("uncrypt-game-id");
 
       // Start daily challenge - always force 'easy' difficulty
       console.log("Making API call to start daily challenge");
