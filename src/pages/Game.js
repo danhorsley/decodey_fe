@@ -181,10 +181,10 @@ const Game = () => {
 
   // Auto-initialize on first render
   useEffect(() => {
-    // Skip if already loading or initialized
-    if (isLoading || gameDataLoaded) return;
-
     const performInitialization = async () => {
+      if (isLoading) return;
+      
+      setIsLoading(true);
       console.log("Starting game initialization in Game.js useEffect");
 
       try {
@@ -215,7 +215,7 @@ const Game = () => {
     };
 
     performInitialization();
-  }, [initializeGame, startDailyChallenge, dailyCompleted, isDailyFromRoute]);
+  }, [initializeGame, startDailyChallenge, dailyCompleted, isDailyFromRoute, isLoading]);
 
   // Listen for game initialized events from the service
   useEffect(() => {
