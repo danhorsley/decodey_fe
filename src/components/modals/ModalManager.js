@@ -146,20 +146,21 @@ const ModalManager = ({ children }) => {
     closeContinueGamePrompt();
 
     try {
-      console.log("Starting daily challenge directly");
+      console.log("Starting daily challenge from modal");
+
+      // Start the daily challenge - this will overwrite any existing game ID
       const result = await startDailyChallenge();
 
       if (result.success) {
-        // No navigation needed - event handling will manage state
         console.log("Daily challenge started successfully");
         return result;
       } else if (result.alreadyCompleted) {
-        // For completed daily challenges, navigate with state
-        navigate("/", {
-          state: {
+        console.log("Daily challenge already completed");
+        navigate("/", { 
+          state: { 
             dailyCompleted: true,
-            completionData: result.completionData,
-          },
+            completionData: result.completionData 
+          }
         });
         return result;
       } else {

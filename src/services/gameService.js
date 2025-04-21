@@ -248,17 +248,16 @@ const gameService = {
    * Start today's daily challenge
    * @returns {Promise<Object>} Result with success flag
    */
-  async startDailyChallenge() {
+  startDailyChallenge: async () => {
     try {
       console.log("Starting daily challenge");
 
-      // Clear any existing game ID first to avoid state conflicts
-      localStorage.removeItem("uncrypt-game-id");
-
       // Force any in-progress initialization to complete/fail
       if (isInitializing) {
-        console.log("Waiting for existing initialization to complete before starting daily");
-        await new Promise(resolve => setTimeout(resolve, 500));
+        console.log(
+          "Waiting for existing initialization to complete before starting daily",
+        );
+        await new Promise((resolve) => setTimeout(resolve, 500));
       }
 
       // Only authenticated users can have completed a daily challenge
@@ -286,45 +285,24 @@ const gameService = {
       const today = new Date().toISOString().split("T")[0];
 
       // Start daily challenge - always force 'easy' difficulty
-      console.log("Making API call to start daily challenge for date:", today);
-      try {
-        const gameData = await apiService.startDailyChallenge(today);
+      console.log("Making API call to start daily challenge");
+      const gameData = await apiService.startDailyChallenge(today);
 
-        // Store game ID if available
-        if (gameData && gameData.game_id) {
-          console.log("Daily challenge started with game ID:", gameData.game_id);
-          localStorage.setItem("uncrypt-game-id", gameData.game_id);
+      // Store game ID if available - this will overwrite any previous game ID
+      if (gameData && gameData.game_id) {
+        console.log("Daily challenge started with game ID:", gameData.game_id);
+        localStorage.setItem("uncrypt-game-id", gameData.game_id);
 
-          // Update game store directly with daily challenge flag
-          this._updateGameState(gameData, { isDaily: true });
+        // Emit game initialized event
+        events.emit(this.events.GAME_INITIALIZED, {
+          daily: true,
+          gameData,
+        });
 
-          // Emit game initialized event
-          events.emit(this.events.GAME_INITIALIZED, {
-            daily: true,
-            gameData,
-          });
-
-          return { success: true, gameData, daily: true };
-        } else {
-          console.error("No game ID returned from daily challenge");
-          throw new Error("Invalid response from daily challenge endpoint");
-        }
-      } catch (error) {
-        // Handle case where the daily is already completed
-        if (error.response?.data?.already_completed || 
-            error.alreadyCompleted) {
-          const completionData = error.response?.data?.completion_data || 
-                                error.completionData || null;
-
-          return {
-            success: false,
-            alreadyCompleted: true,
-            completionData: completionData,
-          };
-        }
-
-        // Re-throw other errors
-        throw error;
+        return { success: true, gameData, daily: true };
+      } else {
+        console.error("No game ID returned from daily challenge");
+        throw new Error("Invalid response from daily challenge endpoint");
       }
     } catch (error) {
       console.error("Error starting daily challenge:", error);
