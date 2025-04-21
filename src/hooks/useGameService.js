@@ -1,14 +1,23 @@
-// src/hooks/useGameService.js
-import { useState, useCallback } from "react";
+// src/hooks/useGameService.js - Improved with better state management
+import { useState, useCallback, useEffect } from "react";
 import gameService from "../services/gameService";
 
 /**
- * Hook to interact with the game service
+ * Custom hook to interact with the game service
+ * Provides a clean interface for components to interact with the game service
+ * without directly manipulating store state
+ *
  * @returns {Object} Game service functions and state
  */
 const useGameService = () => {
+  // Local state for UI feedback
   const [isInitializing, setIsInitializing] = useState(false);
   const [error, setError] = useState(null);
+
+  // Clear errors when component using the hook unmounts
+  useEffect(() => {
+    return () => setError(null);
+  }, []);
 
   /**
    * Initialize or reset game with current settings
@@ -158,7 +167,12 @@ const useGameService = () => {
     }
   }, []);
 
-  // Function to subscribe to game events
+  /**
+   * Subscribe to game events
+   * @param {string} event - Event name from gameService.events
+   * @param {Function} callback - Callback function
+   * @returns {Function} Unsubscribe function
+   */
   const onEvent = useCallback((event, callback) => {
     return gameService.onEvent(event, callback);
   }, []);

@@ -1,10 +1,10 @@
-// src/pages/Login.js - Updated with gameService approach
+// src/pages/Login.js - Improved with gameService approach
 import React, { useState } from "react";
 import "../Styles/About.css";
 import "../Styles/Login.css";
 import useSettingsStore from "../stores/settingsStore";
 import useUIStore from "../stores/uiStore";
-import useGameService from "../hooks/useGameService"; // Updated to use gameService
+import useGameService from "../hooks/useGameService";
 import apiService from "../services/apiService";
 
 function Login({ onClose }) {

@@ -1,5 +1,5 @@
-// src/pages/Game.js - Game state update fix
-import React, { useState, useEffect, useRef, useCallback } from "react";
+// src/pages/Game.js - Improved with proper state management
+import React, { useState, useEffect, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 
 // Import UI components
@@ -47,6 +47,7 @@ const Game = () => {
   const hardcoreMode = useGameStore((state) => state.hardcoreMode);
   const isResetting = useGameStore((state) => state.isResetting);
   const isDailyChallenge = useGameStore((state) => state.isDailyChallenge);
+
   // Use our own loading state instead of relying on hasGameStarted
   const [gameDataLoaded, setGameDataLoaded] = useState(false);
 
@@ -65,43 +66,6 @@ const Game = () => {
 
   const resetAndStartNewGame = useCallback(() => {
     useGameStore.getState().resetAndStartNewGame();
-  }, []);
-
-  // Function to update the game state with API data
-  // In Game.js, update the updateGameState function
-  const updateGameState = useCallback((gameData, options = {}) => {
-    if (!gameData) return;
-
-    const { isNewGame = false, isDaily = false } = options;
-    const gameStore = useGameStore.getState();
-
-    // Check if we need to actually update the state
-    // Only update if we have valid game data
-    if (gameData.encrypted_paragraph && gameData.display) {
-      console.log(
-        `Updating game state with API data - isNewGame: ${isNewGame}, isDaily: ${isDaily}`,
-      );
-
-      // For daily challenges, use the dedicated daily challenge method
-      if (isDaily) {
-        console.log("Processing as daily challenge - using dedicated method");
-        if (typeof gameStore.startDailyChallenge === "function") {
-          gameStore.startDailyChallenge(gameData);
-        } else {
-          // Fallback if method doesn't exist
-          console.warn("startDailyChallenge not available");
-          gameStore.continueSavedGame(gameData);
-        }
-      } else {
-        // For regular continuation, use continueSavedGame as before
-        if (typeof gameStore.continueSavedGame === "function") {
-          gameStore.continueSavedGame(gameData);
-        }
-      }
-
-      // Mark game data as loaded
-      setGameDataLoaded(true);
-    }
   }, []);
 
   // Get mobile detection state
@@ -123,9 +87,9 @@ const Game = () => {
   const [pendingHints, setPendingHints] = useState(0);
   const [isHintInProgress, setIsHintInProgress] = useState(false);
 
-  // Get initialization status and events from our new gameService hook
+  // Get initialization status and events from our gameService hook
   const {
-    isInitializing,
+    isInitializing: isServiceInitializing,
     initializeGame,
     startDailyChallenge,
     onEvent,
@@ -215,31 +179,20 @@ const Game = () => {
     return [...uniqueLetters].sort();
   }, [encrypted, settings?.gridSorting]);
 
-  const initializedRef = useRef(false);
   // Auto-initialize on first render
   useEffect(() => {
-    // Create ref to prevent multiple initializations
+    // Track initialization to prevent multiple calls
+    let isInitialized = false;
 
     const performInitialization = async () => {
-      // Only initialize once
-      if (initializedRef.current) {
-        console.log("Game already initialized, skipping");
-        return;
-      }
+      // Skip if already initialized
+      if (isInitialized) return;
+      isInitialized = true;
 
-      // Set flag immediately to prevent multiple initialization attempts
-      initializedRef.current = true;
       console.log("Starting game initialization in Game.js useEffect");
 
       try {
         setIsLoading(true);
-
-        // Clear any existing game ID for anonymous users to ensure we always get a new daily challenge
-        const isAuthenticated = !!localStorage.getItem("uncrypt-token");
-        if (!isAuthenticated) {
-          console.log("Anonymous user - clearing any existing game ID");
-          localStorage.removeItem("uncrypt-game-id");
-        }
 
         // Check if we're dealing with daily completion notification
         if (dailyCompleted) {
@@ -266,58 +219,31 @@ const Game = () => {
     };
 
     performInitialization();
+  }, [initializeGame, startDailyChallenge, dailyCompleted, isDailyFromRoute]);
 
-    // Listen for game initialized events
-    // In Game.js - fix the event handler for GAME_INITIALIZED
+  // Listen for game initialized events from the service
+  useEffect(() => {
+    // Subscribe to game initialized events
     const unsubscribe = onEvent(events.GAME_INITIALIZED, (data) => {
       console.log("Game initialized event received:", data);
 
-      // Update game state with the received data
-      if (data && data.gameData) {
-        // Check if this is a daily challenge
-        const isDaily = data.daily === true;
+      // Game service now handles the store update directly - we just need to update UI state
+      setIsLoading(false);
+      setGameDataLoaded(true);
+    });
 
-        console.log(`Processing game initialized event - isDaily: ${isDaily}`);
-
-        // Get the game store directly
-        const gameStore = useGameStore.getState();
-
-        // Directly use the appropriate method based on the event type
-        if (isDaily) {
-          console.log("Initializing daily challenge with dedicated method");
-
-          // Use our new method specifically for daily challenges
-          if (typeof gameStore.startDailyChallenge === 'function') {
-            gameStore.startDailyChallenge(data.gameData);
-          } else {
-            console.warn("startDailyChallenge not available, using fallback");
-            // Fallback if method doesn't exist
-            updateGameState(data.gameData);
-          }
-        } else {
-          // For regular games, use the standard updateGameState
-          updateGameState(data.gameData);
-        }
-      }
-
-      // Set loading to false after a short delay
-      setTimeout(() => {
-        setIsLoading(false);
-      }, 500);
+    // Also listen for state changed events
+    const unsubscribeStateChanged = onEvent(events.STATE_CHANGED, () => {
+      console.log("Game state changed event received");
+      setIsLoading(false);
+      setGameDataLoaded(true);
     });
 
     return () => {
       unsubscribe();
+      unsubscribeStateChanged();
     };
-  }, [
-    initializeGame,
-    startDailyChallenge,
-    dailyCompleted,
-    isDailyFromRoute,
-    onEvent,
-    events,
-    updateGameState,
-  ]);
+  }, [onEvent, events]);
 
   // Effect to handle daily completion notification
   useEffect(() => {
@@ -385,7 +311,7 @@ const Game = () => {
   // ========================
 
   // Handle loading state - check for actual game data rather than just flags
-  if (isLoading || isInitializing || !hasValidGameData) {
+  if (isLoading || isServiceInitializing || !hasValidGameData) {
     return (
       <div className="loading-overlay">
         <MatrixRainLoading

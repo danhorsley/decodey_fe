@@ -1,11 +1,10 @@
-// src/pages/Signup.js - Updated with gameService approach
+// src/pages/Signup.js - Improved with gameService approach
 import React, { useState, useCallback, useEffect } from "react";
 import "../Styles/About.css";
 import "../Styles/Login.css";
 import useSettingsStore from "../stores/settingsStore";
-import useAuthStore from "../stores/authStore";
 import useUIStore from "../stores/uiStore";
-import useGameService from "../hooks/useGameService"; // Updated to use gameService
+import useGameService from "../hooks/useGameService";
 import apiService from "../services/apiService";
 
 function Signup({ onClose }) {

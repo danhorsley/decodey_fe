@@ -1,4 +1,4 @@
-// src/components/modals/ModalManager.js - Updated daily challenge handling
+// src/components/modals/ModalManager.js - Improved with better state management
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import About from "./About";
@@ -6,15 +6,13 @@ import Settings from "./Settings";
 import Login from "../../pages/Login";
 import Signup from "../../pages/Signup";
 import ContinueGamePrompt from "./ContinueGamePrompt";
-import useGameService from "../../hooks/useGameService"; // Updated to use gameService
+import useGameService from "../../hooks/useGameService"; // Updated to use gameService hook
 import useUIStore from "../../stores/uiStore";
-import useGameStore from "../../stores/gameStore"
-import useSettingsStore from "../../stores/settingsStore";
 import config from "../../config";
 
 /**
  * ModalManager component - handles rendering of all application modals
- * Updated to directly start daily challenge instead of navigating
+ * Updated to use gameService through hook instead of direct store manipulation
  */
 const ModalManager = ({ children }) => {
   const navigate = useNavigate();
@@ -35,8 +33,12 @@ const ModalManager = ({ children }) => {
   const closeLogin = useUIStore((state) => state.closeLogin);
   const closeSignup = useUIStore((state) => state.closeSignup);
   const closeSettings = useUIStore((state) => state.closeSettings);
-  const closeContinueGamePrompt = useUIStore((state) => state.closeContinueGamePrompt);
-  const openContinueGamePrompt = useUIStore((state) => state.openContinueGamePrompt);
+  const closeContinueGamePrompt = useUIStore(
+    (state) => state.closeContinueGamePrompt,
+  );
+  const openContinueGamePrompt = useUIStore(
+    (state) => state.openContinueGamePrompt,
+  );
 
   // Get game service functions and events
   const {
@@ -45,7 +47,7 @@ const ModalManager = ({ children }) => {
     isDailyCompleted: checkDailyCompletion,
     startDailyChallenge,
     onEvent,
-    events
+    events,
   } = useGameService();
 
   // Check daily challenge completion status when continue game prompt opens
@@ -80,7 +82,7 @@ const ModalManager = ({ children }) => {
         openContinueGamePrompt(data.gameStats);
       } else {
         console.log(
-          "Active game found but user is not authenticated - bypassing continue prompt"
+          "Active game found but user is not authenticated - bypassing continue prompt",
         );
         // For anonymous users, we don't show the modal at all
       }
@@ -107,7 +109,7 @@ const ModalManager = ({ children }) => {
     // Subscribe to game state changes
     const unsubscribe = onEvent(events.STATE_CHANGED, () => {
       console.log(
-        "Game state changed detected - closing continue prompt if open"
+        "Game state changed detected - closing continue prompt if open",
       );
       // Close the continue prompt if it's open
       if (isContinueGameOpen) {
@@ -118,65 +120,46 @@ const ModalManager = ({ children }) => {
     return unsubscribe;
   }, [isContinueGameOpen, closeContinueGamePrompt, onEvent, events]);
 
-  // Updated handler for custom game
+  // Handler for custom game
   const handleNewGame = async () => {
-    // Get settings with complete properties
-    const settingsStore = useSettingsStore.getState();
-    const options = {
-      longText: settingsStore?.settings?.longText || false,
-      hardcoreMode: settingsStore?.settings?.hardcoreMode || false,
-      difficulty: settingsStore?.settings?.difficulty || "medium",
-      customGameRequested: true, // This tells the system to start a custom game
-      preserveExistingGame: false, // This explicitly says to abandon the current game
-    };
+    try {
+      // Delegate to startNewGame through gameService
+      const result = await startNewGame({
+        customGameRequested: true, // This tells the system to start a custom game
+        preserveExistingGame: false, // This explicitly says to abandon the current game
+      });
 
-    console.log("Starting new game with settings:", options);
+      // Close the modal
+      closeContinueGamePrompt();
 
-    // Start new game using the service
-    const result = await startNewGame(options);
-
-    // Close the modal
-    closeContinueGamePrompt();
-
-    return result;
+      return result;
+    } catch (error) {
+      console.error("Error starting new game:", error);
+      closeContinueGamePrompt();
+      return { success: false, error };
+    }
   };
 
-  // Updated handler for daily challenge button - now directly starts the challenge
-  // instead of navigating to a separate route
+  // Handler for daily challenge button - now directly starts the challenge
   const handleDailyChallenge = async () => {
     // Close the modal first for better UX
     closeContinueGamePrompt();
 
     try {
-      console.log("Starting daily challenge directly - ensuring clean game state");
-
-      // 1. Clear the game ID from localStorage
-      localStorage.removeItem("uncrypt-game-id");
-
-      // 2. Reset the game state in the store before starting daily challenge
-      const gameStore = useGameStore.getState();
-      if (typeof gameStore.resetGame === 'function') {
-        gameStore.resetGame();
-        console.log("Game state reset before starting daily challenge");
-      }
-
-      // 3. Add a small delay to ensure state changes are processed
-      await new Promise(resolve => setTimeout(resolve, 50));
-
-      // 4. Start the daily challenge with clean state
-      console.log("Starting daily challenge with clean state");
+      console.log("Starting daily challenge directly");
       const result = await startDailyChallenge();
 
       if (result.success) {
+        // No navigation needed - event handling will manage state
         console.log("Daily challenge started successfully");
         return result;
       } else if (result.alreadyCompleted) {
-        console.log("Daily challenge already completed");
-        navigate("/", { 
-          state: { 
+        // For completed daily challenges, navigate with state
+        navigate("/", {
+          state: {
             dailyCompleted: true,
-            completionData: result.completionData 
-          }
+            completionData: result.completionData,
+          },
         });
         return result;
       } else {

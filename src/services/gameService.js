@@ -1,7 +1,8 @@
-// src/services/gameService.js - Fixed for anonymous users
+// src/services/gameService.js - Improved with proper state management
 import apiService from "./apiService";
 import config from "../config";
 import EventEmitter from "events";
+import useGameStore from "../stores/gameStore";
 
 // Create a single event emitter for the entire service
 const events = new EventEmitter();
@@ -11,7 +12,7 @@ let isInitializing = false;
 
 /**
  * Game Service
- * Simplified replacement for the strategy pattern
+ * Centralized manager for game logic that coordinates API calls and store updates
  */
 const gameService = {
   // Events that components can subscribe to
@@ -111,6 +112,9 @@ const gameService = {
           localStorage.setItem("uncrypt-game-id", gameData.game_id);
         }
 
+        // FIXED: Update game store directly here instead of relying on component
+        this._updateGameState(gameData, { isCustomGame: true });
+
         events.emit(this.events.GAME_INITIALIZED, {
           customGame: true,
           gameData,
@@ -143,6 +147,9 @@ const gameService = {
             localStorage.setItem("uncrypt-game-id", gameData.game_id);
           }
 
+          // FIXED: Update game store directly
+          this._updateGameState(gameData);
+
           events.emit(this.events.GAME_INITIALIZED, {
             resumedGame: false,
             newGame: true,
@@ -164,6 +171,9 @@ const gameService = {
         localStorage.setItem("uncrypt-game-id", gameData.game_id);
       }
 
+      // FIXED: Update game store directly
+      this._updateGameState(gameData);
+
       events.emit(this.events.GAME_INITIALIZED, {
         newGame: true,
         gameData,
@@ -178,6 +188,59 @@ const gameService = {
       setTimeout(() => {
         isInitializing = false;
       }, 500);
+    }
+  },
+
+  /**
+   * Update game state - PRIVATE METHOD that centralizes game state updates
+   * @private
+   * @param {Object} gameData - Game data from API
+   * @param {Object} options - Additional options
+   */
+  _updateGameState(gameData, options = {}) {
+    if (!gameData) return;
+
+    const {
+      isNewGame = false,
+      isDaily = false,
+      isCustomGame = false,
+    } = options;
+    const gameStore = useGameStore.getState();
+
+    // Check if we need to actually update the state
+    // Only update if we have valid game data
+    if (gameData.encrypted_paragraph && gameData.display) {
+      console.log(
+        `Service updating game state directly - isNewGame: ${isNewGame}, isDaily: ${isDaily}, isCustomGame: ${isCustomGame}`,
+      );
+
+      // For daily challenges, use the dedicated daily challenge method
+      if (isDaily) {
+        if (typeof gameStore.startDailyChallenge === "function") {
+          gameStore.startDailyChallenge(gameData);
+        } else {
+          // Fallback if method doesn't exist
+          gameStore.continueSavedGame(gameData);
+        }
+      }
+      // For custom games, specify customGame flag
+      else if (isCustomGame) {
+        if (typeof gameStore.continueSavedGame === "function") {
+          gameStore.continueSavedGame(gameData, { isCustomGame: true });
+        }
+      }
+      // For regular continuation
+      else {
+        if (typeof gameStore.continueSavedGame === "function") {
+          gameStore.continueSavedGame(gameData);
+        }
+      }
+
+      // Signal that state has changed
+      events.emit(this.events.STATE_CHANGED, {
+        source: "service",
+        gameDataUpdated: true,
+      });
     }
   },
 
@@ -223,24 +286,45 @@ const gameService = {
       const today = new Date().toISOString().split("T")[0];
 
       // Start daily challenge - always force 'easy' difficulty
-      console.log("Making API call to start daily challenge");
-      const gameData = await apiService.startDailyChallenge(today);
+      console.log("Making API call to start daily challenge for date:", today);
+      try {
+        const gameData = await apiService.startDailyChallenge(today);
 
-      // Store game ID if available
-      if (gameData && gameData.game_id) {
-        console.log("Daily challenge started with game ID:", gameData.game_id);
-        localStorage.setItem("uncrypt-game-id", gameData.game_id);
+        // Store game ID if available
+        if (gameData && gameData.game_id) {
+          console.log("Daily challenge started with game ID:", gameData.game_id);
+          localStorage.setItem("uncrypt-game-id", gameData.game_id);
 
-        // Emit game initialized event
-        events.emit(this.events.GAME_INITIALIZED, {
-          daily: true,
-          gameData,
-        });
+          // Update game store directly with daily challenge flag
+          this._updateGameState(gameData, { isDaily: true });
 
-        return { success: true, gameData, daily: true };
-      } else {
-        console.error("No game ID returned from daily challenge");
-        throw new Error("Invalid response from daily challenge endpoint");
+          // Emit game initialized event
+          events.emit(this.events.GAME_INITIALIZED, {
+            daily: true,
+            gameData,
+          });
+
+          return { success: true, gameData, daily: true };
+        } else {
+          console.error("No game ID returned from daily challenge");
+          throw new Error("Invalid response from daily challenge endpoint");
+        }
+      } catch (error) {
+        // Handle case where the daily is already completed
+        if (error.response?.data?.already_completed || 
+            error.alreadyCompleted) {
+          const completionData = error.response?.data?.completion_data || 
+                                error.completionData || null;
+
+          return {
+            success: false,
+            alreadyCompleted: true,
+            completionData: completionData,
+          };
+        }
+
+        // Re-throw other errors
+        throw error;
       }
     } catch (error) {
       console.error("Error starting daily challenge:", error);
@@ -307,6 +391,11 @@ const gameService = {
         localStorage.setItem("uncrypt-game-id", gameData.game_id);
       }
 
+      // FIXED: Update game store directly with proper options
+      const isDailyChallenge =
+        gameData.game_id && gameData.game_id.includes("-daily-");
+      this._updateGameState(gameData, { isDaily: isDailyChallenge });
+
       events.emit(this.events.GAME_INITIALIZED, {
         resumed: true,
         gameData,
@@ -340,6 +429,12 @@ const gameService = {
 
       // Always clear local storage
       localStorage.removeItem("uncrypt-game-id");
+
+      // Reset game state explicitly here
+      const gameStore = useGameStore.getState();
+      if (typeof gameStore.resetGame === "function") {
+        gameStore.resetGame();
+      }
 
       // Start new game
       return await this.initializeGame({
@@ -435,6 +530,12 @@ const gameService = {
       localStorage.removeItem(config.AUTH_KEYS.TOKEN);
       sessionStorage.removeItem(config.AUTH_KEYS.TOKEN);
 
+      // Reset game state in store
+      const gameStore = useGameStore.getState();
+      if (typeof gameStore.resetGame === "function") {
+        gameStore.resetGame();
+      }
+
       // Emit event for UI state transition
       events.emit(this.events.LOGOUT_TRANSITION);
 
@@ -463,6 +564,12 @@ const gameService = {
       // Still clear tokens even on error
       localStorage.removeItem(config.AUTH_KEYS.TOKEN);
       sessionStorage.removeItem(config.AUTH_KEYS.TOKEN);
+
+      // Reset game state even on error
+      const gameStore = useGameStore.getState();
+      if (typeof gameStore.resetGame === "function") {
+        gameStore.resetGame();
+      }
 
       // Emit logout event even on error
       events.emit(this.events.LOGOUT_TRANSITION);

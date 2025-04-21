@@ -567,27 +567,31 @@ class ApiService {
 
   /**
    * Start a daily challenge for the given date
-   * @param {string} dateString Date string in YYYY-MM-DD format
+   * @param {string} dateString Optional date string in YYYY-MM-DD format (defaults to today)
    * @returns {Promise<Object>} Game data
    */
   async startDailyChallenge(dateString) {
     try {
+      // If no dateString provided, use today's date
+      if (!dateString) {
+        const today = new Date();
+        // Format as YYYY-MM-DD
+        dateString = today.toISOString().split('T')[0];
+      }
+
       // Validate date string
       if (!dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
         throw new Error("Invalid date format. Use YYYY-MM-DD");
       }
 
-      // Build the URL
+      console.log(`Starting daily challenge for date: ${dateString}`);
+
+      // Build the URL - must use /daily/YYYY-MM-DD format
       const url = `/api/daily/${dateString}`;
 
       // Check if we have a token (authenticated user)
       const token = this.getToken();
       const isAnonymousStart = !token;
-
-      // Log the request for debugging
-      console.log(
-        `Starting daily challenge for date: ${dateString}, anonymous: ${isAnonymousStart}`
-      );
 
       try {
         // For authenticated users, use standard API call
@@ -621,7 +625,8 @@ class ApiService {
 
           // Check for errors
           if (!response.ok) {
-            throw new Error(`HTTP error ${response.status}: ${response.statusText}`);
+            const errorData = await response.json();
+            throw new Error(`HTTP error ${response.status}: ${errorData.error || response.statusText}`);
           }
 
           // Parse the response
@@ -639,31 +644,23 @@ class ApiService {
         // Handle specific errors
         console.error("Error in startDailyChallenge:", error);
 
-        // Still try anonymous approach as fallback if not already attempted
-        if (!isAnonymousStart && error.response?.status === 401) {
-          console.log("Auth error in startDailyChallenge, trying anonymous start as fallback");
+        // If the error indicates the daily is already completed
+        if (error.response?.data?.already_completed) {
+          return {
+            success: false,
+            alreadyCompleted: true,
+            completionData: error.response.data.completion_data
+          };
+        }
 
-          const fullUrl = `${this.api.defaults.baseURL}${url}`;
-          const response = await fetch(fullUrl, {
-            method: 'GET',
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json'
-            },
-            credentials: 'omit'
-          });
-
-          if (!response.ok) {
-            throw new Error(`HTTP error ${response.status}: ${response.statusText}`);
-          }
-
-          const data = await response.json();
-
-          if (data.game_id) {
-            localStorage.setItem("uncrypt-game-id", data.game_id);
-          }
-
-          return data;
+        // If fetch error with already_completed in the response
+        if (error.message?.includes("already completed")) {
+          return {
+            success: false,
+            alreadyCompleted: true,
+            // Try to extract completion data if available
+            completionData: error.completion_data || null
+          };
         }
 
         // Rethrow if we can't recover
