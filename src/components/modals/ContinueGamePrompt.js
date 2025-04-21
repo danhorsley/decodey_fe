@@ -13,13 +13,16 @@ function ContinueGamePrompt({
   isOpen,
   onClose,
   gameStats, // Regular game stats
-  dailyGameStats = null, // Daily game stats (new prop)
+  dailyGameStats = null, // Daily game stats
   onContinue,
   onNewGame,
-  dailyCompleted = true, // Flag for already completed daily (separate from active daily)
-  onDailyChallenge, // Handler for daily challenge button - either continue or start new
-  hasActiveDailyGame = false, // New prop to indicate if there's an active daily game
+  dailyCompleted = true, // Flag for already completed daily
+  onDailyChallenge, // Handler for daily challenge button
+  hasActiveDailyGame = false, // Active daily game flag from API
 }) {
+  // Debug logging
+  console.log('ContinueGamePrompt received hasActiveDailyGame:', hasActiveDailyGame);
+  console.log('ContinueGamePrompt received dailyGameStats:', dailyGameStats);
   // Get theme from settings
   const settings = useSettingsStore((state) => state.settings);
 
