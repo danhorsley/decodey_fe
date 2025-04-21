@@ -79,15 +79,18 @@ const ModalManager = ({ children }) => {
   // Simple handlers that delegate to game service
   const handleContinueGame = async (isDaily = false) => {
     try {
-      // Use the isDaily flag to determine which game to continue
+      console.log(`Continuing ${isDaily ? "daily" : "regular"} game`);
+
+      // Explicitly pass isDaily parameter to ensure it's not lost
       const result = await continueGame({ isDaily });
+
+      // Log the result to help debug
+      console.log(`Continue ${isDaily ? "daily" : "regular"} game result:`, result);
+
       closeContinueGamePrompt();
       return result;
     } catch (error) {
-      console.error(
-        `Error continuing ${isDaily ? "daily" : "regular"} game:`,
-        error,
-      );
+      console.error(`Error continuing ${isDaily ? "daily" : "regular"} game:`, error);
       closeContinueGamePrompt();
       return { success: false, error };
     }

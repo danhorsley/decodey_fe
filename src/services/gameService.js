@@ -412,6 +412,7 @@ const gameService = {
       const isAuthenticated = !!config.session.getAuthToken();
       const { isDaily = false } = options;
 
+      console.log(`continueGame called with isDaily=${isDaily}`);
       // Anonymous users cannot continue games
       if (!isAuthenticated) {
         return {

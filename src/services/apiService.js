@@ -581,7 +581,7 @@ class ApiService {
       if (!dateString) {
         const today = new Date();
         // Format as YYYY-MM-DD
-        dateString = today.toISOString().split('T')[0];
+        dateString = today.toISOString().split("T")[0];
       }
 
       // Validate date string
@@ -589,7 +589,9 @@ class ApiService {
         throw new Error("Invalid date format. Use YYYY-MM-DD");
       }
 
-      console.log(`Starting daily challenge for date: ${dateString} with clean game ID state`);
+      console.log(
+        `Starting daily challenge for date: ${dateString} with clean game ID state`,
+      );
 
       // Build the URL - must use /daily/YYYY-MM-DD format
       const url = `/api/daily/${dateString}`;
@@ -607,7 +609,9 @@ class ApiService {
           // If there's a game ID in the response, store it
           if (response.data.game_id) {
             localStorage.setItem("uncrypt-game-id", response.data.game_id);
-            console.log(`Daily challenge started with ID: ${response.data.game_id}`);
+            console.log(
+              `Daily challenge started with ID: ${response.data.game_id}`,
+            );
           }
 
           return response.data;
@@ -620,18 +624,20 @@ class ApiService {
           console.log("Full URL for fetch:", fullUrl);
 
           const response = await fetch(fullUrl, {
-            method: 'GET',
+            method: "GET",
             headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json'
+              Accept: "application/json",
+              "Content-Type": "application/json",
             },
-            credentials: 'omit' // Important: don't send credentials for anonymous requests
+            credentials: "omit", // Important: don't send credentials for anonymous requests
           });
 
           // Check for errors
           if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(`HTTP error ${response.status}: ${errorData.error || response.statusText}`);
+            throw new Error(
+              `HTTP error ${response.status}: ${errorData.error || response.statusText}`,
+            );
           }
 
           // Parse the response
@@ -640,7 +646,9 @@ class ApiService {
           // If there's a game ID in the response, store it
           if (data.game_id) {
             localStorage.setItem("uncrypt-game-id", data.game_id);
-            console.log(`Anonymous daily challenge started with ID: ${data.game_id}`);
+            console.log(
+              `Anonymous daily challenge started with ID: ${data.game_id}`,
+            );
           }
 
           return data;
@@ -654,7 +662,7 @@ class ApiService {
           return {
             success: false,
             alreadyCompleted: true,
-            completionData: error.response.data.completion_data
+            completionData: error.response.data.completion_data,
           };
         }
 
@@ -664,7 +672,7 @@ class ApiService {
             success: false,
             alreadyCompleted: true,
             // Try to extract completion data if available
-            completionData: error.completion_data || null
+            completionData: error.completion_data || null,
           };
         }
 
@@ -750,11 +758,14 @@ class ApiService {
       // Daily games get purged automatically on the backend, so we only abandon regular games
       const isDaily = false;
 
-      console.log("Abandoning regular game only (daily games handled by backend)");
+      console.log(
+        "Abandoning regular game only (daily games handled by backend)",
+      );
 
       // Check if we have a daily game ID - preserve it
       const activeGameId = localStorage.getItem("uncrypt-game-id");
-      const isActiveDailyGame = activeGameId && activeGameId.includes("-daily-");
+      const isActiveDailyGame =
+        activeGameId && activeGameId.includes("-daily-");
 
       // Only clear game ID if it's a regular game
       if (!isActiveDailyGame) {
@@ -775,7 +786,7 @@ class ApiService {
 
           console.log("Making API call to abandon regular game");
 
-          // Make direct call to abandon endpoint 
+          // Make direct call to abandon endpoint
           await this.api.delete(url, {
             headers: {
               // Ensure authentication headers are included
@@ -948,8 +959,8 @@ class ApiService {
   async continueGame(isDaily = false) {
     try {
       // Build URL with query parameter for isDaily
-      const url = isDaily 
-        ? "/api/continue-game?isDaily=true" 
+      const url = isDaily
+        ? "/api/continue-game?isDaily=true"
         : "/api/continue-game";
 
       console.log(`Continuing game with isDaily=${isDaily}`);
