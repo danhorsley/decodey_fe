@@ -91,7 +91,10 @@ const gameService = {
         if (activeGameCheck.hasActiveGame) {
           console.log("Active game found, emitting event");
           events.emit(this.events.ACTIVE_GAME_FOUND, {
-            gameStats: activeGameCheck.gameStats,
+            hasActiveGame: true,
+            hasActiveDailyGame: activeGameCheck.hasActiveDailyGame || false,
+            gameStats: activeGameCheck.gameStats || null,
+            dailyStats: activeGameCheck.dailyStats || null,
           });
 
           return {
@@ -453,10 +456,7 @@ const gameService = {
   async abandonAndStartNew(options = {}) {
     try {
       // Extract options (no need for isDaily anymore)
-      const { 
-        customGameRequested = true,
-        ...otherOptions
-      } = options;
+      const { customGameRequested = true, ...otherOptions } = options;
 
       console.log("Abandoning regular game and starting new game");
 
@@ -475,7 +475,8 @@ const gameService = {
       } else {
         // For anonymous users, just clear the game ID if it's not a daily game
         const activeGameId = localStorage.getItem("uncrypt-game-id");
-        const isActiveDailyGame = activeGameId && activeGameId.includes("-daily-");
+        const isActiveDailyGame =
+          activeGameId && activeGameId.includes("-daily-");
 
         if (!isActiveDailyGame) {
           localStorage.removeItem("uncrypt-game-id");
@@ -571,17 +572,22 @@ const gameService = {
         try {
           const activeGameCheck = await this.checkActiveGame();
 
-          if (activeGameCheck.hasActiveGame) {
-            // Notify UI about active game
-            events.emit(this.events.ACTIVE_GAME_FOUND, {
-              gameStats: activeGameCheck.gameStats,
-            });
+          // if (activeGameCheck.hasActiveGame) {
+          //   // Notify UI about active game
+          //   events.emit(this.events.ACTIVE_GAME_FOUND, {
+          //     hasActiveGame: true,
+          //     hasActiveDailyGame: activeGameCheck.hasActiveDailyGame || false,
+          //     gameStats: activeGameCheck.gameStats || null,
+          //     dailyStats: activeGameCheck.dailyStats || null,
+          //   });
 
             return {
               success: true,
-              hasActiveGame: true,
-              activeGameStats: activeGameCheck.gameStats,
-            };
+                hasActiveGame: activeGameCheck.hasActiveGame || false,
+                hasActiveDailyGame: activeGameCheck.hasActiveDailyGame || false,
+                activeGameStats: activeGameCheck.gameStats || null,
+                activeDailyStats: activeGameCheck.dailyStats || null
+            // };
           }
         } catch (checkError) {
           console.warn("Error checking for active game:", checkError);

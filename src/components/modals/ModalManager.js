@@ -76,39 +76,6 @@ const ModalManager = ({ children }) => {
     }
   }, [isContinueGameOpen, checkDailyCompletion]);
 
-  // Listen for active game notifications from gameService
-  useEffect(() => {
-    // Subscribe to the active game found event
-    const unsubscribe = onEvent(events.ACTIVE_GAME_FOUND, (data) => {
-      // Only show continue game prompt for authenticated users
-      const isAuthenticated = !!config.session.getAuthToken();
-
-      if (isAuthenticated) {
-        // Store both regular and daily game stats if available
-        const regularGameStats = data.gameStats || null;
-        const dailyGameStats = data.dailyStats || null;
-        const hasActiveDailyGame = data.hasActiveDailyGame || false;
-
-        // Update state with both game types
-        setActiveGameStats(regularGameStats);
-        setActiveDailyStats(dailyGameStats);
-        setHasActiveDailyGame(hasActiveDailyGame);
-
-        // Open the continue game prompt if we have any active game
-        if (regularGameStats || (hasActiveDailyGame && dailyGameStats)) {
-          openContinueGamePrompt(regularGameStats);
-        }
-      } else {
-        console.log(
-          "Active game found but user is not authenticated - bypassing continue prompt",
-        );
-        // For anonymous users, we don't show the modal at all
-      }
-    });
-
-    return unsubscribe;
-  }, [onEvent, events, openContinueGamePrompt]);
-
   // Simple handlers that delegate to game service
   const handleContinueGame = async (isDaily = false) => {
     try {
@@ -128,46 +95,44 @@ const ModalManager = ({ children }) => {
 
   // Listen for game state changes
   useEffect(() => {
-    // Subscribe to game state changes
+    // Subscribe to the active game found event
     const unsubscribe = onEvent(events.ACTIVE_GAME_FOUND, (data) => {
+      console.log("ACTIVE_GAME_FOUND event received with data:", data);
+
       // Only show continue game prompt for authenticated users
       const isAuthenticated = !!config.session.getAuthToken();
 
       if (isAuthenticated) {
-        // Store both regular and daily game stats if available
+        // Extract all data properties explicitly
         const regularGameStats = data.gameStats || null;
         const dailyGameStats = data.dailyStats || null;
-        const hasActiveDailyGame = data.hasActiveDailyGame || false;
+        const hasActiveDailyGame = !!data.hasActiveDailyGame; // Convert to boolean
 
-        // Update state with both game types
+        console.log("Processing game data:", {
+          regularGameStats,
+          dailyGameStats,
+          hasActiveDailyGame
+        });
+
+        // Update state with complete data
         setActiveGameStats(regularGameStats);
         setActiveDailyStats(dailyGameStats);
         setHasActiveDailyGame(hasActiveDailyGame);
 
-        // Update state first
-        setActiveGameStats(regularGameStats);
-        setActiveDailyStats(dailyGameStats);
-        setHasActiveDailyGame(hasActiveDailyGame);
-
-        // Then open the continue game prompt if we have ANY active game type
+        // Open the continue game prompt if we have any active game
         if (regularGameStats || (hasActiveDailyGame && dailyGameStats)) {
-          console.log('Opening continue prompt with:', {
-            hasActiveDailyGame,
-            dailyGameStats,
-            regularGameStats
-          });
+          // Don't pass any parameters here - just open the modal
           openContinueGamePrompt();
         }
       } else {
         console.log(
-          "Active game found but user is not authenticated - bypassing continue prompt",
+          "Active game found but user is not authenticated - bypassing continue prompt"
         );
-        // For anonymous users, we don't show the modal at all
       }
     });
 
     return unsubscribe;
-  }, [isContinueGameOpen, closeContinueGamePrompt, onEvent, events]);
+  }, [onEvent, events, openContinueGamePrompt]);
 
   // Handler for custom game
   const handleNewGame = async () => {
