@@ -1082,7 +1082,7 @@ class ApiService {
 
       // Add query parameters for both anonymous game ID and daily flag
       const params = new URLSearchParams();
-      if (isAnonymous && gameId) {
+      if (gameId) {
         params.append("game_id", gameId);
       }
       if (isDailyChallenge) {
