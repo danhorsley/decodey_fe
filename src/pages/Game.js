@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useState } from "react";
+// src/pages/Game.js
+import React, { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 
 // Import our new UI components
@@ -8,9 +9,8 @@ import GameDashboard from "../components/GameDashboard";
 
 // Import stores and hooks
 import useGameStore from "../stores/gameStore";
-import useGameSession from "../hooks/useGameSession";
+import useGameService from "../hooks/useGameService"; // New simplified game service hook
 import useSettingsStore from "../stores/settingsStore";
-// import useAuthStore from "../stores/authStore";
 import useUIStore from "../stores/uiStore";
 import useSound from "../services/WebAudioSoundManager";
 import useKeyboardInput from "../hooks/KeyboardController";
@@ -21,36 +21,81 @@ import MatrixRainLoading from "../components/effects/MatrixRainLoading";
 import TuneableTextDisplay from "../components/TuneableTextDisplay";
 import TutorialOverlay from "../components/TutorialOverlay";
 
-// Format the display text
-
-function Game() {
-  // Navigation hook
-  // const navigate = useNavigate();
-  // const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  // Location hook to get state from routing
+// Game component - the main gameplay screen
+const Game = () => {
+  // React Router location for checking route params
   const location = useLocation();
-  const isWinVerificationInProgress = useGameStore((state) => state.isWinVerificationInProgress);
-  // Slide menu state - NEW
-  const [menuOpen, setMenuOpen] = useState(false);
-  const toggleMenu = useCallback(() => setMenuOpen((prev) => !prev), []);
-  const [showTutorial, setShowTutorial] = useState(() => {
-    return !localStorage.getItem("tutorial-completed");
-  });
-  // const [showTutorial, setShowTutorial] = useState(true);
-  const handleTutorialComplete = () => {
-    setShowTutorial(false);
-  };
-  // Check if this is a daily challenge (passed from DailyChallenge component)
-  const isDailyFromRoute = location.state?.dailyChallenge === true;
 
-  // Get initialization status and events from gameSession hook
+  // Get game state from store
+  const {
+    game,
+    text,
+    keyPairs,
+    solved,
+    mistakesLeft,
+    gameOver,
+    showWin,
+    symbols,
+    secondsElapsed,
+    hintUsed,
+    difficulty,
+    hasGameLoaded,
+    loading: gameStateLoading,
+  } = useGameStore((state) => state);
+
+  // Get mobile detection state
+  const useMobileMode = useUIStore((state) => state.useMobileMode);
+
+  // Get UI state
+  const {
+    showSideMenu,
+    toggleSideMenu,
+    showGameOver,
+    showResetConfirmation,
+    openResetConfirmation,
+    openSettings,
+  } = useUIStore((state) => state);
+
+  // Get settings from store
+  const settings = useSettingsStore((state) => state.settings);
+
+  // State for controlling tutorial
+  const [showTutorial, setShowTutorial] = useState(false);
+
+  // State for controlling loading spinner
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Get initialization status and events from our new gameService hook
   const {
     isInitializing,
+    error: lastError,
     initializeGame,
     startDailyChallenge,
-    lastError,
-    subscribeToEvents,
-  } = useGameSession();
+    onEvent,
+    events
+  } = useGameService();
+
+  // Check if this is a daily challenge or an already completed daily challenge
+  const isDailyFromRoute = location.state?.dailyChallenge === true;
+  const dailyCompleted = location.state?.dailyCompleted === true;
+  const dailyCompletionData = location.state?.completionData;
+
+  // State for showing daily completion notification
+  const [showDailyCompletionNotice, setShowDailyCompletionNotice] = useState(dailyCompleted);
+
+  // Effect to handle daily completion notification
+  useEffect(() => {
+    if (dailyCompleted && dailyCompletionData) {
+      setShowDailyCompletionNotice(true);
+
+      // Hide after 5 seconds
+      const timer = setTimeout(() => {
+        setShowDailyCompletionNotice(false);
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [dailyCompleted, dailyCompletionData]);
 
   useEffect(() => {
     const handleOrientationChange = () => {
@@ -72,471 +117,229 @@ function Game() {
     };
   }, []);
 
-  // Handle logout transition
+  // Handle logout transition with our simplified event system
   useEffect(() => {
-    const unsubscribe = subscribeToEvents("auth:logout-transition", () => {
+    // Listen for logout events
+    const unsubscribeLogout = onEvent(events.LOGOUT_TRANSITION, () => {
       // Reset any authenticated-user specific state
-      console.log("auth:logout-transition event received in Game.js");
+      console.log("Logout transition event received in Game.js");
       const gameStore = useGameStore.getState();
       if (typeof gameStore.resetGame === "function") {
         gameStore.resetGame();
       }
     });
 
-    // Handle anonymous transition
-    const unsubscribeAnon = subscribeToEvents(
-      "game:anonymous-transition",
-      (result) => {
-        console.log(
-          "game:anonymous-transition event received in Game.js",
-          result,
+    // Listen for game state changes (includes anonymous transitions)
+    const unsubscribeStateChange = onEvent(events.STATE_CHANGED, (data) => {
+      console.log("Game state changed event received in Game.js", data);
+      if (data && data.source === "logout-transition") {
+        // A new game was started after logout
+        const gameStore = useGameStore.getState();
+        console.log("Starting anonymous game after logout");
+        gameStore.startGame(
+          false, // longText
+          false, // hardcoreMode
+          true,  // forceNew
+          false, // isDaily
         );
-        if (result && result.success && result.gameData) {
-          // Start new anonymous game with the received data
-          const gameStore = useGameStore.getState();
-          console.log("Starting anonymous game after logout");
-          gameStore.startGame(
-            false, // longText
-            false, // hardcoreMode
-            true, // forceNew
-            false, // isDaily
-          );
-        }
-      },
-    );
+      }
+    });
 
     return () => {
-      unsubscribe();
-      unsubscribeAnon();
+      unsubscribeLogout();
+      unsubscribeStateChange();
     };
-  }, [subscribeToEvents]);
-  // Get isResetting from gameStore to properly handle transitions
-  const isResetting = useGameStore((state) => state.isResetting);
-
-  // Settings
-  const settings = useSettingsStore((state) => state.settings);
-
-  // UI state for mobile/responsive
-  const useMobileMode = useUIStore((state) => state.useMobileMode);
-
-  // Modal states
-  const isLoginOpen = useUIStore((state) => state.isLoginOpen);
-  const isSignupOpen = useUIStore((state) => state.isSignupOpen);
-  const isSettingsOpen = useUIStore((state) => state.isSettingsOpen);
-  const isAboutOpen = useUIStore((state) => state.isAboutOpen);
-  const isContinueGameOpen = useUIStore((state) => state.isContinueGameOpen);
-
-  // Sound
-  const { playSound } = useSound();
-
-  // Game state - read only what we need
-  const {
-    encrypted,
-    display,
-    mistakes,
-    maxMistakes,
-    correctlyGuessed,
-    incorrectGuesses,
-    selectedEncrypted,
-    lastCorrectGuess,
-    letterFrequency,
-    originalLetters,
-    guessedMappings,
-    hasWon,
-    hasLost,
-    winData,
-
-    // Actions
-    submitGuess,
-    handleEncryptedSelect,
-    getHint,
-  } = useGameStore();
-
-  // Hint-specific state - moved to top level
-  const isHintInProgress = useGameStore((state) => state.isHintInProgress);
-  const pendingHints = useGameStore((state) => state.pendingHints);
-
-  // Game flag states
-  const hardcoreMode = useGameStore((state) => state.hardcoreMode);
-  const isDailyChallenge = useGameStore((state) => state.isDailyChallenge);
-
-  // Auto-initialize on first render - the component calls initializeGame
-  // once on mount via React.useEffect()
+  }, [onEvent, events]);
+  const initializedRef = useRef(false);
+  // Auto-initialize on first render with our simplified approach
   useEffect(() => {
-    // Use a flag to prevent double initialization
-    let hasInitialized = false;
+    // Create ref to prevent multiple initializations
 
     const performInitialization = async () => {
-      // Prevent double initialization
-      if (hasInitialized) return;
-      hasInitialized = true;
-
-      console.log("Starting game initialization in Game.js useEffect");
-
-      // Define options first
-      const options = { customGameRequested: false };
-      
-      // Determine if this should be a daily challenge
-      const isAnonymous = !config.session.getAuthToken();
-      const shouldStartDaily = isDailyFromRoute || (isAnonymous && !options.customGameRequested);
-
-      if (shouldStartDaily) {
-        console.log("Starting daily challenge");
-        await startDailyChallenge();
+      // Only initialize once
+      if (initializedRef.current) {
+        console.log("Game already initialized, skipping");
         return;
       }
 
-      // For non-daily games, use standard initialization
-      console.log("Starting standard game");
-      await initializeGame(options);
-    };
+      // Set flag immediately
+      initializedRef.current = true;
+      console.log("Starting game initialization in Game.js useEffect");
 
-    performInitialization();
-  }, [initializeGame, startDailyChallenge, isDailyFromRoute]);
-  //if lines don't match rerender
-  useEffect(() => {
-    // Safety check for length mismatches or space misalignment
-    if (encrypted && display) {
-      if (encrypted.length !== display.length) {
-        console.error("Length mismatch detected in renderer");
-        triggerRecovery();
-      } else {
-        // Check space alignment
-        let misaligned = false;
-        for (let i = 0; i < encrypted.length; i++) {
-          if (
-            (encrypted[i] === " " && display[i] !== " ") ||
-            (encrypted[i] !== " " && display[i] === " ")
-          ) {
-            console.error(`Space misalignment at position ${i}`);
-            misaligned = true;
-            break;
-          }
-        }
-
-        if (misaligned) triggerRecovery();
-      }
-    }
-
-    function triggerRecovery() {
-      console.log("Triggering game state recovery due to text misalignment");
-      // If we have a verifyWinAndGetData function, that's perfect because it fetches game state
-      const gameStore = useGameStore.getState();
-      if (typeof gameStore.continueGame === "function") {
-        gameStore.verifyWinAndGetData().then((result) => {
-          if (result && result.verified) {
-            console.log("Game state successfully recovered");
-          } else {
-            // If verification didn't work, try continueSavedGame without parameters
-            // This will make it fetch from the server
-            if (typeof gameStore.continueSavedGame === "function") {
-              gameStore.continueSavedGame();
-            }
-          }
-        });
-      } else if (typeof gameStore.continueSavedGame === "function") {
-        // Direct approach - just try to continue the saved game
-        gameStore.continueSavedGame();
-      }
-    }
-  }, [encrypted, display]);
-  // ===== GAME INTERACTION HANDLERS =====
-  // Handle encrypted letter selection
-  const onEncryptedClick = useCallback(
-    (letter) => {
-      if (typeof handleEncryptedSelect === "function") {
-        handleEncryptedSelect(letter);
-        playSound?.("keyclick");
-      }
-    },
-    [handleEncryptedSelect, playSound],
-  );
-
-  // Handle guess letter selection
-  const onGuessClick = useCallback(
-    (guessedLetter) => {
-      if (selectedEncrypted && typeof submitGuess === "function") {
-        // Check if this would be a repeat guess
-        const previousGuesses = incorrectGuesses[selectedEncrypted] || [];
-        if (previousGuesses.includes(guessedLetter)) {
+      try {
+        // Check if we're dealing with daily completion notification
+        if (dailyCompleted) {
+          console.log("Daily challenge already completed - initializing standard game");
+          await initializeGame({ skipDailyCheck: true });
           return;
         }
 
-        submitGuess(selectedEncrypted, guessedLetter).then((result) => {
-          if (result.success) {
-            if (result.isCorrect) {
-              playSound?.("correct");
-            } else if (result.isIncorrect) {
-              playSound?.("incorrect");
-            }
+        // Handle explicit daily challenge requests
+        if (isDailyFromRoute) {
+          console.log("Explicitly requested daily challenge - initializing");
+          await startDailyChallenge();
+          return;
+        }
 
-            if (result.hasLost) {
-              playSound?.("lose");
-            }
-          }
-        });
+        // For everything else, let the service handle the logic
+        await initializeGame();
+      } catch (err) {
+        console.error("Game initialization failed:", err);
       }
-    },
-    [selectedEncrypted, submitGuess, playSound, incorrectGuesses],
-  );
+    };
 
-  // Handle hint button click
-  const onHintClick = useCallback(() => {
-    if (typeof getHint === "function") {
-      getHint().then((result) => {
-        if (result.success) {
-          playSound?.("hint");
-        }
+    performInitialization();
+  }, []);
 
-        // Add any user feedback for hint failures if needed
-        if (!result.success) {
-          if (result.reason === "would-exceed-max-mistakes") {
-            console.log("Hint would exceed max mistakes");
-            // Could show a toast or flash the mistakes counter
-          }
-        }
-      });
-    }
-  }, [getHint, playSound]);
+  // Detect tutorial settings on mount
+  useEffect(() => {
+    // Check local storage to see if tutorial has been shown
+    const tutorialCompleted = localStorage.getItem("tutorial-completed") === "true";
+    const tutorialStarted = localStorage.getItem("tutorial-started") === "true";
 
-  // Handle retry/restart game
-  const handleStartNewGame = useCallback(() => {
-    // Use the more comprehensive reset and start function from gameStore
-    const resetAndStart = useGameStore.getState().resetAndStartNewGame;
-    if (typeof resetAndStart === "function") {
-      // Use settings from the store
-      const settingsStore = useSettingsStore.getState();
-
-      // Set isResetting flag before the reset
-      useGameStore.getState().resetGame();
-
-      // Force a UI refresh by setting state
-      // setForceRefresh((prevState) => !prevState); // Add this state variable if needed
-
-      resetAndStart(
-        settingsStore.settings?.longText || false,
-        settingsStore.settings?.hardcoreMode || false,
-        {
-          forceRender: true, // Add a flag we can check for forcing updates
-          customGameRequested: true, // Ensure we get a custom game
-        },
-      );
+    if (!tutorialCompleted && !tutorialStarted) {
+      // Set local storage to indicate tutorial has been started
+      localStorage.setItem("tutorial-started", "true");
+      setShowTutorial(true);
     }
   }, []);
 
-  // ===== DERIVED STATE =====
-  // Determine if game is active - computed value
-  const isGameActive =
-    !!encrypted && !hasWon && !hasLost && mistakes < maxMistakes;
+  // Sound effects
+  const { playSound } = useSound();
 
-  // Any modal open check for keyboard handling
-  const anyModalOpen =
-    isLoginOpen ||
-    isSignupOpen ||
-    isSettingsOpen ||
-    isAboutOpen ||
-    isContinueGameOpen ||
-    hasWon ||
-    hasLost;
+  // Clear loading state when game is loaded
+  useEffect(() => {
+    if (hasGameLoaded) {
+      // Add a slight delay to ensure all components have updated
+      const timer = setTimeout(() => {
+        setIsLoading(false);
+        playSound("gameStart");
+      }, 1000);
 
-  // Enable keyboard input only when appropriate - a game is active, no modals are open, and we're not initializing
-  const keyboardEnabled = isGameActive && !anyModalOpen && !isInitializing;
+      return () => clearTimeout(timer);
+    }
+  }, [hasGameLoaded, playSound]);
 
-  // Get sorted encrypted letters for display
-  const sortedEncryptedLetters = React.useMemo(() => {
-    if (!encrypted) return [];
+  // ========================
+  // Keyboard input handling
+  // ========================
 
-    // Extract unique letters from encrypted text
-    const encryptedLetters = [...new Set(encrypted.match(/[A-Z]/g) || [])];
+  // Use the keyboard controller hook to handle input
+  const { handleKeyPress } = useKeyboardInput();
 
-    // Sort if needed based on settings
-    return settings?.gridSorting === "alphabetical"
-      ? [...encryptedLetters].sort()
-      : encryptedLetters;
-  }, [encrypted, settings?.gridSorting]);
+  // =======================
+  // Game actions and utils
+  // =======================
 
-  const effectiveMistakes = mistakes + pendingHints;
-  const remainingMistakes = maxMistakes - effectiveMistakes;
+  // Handle when user completes the tutorial
+  const handleTutorialComplete = () => {
+    setShowTutorial(false);
+    localStorage.setItem("tutorial-completed", "true");
+  };
 
-  const disableHint =
-    !isGameActive || isHintInProgress || remainingMistakes <= 1;
+  // ========================
+  // Rendering of components
+  // ========================
 
-  // Setup keyboard input with more explicit callbacks
-  useKeyboardInput({
-    enabled: keyboardEnabled,
-    speedMode: true,
-    encryptedLetters: Array.isArray(sortedEncryptedLetters)
-      ? sortedEncryptedLetters
-      : [],
-    originalLetters: Array.isArray(originalLetters) ? originalLetters : [],
-    selectedEncrypted,
-    onEncryptedSelect: (letter) => {
-      if (keyboardEnabled && typeof handleEncryptedSelect === "function") {
-        handleEncryptedSelect(letter);
-        playSound?.("keyclick");
-      }
-    },
-    onGuessSubmit: (guessedLetter) => {
-      if (
-        keyboardEnabled &&
-        selectedEncrypted &&
-        typeof submitGuess === "function"
-      ) {
-        submitGuess(selectedEncrypted, guessedLetter).then((result) => {
-          if (result.success) {
-            if (result.isCorrect) {
-              playSound?.("correct");
-            } else if (result.isIncorrect) {
-              playSound?.("incorrect");
-            }
-
-            if (result.hasLost) {
-              playSound?.("lose");
-            }
-          }
-        });
-      }
-    },
-    playSound,
-  });
-
-  // ===== RENDER HELPERS =====
-  // If loading, show loading screen
-  if (isInitializing || isResetting) {
+  // Handle loading state
+  if (isLoading || !hasGameLoaded) {
     return (
-      <div
-        className={`App-container ${settings?.theme === "dark" ? "dark-theme" : "light-theme"}`}
-      >
-        <CompactHeader
-          title="decodey"
-          toggleMenu={toggleMenu}
-          isDailyChallenge={isDailyChallenge}
-        />
-        <SlideMenu isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
-        <div
-          className={`loading-container ${settings?.theme === "dark" ? "dark-theme" : "light-theme"}`}
-        >
-          {/* Matrix Rain loading animation */}
-          <div className="loading-animation">
-            <MatrixRainLoading
-              active={true}
-              color={settings?.theme === "dark" ? "#4cc9f0" : "#00ff41"}
-              message={isResetting ? "Starting new game..." : "Loading game..."}
-              width="100%"
-              height="100%"
-              density={40}
-            />
-          </div>
-        </div>
+      <div className="loading-overlay">
+        <MatrixRainLoading />
       </div>
     );
   }
 
-  // If error or no game loaded, show error screen
-  if (!encrypted && !isInitializing) {
+  // Game over screen
+  const renderGameOver = () => {
+    if (showGameOver) {
+      return (
+        <div className="game-over-screen">
+          <h2>GAME OVER</h2>
+          <p>The code remains unbroken.</p>
+          <p>Your progress: {Math.floor((solved.length / symbols.length) * 100)}%</p>
+          <button onClick={() => window.location.reload()}>Try Again</button>
+        </div>
+      );
+    }
+
+    if (showWin) {
+      return <WinCelebration />;
+    }
+
+    return null;
+  };
+
+  // Render the game header (top bar)
+  const renderGameHeader = () => {
     return (
-      <div
-        className={`App-container ${settings?.theme === "dark" ? "dark-theme" : "light-theme"}`}
-      >
-        <CompactHeader
-          title="decodey"
-          toggleMenu={toggleMenu}
-          isDailyChallenge={isDailyChallenge}
-        />
-        <SlideMenu isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
-        <div
-          className={`error-container ${settings?.theme === "dark" ? "dark-theme" : "light-theme"}`}
-        >
-          <h2 className="error-title">Game Failed to Load</h2>
+      <CompactHeader
+        toggleSideMenu={toggleSideMenu}
+        openSettings={openSettings}
+        openResetConfirmation={openResetConfirmation}
+        time={secondsElapsed}
+        mistakesLeft={mistakesLeft}
+        difficulty={difficulty}
+        openModal={() => {}}
+        hintUsed={hintUsed}
+      />
+    );
+  };
 
-          <p className="error-message">
-            {lastError?.message || "There was a problem loading the game data."}
-          </p>
+  // Render the controls panel (bottom section)
+  const renderControls = () => {
+    return (
+      <GameDashboard
+        keyPairs={keyPairs}
+        solved={solved}
+        mistakesLeft={mistakesLeft}
+        onKeyPress={handleKeyPress}
+        gameOver={gameOver}
+      />
+    );
+  };
 
-          <button onClick={handleStartNewGame} className="try-again-button">
-            Try Again
+  // Render the text container
+  const renderTextContainer = () => {
+    // Use TuneableTextDisplay for the main text area
+    return (
+      <TuneableTextDisplay
+        text={text}
+        keyPairs={keyPairs}
+        solved={solved}
+        settings={settings}
+      />
+    );
+  };
+
+  // Daily challenge completion notice
+  const renderDailyCompletionNotice = () => {
+    if (!showDailyCompletionNotice || !dailyCompletionData) return null;
+
+    // Format time for display
+    const formatTime = (seconds) => {
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = seconds % 60;
+      return `${minutes}m ${remainingSeconds}s`;
+    };
+
+    return (
+      <div className="daily-completion-notice">
+        <div className="notice-content">
+          <h3>Today's Daily Challenge</h3>
+          <p>You've already completed today's challenge!</p>
+          {dailyCompletionData && (
+            <div className="completion-stats">
+              <p>Score: <strong>{dailyCompletionData.score}</strong></p>
+              <p>Time: {formatTime(dailyCompletionData.time_taken)}</p>
+            </div>
+          )}
+          <button onClick={() => setShowDailyCompletionNotice(false)}>
+            Dismiss
           </button>
         </div>
       </div>
     );
-  }
-
-  // ===== UI COMPONENTS =====
-  // Game header component
-  const renderGameHeader = () => (
-    <>
-      {/* Updated CompactHeader with both isDailyChallenge and hardcoreMode props */}
-      <CompactHeader
-        title="decodey"
-        toggleMenu={toggleMenu}
-        isDailyChallenge={isDailyChallenge}
-        hardcoreMode={hardcoreMode}
-      />
-
-      {/* Slide menu */}
-      <SlideMenu isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
-    </>
-  );
-
-  // Text container component - simplified for better mobile display
-  const renderTextContainer = () => (
-    <TuneableTextDisplay
-      encrypted={encrypted}
-      display={display}
-      hardcoreMode={hardcoreMode}
-    />
-  );
-
-  // Grid components - simplified for both mobile and desktop
-  const renderControls = () => (
-    <GameDashboard
-      mistakes={mistakes}
-      maxMistakes={maxMistakes}
-      pendingHints={pendingHints}
-      onHintClick={onHintClick}
-      disableHint={disableHint}
-      isHintInProgress={isHintInProgress}
-      sortedEncryptedLetters={sortedEncryptedLetters}
-      selectedEncrypted={selectedEncrypted}
-      correctlyGuessed={correctlyGuessed}
-      incorrectGuesses={incorrectGuesses}
-      lastCorrectGuess={lastCorrectGuess}
-      letterFrequency={letterFrequency}
-      onEncryptedClick={onEncryptedClick}
-      isGameActive={isGameActive}
-      originalLetters={originalLetters}
-      guessedMappings={guessedMappings}
-      onGuessClick={onGuessClick}
-      hasLost={hasLost}
-      onStartNewGame={handleStartNewGame}
-    />
-  );
-
-  // Win/lose states
-  const renderGameOver = () => {
-    // Handle both win and loss scenarios with the same component
-    if (hasWon || hasLost) {
-      // Create win data object with necessary props for both states
-      const gameOverData = {
-        ...winData,
-        hasLost: hasLost,
-        // Make sure we include important data needed for either state
-        score: winData?.score || 0,
-        mistakes: mistakes,
-        maxMistakes: maxMistakes,
-        gameTimeSeconds: winData?.gameTimeSeconds || 0,
-        encrypted: encrypted,
-        display: display,
-        correctlyGuessed: correctlyGuessed, // Add correctly guessed letters for percentage calculation
-        hardcoreMode: hardcoreMode,
-        // Add callback for Play Again button
-        onPlayAgain: handleStartNewGame,
-        statsLoading: isWinVerificationInProgress, 
-      };
-
-      return <WinCelebration playSound={playSound} winData={gameOverData} />;
-    }
-    return null;
   };
 
   // ===== MAIN RENDER =====
@@ -550,6 +353,7 @@ function Game() {
           {renderTextContainer()}
           {renderControls()}
           {renderGameOver()}
+          {renderDailyCompletionNotice()}
         </MobileLayout>
         {showTutorial && (
           <TutorialOverlay onComplete={handleTutorialComplete} />
@@ -567,9 +371,10 @@ function Game() {
       {renderTextContainer()}
       {renderControls()}
       {renderGameOver()}
+      {renderDailyCompletionNotice()}
       {showTutorial && <TutorialOverlay onComplete={handleTutorialComplete} />}
     </div>
   );
-}
+};
 
 export default Game;

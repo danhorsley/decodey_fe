@@ -14,71 +14,95 @@ import {
 import useSettingsStore from "../stores/settingsStore";
 import useAuthStore from "../stores/authStore";
 import useUIStore from "../stores/uiStore";
-import useGameSession from "../hooks/useGameSession";
+import useGameService from "../hooks/useGameService";
 import useDeviceDetection from "../hooks/useDeviceDetection";
 import "../Styles/HomePage.css";
 import useGameStore from "../stores/gameStore";
-import apiService from "../services/apiService";
 
 const HomePage = () => {
   const navigate = useNavigate();
   const settings = useSettingsStore((state) => state.settings);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const { userLogout } = useGameSession();
+  const { logout, startDailyChallenge, initializeGame, continueGame } =
+    useGameService();
   const { isLandscape } = useDeviceDetection();
+
   // UI actions
   const openSettings = useUIStore((state) => state.openSettings);
   const openAbout = useUIStore((state) => state.openAbout);
 
   // Navigation handlers
-  const handleDailyChallenge = () => {
-    navigate("/daily");
+  const handleDailyChallenge = async () => {
+    // Start a daily challenge directly without navigating
+    try {
+      const result = await startDailyChallenge();
+
+      if (result.success) {
+        // If successful, navigate to main game route
+        navigate("/");
+      } else if (result.alreadyCompleted) {
+        // If already completed, still navigate to main game with a state flag
+        navigate("/", {
+          state: {
+            dailyCompleted: true,
+            completionData: result.completionData,
+          },
+        });
+      } else {
+        // On error, still navigate back to home
+        console.error("Failed to start daily challenge:", result.error);
+        navigate("/");
+      }
+    } catch (error) {
+      console.error("Error starting daily challenge:", error);
+      navigate("/");
+    }
   };
 
   const handleCustomGame = async () => {
     console.log("Custom Game clicked in HomePage");
 
-    if (!isAuthenticated) {
-      // Anonymous users always get a new game
-      window.location.href = "/";
-      return;
-    }
+    // For authenticated users, check for active game first
+    if (isAuthenticated) {
+      try {
+        // Try to continue game - this will trigger continue prompt if active game exists
+        const result = await continueGame();
 
-    try {
-      // Check active game using apiService directly
-      const response = await apiService.checkActiveGame();
-
-      if (response && response.has_active_game) {
-        // If active game exists, simply navigate to "/" which will detect
-        // and show the continue prompt through the normal flow
-        navigate("/");
-        return;
+        if (result.success) {
+          // Just navigate to the game page, modal will show if there's an active game
+          navigate("/");
+          return;
+        }
+      } catch (error) {
+        console.error("Error checking for active game:", error);
       }
-    } catch (error) {
-      console.error("Error checking for active game:", error);
     }
 
-    // No active game or error checking - use the WinCelebration approach
-    const resetAndStart = useGameStore.getState().resetAndStartNewGame;
-
-    if (typeof resetAndStart === "function") {
+    // No active game or error checking - start a new custom game
+    try {
       // First reset the game
       useGameStore.getState().resetGame();
 
-      // Then start a new game with the exact same parameters used in WinCelebration
-      resetAndStart(
-        settings?.longText || false,
-        settings?.hardcoreMode || false,
-        {
-          forceRender: true,
-          customGameRequested: true,
-        },
-      );
+      // Start a new custom game
+      const result = await initializeGame({
+        longText: settings?.longText || false,
+        hardcoreMode: settings?.hardcoreMode || false,
+        customGameRequested: true,
+      });
 
-      // Navigate to the game page
-      navigate("/");
-    } else {
-      // Fallback to simple navigation
+      if (result.success) {
+        // Navigate to the game page
+        navigate("/");
+      } else {
+        console.error(
+          "Failed to start custom game:",
+          result.error || result.reason,
+        );
+        // Fallback to simple navigation
+        navigate("/");
+      }
+    } catch (error) {
+      console.error("Error starting custom game:", error);
       navigate("/");
     }
   };
@@ -88,7 +112,7 @@ const HomePage = () => {
   };
 
   const handleLogout = async () => {
-    await userLogout(false); // Don't auto-start a new game
+    await logout(false); // Don't auto-start a new game
     window.location.href = "/"; // Full page refresh to ensure clean state
   };
 

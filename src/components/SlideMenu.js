@@ -15,7 +15,7 @@ import {
 import "../Styles/SlideMenu.css";
 import useAuthStore from "../stores/authStore";
 import useUIStore from "../stores/uiStore";
-import useGameSession from "../hooks/useGameSession";
+import useGameService from "../hooks/useGameService";
 
 /**
  * SlideMenu - The sidebar menu that opens when the hamburger is clicked
@@ -32,12 +32,9 @@ const SlideMenu = ({ isOpen, onClose }) => {
   const openSignup = useUIStore((state) => state.openSignup);
   const openSettings = useUIStore((state) => state.openSettings);
   const openAbout = useUIStore((state) => state.openAbout);
-  // const openContinueGamePrompt = useUIStore(
-  //   (state) => state.openContinueGamePrompt,
-  // );
 
-  // Get game session functions
-  const gameSession = useGameSession();
+  // Get game service functions
+  const { continueGame, logout, startDailyChallenge, events, onEvent } = useGameService();
 
   // Handle navigation
   const handleNavigation = (path) => {
@@ -45,27 +42,19 @@ const SlideMenu = ({ isOpen, onClose }) => {
     onClose();
   };
 
-  // Handle custom game - UPDATED to ensure continue modal appears when needed
+  // Handle custom game - simplified with our new service
   const handleCustomGame = async () => {
     console.log("Custom Game clicked in SlideMenu");
+    onClose(); // Close menu first for better UX
 
     // For authenticated users, check for active game
     if (isAuthenticated) {
       try {
-        // We already have the gameSession from the hook
-        const { events } = gameSession;
+        // Try to continue game - if active game exists, service will emit the event
+        const result = await continueGame();
 
-        // The gameSession may already have a method to check active games
-        const result = await gameSession.continueGame();
-
-        // If result has activeGameFound flag, emit the event ModalManager is listening for
-        if (result.activeGameFound && result.gameStats) {
-          // This is the event that ModalManager listens for
-          events.emit("game:active-game-found", {
-            gameStats: result.gameStats
-          });
-        } else {
-          // No active game, force refresh to start a new game
+        // If no active game found, just refresh to start a new game
+        if (!result.success || !result.activeGameFound) {
           window.location.href = "/";
         }
       } catch (error) {
@@ -77,9 +66,37 @@ const SlideMenu = ({ isOpen, onClose }) => {
       // For anonymous users, refresh the page to start a new game
       window.location.href = "/";
     }
+  };
 
-    // Close the menu
-    onClose();
+  // Handle daily challenge - simplified direct approach
+  const handleDailyChallenge = async () => {
+    console.log("Daily Challenge clicked in SlideMenu");
+    onClose(); // Close menu first
+
+    try {
+      // Start daily challenge and navigate based on result
+      const result = await startDailyChallenge();
+
+      if (result.success) {
+        // Navigate to main game if successful
+        navigate("/");
+      } else if (result.alreadyCompleted) {
+        // If already completed, navigate with state
+        navigate("/", { 
+          state: { 
+            dailyCompleted: true,
+            completionData: result.completionData 
+          }
+        });
+      } else {
+        // On error, still navigate to main route
+        console.error("Failed to start daily challenge:", result.error);
+        navigate("/");
+      }
+    } catch (error) {
+      console.error("Error starting daily challenge:", error);
+      navigate("/");
+    }
   };
 
   // Handle auth actions
@@ -95,8 +112,8 @@ const SlideMenu = ({ isOpen, onClose }) => {
 
   const handleLogout = async () => {
     console.log("Logout clicked in SlideMenu");
-    await gameSession.userLogout(true); // true means start an anonymous game
-    console.log("userLogout completed in SlideMenu");
+    await logout(true); // true means start an anonymous game
+    console.log("Logout completed in SlideMenu");
     onClose();
   };
 
@@ -130,7 +147,7 @@ const SlideMenu = ({ isOpen, onClose }) => {
             Home Menu
           </li>
 
-          <li onClick={() => handleNavigation("/daily")}>
+          <li onClick={handleDailyChallenge}>
             <FaCalendarAlt className="menu-icon" />
             Daily Challenge
           </li>
@@ -182,6 +199,6 @@ const SlideMenu = ({ isOpen, onClose }) => {
       </div>
     </>
   );
-};
+  };
 
-export default SlideMenu;
+  export default SlideMenu;

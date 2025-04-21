@@ -58,7 +58,6 @@ function App() {
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/scoring" element={<Scoring />} />
-            <Route path="/daily" element={<DailyChallenge />} />
             <Route path="/wintest" element={<WinCelebrationTest />} />
             <Route path="/home" element={<HomePage />} />
             <Route path="*" element={<NotFound />} />
