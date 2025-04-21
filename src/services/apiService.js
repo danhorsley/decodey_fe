@@ -1055,6 +1055,16 @@ class ApiService {
   }
 
   /**
+   * Check if a game ID represents a daily challenge
+   * @param {string} gameId - The game ID to check
+   * @returns {boolean} - True if this is a daily challenge game
+   */
+  isDailyChallenge(gameId) {
+    // Check if the game ID includes the daily challenge identifier
+    return gameId && gameId.includes("-daily-");
+  }
+
+  /**
    * Get current game status
    * @returns {Promise<Object>} Game status
    */
@@ -1064,11 +1074,29 @@ class ApiService {
       const gameId = this.getGameId();
       const isAnonymous = !token;
 
+      // Determine if this is a daily challenge based on the game ID
+      const isDailyChallenge = this.isDailyChallenge(gameId);
+
       // For anonymous users, include game_id as query param
       let url = "/api/game-status";
+
+      // Add query parameters for both anonymous game ID and daily flag
+      const params = new URLSearchParams();
       if (isAnonymous && gameId) {
-        url += `?game_id=${encodeURIComponent(gameId)}`;
+        params.append("game_id", gameId);
       }
+      if (isDailyChallenge) {
+        params.append("isDaily", "true");
+      }
+
+      // Append parameters if we have any
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+
+      console.log(
+        `Getting game status with URL: ${url}, isDailyChallenge: ${isDailyChallenge}, gameId: ${gameId}`,
+      );
 
       // Make the request
       const response = await this.api.get(url);
@@ -1078,13 +1106,15 @@ class ApiService {
 
       // Normalize some field names for consistency
       const data = response.data;
-
+      console.log("Game status data:", data);
       // The backend might use different field naming conventions
       return {
         // Normalize boolean properties
         game_complete: data.game_complete || data.gameComplete || false,
         has_won: data.has_won || data.hasWon || false,
 
+        // Include the daily challenge flag
+        isDailyChallenge: isDailyChallenge,
         // Ensure streak data is passed through
         current_daily_streak: data.current_daily_streak || 0,
 

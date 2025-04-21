@@ -767,8 +767,12 @@ const useGameStore = create(
           state.isWinVerificationInProgress = true;
         });
 
-        // Get fresh status from backend
-        const gameStatus = await apiService.getGameStatus();
+        // Get current game ID and check if it's a daily challenge
+        const gameId = localStorage.getItem("uncrypt-game-id") || "";
+        const isDailyChallenge = gameId.includes("-daily-") || get().isDailyChallenge;
+
+        // Get fresh status from backend - pass isDailyChallenge flag if needed
+        const gameStatus = await apiService.getGameStatus(isDailyChallenge);
 
         if (gameStatus.error) {
           console.error("Error verifying win:", gameStatus.error);
@@ -788,14 +792,6 @@ const useGameStore = create(
           // Extract win data from the response - handle multiple possible field names
           const winData = gameStatus.win_data || gameStatus.winData || {};
           const uniqueLettersSolved = new Set(get().correctlyGuessed || []).size;
-
-          // Log the win data to help diagnose streak issues
-          console.log("Raw win data from server:", winData);
-          console.log("Streak data:", winData.current_daily_streak);
-
-          // Get daily challenge status
-          const isDailyChallenge = get().isDailyChallenge;
-          const dailyDate = get().dailyDate;
 
           // Create complete win data structure with normalized field names
           const formattedWinData = {
@@ -825,13 +821,11 @@ const useGameStore = create(
 
             // Add daily challenge info to win data
             isDailyChallenge: isDailyChallenge,
-            dailyDate: dailyDate,
+            dailyDate: get().dailyDate,
 
-            // Ensure daily streak data is properly passed through - FIXED
+            // Ensure daily streak data is properly passed through
             current_daily_streak: winData.current_daily_streak || 0,
           };
-
-          console.log("Formatted win data:", formattedWinData);
 
           // Update state with win data and clear verification flag
           set(state => {
@@ -846,18 +840,6 @@ const useGameStore = create(
             verified: true,
             winData: formattedWinData,
           };
-        }
-
-        // Handle case where backend says game is lost
-        if (gameStatus.game_complete && !gameStatus.has_won) {
-          set(state => {
-            state.hasWon = false;
-            state.hasLost = true;
-            state.completionTime = Date.now();
-            state.isWinVerificationInProgress = false;
-          });
-
-          return { verified: true, hasLost: true };
         }
 
         // No win/loss confirmed by backend
