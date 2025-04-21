@@ -1,6 +1,7 @@
 // src/stores/settingsStore.js
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { immer } from "zustand/middleware/immer"; // Import immer middleware
 
 const defaultSettings = {
   theme: "light",
@@ -22,9 +23,10 @@ const MAX_MISTAKES_MAP = {
   hard: 3,
 };
 
+// Combine persist and immer middleware
 const useSettingsStore = create(
   persist(
-    (set, get) => ({
+    immer((set, get) => ({
       // State
       settings: { ...defaultSettings },
 
@@ -43,35 +45,49 @@ const useSettingsStore = create(
           const currentDifficulty =
             state.settings?.difficulty || defaultSettings.difficulty;
 
-          const completeSettings = {
-            ...defaultSettings,
-            ...state.settings,
-            ...newSettings,
-            // Ensure difficulty is one of the allowed values
-            difficulty:
-              newSettings.difficulty &&
-              ["easy", "medium", "hard"].includes(newSettings.difficulty)
-                ? newSettings.difficulty
-                : state.settings?.difficulty || defaultSettings.difficulty,
-            speedMode: true, // Always ensure speed mode is on
-          };
+          // With Immer, we can directly modify settings
+          // First apply default settings for missing values
+          Object.keys(defaultSettings).forEach((key) => {
+            if (state.settings[key] === undefined) {
+              state.settings[key] = defaultSettings[key];
+            }
+          });
+
+          // Then apply new settings
+          Object.keys(newSettings).forEach((key) => {
+            // Special handling for difficulty
+            if (key === "difficulty") {
+              if (
+                newSettings.difficulty &&
+                ["easy", "medium", "hard"].includes(newSettings.difficulty)
+              ) {
+                state.settings.difficulty = newSettings.difficulty;
+              }
+              // If invalid, keep existing value
+            }
+            // Handle all other settings
+            else {
+              state.settings[key] = newSettings[key];
+            }
+          });
+
+          // Always ensure speedMode is on
+          state.settings.speedMode = true;
 
           // Handle theme-based text color adjustment
           if (
             newSettings.theme === "dark" &&
-            completeSettings.textColor === "default"
+            state.settings.textColor === "default"
           ) {
-            completeSettings.textColor = "scifi-blue";
+            state.settings.textColor = "scifi-blue";
           }
 
           // If difficulty changed, log it
-          if (completeSettings.difficulty !== currentDifficulty) {
+          if (state.settings.difficulty !== currentDifficulty) {
             console.log(
-              `Settings difficulty changed from ${currentDifficulty} to ${completeSettings.difficulty}`,
+              `Settings difficulty changed from ${currentDifficulty} to ${state.settings.difficulty}`,
             );
           }
-
-          return { settings: completeSettings };
         });
 
         // Apply theme changes
@@ -112,7 +128,7 @@ const useSettingsStore = create(
           console.error("Error applying theme:", e);
         }
       },
-    }),
+    })),
     {
       name: "uncrypt-settings", // Name for localStorage key
       getStorage: () => localStorage, // Use localStorage for persistence

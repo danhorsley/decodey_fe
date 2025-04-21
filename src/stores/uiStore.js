@@ -1,12 +1,14 @@
-// src/stores/uiStore.js - Optimized for performance
+// src/stores/uiStore.js - Optimized for performance with Immer
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { immer } from "zustand/middleware/immer"; // Import immer middleware
 
 // Development mode flag to control logging
-const isDev = process.env.NODE_ENV !== 'production';
+const isDev = process.env.NODE_ENV !== "production";
 
 // Add a flag to force mobile mode during development - only evaluate once
-const DEBUG_FORCE_MOBILE = localStorage.getItem("force_mobile_debug") === "true";
+const DEBUG_FORCE_MOBILE =
+  localStorage.getItem("force_mobile_debug") === "true";
 
 // Track event throttling
 let lastOrientationEventTime = 0;
@@ -53,10 +55,10 @@ const detectMobileDevice = () => {
   );
 };
 
-// Create the UI store with optimized state management
+// Create the UI store with optimized state management using Immer
 const useUIStore = create(
   persist(
-    (set, get) => ({
+    immer((set, get) => ({
       // Current view state
       currentView: "game",
 
@@ -83,62 +85,83 @@ const useUIStore = create(
 
       // Navigation actions
       showSettings: () => {
-        set({
-          currentView: "settings",
-          isSettingsOpen: true,
+        set((state) => {
+          state.currentView = "settings";
+          state.isSettingsOpen = true;
         });
       },
 
       showGame: () => {
-        set({ currentView: "game" });
+        set((state) => {
+          state.currentView = "game";
+        });
       },
 
       showLogin: () => {
-        set({
-          currentView: "login",
-          isLoginOpen: true,
-          isSignupOpen: false, // Close signup if open
+        set((state) => {
+          state.currentView = "login";
+          state.isLoginOpen = true;
+          state.isSignupOpen = false; // Close signup if open
         });
       },
 
       showRegister: () => {
-        set({
-          currentView: "register",
-          isSignupOpen: true,
-          isLoginOpen: false, // Close login if open
+        set((state) => {
+          state.currentView = "register";
+          state.isSignupOpen = true;
+          state.isLoginOpen = false; // Close login if open
         });
       },
 
-      // Modal actions - consolidated to reduce repetitive code
-      openAbout: () => set({ isAboutOpen: true }),
-      closeAbout: () => set({ isAboutOpen: false }),
+      // Modal actions - consolidated with Immer
+      openAbout: () =>
+        set((state) => {
+          state.isAboutOpen = true;
+        }),
+      closeAbout: () =>
+        set((state) => {
+          state.isAboutOpen = false;
+        }),
 
       openLogin: () =>
-        set({
-          isLoginOpen: true,
-          isSignupOpen: false, // Close signup when opening login
+        set((state) => {
+          state.isLoginOpen = true;
+          state.isSignupOpen = false; // Close signup when opening login
         }),
-      closeLogin: () => set({ isLoginOpen: false }),
+      closeLogin: () =>
+        set((state) => {
+          state.isLoginOpen = false;
+        }),
 
       openSignup: () =>
-        set({
-          isSignupOpen: true,
-          isLoginOpen: false, // Close login when opening signup
+        set((state) => {
+          state.isSignupOpen = true;
+          state.isLoginOpen = false; // Close login when opening signup
         }),
-      closeSignup: () => set({ isSignupOpen: false }),
+      closeSignup: () =>
+        set((state) => {
+          state.isSignupOpen = false;
+        }),
 
-      openSettings: () => set({ isSettingsOpen: true }),
-      closeSettings: () => set({ isSettingsOpen: false }),
+      openSettings: () =>
+        set((state) => {
+          state.isSettingsOpen = true;
+        }),
+      closeSettings: () =>
+        set((state) => {
+          state.isSettingsOpen = false;
+        }),
 
       openContinueGamePrompt: (gameStats) =>
-        set({
-          isContinueGameOpen: true,
-          activeGameStats: gameStats,
+        set((state) => {
+          state.isContinueGameOpen = true;
+          state.activeGameStats = gameStats;
         }),
+
       closeContinueGamePrompt: () =>
-        set({
-          isContinueGameOpen: false,
-          activeGameStats: null,
+        set((state) => {
+          state.isContinueGameOpen = false;
+          state.activeGameStats = null;
         }),
 
       // Enhanced device detection update - optimized with debouncing
@@ -158,43 +181,43 @@ const useUIStore = create(
                 : detectMobileDevice();
 
             // Get accurate orientation info
-            const newIsLandscape = 
+            const newIsLandscape =
               typeof deviceInfo.isLandscape === "boolean"
                 ? deviceInfo.isLandscape
-                : (deviceInfo.screenWidth > deviceInfo.screenHeight);
+                : deviceInfo.screenWidth > deviceInfo.screenHeight;
 
             // More concise logging in development only
             if (isDev) {
               console.log(
-                `[uiStore] Updating device: ${isActuallyMobile ? "mobile" : "desktop"}, ${newIsLandscape ? "landscape" : "portrait"}`
+                `[uiStore] Updating device: ${isActuallyMobile ? "mobile" : "desktop"}, ${newIsLandscape ? "landscape" : "portrait"}`,
               );
             }
 
             // Get current state for comparison
             const currentState = get();
-            const stateChanged = 
-              currentState.isMobile !== isActuallyMobile || 
+            const stateChanged =
+              currentState.isMobile !== isActuallyMobile ||
               currentState.isLandscape !== newIsLandscape ||
-              currentState.screenWidth !== (deviceInfo.screenWidth || window.innerWidth) ||
-              currentState.screenHeight !== (deviceInfo.screenHeight || window.innerHeight);
+              currentState.screenWidth !==
+                (deviceInfo.screenWidth || window.innerWidth) ||
+              currentState.screenHeight !==
+                (deviceInfo.screenHeight || window.innerHeight);
 
             // Only update if state actually changed
             if (stateChanged) {
-              // Consolidated state update - single set call with all changes
-              const updates = {
-                isMobile: isActuallyMobile,
-                isLandscape: newIsLandscape,
-                screenWidth: deviceInfo.screenWidth || window.innerWidth,
-                screenHeight: deviceInfo.screenHeight || window.innerHeight,
-              };
+              // Consolidated state update using Immer
+              set((state) => {
+                state.isMobile = isActuallyMobile;
+                state.isLandscape = newIsLandscape;
+                state.screenWidth = deviceInfo.screenWidth || window.innerWidth;
+                state.screenHeight =
+                  deviceInfo.screenHeight || window.innerHeight;
 
-              // If we're on auto mode, update useMobileMode too
-              if (currentState.mobileModeSetting === "auto") {
-                updates.useMobileMode = isActuallyMobile;
-              }
-
-              // Update state in a single operation
-              set(updates);
+                // If we're on auto mode, update useMobileMode too
+                if (state.mobileModeSetting === "auto") {
+                  state.useMobileMode = isActuallyMobile;
+                }
+              });
 
               // Throttled event dispatch - only if it's been long enough since last event
               const now = Date.now();
@@ -202,16 +225,22 @@ const useUIStore = create(
                 lastOrientationEventTime = now;
 
                 try {
-                  const orientationEvent = new CustomEvent('app:orientationchange', { 
-                    detail: { 
-                      isLandscape: newIsLandscape,
-                      isMobile: isActuallyMobile
-                    }
-                  });
+                  const orientationEvent = new CustomEvent(
+                    "app:orientationchange",
+                    {
+                      detail: {
+                        isLandscape: newIsLandscape,
+                        isMobile: isActuallyMobile,
+                      },
+                    },
+                  );
                   window.dispatchEvent(orientationEvent);
                 } catch (e) {
                   if (isDev) {
-                    console.warn('[uiStore] Could not dispatch orientation event:', e);
+                    console.warn(
+                      "[uiStore] Could not dispatch orientation event:",
+                      e,
+                    );
                   }
                 }
               }
@@ -220,10 +249,12 @@ const useUIStore = create(
         };
       })(),
 
-      // Update mobile mode based on settings - optimized version
+      // Update mobile mode based on settings - optimized with Immer
       updateMobileMode: (mobileModeSetting) => {
         if (isDev) {
-          console.log(`[uiStore] Updating mobile mode setting to: ${mobileModeSetting}`);
+          console.log(
+            `[uiStore] Updating mobile mode setting to: ${mobileModeSetting}`,
+          );
         }
 
         // Get current state
@@ -231,19 +262,21 @@ const useUIStore = create(
         const isMobile = currentState.isMobile || detectMobileDevice();
 
         // Determine the appropriate mobile mode value
-        const useMobileMode = 
-          mobileModeSetting === "always" ? true :
-          mobileModeSetting === "never" ? false :
-          isMobile;
+        const useMobileMode =
+          mobileModeSetting === "always"
+            ? true
+            : mobileModeSetting === "never"
+              ? false
+              : isMobile;
 
-        // Consolidated state update with a single set call
-        set({ 
-          mobileModeSetting, 
-          useMobileMode 
+        // Update state with Immer
+        set((state) => {
+          state.mobileModeSetting = mobileModeSetting;
+          state.useMobileMode = useMobileMode;
         });
       },
 
-      // Initialize mobile mode on app start - optimized
+      // Initialize mobile mode on app start - optimized with Immer
       initMobileMode: () => {
         const state = get();
 
@@ -251,25 +284,27 @@ const useUIStore = create(
         const isMobile = detectMobileDevice();
 
         // Determine appropriate useMobileMode value based on settings and detection
-        const useMobileMode = 
-          state.mobileModeSetting === "always" || DEBUG_FORCE_MOBILE ? true :
-          state.mobileModeSetting === "never" ? false :
-          isMobile;
+        const useMobileMode =
+          state.mobileModeSetting === "always" || DEBUG_FORCE_MOBILE
+            ? true
+            : state.mobileModeSetting === "never"
+              ? false
+              : isMobile;
 
         // Simplified log for development
         if (isDev) {
           console.log(
-            `[uiStore] Initializing mobile: setting=${state.mobileModeSetting}, detected=${isMobile}, using=${useMobileMode}`
+            `[uiStore] Initializing mobile: setting=${state.mobileModeSetting}, detected=${isMobile}, using=${useMobileMode}`,
           );
         }
 
-        // Consolidated update with a single set call
-        set({ 
-          isMobile, 
-          useMobileMode
+        // Update state with Immer
+        set((state) => {
+          state.isMobile = isMobile;
+          state.useMobileMode = useMobileMode;
         });
       },
-    }),
+    })),
     {
       name: "uncrypt-ui-state",
       partialize: (state) => ({

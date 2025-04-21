@@ -1,13 +1,14 @@
 // src/stores/authStore.js
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { immer } from "zustand/middleware/immer"; // Import immer middleware
 import apiService from "../services/apiService";
 import config from "../config";
 
-// Create the store with persistence
+// Create the store with persistence and immer middleware
 const useAuthStore = create(
   persist(
-    (set, get) => ({
+    immer((set, get) => ({
       // State
       isAuthenticated: false,
       user: null,
@@ -17,17 +18,19 @@ const useAuthStore = create(
 
       // Actions
       initialize: async () => {
-        set({ loading: true });
+        set((state) => {
+          state.loading = true;
+        });
 
         // Check for token
         const token = config.session.getAuthToken();
 
         if (!token) {
-          set({
-            isAuthenticated: false,
-            user: null,
-            loading: false,
-            hasActiveGame: false,
+          set((state) => {
+            state.isAuthenticated = false;
+            state.user = null;
+            state.loading = false;
+            state.hasActiveGame = false;
           });
           return;
         }
@@ -46,14 +49,14 @@ const useAuthStore = create(
               console.warn("Error checking for active game:", gameCheckError);
             }
 
-            set({
-              isAuthenticated: true,
-              user: {
+            set((state) => {
+              state.isAuthenticated = true;
+              state.user = {
                 id: response.user_id,
                 username: response.username,
-              },
-              loading: false,
-              hasActiveGame: hasActiveGame,
+              };
+              state.loading = false;
+              state.hasActiveGame = hasActiveGame;
             });
           } else {
             // Token invalid
@@ -66,17 +69,12 @@ const useAuthStore = create(
             await get().handleInvalidToken();
           } else {
             // Network error, maintain state but mark as not loading
-            set((state) => ({
-              ...state,
-              loading: false,
-            }));
+            set((state) => {
+              state.loading = false;
+            });
           }
         }
       },
-
-      // In src/stores/authStore.js
-      // The error is showing get().clearAuth is not a function
-      // Let's fix the handleInvalidToken function
 
       handleInvalidToken: async () => {
         try {
@@ -89,12 +87,12 @@ const useAuthStore = create(
               "No refresh token available - proceeding as anonymous user",
             );
 
-            // Instead of calling get().clearAuth(), directly set the state
-            set({
-              isAuthenticated: false,
-              user: null,
-              loading: false,
-              hasActiveGame: false,
+            // Using Immer to update state
+            set((state) => {
+              state.isAuthenticated = false;
+              state.user = null;
+              state.loading = false;
+              state.hasActiveGame = false;
             });
 
             // Clear stored tokens to be safe
@@ -105,7 +103,7 @@ const useAuthStore = create(
             return { success: false, anonymous: true };
           }
 
-          // Rest of the function stays the same
+          // Try to refresh the token
           const refreshResult = await apiService.refreshToken();
 
           if (refreshResult && refreshResult.access_token) {
@@ -118,33 +116,34 @@ const useAuthStore = create(
               console.warn("Error checking for active game:", gameCheckError);
             }
 
-            set({
-              isAuthenticated: true,
-              user: {
+            // Update state with refreshed authentication
+            set((state) => {
+              state.isAuthenticated = true;
+              state.user = {
                 id: refreshResult.user_id,
                 username: refreshResult.username,
-              },
-              loading: false,
-              hasActiveGame: hasActiveGame,
+              };
+              state.loading = false;
+              state.hasActiveGame = hasActiveGame;
             });
           } else {
-            // Use set directly instead of get().clearAuth()
-            set({
-              isAuthenticated: false,
-              user: null,
-              loading: false,
-              hasActiveGame: false,
+            // Failed to refresh, reset to anonymous state
+            set((state) => {
+              state.isAuthenticated = false;
+              state.user = null;
+              state.loading = false;
+              state.hasActiveGame = false;
             });
           }
         } catch (error) {
           console.error("Token refresh failed:", error);
 
-          // Use set directly instead of get().clearAuth()
-          set({
-            isAuthenticated: false,
-            user: null,
-            loading: false,
-            hasActiveGame: false,
+          // Reset to anonymous state on error
+          set((state) => {
+            state.isAuthenticated = false;
+            state.user = null;
+            state.loading = false;
+            state.hasActiveGame = false;
           });
         }
       },
@@ -158,21 +157,21 @@ const useAuthStore = create(
           sessionStorage.removeItem(config.AUTH_KEYS.TOKEN);
 
           // Update state
-          set({
-            isAuthenticated: false,
-            user: null,
-            loading: false,
-            hasActiveGame: false,
+          set((state) => {
+            state.isAuthenticated = false;
+            state.user = null;
+            state.loading = false;
+            state.hasActiveGame = false;
           });
 
           return { success: true };
         } catch (error) {
           // Still clear state on error
-          set({
-            isAuthenticated: false,
-            user: null,
-            loading: false,
-            hasActiveGame: false,
+          set((state) => {
+            state.isAuthenticated = false;
+            state.user = null;
+            state.loading = false;
+            state.hasActiveGame = false;
           });
 
           return {
@@ -216,7 +215,7 @@ const useAuthStore = create(
           }, 5000);
         });
       },
-    }),
+    })),
     {
       name: "auth-storage", // Storage key
       partialize: (state) => ({
@@ -230,14 +229,14 @@ const useAuthStore = create(
 
 // Subscribe to API service events
 apiService.on("auth:login", (data) => {
-  useAuthStore.setState({
-    isAuthenticated: true,
-    user: {
+  useAuthStore.setState((state) => {
+    state.isAuthenticated = true;
+    state.user = {
       id: data.user_id,
       username: data.username,
-    },
-    hasActiveGame: data.has_active_game || false,
-    loading: false,
+    };
+    state.hasActiveGame = data.has_active_game || false;
+    state.loading = false;
   });
 
   // Trigger active game check if needed
@@ -247,11 +246,11 @@ apiService.on("auth:login", (data) => {
 });
 
 apiService.on("auth:logout", () => {
-  useAuthStore.setState({
-    isAuthenticated: false,
-    user: null,
-    hasActiveGame: false,
-    loading: false,
+  useAuthStore.setState((state) => {
+    state.isAuthenticated = false;
+    state.user = null;
+    state.hasActiveGame = false;
+    state.loading = false;
   });
 });
 
