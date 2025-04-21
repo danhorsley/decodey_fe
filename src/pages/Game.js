@@ -200,7 +200,7 @@ const Game = () => {
         }
 
         // Handle explicit daily challenge requests
-        if (isDailyFromRoute) {
+        else {
           console.log("Explicitly requested daily challenge - initializing");
           await startDailyChallenge();
           return;
