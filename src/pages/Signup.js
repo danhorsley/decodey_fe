@@ -1,19 +1,20 @@
-// src/pages/Signup.js
+// src/pages/Signup.js - Updated with gameService approach
 import React, { useState, useCallback, useEffect } from "react";
 import "../Styles/About.css";
 import "../Styles/Login.css";
 import useSettingsStore from "../stores/settingsStore";
 import useAuthStore from "../stores/authStore";
 import useUIStore from "../stores/uiStore";
-import useGameSession from "../hooks/useGameSession"; // Add this import
-import apiService from "../services/apiService"; // Using apiService directly for signup
+import useGameService from "../hooks/useGameService"; // Updated to use gameService
+import apiService from "../services/apiService";
 
 function Signup({ onClose }) {
   // Get contexts directly
   const settings = useSettingsStore((state) => state.settings);
   const openLogin = useUIStore((state) => state.openLogin);
-  // Use the game session hook for login after signup
-  const { login: handleUserLogin } = useGameSession();
+
+  // Use gameService for login after signup
+  const { login } = useGameService();
 
   // Local state
   const [email, setEmail] = useState("");
@@ -48,21 +49,21 @@ function Signup({ onClose }) {
           email,
           username,
           password,
-          emailConsent, // Add consent data to the request
+          emailConsent,
         });
 
         if (result && result.msg === "User created successfully") {
           console.log("Account created successfully! Attempting auto-login");
 
           try {
-            // Auto-login with credentials
+            // Auto-login with credentials using gameService
             const credentials = {
               username: username,
               password: password,
               rememberMe: true, // Default to remember me for better UX
             };
 
-            const loginResult = await handleUserLogin(credentials);
+            const loginResult = await login(credentials);
 
             if (loginResult.success) {
               console.log("Auto-login successful after signup");
@@ -85,8 +86,13 @@ function Signup({ onClose }) {
               setTimeout(() => document.body.removeChild(toast), 3000);
               onClose();
             } else {
-              console.warn("Auto-login failed after signup:", loginResult.error);
-              setError(loginResult.error?.message || "Failed to login after signup");
+              console.warn(
+                "Auto-login failed after signup:",
+                loginResult.error,
+              );
+              setError(
+                loginResult.error?.message || "Failed to login after signup",
+              );
               onClose();
               openLogin();
             }
@@ -118,7 +124,7 @@ function Signup({ onClose }) {
       emailConsent,
       openLogin,
       onClose,
-      handleUserLogin,
+      login,
       settings.theme,
     ],
   );

@@ -1,5 +1,4 @@
-// src/services/gameService.js
-// A simplified service for game initialization and management
+// src/services/gameService.js - Fixed for anonymous users
 import apiService from "./apiService";
 import config from "../config";
 import EventEmitter from "events";
@@ -21,6 +20,7 @@ const gameService = {
     DAILY_ALREADY_COMPLETED: "daily:already-completed",
     LOGOUT_TRANSITION: "auth:logout-transition",
     STATE_CHANGED: "game:state-changed",
+    GAME_INITIALIZED: "game:initialized",
   },
 
   /**
@@ -59,13 +59,32 @@ const gameService = {
       const isAuthenticated = !!config.session.getAuthToken();
       const hasExistingGameId = !!localStorage.getItem("uncrypt-game-id");
 
+      console.log(
+        "Init status: authenticated:",
+        isAuthenticated,
+        "hasExistingGameId:",
+        hasExistingGameId,
+      );
+
       // Handle explicit requests for daily challenge
       if (options.daily === true) {
         return await this.startDailyChallenge();
       }
 
+      // IMPORTANT: For anonymous users, ALWAYS start with daily challenge
+      // unless a custom game is explicitly requested
+      if (!isAuthenticated && !options.customGameRequested) {
+        console.log(
+          "Anonymous user - always starting with daily challenge regardless of existing ID",
+        );
+        // Clear any existing game ID first to ensure a fresh start
+        localStorage.removeItem("uncrypt-game-id");
+        return await this.startDailyChallenge();
+      }
+
       // For authenticated users, check for active game
       if (isAuthenticated && !options.customGameRequested) {
+        console.log("Checking for active game for authenticated user");
         const activeGameCheck = await this.checkActiveGame();
 
         if (activeGameCheck.hasActiveGame) {
@@ -92,22 +111,65 @@ const gameService = {
           localStorage.setItem("uncrypt-game-id", gameData.game_id);
         }
 
+        events.emit(this.events.GAME_INITIALIZED, {
+          customGame: true,
+          gameData,
+        });
+
         return { success: true, gameData, isCustomGame: true };
-      } else if (!isAuthenticated && !hasExistingGameId) {
-        // For new anonymous users with no game, start with daily
-        console.log("New anonymous user - starting with daily challenge");
-        return await this.startDailyChallenge();
-      } else {
-        // Default behavior - start standard game
-        console.log("Starting standard game");
-        const gameData = await apiService.startGame(options);
+      } else if (isAuthenticated && hasExistingGameId) {
+        // If there's an existing game ID in localStorage for authenticated users, try to continue that game
+        console.log(
+          "Authenticated user with existing game ID:",
+          localStorage.getItem("uncrypt-game-id"),
+        );
 
-        if (gameData.game_id) {
-          localStorage.setItem("uncrypt-game-id", gameData.game_id);
+        try {
+          // Try to continue the game for authenticated users
+          console.log(
+            "Authenticated user with existing game ID - trying to continue",
+          );
+          const continueResult = await this.continueGame();
+
+          if (continueResult.success) {
+            return continueResult;
+          }
+
+          // If continue failed, start a new game
+          console.log("Continue failed, starting new game");
+          const gameData = await apiService.startGame(options);
+
+          if (gameData.game_id) {
+            localStorage.setItem("uncrypt-game-id", gameData.game_id);
+          }
+
+          events.emit(this.events.GAME_INITIALIZED, {
+            resumedGame: false,
+            newGame: true,
+            gameData,
+          });
+
+          return { success: true, gameData, newGame: true };
+        } catch (error) {
+          console.error("Error handling existing game:", error);
+          // Fall through to default new game below
         }
-
-        return { success: true, gameData };
       }
+
+      // Default behavior - start standard game
+      console.log("Starting standard game");
+      const gameData = await apiService.startGame(options);
+
+      if (gameData.game_id) {
+        localStorage.setItem("uncrypt-game-id", gameData.game_id);
+      }
+
+      events.emit(this.events.GAME_INITIALIZED, {
+        newGame: true,
+        gameData,
+      });
+
+      return { success: true, gameData };
     } catch (error) {
       console.error("Error initializing game:", error);
       return { success: false, error };
@@ -155,16 +217,25 @@ const gameService = {
       localStorage.removeItem("uncrypt-game-id");
 
       // Start daily challenge - always force 'easy' difficulty
-      const gameData = await apiService.startDailyChallenge(today, {
-        difficulty: "easy",
-      });
+      console.log("Making API call to start daily challenge");
+      const gameData = await apiService.startDailyChallenge(today);
 
       // Store game ID if available
-      if (gameData.game_id) {
+      if (gameData && gameData.game_id) {
+        console.log("Daily challenge started with game ID:", gameData.game_id);
         localStorage.setItem("uncrypt-game-id", gameData.game_id);
-      }
 
-      return { success: true, gameData, daily: true };
+        // Emit game initialized event
+        events.emit(this.events.GAME_INITIALIZED, {
+          daily: true,
+          gameData,
+        });
+
+        return { success: true, gameData, daily: true };
+      } else {
+        console.error("No game ID returned from daily challenge");
+        throw new Error("Invalid response from daily challenge endpoint");
+      }
     } catch (error) {
       console.error("Error starting daily challenge:", error);
       return { success: false, error };
@@ -229,6 +300,11 @@ const gameService = {
       if (gameData.game_id) {
         localStorage.setItem("uncrypt-game-id", gameData.game_id);
       }
+
+      events.emit(this.events.GAME_INITIALIZED, {
+        resumed: true,
+        gameData,
+      });
 
       return { success: true, gameData };
     } catch (error) {

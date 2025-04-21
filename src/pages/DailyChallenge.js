@@ -1,17 +1,16 @@
-// src/pages/DailyChallenge.js
+// src/pages/DailyChallenge.js - Updated with gameService approach
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import useGameSession from "../hooks/useGameSession";
+import useGameService from "../hooks/useGameService"; // Updated to use gameService
 import useSettingsStore from "../stores/settingsStore";
 import useAuthStore from "../stores/authStore";
 import HeaderControls from "../components/HeaderControls";
 import MatrixRainLoading from "../components/effects/MatrixRainLoading";
-import useGameStore from "../stores/gameStore";
-import apiService from "../services/apiService";
+
 /**
  * Daily Challenge Page
- * This page handles checking daily completion status and redirecting to the Game component
- * with daily challenge mode initialized
+ * This page handles checking daily completion status and starting the daily challenge
+ * Updated to use gameService for game management
  */
 const DailyChallenge = () => {
   const navigate = useNavigate();
@@ -22,59 +21,22 @@ const DailyChallenge = () => {
   // Get settings
   const settings = useSettingsStore((state) => state.settings);
 
-  // Get game session functions
+  // Get game service functions
   const { startDailyChallenge, isDailyCompleted, isInitializing } =
-    useGameSession();
+    useGameService();
 
   // Local state
   const [checking, setChecking] = useState(true);
   const [alreadyCompleted, setAlreadyCompleted] = useState(false);
   const [completionData, setCompletionData] = useState(null);
   const [error, setError] = useState(null);
+
+  // Handler for custom game button
   const handleCustomGame = async () => {
     console.log("Custom Game clicked in Daily Challenge completion screen");
-
-    // For authenticated users, check for active game first
-    if (isAuthenticated) {
-      try {
-        // Check active game using apiService directly
-        const response = await apiService.checkActiveGame();
-
-        if (response && response.has_active_game) {
-          // If active game exists, simply navigate to "/" which will detect
-          // and show the continue prompt through the normal flow
-          navigate("/");
-          return;
-        }
-      } catch (error) {
-        console.error("Error checking for active game:", error);
-      }
-    }
-
-    // No active game or error checking - start a new game
-    const resetAndStart = useGameStore.getState().resetAndStartNewGame;
-
-    if (typeof resetAndStart === "function") {
-      // First reset the game
-      useGameStore.getState().resetGame();
-
-      // Then start a new game with the same parameters used in HomePage
-      resetAndStart(
-        settings?.longText || false,
-        settings?.hardcoreMode || false,
-        {
-          forceRender: true,
-          customGameRequested: true,
-        }
-      );
-
-      // Navigate to the game page
-      navigate("/");
-    } else {
-      // Fallback to simple navigation
-      navigate("/");
-    }
+    navigate("/"); // Navigate to home, which will handle game initialization
   };
+
   // Check completion status on mount
   useEffect(() => {
     const checkDailyStatus = async () => {
@@ -87,7 +49,7 @@ const DailyChallenge = () => {
 
           if (result.isCompleted) {
             setAlreadyCompleted(true);
-            setCompletionData(result.completion_data);
+            setCompletionData(result.completion_data || result.completionData);
             return;
           }
         }

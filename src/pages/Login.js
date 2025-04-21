@@ -1,19 +1,19 @@
-// src/pages/Login.js - Simplified with gameSession hook
+// src/pages/Login.js - Updated with gameService approach
 import React, { useState } from "react";
 import "../Styles/About.css";
 import "../Styles/Login.css";
 import useSettingsStore from "../stores/settingsStore";
 import useUIStore from "../stores/uiStore";
-import useGameSession from "../hooks/useGameSession";
-import apiService from "../services/apiService"; // Import apiService
+import useGameService from "../hooks/useGameService"; // Updated to use gameService
+import apiService from "../services/apiService";
 
 function Login({ onClose }) {
   // Get settings and UI actions
   const settings = useSettingsStore((state) => state.settings);
   const openSignup = useUIStore((state) => state.openSignup);
 
-  // Use streamlined game session hook for login
-  const { loginAndInitGame, isInitializing } = useGameSession();
+  // Use gameService for login functionality
+  const { login, isInitializing } = useGameService();
 
   // Local state
   const [username, setUsername] = useState("");
@@ -35,8 +35,8 @@ function Login({ onClose }) {
     };
 
     try {
-      // Use the combined login and start game function
-      const result = await loginAndInitGame(credentials);
+      // Use the login function from gameService
+      const result = await login(credentials);
 
       if (result.success) {
         // Store remember me preference

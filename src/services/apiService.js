@@ -586,57 +586,87 @@ class ApiService {
 
       // Log the request for debugging
       console.log(
-        `Starting daily challenge for date: ${dateString}, anonymous: ${isAnonymousStart}`,
+        `Starting daily challenge for date: ${dateString}, anonymous: ${isAnonymousStart}`
       );
 
       try {
-        // Make the request through our normal API instance
-        console.log("***url daily***", url);
-        const response = await this.api.get(url);
-
-        // If there's a game ID in the response, store it
-        if (response.data.game_id) {
-          localStorage.setItem("uncrypt-game-id", response.data.game_id);
-          console.log(
-            `Daily challenge started with ID: ${response.data.game_id}`,
-          );
-        }
-
-        return response.data;
-      } catch (error) {
-        // If we get a 401 error, try an anonymous start
-        if (error.response?.status === 401) {
-          console.log(
-            "Auth error in startDailyChallenge, trying anonymous start",
-          );
-
-          // For anonymous start, create a request config without auth headers
-          const config = {
-            url: url,
-            method: "get",
-            baseURL: this.api.defaults.baseURL,
-            headers: {
-              Accept: "application/json",
-              "Content-Type": "application/json",
-            },
-            // Do not include auth headers
-          };
-          console.log("***config***", config);
-          // Use our API instance but with a custom config that doesn't trigger the auth interceptor
-          const anonResponse = await this.api.request(config);
+        // For authenticated users, use standard API call
+        if (!isAnonymousStart) {
+          console.log("Making authenticated daily challenge request");
+          const response = await this.api.get(url);
 
           // If there's a game ID in the response, store it
-          if (anonResponse.data.game_id) {
-            localStorage.setItem("uncrypt-game-id", anonResponse.data.game_id);
-            console.log(
-              `Anonymous daily challenge started with ID: ${anonResponse.data.game_id}`,
-            );
+          if (response.data.game_id) {
+            localStorage.setItem("uncrypt-game-id", response.data.game_id);
+            console.log(`Daily challenge started with ID: ${response.data.game_id}`);
           }
 
-          return anonResponse.data;
+          return response.data;
+        } else {
+          // For anonymous users, use fetch directly to avoid auth headers
+          console.log("Making anonymous daily challenge request");
+
+          // Create the full URL
+          const fullUrl = `${this.api.defaults.baseURL}${url}`;
+          console.log("Full URL for fetch:", fullUrl);
+
+          const response = await fetch(fullUrl, {
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+            credentials: 'omit' // Important: don't send credentials for anonymous requests
+          });
+
+          // Check for errors
+          if (!response.ok) {
+            throw new Error(`HTTP error ${response.status}: ${response.statusText}`);
+          }
+
+          // Parse the response
+          const data = await response.json();
+
+          // If there's a game ID in the response, store it
+          if (data.game_id) {
+            localStorage.setItem("uncrypt-game-id", data.game_id);
+            console.log(`Anonymous daily challenge started with ID: ${data.game_id}`);
+          }
+
+          return data;
+        }
+      } catch (error) {
+        // Handle specific errors
+        console.error("Error in startDailyChallenge:", error);
+
+        // Still try anonymous approach as fallback if not already attempted
+        if (!isAnonymousStart && error.response?.status === 401) {
+          console.log("Auth error in startDailyChallenge, trying anonymous start as fallback");
+
+          const fullUrl = `${this.api.defaults.baseURL}${url}`;
+          const response = await fetch(fullUrl, {
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+            credentials: 'omit'
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error ${response.status}: ${response.statusText}`);
+          }
+
+          const data = await response.json();
+
+          if (data.game_id) {
+            localStorage.setItem("uncrypt-game-id", data.game_id);
+          }
+
+          return data;
         }
 
-        // Rethrow the error if it's not a 401
+        // Rethrow if we can't recover
         throw error;
       }
     } catch (error) {

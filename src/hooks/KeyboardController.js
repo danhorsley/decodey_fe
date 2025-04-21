@@ -2,28 +2,32 @@ import { useEffect } from "react";
 
 /**
  * Custom hook to handle keyboard inputs for the Decrypto game
+ * Updated with robust default values to prevent undefined property access
  *
  * @param {Object} props - Configuration and callback functions
- * @param {boolean} props.enabled - Whether keyboard control is enabled
- * @param {boolean} props.speedMode - Whether speed mode is active
- * @param {Array<string>} props.encryptedLetters - Array of encrypted letters in the grid
- * @param {Array<string>} props.originalLetters - Array of original letters for guessing
- * @param {string|null} props.selectedEncrypted - Currently selected encrypted letter
- * @param {Function} props.onEncryptedSelect - Callback when an encrypted letter is selected
- * @param {Function} props.onGuessSubmit - Callback when a guess is submitted
- * @param {Function} props.playSound - Function to play sound effects
+ * @param {boolean} [props.enabled=true] - Whether keyboard control is enabled
+ * @param {boolean} [props.speedMode=false] - Whether speed mode is active
+ * @param {Array<string>} [props.encryptedLetters=[]] - Array of encrypted letters in the grid
+ * @param {Array<string>} [props.originalLetters=[]] - Array of original letters for guessing
+ * @param {string|null} [props.selectedEncrypted=null] - Currently selected encrypted letter
+ * @param {Function} [props.onEncryptedSelect=()=>{}] - Callback when an encrypted letter is selected
+ * @param {Function} [props.onGuessSubmit=()=>{}] - Callback when a guess is submitted
+ * @param {Function} [props.playSound] - Function to play sound effects
  * @returns {Object} - State of the keyboard input
  */
-const useKeyboardInput = ({
-  enabled = true,
-  speedMode = false,
-  encryptedLetters = [],
-  originalLetters = [],
-  selectedEncrypted = null,
-  onEncryptedSelect,
-  onGuessSubmit,
-  playSound,
-}) => {
+const useKeyboardInput = (props = {}) => {
+  // Extract properties with default values to prevent undefined errors
+  const {
+    enabled = true,
+    speedMode = false,
+    encryptedLetters = [],
+    originalLetters = [],
+    selectedEncrypted = null,
+    onEncryptedSelect = () => {},
+    onGuessSubmit = () => {},
+    playSound,
+  } = props || {};
+
   // Handle all keyboard events
   useEffect(() => {
     // Early return if not enabled - IMPORTANT for modals

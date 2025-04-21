@@ -1,20 +1,19 @@
-// src/pages/Game.js
-import React, { useState, useEffect, useRef } from "react";
+// src/pages/Game.js - Game state update fix
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 
-// Import our new UI components
+// Import UI components
 import SlideMenu from "../components/SlideMenu";
 import CompactHeader from "../components/CompactHeader";
 import GameDashboard from "../components/GameDashboard";
 
 // Import stores and hooks
 import useGameStore from "../stores/gameStore";
-import useGameService from "../hooks/useGameService"; // New simplified game service hook
+import useGameService from "../hooks/useGameService";
 import useSettingsStore from "../stores/settingsStore";
 import useUIStore from "../stores/uiStore";
 import useSound from "../services/WebAudioSoundManager";
 import useKeyboardInput from "../hooks/KeyboardController";
-import config from "../config";
 import MobileLayout from "../components/layout/MobileLayout";
 import WinCelebration from "../components/modals/WinCelebration";
 import MatrixRainLoading from "../components/effects/MatrixRainLoading";
@@ -26,35 +25,74 @@ const Game = () => {
   // React Router location for checking route params
   const location = useLocation();
 
-  // Get game state from store
-  const {
-    game,
-    text,
-    keyPairs,
-    solved,
-    mistakesLeft,
-    gameOver,
-    showWin,
-    symbols,
-    secondsElapsed,
-    hintUsed,
-    difficulty,
-    hasGameLoaded,
-    loading: gameStateLoading,
-  } = useGameStore((state) => state);
+  // Get game state from store - use specific selectors to avoid unnecessary rerenders
+  const encrypted = useGameStore((state) => state.encrypted);
+  const display = useGameStore((state) => state.display);
+  const mistakes = useGameStore((state) => state.mistakes);
+  const maxMistakes = useGameStore((state) => state.maxMistakes);
+  const letterFrequency = useGameStore((state) => state.letterFrequency);
+  const correctlyGuessed = useGameStore(
+    (state) => state.correctlyGuessed || [],
+  );
+  const selectedEncrypted = useGameStore((state) => state.selectedEncrypted);
+  const lastCorrectGuess = useGameStore((state) => state.lastCorrectGuess);
+  const guessedMappings = useGameStore((state) => state.guessedMappings || {});
+  const originalLetters = useGameStore((state) => state.originalLetters || []);
+  const incorrectGuesses = useGameStore(
+    (state) => state.incorrectGuesses || {},
+  );
+  const hasWon = useGameStore((state) => state.hasWon);
+  const hasLost = useGameStore((state) => state.hasLost);
+  const winData = useGameStore((state) => state.winData);
+  const hardcoreMode = useGameStore((state) => state.hardcoreMode);
+  const isResetting = useGameStore((state) => state.isResetting);
+  const isDailyChallenge = useGameStore((state) => state.isDailyChallenge);
+  // Use our own loading state instead of relying on hasGameStarted
+  const [gameDataLoaded, setGameDataLoaded] = useState(false);
+
+  // Get game actions from store - must use useCallback to prevent infinite loops
+  const handleEncryptedSelect = useCallback((letter) => {
+    useGameStore.getState().handleEncryptedSelect(letter);
+  }, []);
+
+  const handleSubmitGuess = useCallback((encryptedLetter, guessedLetter) => {
+    useGameStore.getState().submitGuess(encryptedLetter, guessedLetter);
+  }, []);
+
+  const getHint = useCallback(() => {
+    return useGameStore.getState().getHint();
+  }, []);
+
+  const resetAndStartNewGame = useCallback(() => {
+    useGameStore.getState().resetAndStartNewGame();
+  }, []);
+
+  // Function to update the game state with API data
+  const updateGameState = useCallback((gameData) => {
+    if (!gameData) return;
+
+    const gameStore = useGameStore.getState();
+
+    // Check if we need to actually update the state
+    // Only update if we have valid game data
+    if (gameData.encrypted_paragraph && gameData.display) {
+      console.log("Updating game state with API data");
+
+      // Call continueGame directly on the gameStore to update the state
+      if (typeof gameStore.continueSavedGame === "function") {
+        gameStore.continueSavedGame(gameData);
+      }
+
+      // Mark game data as loaded
+      setGameDataLoaded(true);
+    }
+  }, []);
 
   // Get mobile detection state
   const useMobileMode = useUIStore((state) => state.useMobileMode);
 
   // Get UI state
-  const {
-    showSideMenu,
-    toggleSideMenu,
-    showGameOver,
-    showResetConfirmation,
-    openResetConfirmation,
-    openSettings,
-  } = useUIStore((state) => state);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   // Get settings from store
   const settings = useSettingsStore((state) => state.settings);
@@ -65,14 +103,17 @@ const Game = () => {
   // State for controlling loading spinner
   const [isLoading, setIsLoading] = useState(true);
 
+  // State for pending hint
+  const [pendingHints, setPendingHints] = useState(0);
+  const [isHintInProgress, setIsHintInProgress] = useState(false);
+
   // Get initialization status and events from our new gameService hook
   const {
     isInitializing,
-    error: lastError,
     initializeGame,
     startDailyChallenge,
     onEvent,
-    events
+    events,
   } = useGameService();
 
   // Check if this is a daily challenge or an already completed daily challenge
@@ -81,77 +122,85 @@ const Game = () => {
   const dailyCompletionData = location.state?.completionData;
 
   // State for showing daily completion notification
-  const [showDailyCompletionNotice, setShowDailyCompletionNotice] = useState(dailyCompleted);
+  const [showDailyCompletionNotice, setShowDailyCompletionNotice] =
+    useState(dailyCompleted);
 
-  // Effect to handle daily completion notification
-  useEffect(() => {
-    if (dailyCompleted && dailyCompletionData) {
-      setShowDailyCompletionNotice(true);
+  // Sound effects
+  const { playSound } = useSound();
 
-      // Hide after 5 seconds
-      const timer = setTimeout(() => {
-        setShowDailyCompletionNotice(false);
-      }, 5000);
+  // Check if the game is active (not won or lost)
+  const isGameActive = !hasWon && !hasLost && !isResetting;
 
-      return () => clearTimeout(timer);
-    }
-  }, [dailyCompleted, dailyCompletionData]);
-
-  useEffect(() => {
-    const handleOrientationChange = () => {
-      // Force a re-render by updating a local state
-      // This is only needed if you notice components not updating properly
-      console.log("Game component detected orientation change");
-    };
-
-    // Listen to both native and custom orientation change events
-    window.addEventListener("orientationchange", handleOrientationChange);
-    window.addEventListener("app:orientationchange", handleOrientationChange);
-
-    return () => {
-      window.removeEventListener("orientationchange", handleOrientationChange);
-      window.removeEventListener(
-        "app:orientationchange",
-        handleOrientationChange,
-      );
-    };
+  // Toggle side menu - use useCallback to prevent unnecessary rerenders
+  const toggleMenu = useCallback(() => {
+    setMenuOpen((prev) => !prev);
   }, []);
 
-  // Handle logout transition with our simplified event system
-  useEffect(() => {
-    // Listen for logout events
-    const unsubscribeLogout = onEvent(events.LOGOUT_TRANSITION, () => {
-      // Reset any authenticated-user specific state
-      console.log("Logout transition event received in Game.js");
-      const gameStore = useGameStore.getState();
-      if (typeof gameStore.resetGame === "function") {
-        gameStore.resetGame();
-      }
-    });
+  // Handle encrypted letter click - use useCallback for stability
+  const handleEncryptedClick = useCallback(
+    (letter) => {
+      if (!isGameActive || correctlyGuessed.includes(letter)) return;
 
-    // Listen for game state changes (includes anonymous transitions)
-    const unsubscribeStateChange = onEvent(events.STATE_CHANGED, (data) => {
-      console.log("Game state changed event received in Game.js", data);
-      if (data && data.source === "logout-transition") {
-        // A new game was started after logout
-        const gameStore = useGameStore.getState();
-        console.log("Starting anonymous game after logout");
-        gameStore.startGame(
-          false, // longText
-          false, // hardcoreMode
-          true,  // forceNew
-          false, // isDaily
-        );
-      }
-    });
+      handleEncryptedSelect(letter);
+      playSound && playSound("keyclick");
+    },
+    [isGameActive, correctlyGuessed, handleEncryptedSelect, playSound],
+  );
 
-    return () => {
-      unsubscribeLogout();
-      unsubscribeStateChange();
-    };
-  }, [onEvent, events]);
+  // Handle guess click - use useCallback for stability
+  const handleGuessClick = useCallback(
+    (guessedLetter) => {
+      if (!isGameActive || !selectedEncrypted) return;
+
+      // Check if this guess was already tried
+      if (incorrectGuesses[selectedEncrypted]?.includes(guessedLetter)) {
+        playSound && playSound("keyclick");
+        return;
+      }
+
+      handleSubmitGuess(selectedEncrypted, guessedLetter);
+    },
+    [
+      isGameActive,
+      selectedEncrypted,
+      incorrectGuesses,
+      handleSubmitGuess,
+      playSound,
+    ],
+  );
+
+  // Handle hint request - use useCallback for stability
+  const handleHintClick = useCallback(async () => {
+    if (!isGameActive || isHintInProgress) return;
+
+    setIsHintInProgress(true);
+    setPendingHints((prev) => prev + 1);
+
+    try {
+      await getHint();
+    } finally {
+      setIsHintInProgress(false);
+      setPendingHints(0);
+    }
+  }, [isGameActive, isHintInProgress, getHint]);
+
+  // Get all letters from encrypted text, sorted by setting preference
+  const sortedEncryptedLetters = React.useMemo(() => {
+    if (!encrypted) return [];
+
+    const uniqueLetters = [...new Set(encrypted.match(/[A-Z]/g) || [])];
+
+    // Default order - as they appear in the text
+    if (!settings || settings.gridSorting === "default") {
+      return uniqueLetters;
+    }
+
+    // Alphabetical order
+    return [...uniqueLetters].sort();
+  }, [encrypted, settings?.gridSorting]);
+
   const initializedRef = useRef(false);
-  // Auto-initialize on first render with our simplified approach
+  // Auto-initialize on first render
   useEffect(() => {
     // Create ref to prevent multiple initializations
 
@@ -162,11 +211,20 @@ const Game = () => {
         return;
       }
 
-      // Set flag immediately
+      // Set flag immediately to prevent multiple initialization attempts
       initializedRef.current = true;
       console.log("Starting game initialization in Game.js useEffect");
 
       try {
+        setIsLoading(true);
+
+        // Clear any existing game ID for anonymous users to ensure we always get a new daily challenge
+        const isAuthenticated = !!localStorage.getItem("uncrypt-token");
+        if (!isAuthenticated) {
+          console.log("Anonymous user - clearing any existing game ID");
+          localStorage.removeItem("uncrypt-game-id");
+        }
+
         // Check if we're dealing with daily completion notification
         if (dailyCompleted) {
           console.log("Daily challenge already completed - initializing standard game");
@@ -182,19 +240,56 @@ const Game = () => {
         }
 
         // For everything else, let the service handle the logic
+        console.log("Initializing with standard flow");
         await initializeGame();
+
       } catch (err) {
         console.error("Game initialization failed:", err);
       }
     };
 
     performInitialization();
-  }, []);
 
-  // Detect tutorial settings on mount
+    // Listen for game initialized events
+    const unsubscribe = onEvent(events.GAME_INITIALIZED, (data) => {
+      console.log("Game initialized event received:", data);
+
+      // Update game state with the received data
+      if (data && data.gameData) {
+        updateGameState(data.gameData);
+      }
+
+      // Set loading to false after a short delay
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 500);
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [
+    initializeGame,
+    startDailyChallenge,
+    dailyCompleted,
+    isDailyFromRoute,
+    onEvent,
+    events,
+    updateGameState,
+  ]);
+
+  // Effect to handle daily completion notification
+  useEffect(() => {
+    if (dailyCompleted && dailyCompletionData) {
+      setShowDailyCompletionNotice(true);
+    }
+  }, [dailyCompleted, dailyCompletionData]);
+
+  // Effect to detect tutorial settings on mount
   useEffect(() => {
     // Check local storage to see if tutorial has been shown
-    const tutorialCompleted = localStorage.getItem("tutorial-completed") === "true";
+    const tutorialCompleted =
+      localStorage.getItem("tutorial-completed") === "true";
     const tutorialStarted = localStorage.getItem("tutorial-started") === "true";
 
     if (!tutorialCompleted && !tutorialStarted) {
@@ -204,175 +299,138 @@ const Game = () => {
     }
   }, []);
 
-  // Sound effects
-  const { playSound } = useSound();
+  // Handle when user completes the tutorial
+  const handleTutorialComplete = useCallback(() => {
+    setShowTutorial(false);
+    localStorage.setItem("tutorial-completed", "true");
+  }, []);
 
-  // Clear loading state when game is loaded
-  useEffect(() => {
-    if (hasGameLoaded) {
-      // Add a slight delay to ensure all components have updated
-      const timer = setTimeout(() => {
-        setIsLoading(false);
-        playSound("gameStart");
-      }, 1000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [hasGameLoaded, playSound]);
+  // Check if we have valid game data
+  const hasValidGameData =
+    encrypted && display && originalLetters && originalLetters.length > 0;
 
   // ========================
   // Keyboard input handling
   // ========================
 
-  // Use the keyboard controller hook to handle input
-  const { handleKeyPress } = useKeyboardInput();
+  // Use the keyboard controller hook to handle input with stable config
+  const keyboardConfig = React.useMemo(
+    () => ({
+      enabled: isGameActive,
+      speedMode: settings?.speedMode !== undefined ? settings.speedMode : true,
+      encryptedLetters: sortedEncryptedLetters || [],
+      originalLetters: originalLetters || [],
+      selectedEncrypted,
+      onEncryptedSelect: handleEncryptedClick,
+      onGuessSubmit: handleGuessClick,
+      playSound,
+    }),
+    [
+      isGameActive,
+      settings?.speedMode,
+      sortedEncryptedLetters,
+      originalLetters,
+      selectedEncrypted,
+      handleEncryptedClick,
+      handleGuessClick,
+      playSound,
+    ],
+  );
 
-  // =======================
-  // Game actions and utils
-  // =======================
-
-  // Handle when user completes the tutorial
-  const handleTutorialComplete = () => {
-    setShowTutorial(false);
-    localStorage.setItem("tutorial-completed", "true");
-  };
+  useKeyboardInput(keyboardConfig);
 
   // ========================
   // Rendering of components
   // ========================
 
-  // Handle loading state
-  if (isLoading || !hasGameLoaded) {
+  // Handle loading state - check for actual game data rather than just flags
+  if (isLoading || isInitializing || !hasValidGameData) {
     return (
       <div className="loading-overlay">
-        <MatrixRainLoading />
+        <MatrixRainLoading
+          active={true}
+          color={settings?.theme === "dark" ? "#4cc9f0" : "#00ff41"}
+          message="Decrypting puzzle..."
+        />
       </div>
     );
   }
 
-  // Game over screen
-  const renderGameOver = () => {
-    if (showGameOver) {
-      return (
-        <div className="game-over-screen">
-          <h2>GAME OVER</h2>
-          <p>The code remains unbroken.</p>
-          <p>Your progress: {Math.floor((solved.length / symbols.length) * 100)}%</p>
-          <button onClick={() => window.location.reload()}>Try Again</button>
-        </div>
-      );
-    }
-
-    if (showWin) {
-      return <WinCelebration />;
-    }
-
-    return null;
-  };
-
-  // Render the game header (top bar)
-  const renderGameHeader = () => {
-    return (
+  // Common content to render in both mobile and desktop layouts
+  const gameContent = (
+    <>
       <CompactHeader
-        toggleSideMenu={toggleSideMenu}
-        openSettings={openSettings}
-        openResetConfirmation={openResetConfirmation}
-        time={secondsElapsed}
-        mistakesLeft={mistakesLeft}
-        difficulty={difficulty}
-        openModal={() => {}}
-        hintUsed={hintUsed}
+        title="decodey"
+        toggleMenu={toggleMenu}
+        isDailyChallenge={isDailyChallenge}
+        hardcoreMode={hardcoreMode}
       />
-    );
-  };
 
-  // Render the controls panel (bottom section)
-  const renderControls = () => {
-    return (
-      <GameDashboard
-        keyPairs={keyPairs}
-        solved={solved}
-        mistakesLeft={mistakesLeft}
-        onKeyPress={handleKeyPress}
-        gameOver={gameOver}
-      />
-    );
-  };
+      <SlideMenu isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
 
-  // Render the text container
-  const renderTextContainer = () => {
-    // Use TuneableTextDisplay for the main text area
-    return (
       <TuneableTextDisplay
-        text={text}
-        keyPairs={keyPairs}
-        solved={solved}
-        settings={settings}
+        encrypted={encrypted}
+        display={display}
+        hardcoreMode={hardcoreMode}
       />
-    );
-  };
 
-  // Daily challenge completion notice
-  const renderDailyCompletionNotice = () => {
-    if (!showDailyCompletionNotice || !dailyCompletionData) return null;
+      <GameDashboard
+        mistakes={mistakes}
+        maxMistakes={maxMistakes}
+        pendingHints={pendingHints}
+        onHintClick={handleHintClick}
+        disableHint={!isGameActive || isHintInProgress}
+        isHintInProgress={isHintInProgress}
+        sortedEncryptedLetters={sortedEncryptedLetters}
+        selectedEncrypted={selectedEncrypted}
+        correctlyGuessed={correctlyGuessed}
+        incorrectGuesses={incorrectGuesses}
+        lastCorrectGuess={lastCorrectGuess}
+        letterFrequency={letterFrequency}
+        onEncryptedClick={handleEncryptedClick}
+        isGameActive={isGameActive}
+        originalLetters={originalLetters}
+        guessedMappings={guessedMappings}
+        onGuessClick={handleGuessClick}
+        hasLost={hasLost}
+        onStartNewGame={resetAndStartNewGame}
+      />
 
-    // Format time for display
-    const formatTime = (seconds) => {
-      const minutes = Math.floor(seconds / 60);
-      const remainingSeconds = seconds % 60;
-      return `${minutes}m ${remainingSeconds}s`;
-    };
+      {hasWon && winData && (
+        <WinCelebration playSound={playSound} winData={winData} />
+      )}
 
-    return (
-      <div className="daily-completion-notice">
-        <div className="notice-content">
-          <h3>Today's Daily Challenge</h3>
-          <p>You've already completed today's challenge!</p>
-          {dailyCompletionData && (
-            <div className="completion-stats">
-              <p>Score: <strong>{dailyCompletionData.score}</strong></p>
-              <p>Time: {formatTime(dailyCompletionData.time_taken)}</p>
-            </div>
-          )}
-          <button onClick={() => setShowDailyCompletionNotice(false)}>
-            Dismiss
-          </button>
+      {showDailyCompletionNotice && dailyCompletionData && (
+        <div className="daily-completion-notice">
+          <div className="notice-content">
+            <h3>Today's Daily Challenge</h3>
+            <p>You've already completed today's challenge!</p>
+            <button onClick={() => setShowDailyCompletionNotice(false)}>
+              Dismiss
+            </button>
+          </div>
         </div>
-      </div>
-    );
-  };
+      )}
 
-  // ===== MAIN RENDER =====
-  // Determine if we should use mobile layout - UPDATED VERSION
+      {showTutorial && <TutorialOverlay onComplete={handleTutorialComplete} />}
+    </>
+  );
+
+  // Determine if we should use mobile layout
   if (useMobileMode) {
-    // console.log("Rendering mobile layout"); // Debug log
     return (
       <div className="App-container mobile-mode">
-        <MobileLayout>
-          {renderGameHeader()}
-          {renderTextContainer()}
-          {renderControls()}
-          {renderGameOver()}
-          {renderDailyCompletionNotice()}
-        </MobileLayout>
-        {showTutorial && (
-          <TutorialOverlay onComplete={handleTutorialComplete} />
-        )}
+        <MobileLayout>{gameContent}</MobileLayout>
       </div>
     );
   }
 
-  // Standard desktop layout - also using new components
+  // Standard desktop layout
   return (
     <div
       className={`App-container ${settings?.theme === "dark" ? "dark-theme" : ""}`}
     >
-      {renderGameHeader()}
-      {renderTextContainer()}
-      {renderControls()}
-      {renderGameOver()}
-      {renderDailyCompletionNotice()}
-      {showTutorial && <TutorialOverlay onComplete={handleTutorialComplete} />}
+      {gameContent}
     </div>
   );
 };

@@ -1,4 +1,4 @@
-// src/components/modals/ModalManager.js - Updated with Custom Game flag
+// src/components/modals/ModalManager.js - Updated with gameService approach
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import About from "./About";
@@ -6,14 +6,14 @@ import Settings from "./Settings";
 import Login from "../../pages/Login";
 import Signup from "../../pages/Signup";
 import ContinueGamePrompt from "./ContinueGamePrompt";
-import useGameSession from "../../hooks/useGameSession";
+import useGameService from "../../hooks/useGameService"; // Updated to use gameService
 import useUIStore from "../../stores/uiStore";
-import useSettingsStore from "../../stores/settingsStore"; // Added missing import
+import useSettingsStore from "../../stores/settingsStore";
 import config from "../../config";
 
 /**
  * ModalManager component - handles rendering of all application modals
- * Updated to check daily challenge completion status
+ * Updated to use gameService for game management
  */
 const ModalManager = ({ children }) => {
   const navigate = useNavigate();
@@ -41,15 +41,15 @@ const ModalManager = ({ children }) => {
     (state) => state.openContinueGamePrompt,
   );
 
-  // Get game session functions - simplified API
+  // Get game service functions and events
   const {
     continueGame,
     startNewGame,
+    isDailyCompleted: checkDailyCompletion,
+    startDailyChallenge,
+    onEvent,
     events,
-    subscribeToEvents,
-    isDailyCompleted: checkDailyCompletion, // Add the daily completion check function
-    startDailyChallenge, // Add the function to start daily challenge
-  } = useGameSession();
+  } = useGameService();
 
   // Check daily challenge completion status when continue game prompt opens
   useEffect(() => {
@@ -72,10 +72,10 @@ const ModalManager = ({ children }) => {
     }
   }, [isContinueGameOpen, checkDailyCompletion]);
 
-  // Listen for active game notifications
+  // Listen for active game notifications from gameService
   useEffect(() => {
     // Subscribe to the active game found event
-    const unsubscribe = subscribeToEvents(events.ACTIVE_GAME_FOUND, (data) => {
+    const unsubscribe = onEvent(events.ACTIVE_GAME_FOUND, (data) => {
       // Only show continue game prompt for authenticated users
       const isAuthenticated = !!config.session.getAuthToken();
 
@@ -90,18 +90,25 @@ const ModalManager = ({ children }) => {
     });
 
     return unsubscribe;
-  }, [events, subscribeToEvents, openContinueGamePrompt]);
+  }, [onEvent, events, openContinueGamePrompt]);
 
-  // Simple handlers that delegate to game session
+  // Simple handlers that delegate to game service
   const handleContinueGame = async () => {
-    await continueGame();
-    closeContinueGamePrompt();
+    try {
+      const result = await continueGame();
+      closeContinueGamePrompt();
+      return result;
+    } catch (error) {
+      console.error("Error continuing game:", error);
+      closeContinueGamePrompt();
+      return { success: false, error };
+    }
   };
 
   // Listen for game state changes
   useEffect(() => {
     // Subscribe to game state changes
-    const unsubscribe = subscribeToEvents("game:state-changed", () => {
+    const unsubscribe = onEvent(events.STATE_CHANGED, () => {
       console.log(
         "Game state changed detected - closing continue prompt if open",
       );
@@ -112,9 +119,9 @@ const ModalManager = ({ children }) => {
     });
 
     return unsubscribe;
-  }, [isContinueGameOpen, closeContinueGamePrompt, subscribeToEvents]);
+  }, [isContinueGameOpen, closeContinueGamePrompt, onEvent, events]);
 
-  // Updated handler for custom game - now with custom flag
+  // Updated handler for custom game
   const handleNewGame = async () => {
     // Get settings with complete properties
     const settingsStore = useSettingsStore.getState();
@@ -128,18 +135,13 @@ const ModalManager = ({ children }) => {
 
     console.log("Starting new game with settings:", options);
 
-    // Start new game
+    // Start new game using the service
     const result = await startNewGame(options);
-
-    // Emit an event that the game state has changed
-    if (result.success) {
-      if (events && events.emit) {
-        events.emit("game:state-changed", { source: "custom-game-start" });
-      }
-    }
 
     // Close the modal
     closeContinueGamePrompt();
+
+    return result;
   };
 
   // Handler for daily challenge button
