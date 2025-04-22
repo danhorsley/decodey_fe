@@ -52,13 +52,7 @@ function Signup({ onClose }) {
         });
 
         if (result && result.msg === "User created successfully") {
-            // Track signup conversion
-            if (window.gtag) {
-              gtag('event', 'conversion', {
-                'send_to': 'AW-11234477900/user_signup'
-              });
-            }
-            console.log("Account created successfully! Attempting auto-login");
+          console.log("Account created successfully! Attempting auto-login");
 
           try {
             // Auto-login with credentials using gameService
