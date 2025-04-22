@@ -143,44 +143,14 @@ class ApiService {
         rememberMe: credentials.rememberMe,
       });
 
-      // Log existing tokens before login
-      console.log("DEBUG: BEFORE LOGIN - Storage check:");
-      console.log(
-        "- localStorage.uncrypt-token:",
-        !!localStorage.getItem("uncrypt-token"),
-      );
-      console.log(
-        "- localStorage.refresh_token:",
-        !!localStorage.getItem("refresh_token"),
-      );
-      console.log(
-        "- sessionStorage.uncrypt-token:",
-        !!sessionStorage.getItem("uncrypt-token"),
-      );
 
       const response = await this.api.post("/login", credentials);
-
-      // Log full response for debugging (except sensitive data)
-      console.log("DEBUG: RAW LOGIN RESPONSE:", {
-        status: response.status,
-        statusText: response.statusText,
-        headers: response.headers,
-        data: {
-          ...response.data,
-          access_token: response.data.access_token ? "[PRESENT]" : "[MISSING]",
-          refresh_token: response.data.refresh_token
-            ? "[PRESENT]"
-            : "[MISSING]",
-        },
-      });
 
       if (response.data.access_token) {
         // Store access token based on remember me preference
         if (credentials.rememberMe) {
           localStorage.setItem("uncrypt-token", response.data.access_token);
-          console.log(
-            "DEBUG: ✅ Saved access token to localStorage (rememberMe=true)",
-          );
+    
         } else {
           sessionStorage.setItem("uncrypt-token", response.data.access_token);
           console.log(
