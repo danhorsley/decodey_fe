@@ -243,9 +243,9 @@ apiService.on("auth:login", (data) => {
   setTimeout(() => {
     if (!data.has_active_game) {
       // Use history API for smoother navigation
-      window.history.pushState({}, '', '/home');
+      window.history.pushState({}, "", "/home");
       // Trigger a navigation event for React Router
-      window.dispatchEvent(new PopStateEvent('popstate'));
+      window.dispatchEvent(new PopStateEvent("popstate"));
     } else if (data.has_active_game) {
       apiService.events.emit("auth:active-game-check-needed");
     }
