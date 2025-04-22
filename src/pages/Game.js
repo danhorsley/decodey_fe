@@ -139,7 +139,7 @@ const Game = () => {
         return;
       }
 
-      handleSubmitGuess(selectedEncrypted, guessedLetter, playSound);
+      handleSubmitGuess(selectedEncrypted, guessedLetter);
     },
     [
       isGameActive,

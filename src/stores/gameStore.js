@@ -569,11 +569,6 @@ const useGameStore = create(
           !state.correctlyGuessed.includes(encryptedLetter)
         ) {
           isCorrectGuess = true;
-          if (typeof playSound === 'function') {
-            playSound('correct');
-          }
-        } else if (isIncorrectGuess && typeof playSound === 'function') {
-          playSound('incorrect');
         }
 
         // Update state with Immer
@@ -618,7 +613,10 @@ const useGameStore = create(
             state.correctlyGuessed = data.correctly_guessed;
 
             // Check if this guess was correct
-            
+            if (isCorrectGuess) {
+              state.lastCorrectGuess = encryptedLetter;
+              state.guessedMappings[encryptedLetter] = guessedLetter.toUpperCase();
+            }
           }
         });
 
