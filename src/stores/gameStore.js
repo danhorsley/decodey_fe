@@ -736,16 +736,24 @@ const useGameStore = create(
           }
 
           // Update guessedMappings based on newly revealed letters
-          newCorrectlyGuessed.forEach(letter => {
-            if (!state.correctlyGuessed.includes(letter)) {
-              for (let i = 0; i < state.encrypted.length; i++) {
-                if (state.encrypted[i] === letter && displayText[i] !== '█') {
-                  state.guessedMappings[letter] = displayText[i];
-                  break;
-                }
+          newCorrectlyGuessed.forEach(encryptedLetter => {
+            // Skip if we already have this mapping
+            if (state.guessedMappings[encryptedLetter]) return;
+
+            // Find the first occurrence of this letter in the encrypted text
+            // where the corresponding display text shows the revealed letter
+            for (let i = 0; i < state.encrypted.length; i++) {
+              if (state.encrypted[i] === encryptedLetter && displayText[i] !== '█') {
+                // Store the mapping from encrypted letter to original letter
+                state.guessedMappings[encryptedLetter] = displayText[i];
+
+                // Log for debugging
+                console.log(`Hint revealed mapping: ${encryptedLetter} → ${displayText[i]}`);
+                break;
               }
             }
           });
+
         });
 
         if (hasWon) {
