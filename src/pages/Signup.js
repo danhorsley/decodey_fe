@@ -84,6 +84,12 @@ function Signup({ onClose }) {
               document.body.appendChild(toast);
               setTimeout(() => document.body.removeChild(toast), 3000);
               onClose();
+              // Track signup conversion
+              if (typeof window.gtag === 'function') {
+                window.gtag('event', 'conversion', {
+                  'send_to': 'AW-11234477900/user_signup'
+                });
+              }
             } else {
               console.warn(
                 "Auto-login failed after signup:",
