@@ -207,6 +207,7 @@ const gameService = {
       isNewGame = false,
       isDaily = false,
       isCustomGame = false,
+      isContinuing = false, // Explicit flag for continuation
     } = options;
     const gameStore = useGameStore.getState();
 
@@ -214,26 +215,45 @@ const gameService = {
     // Only update if we have valid game data
     if (gameData.encrypted_paragraph && gameData.display) {
       console.log(
-        `Service updating game state directly - isNewGame: ${isNewGame}, isDaily: ${isDaily}, isCustomGame: ${isCustomGame}`,
+        `Service updating game state - isNewGame: ${isNewGame}, isDaily: ${isDaily}, isCustomGame: ${isCustomGame}, isContinuing: ${isContinuing}`,
       );
 
-      // For daily challenges, use the dedicated daily challenge method
-      if (isDaily) {
-        if (typeof gameStore.startDailyChallenge === "function") {
-          gameStore.startDailyChallenge(gameData);
-        } else {
-          // Fallback if method doesn't exist
+      // CASE 1: If we're explicitly continuing a game, ALWAYS use continueSavedGame
+      if (isContinuing) {
+        console.log("Continuing existing game - using continueSavedGame");
+        if (typeof gameStore.continueSavedGame === "function") {
           gameStore.continueSavedGame(gameData);
         }
       }
-      // For custom games, specify customGame flag
-      else if (isCustomGame) {
-        if (typeof gameStore.continueSavedGame === "function") {
-          gameStore.continueSavedGame(gameData, { isCustomGame: true });
+      // CASE 2: For new daily challenges use startDailyChallenge
+      else if (isNewGame && isDaily) {
+        console.log("Starting new daily challenge - using startDailyChallenge");
+        if (typeof gameStore.startDailyChallenge === "function") {
+          gameStore.startDailyChallenge(gameData);
+        } else {
+          // Fallback
+          gameStore.continueSavedGame(gameData);
         }
       }
-      // For regular continuation
+      // CASE 3: For new custom games use regular game initialization
+      else if (isNewGame && isCustomGame) {
+        console.log(
+          "Starting new custom game - using appropriate initialization",
+        );
+        // Here you would use whatever method is appropriate for starting a new custom game
+        // This might be something like startGame or resetAndStartNewGame
+        if (typeof gameStore.startGame === "function") {
+          gameStore.startGame(gameData);
+        } else if (typeof gameStore.resetAndStartNewGame === "function") {
+          gameStore.resetAndStartNewGame(gameData);
+        } else {
+          // Fallback
+          gameStore.continueSavedGame(gameData);
+        }
+      }
+      // CASE 4: For all other cases
       else {
+        console.log("Using continueSavedGame as fallback");
         if (typeof gameStore.continueSavedGame === "function") {
           gameStore.continueSavedGame(gameData);
         }
@@ -430,11 +450,30 @@ const gameService = {
         localStorage.setItem("uncrypt-game-id", gameData.game_id);
       }
 
-      // FIXED: Update game store directly with proper options
+      // FIXED: Don't use startDailyChallenge for continuing a daily challenge
       const isDailyChallenge =
         isDaily || (gameData.game_id && gameData.game_id.includes("-daily-"));
 
-      this._updateGameState(gameData, { isDaily: isDailyChallenge });
+      // THIS IS THE FIX - Replace whatever is currently here with this:
+      // Get the game store to update state
+      const gameStore = useGameStore.getState();
+
+      // CRITICAL FIX: Always use continueSavedGame method for both regular and daily games
+      if (gameStore && typeof gameStore.continueSavedGame === "function") {
+        const continueResult = gameStore.continueSavedGame(gameData);
+        console.log(
+          `Continuing ${isDailyChallenge ? "daily" : "regular"} game result:`,
+          continueResult,
+        );
+      } else {
+        // Fallback to using _updateGameState with explicit isContinuing flag
+        this._updateGameState(gameData, {
+          isDaily: isDailyChallenge,
+          isNewGame: false,
+          isCustomGame: !isDailyChallenge, // Set as opposite of isDailyChallenge
+          isContinuing: true, // Explicitly mark as continuation
+        });
+      }
 
       events.emit(this.events.GAME_INITIALIZED, {
         resumed: true,
@@ -582,14 +621,14 @@ const gameService = {
           //     dailyStats: activeGameCheck.dailyStats || null,
           //   });
 
-            return {
-              success: true,
-                hasActiveGame: activeGameCheck.hasActiveGame || false,
-                hasActiveDailyGame: activeGameCheck.hasActiveDailyGame || false,
-                activeGameStats: activeGameCheck.gameStats || null,
-                activeDailyStats: activeGameCheck.dailyStats || null
+          return {
+            success: true,
+            hasActiveGame: activeGameCheck.hasActiveGame || false,
+            hasActiveDailyGame: activeGameCheck.hasActiveDailyGame || false,
+            activeGameStats: activeGameCheck.gameStats || null,
+            activeDailyStats: activeGameCheck.dailyStats || null,
             // };
-          }
+          };
         } catch (checkError) {
           console.warn("Error checking for active game:", checkError);
         }

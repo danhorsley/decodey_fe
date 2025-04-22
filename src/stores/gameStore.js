@@ -334,6 +334,11 @@ const useGameStore = create(
 
           gameData = response.data;
         }
+        console.log("Continue game data received:", {
+          hasGuessedMappings: !!gameData.guessedMappings,
+          hasReverseMappings: !!gameData.reverse_mapping,
+          correctlyGuessedCount: Array.isArray(gameData.correctly_guessed) ? gameData.correctly_guessed.length : 0
+        });
 
         // Check if this is a daily challenge
         let isDailyChallenge = false; // Default to false
@@ -369,7 +374,7 @@ const useGameStore = create(
             }
           }
         }
-
+        
         // Process game data for hardcore mode if needed
         const gameHardcoreMode = gameData.game_id
           ? gameData.game_id.includes("-hardcore-")
@@ -426,14 +431,13 @@ const useGameStore = create(
         const guessedMappings = {};
 
         // If game has guessedMappings, use that
-        if (
-          gameData.guessedMappings &&
-          typeof gameData.guessedMappings === "object"
-        ) {
+        if (gameData.guessedMappings && typeof gameData.guessedMappings === "object") {
           // Create a fresh copy for immutability
           Object.entries(gameData.guessedMappings).forEach(([key, value]) => {
-            guessedMappings[key] = value;
+            // Ensure values are uppercase for consistency
+            guessedMappings[key] = typeof value === 'string' ? value.toUpperCase() : value;
           });
+          console.log("Using provided guessedMappings:", guessedMappings);
         }
         // Otherwise reconstruct from correctly_guessed and reverse_mapping
         else if (gameData.reverse_mapping && correctlyGuessed.length > 0) {
@@ -482,7 +486,12 @@ const useGameStore = create(
         const hasLost = gameData.mistakes >= maxMistakesValue;
         const incorrectGuesses =
           gameData.incorrect_guesses || gameData.incorrectGuesses || {};
-
+        // Final verification of guessedMappings
+        console.log("Final guessedMappings:", {
+          mappings: guessedMappings,
+          count: Object.keys(guessedMappings).length,
+          correctlyGuessedCount: correctlyGuessed.length
+        });
         // Update game state with Immer
         set(state => {
           // Core game data
