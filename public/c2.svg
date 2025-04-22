@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <style>
+    .block, .question {
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+      font-size: 50px;
+      fill: #00ff00; /* Neon green for that terminal glow */
+      dominant-baseline: middle;
+      text-anchor: middle;
+    }
+    .background {
+      fill: #1a1a1a; /* Dark background like an old CRT */
+    }
+    .scanline {
+      stroke: rgba(255, 255, 255, 0.1);
+      stroke-width: 0.5;
+    }
+  </style>
+
+  <!-- Background -->
+  <rect width="100" height="100" class="background"/>
+
+  <!-- Scanline effect for retro CRT feel -->
+  <g>
+    <line x1="0" y1="10" x2="100" y2="10" class="scanline"/>
+    <line x1="0" y1="20" x2="100" y2="20" class="scanline"/>
+    <line x1="0" y1="30" x2="100" y2="30" class="scanline"/>
+    <line x1="0" y1="40" x2="100" y2="40" class="scanline"/>
+    <line x1="0" y1="50" x2="100" y2="50" class="scanline"/>
+    <line x1="0" y1="60" x2="100" y2="60" class="scanline"/>
+    <line x1="0" y1="70" x2="100" y2="70" class="scanline"/>
+    <line x1="0" y1="80" x2="100" y2="80" class="scanline"/>
+    <line x1="0" y1="90" x2="100" y2="90" class="scanline"/>
+  </g>
+
+  <!-- 2x2 Grid of Characters -->
+  <!-- Top Row -->
+  <text class="block" x="30" y="30">█</text>
+  <text class="question" x="70" y="30">?</text>
+
+  <!-- Bottom Row -->
+  <text class="question" x="30" y="80">?</text>
+  <text class="block" x="70" y="80">█</text>
+</svg>
