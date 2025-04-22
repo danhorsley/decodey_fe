@@ -74,12 +74,13 @@ const useGameService = () => {
    * Continue a saved game
    * @returns {Promise<Object>} Continue result
    */
-  const continueGame = useCallback(async () => {
+  const continueGame = useCallback(async (options = {}) => {
     try {
       setIsInitializing(true);
       setError(null);
 
-      const result = await gameService.continueGame();
+      // Fix: Pass the options to the service's continueGame function
+      const result = await gameService.continueGame(options);
 
       if (!result.success) {
         setError(

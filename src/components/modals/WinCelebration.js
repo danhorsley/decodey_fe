@@ -102,7 +102,7 @@ const WinCelebration = ({ playSound, winData }) => {
     }
   }, [winData, showStatsSpinner]);
 
-  // Handler for Play Again button - FIXED to properly handle active games and validate daily date
+  // Handler for Play Again button - FIXED to properly handle active games
   const handlePlayAgain = async () => {
     // For authenticated users, check for existing active games
     if (isAuthenticated) {
@@ -110,71 +110,24 @@ const WinCelebration = ({ playSound, winData }) => {
         // Check for active games
         const activeGameCheck = await checkActiveGame();
 
-        // Validate daily challenge - only allow continuing if it's today's challenge
-        let hasValidActiveDailyGame = false;
-
-        if (activeGameCheck.hasActiveDailyGame && activeGameCheck.dailyStats) {
-          // First try using daily_date or dailyDate field
-          const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
-
-          // Check if we have start_time in dailyStats (from backend update)
-          if (activeGameCheck.dailyStats.start_time) {
-            try {
-              // Parse the start_time (should be in ISO format from backend)
-              const startTime = new Date(activeGameCheck.dailyStats.start_time);
-              const startDate = startTime.toISOString().split("T")[0]; // YYYY-MM-DD
-
-              console.log(
-                `Daily challenge validation using start_time - Started: ${startDate}, Today: ${today}`,
-              );
-
-              // Only consider the daily game valid if it was started today
-              hasValidActiveDailyGame = startDate === today;
-            } catch (dateError) {
-              console.warn(
-                "Error parsing daily challenge start_time:",
-                dateError,
-              );
-              // Fall back to date field check
-            }
-          }
-
-          // Fallback: Try to use daily_date or dailyDate field if start_time parsing failed
-          if (!hasValidActiveDailyGame) {
-            const activeDailyDate =
-              activeGameCheck.dailyStats.daily_date ||
-              activeGameCheck.dailyStats.dailyDate ||
-              null;
-
-            if (activeDailyDate) {
-              console.log(
-                `Daily challenge validation using date field - Date: ${activeDailyDate}, Today: ${today}`,
-              );
-              hasValidActiveDailyGame = activeDailyDate === today;
-            }
-          }
-
-          if (activeGameCheck.hasActiveDailyGame && !hasValidActiveDailyGame) {
-            console.log("Found outdated daily challenge - ignoring it");
-          }
-        }
-
-        // Only show continue prompt if there's a regular game or a valid (today's) daily game
-        if (activeGameCheck.hasActiveGame || hasValidActiveDailyGame) {
-          // If user has valid active games, open the continue game prompt
-          console.log("User has valid active games, showing continue prompt");
+        if (
+          activeGameCheck.hasActiveGame ||
+          activeGameCheck.hasActiveDailyGame
+        ) {
+          // If user has any active games, open the continue game prompt
+          console.log("User has active games, showing continue prompt");
 
           // Open the continue game prompt with proper game stats
           openContinueGamePrompt({
             gameStats: activeGameCheck.gameStats || null,
             dailyStats: activeGameCheck.dailyStats || null,
-            hasActiveDailyGame: hasValidActiveDailyGame, // Only pass true if it's today's challenge
+            hasActiveDailyGame: activeGameCheck.hasActiveDailyGame || false,
           });
 
           return;
         }
 
-        // If no valid active games, use onPlayAgain callback if provided
+        // If no active games, use onPlayAgain callback if provided
         if (winData.onPlayAgain && typeof winData.onPlayAgain === "function") {
           winData.onPlayAgain();
         } else {
