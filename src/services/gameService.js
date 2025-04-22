@@ -562,29 +562,53 @@ const gameService = {
 
       // Check for both game types from the updated API response
       const hasActiveGame = result.has_active_game || false;
-      const hasActiveDailyGame = result.has_active_daily_game || false;
-      const gameStats = result.game_stats || null;
+
+      // For daily games, also check if start_time is from today
+      let hasActiveDailyGame = result.has_active_daily_game || false;
       const dailyStats = result.daily_stats || null;
+
+      // Check if daily game start_time is from today
+      if (hasActiveDailyGame && dailyStats && dailyStats.start_time) {
+        const startDate = new Date(dailyStats.start_time);
+        const today = new Date();
+
+        const isStartedToday = 
+          startDate.getFullYear() === today.getFullYear() &&
+          startDate.getMonth() === today.getMonth() &&
+          startDate.getDate() === today.getDate();
+
+        // Only consider daily game active if it's from today
+        hasActiveDailyGame = isStartedToday;
+
+        console.log(`Daily challenge check: start_time=${dailyStats.start_time}, isStartedToday=${isStartedToday}`);
+
+        // If it's not from today, we treat it as if there's no active daily game
+        if (!isStartedToday) {
+          console.log("Daily challenge is not from today, considering it inactive");
+        }
+      }
 
       // Emit event if ANY game type is found
       if (hasActiveGame || hasActiveDailyGame) {
         events.emit(this.events.ACTIVE_GAME_FOUND, {
           hasActiveGame,
           hasActiveDailyGame,
-          gameStats,
+          gameStats: result.game_stats || null,
           dailyStats,
         });
       }
+
       console.log("Active game check result:", {
         hasActiveGame,
         hasActiveDailyGame,
-        gameStats,
-        dailyStats,
+        gameStats: result.game_stats ? "present" : "null",
+        dailyStats: dailyStats ? "present" : "null",
       });
+
       return {
         hasActiveGame,
         hasActiveDailyGame,
-        gameStats,
+        gameStats: result.game_stats || null,
         dailyStats,
       };
     } catch (error) {

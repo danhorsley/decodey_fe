@@ -57,9 +57,7 @@ const Game = () => {
     useGameStore.getState().handleEncryptedSelect(letter);
   }, []);
 
-  const handleSubmitGuess = useCallback((encryptedLetter, guessedLetter) => {
-    useGameStore.getState().submitGuess(encryptedLetter, guessedLetter);
-  }, []);
+
 
   const getHint = useCallback(() => {
     return useGameStore.getState().getHint();
@@ -108,7 +106,32 @@ const Game = () => {
 
   // Sound effects
   const { playSound } = useSound();
+  const handleSubmitGuess = useCallback(
+    async (encryptedLetter, guessedLetter) => {
+      // Submit the guess to the store
+      const result = await useGameStore.getState().submitGuess(encryptedLetter, guessedLetter);
 
+      // Play appropriate sound based on result
+      if (result && playSound) {
+        if (result.isCorrect) {
+          console.log("Playing 'correct' sound for correct guess");
+          playSound("correct");
+        } else if (result.isIncorrect) {
+          console.log("Playing 'incorrect' sound for incorrect guess");
+          playSound("incorrect");
+        }
+
+        // Play lose sound if game ended with a loss
+        // (Win sound is handled by WinCelebration component)
+        if (result.hasLost) {
+          console.log("Playing 'lose' sound for game over");
+          playSound("lose");
+        }
+      }
+    },
+    // Only playSound is used inside this function
+    [playSound]
+  );
   // Check if the game is active (not won or lost)
   const isGameActive = !hasWon && !hasLost && !isResetting;
 
@@ -139,6 +162,10 @@ const Game = () => {
         return;
       }
 
+      // Play key click sound when submitting any guess
+      playSound && playSound("keyclick");
+
+      // Submit the guess and get the result
       handleSubmitGuess(selectedEncrypted, guessedLetter);
     },
     [
@@ -147,7 +174,7 @@ const Game = () => {
       incorrectGuesses,
       handleSubmitGuess,
       playSound,
-    ],
+    ]
   );
 
   // Handle hint request - use useCallback for stability
