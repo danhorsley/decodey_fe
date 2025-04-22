@@ -158,12 +158,21 @@ const Game = () => {
     setPendingHints((prev) => prev + 1);
 
     try {
-      await getHint();
+      // Play click sound when button is pressed
+      playSound && playSound("keyclick");
+
+      // Get hint
+      const result = await getHint();
+
+      // Add this line to play hint sound when successful
+      if (result && result.success) {
+        playSound && playSound("hint");
+      }
     } finally {
       setIsHintInProgress(false);
       setPendingHints(0);
     }
-  }, [isGameActive, isHintInProgress, getHint]);
+  }, [isGameActive, isHintInProgress, getHint, playSound]);
 
   // Get all letters from encrypted text, sorted by setting preference
   const sortedEncryptedLetters = React.useMemo(() => {

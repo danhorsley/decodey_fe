@@ -1,4 +1,4 @@
-// src/components/modals/WinCelebration.js - Updated with proper Play Again behavior
+// src/components/modals/WinCelebration.js - Fixed Play Again button behavior
 import React, { useState, useEffect } from "react";
 import MatrixRain from "../effects/MatrixRain";
 import CryptoSpinner from "../CryptoSpinner";
@@ -6,7 +6,7 @@ import "../../Styles/WinCelebration.css";
 import useAuthStore from "../../stores/authStore";
 import useUIStore from "../../stores/uiStore";
 import useSettingsStore from "../../stores/settingsStore";
-import useGameService from "../../hooks/useGameService"; // Add gameService
+import useGameService from "../../hooks/useGameService"; // Game service for better state management
 import { FaXTwitter } from "react-icons/fa6";
 
 /**
@@ -55,8 +55,13 @@ const WinCelebration = ({ playSound, winData }) => {
   const openLogin = useUIStore((state) => state.openLogin);
   const settings = useSettingsStore((state) => state.settings);
 
-  // Get gameService for starting new games
-  const { startNewGame } = useGameService();
+  // Get UI actions for continue game prompt
+  const openContinueGamePrompt = useUIStore(
+    (state) => state.openContinueGamePrompt,
+  );
+
+  // Get gameService for checking active games and starting new games
+  const { startNewGame, checkActiveGame } = useGameService();
 
   // State for showing quote (for loss state)
   const [showQuote, setShowQuote] = useState(true);
@@ -97,10 +102,97 @@ const WinCelebration = ({ playSound, winData }) => {
     }
   }, [winData, showStatsSpinner]);
 
-  // Handler for Play Again button - different behavior for anonymous vs authenticated users
+  // Handler for Play Again button - FIXED to properly handle active games and validate daily date
   const handlePlayAgain = async () => {
-    // For anonymous users, start a custom game with current settings
-    if (!isAuthenticated) {
+    // For authenticated users, check for existing active games
+    if (isAuthenticated) {
+      try {
+        // Check for active games
+        const activeGameCheck = await checkActiveGame();
+
+        // Validate daily challenge - only allow continuing if it's today's challenge
+        let hasValidActiveDailyGame = false;
+
+        if (activeGameCheck.hasActiveDailyGame && activeGameCheck.dailyStats) {
+          // First try using daily_date or dailyDate field
+          const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+
+          // Check if we have start_time in dailyStats (from backend update)
+          if (activeGameCheck.dailyStats.start_time) {
+            try {
+              // Parse the start_time (should be in ISO format from backend)
+              const startTime = new Date(activeGameCheck.dailyStats.start_time);
+              const startDate = startTime.toISOString().split("T")[0]; // YYYY-MM-DD
+
+              console.log(
+                `Daily challenge validation using start_time - Started: ${startDate}, Today: ${today}`,
+              );
+
+              // Only consider the daily game valid if it was started today
+              hasValidActiveDailyGame = startDate === today;
+            } catch (dateError) {
+              console.warn(
+                "Error parsing daily challenge start_time:",
+                dateError,
+              );
+              // Fall back to date field check
+            }
+          }
+
+          // Fallback: Try to use daily_date or dailyDate field if start_time parsing failed
+          if (!hasValidActiveDailyGame) {
+            const activeDailyDate =
+              activeGameCheck.dailyStats.daily_date ||
+              activeGameCheck.dailyStats.dailyDate ||
+              null;
+
+            if (activeDailyDate) {
+              console.log(
+                `Daily challenge validation using date field - Date: ${activeDailyDate}, Today: ${today}`,
+              );
+              hasValidActiveDailyGame = activeDailyDate === today;
+            }
+          }
+
+          if (activeGameCheck.hasActiveDailyGame && !hasValidActiveDailyGame) {
+            console.log("Found outdated daily challenge - ignoring it");
+          }
+        }
+
+        // Only show continue prompt if there's a regular game or a valid (today's) daily game
+        if (activeGameCheck.hasActiveGame || hasValidActiveDailyGame) {
+          // If user has valid active games, open the continue game prompt
+          console.log("User has valid active games, showing continue prompt");
+
+          // Open the continue game prompt with proper game stats
+          openContinueGamePrompt({
+            gameStats: activeGameCheck.gameStats || null,
+            dailyStats: activeGameCheck.dailyStats || null,
+            hasActiveDailyGame: hasValidActiveDailyGame, // Only pass true if it's today's challenge
+          });
+
+          return;
+        }
+
+        // If no valid active games, use onPlayAgain callback if provided
+        if (winData.onPlayAgain && typeof winData.onPlayAgain === "function") {
+          winData.onPlayAgain();
+        } else {
+          // Fallback if callback is missing
+          window.location.reload();
+        }
+      } catch (error) {
+        console.error("Error checking for active games:", error);
+
+        // Fall back to using the provided callback
+        if (winData.onPlayAgain && typeof winData.onPlayAgain === "function") {
+          winData.onPlayAgain();
+        } else {
+          window.location.reload();
+        }
+      }
+    } else {
+      // For anonymous users, start a custom game with current settings
       try {
         // Use current settings but start a custom game
         await startNewGame({
@@ -112,14 +204,6 @@ const WinCelebration = ({ playSound, winData }) => {
       } catch (error) {
         console.error("Error starting new game:", error);
         // Fallback - just reload the page if the API call fails
-        window.location.reload();
-      }
-    } else {
-      // For authenticated users, use the onPlayAgain callback from winData
-      if (winData.onPlayAgain && typeof winData.onPlayAgain === "function") {
-        winData.onPlayAgain();
-      } else {
-        // Fallback if callback is missing
         window.location.reload();
       }
     }

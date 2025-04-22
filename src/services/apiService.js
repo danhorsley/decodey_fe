@@ -866,15 +866,10 @@ class ApiService {
         };
       }
 
-      // Validate date string
-      if (!dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        throw new Error("Invalid date format. Use YYYY-MM-DD");
-      }
-
-      // Make request to check for daily completion
-      const response = await this.api.get(
-        `/api/daily-completion/${dateString}`,
-      );
+      // OLD: const response = await this.api.get(`/api/daily-completion/${dateString}`);
+      const response = await this.api.get(`/api/daily-completion`, {
+        params: { date: dateString },
+      });
 
       return {
         is_completed: response.data.is_completed || false,
