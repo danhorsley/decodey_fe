@@ -239,10 +239,17 @@ apiService.on("auth:login", (data) => {
     state.loading = false;
   });
 
-  // Trigger active game check if needed
-  if (data.has_active_game) {
-    apiService.events.emit("auth:active-game-check-needed");
-  }
+  // Handle navigation after state is updated
+  setTimeout(() => {
+    if (!data.has_active_game) {
+      // Use history API for smoother navigation
+      window.history.pushState({}, '', '/home');
+      // Trigger a navigation event for React Router
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    } else if (data.has_active_game) {
+      apiService.events.emit("auth:active-game-check-needed");
+    }
+  }, 0);
 });
 
 apiService.on("auth:logout", () => {
