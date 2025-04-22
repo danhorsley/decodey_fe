@@ -57,8 +57,6 @@ const Game = () => {
     useGameStore.getState().handleEncryptedSelect(letter);
   }, []);
 
-
-
   const getHint = useCallback(() => {
     return useGameStore.getState().getHint();
   }, []);
@@ -109,7 +107,9 @@ const Game = () => {
   const handleSubmitGuess = useCallback(
     async (encryptedLetter, guessedLetter) => {
       // Submit the guess to the store
-      const result = await useGameStore.getState().submitGuess(encryptedLetter, guessedLetter);
+      const result = await useGameStore
+        .getState()
+        .submitGuess(encryptedLetter, guessedLetter);
 
       // Play appropriate sound based on result
       if (result && playSound) {
@@ -130,7 +130,7 @@ const Game = () => {
       }
     },
     // Only playSound is used inside this function
-    [playSound]
+    [playSound],
   );
   // Check if the game is active (not won or lost)
   const isGameActive = !hasWon && !hasLost && !isResetting;
@@ -174,7 +174,7 @@ const Game = () => {
       incorrectGuesses,
       handleSubmitGuess,
       playSound,
-    ]
+    ],
   );
 
   // Handle hint request - use useCallback for stability
@@ -226,7 +226,7 @@ const Game = () => {
       localStorage.removeItem("force-daily-challenge");
     }
   }, []);
-  
+
   useEffect(() => {
     // Only run initialization once to prevent loops
     if (hasInitialized) return;
@@ -415,6 +415,7 @@ const Game = () => {
             correctlyGuessed,
             mistakes,
             maxMistakes,
+            statsLoading: useGameStore.getState().isWinVerificationInProgress,
             gameTimeSeconds: hasWon
               ? winData?.gameTimeSeconds || 0
               : Math.floor(
