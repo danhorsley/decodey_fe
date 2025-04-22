@@ -1,12 +1,13 @@
-// src/components/modals/WinCelebration.js - Fixed Play Again button behavior
-import React, { useState, useEffect } from "react";
+// src/components/modals/WinCelebration.js - Fixed version with proper spinner overlay
+import React, { useState, useEffect, useCallback } from "react";
 import MatrixRain from "../effects/MatrixRain";
 import CryptoSpinner from "../CryptoSpinner";
 import "../../Styles/WinCelebration.css";
 import useAuthStore from "../../stores/authStore";
 import useUIStore from "../../stores/uiStore";
 import useSettingsStore from "../../stores/settingsStore";
-import useGameService from "../../hooks/useGameService"; // Game service for better state management
+import useGameService from "../../hooks/useGameService"; // Game service for events
+import apiService from "../../services/apiService"; // Import apiService for checking active games
 import { FaXTwitter } from "react-icons/fa6";
 
 /**
@@ -60,17 +61,23 @@ const WinCelebration = ({ playSound, winData }) => {
     (state) => state.openContinueGamePrompt,
   );
 
-  // Get gameService for checking active games and starting new games
-  const { startNewGame, checkActiveGame } = useGameService();
+  // Get game service functions and event system
+  const { startNewGame } = useGameService();
 
   // State for showing quote (for loss state)
   const [showQuote, setShowQuote] = useState(true);
+
   // State to track if we specifically need the stats spinner
+  // IMPORTANT: Initialize to true if winData has statsLoading flag
   const [showStatsSpinner, setShowStatsSpinner] = useState(
-    winData?.statsLoading || false,
+    winData?.statsLoading === true,
   );
+
   // Store anonymous state at mount time
   const [wasAnonymous] = useState(!isAuthenticated);
+
+  // State to track if we're checking for active games
+  const [isCheckingActiveGames, setIsCheckingActiveGames] = useState(false);
 
   // Play sound effect on mount and handle loading state
   useEffect(() => {
@@ -80,55 +87,65 @@ const WinCelebration = ({ playSound, winData }) => {
     }
 
     // Update spinner state when winData changes
-    setShowStatsSpinner(winData?.statsLoading || false);
+    if (winData?.statsLoading === true) {
+      setShowStatsSpinner(true);
 
-    // If winData has statsLoading=true, set up a timeout to hide the spinner
-    // after a reasonable time even if the backend doesn't respond
-    if (winData?.statsLoading) {
+      // Set up a timeout to hide the spinner after a reasonable time
+      // even if the backend doesn't respond
       const timeout = setTimeout(() => {
         setShowStatsSpinner(false);
       }, 5000); // 5 second maximum loading time
 
       return () => clearTimeout(timeout);
+    } else {
+      setShowStatsSpinner(false);
     }
   }, [playSound, winData?.statsLoading]);
 
   // Effect to handle winData updates - to clear the loading state
   // when complete data arrives
   useEffect(() => {
-    if (winData && !winData.statsLoading && showStatsSpinner) {
+    if (winData && winData.statsLoading === false && showStatsSpinner) {
       // Data has arrived and is no longer loading, but spinner is showing
       setShowStatsSpinner(false);
     }
   }, [winData, showStatsSpinner]);
 
-  // Handler for Play Again button - FIXED to properly handle active games
-  const handlePlayAgain = async () => {
+  // Handler for Play Again button - using direct API call for simplicity
+  const handlePlayAgain = useCallback(async () => {
     // For authenticated users, check for existing active games
     if (isAuthenticated) {
       try {
-        // Check for active games
-        const activeGameCheck = await checkActiveGame();
+        // Show the checking games spinner
+        setIsCheckingActiveGames(true);
+
+        // Use apiService directly to check for active games
+        console.log("Checking for active games...");
+        const activeGameCheck = await apiService.checkActiveGame();
+        console.log("Active game check result:", activeGameCheck);
+
+        // Hide the spinner
+        setIsCheckingActiveGames(false);
 
         if (
-          activeGameCheck.hasActiveGame ||
-          activeGameCheck.hasActiveDailyGame
+          activeGameCheck.has_active_game ||
+          activeGameCheck.has_active_daily_game
         ) {
           // If user has any active games, open the continue game prompt
           console.log("User has active games, showing continue prompt");
 
           // Open the continue game prompt with proper game stats
           openContinueGamePrompt({
-            gameStats: activeGameCheck.gameStats || null,
-            dailyStats: activeGameCheck.dailyStats || null,
-            hasActiveDailyGame: activeGameCheck.hasActiveDailyGame || false,
+            gameStats: activeGameCheck.game_stats || null,
+            dailyStats: activeGameCheck.daily_stats || null,
+            hasActiveDailyGame: activeGameCheck.has_active_daily_game || false,
           });
 
           return;
         }
 
         // If no active games, use onPlayAgain callback if provided
-        if (winData.onPlayAgain && typeof winData.onPlayAgain === "function") {
+        if (winData?.onPlayAgain && typeof winData.onPlayAgain === "function") {
           winData.onPlayAgain();
         } else {
           // Fallback if callback is missing
@@ -136,9 +153,10 @@ const WinCelebration = ({ playSound, winData }) => {
         }
       } catch (error) {
         console.error("Error checking for active games:", error);
+        setIsCheckingActiveGames(false);
 
         // Fall back to using the provided callback
-        if (winData.onPlayAgain && typeof winData.onPlayAgain === "function") {
+        if (winData?.onPlayAgain && typeof winData.onPlayAgain === "function") {
           winData.onPlayAgain();
         } else {
           window.location.reload();
@@ -160,7 +178,13 @@ const WinCelebration = ({ playSound, winData }) => {
         window.location.reload();
       }
     }
-  };
+  }, [
+    isAuthenticated,
+    openContinueGamePrompt,
+    startNewGame,
+    settings,
+    winData,
+  ]);
 
   // Safely extract win data with defaults
   const {
@@ -217,7 +241,6 @@ const WinCelebration = ({ playSound, winData }) => {
   // Share URL for Twitter
   const getShareUrl = (score) => {
     let message;
-    // const url = "https://decodey.game";
 
     if (hasLost) {
       const solvePercentage = calculatePercentageSolved();
@@ -242,6 +265,13 @@ const WinCelebration = ({ playSound, winData }) => {
 
     return `https://twitter.com/intent/tweet?text=${encodeURIComponent(message)}`;
   };
+
+  // Debug logging for spinner state
+  console.log("Spinner state:", {
+    showStatsSpinner,
+    isCheckingActiveGames,
+    statsLoading: winData?.statsLoading,
+  });
 
   return (
     <div
@@ -306,14 +336,18 @@ const WinCelebration = ({ playSound, winData }) => {
         {/* Stats in monospace grid - with loading spinner overlay */}
         <div className="retro-stats" style={{ position: "relative" }}>
           {/* CryptoSpinner overlay for stats section */}
-          {showStatsSpinner && (
+          {(showStatsSpinner || isCheckingActiveGames) && (
             <div className="stats-spinner-container">
               <CryptoSpinner
                 isActive={true}
                 isDarkTheme={settings.theme === "dark"}
                 inStatsContainer={true}
               />
-              <div className="calculating-text">CALCULATING SCORE</div>
+              <div className="calculating-text">
+                {isCheckingActiveGames
+                  ? "CHECKING GAME DATA"
+                  : "CALCULATING SCORE"}
+              </div>
             </div>
           )}
 
@@ -369,6 +403,7 @@ const WinCelebration = ({ playSound, winData }) => {
           <button
             className="game-over-action-button play-again"
             onClick={handlePlayAgain}
+            disabled={isCheckingActiveGames}
           >
             <div className="game-over-text-display">
               {hasLost ? "TRY AGAIN" : "PLAY AGAIN"}
