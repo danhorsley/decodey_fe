@@ -21,7 +21,7 @@ const tutorialSteps = [
   {
     id: "encrypted-grid",
     title: "Encrypted Letters",
-    description: "Click a letter here to select it.",
+    description: "Click a letter here to select it for decoding.",
     targetSelector: ".encrypted-grid",
     position: "right", // Will be auto-adjusted on small screens
     smallScreenPosition: "top", // Prefer top on small screens
@@ -29,7 +29,8 @@ const tutorialSteps = [
   {
     id: "guess-grid",
     title: "Original Letters",
-    description: "After selecting an encrypted letter, click here to guess what the real letter might be.",
+    description:
+      "And then click on this grid to choose the real letter you think it represents.",
     targetSelector: ".guess-grid",
     position: "left", // Will be auto-adjusted on small screens
     smallScreenPosition: "top", // Prefer top on small screens
@@ -37,7 +38,8 @@ const tutorialSteps = [
   {
     id: "hint-button",
     title: "Hint Button",
-    description: "Use hints if stuck. Each hint or mistake costs one token.",
+    description:
+      "Stuck? Use a hint to reveal a letter. Each hint or mistake costs one token.",
     targetSelector: ".crossword-hint-button",
     position: "left", // Will be auto-adjusted on small screens
     smallScreenPosition: "top", // Prefer top on small screens
@@ -46,7 +48,7 @@ const tutorialSteps = [
     id: "menu",
     title: "Slide Menu",
     description:
-      "Access account options, and start new games. You can create a free account to record scores and compete on leaderboards. Change difficulty in settings or try dark mode for a retro feel!",
+      "Start new games, or change difficulty and other settings. Create a free account to save scores and compete on leaderboards.",
     targetSelector: ".menu-toggle",
     position: "bottom",
   },
