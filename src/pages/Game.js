@@ -415,9 +415,15 @@ const Game = () => {
             correctlyGuessed,
             mistakes,
             maxMistakes,
+            // If isWinVerificationInProgress is true, show loading spinner
+            // Otherwise, use the value from attributionComplete
             statsLoading: useGameStore.getState().isWinVerificationInProgress,
             gameTimeSeconds: hasWon
-              ? winData?.gameTimeSeconds || 0
+              ? winData?.gameTimeSeconds || Math.floor(
+                  (Date.now() -
+                    (useGameStore.getState().startTime || Date.now())) /
+                    1000,
+                )
               : Math.floor(
                   (Date.now() -
                     (useGameStore.getState().startTime || Date.now())) /

@@ -187,6 +187,7 @@ const WinCelebration = ({ playSound, winData }) => {
   ]);
 
   // Safely extract win data with defaults
+  // Extract important win data with proper defaults
   const {
     score = 0,
     mistakes = 0,
@@ -198,7 +199,10 @@ const WinCelebration = ({ playSound, winData }) => {
     hasLost = false,
     attribution = {},
     isDailyChallenge = false,
-    current_daily_streak = 0, // Extract the streak from win data
+    // Ensure all possible streak data locations are checked
+    current_daily_streak = winData?.current_daily_streak || 
+                           winData?.winData?.current_daily_streak || 0,
+    statsLoading = false
   } = winData || {};
 
   // Calculate base score and bonus

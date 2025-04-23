@@ -676,6 +676,21 @@ class ApiService {
       // Make the request
       const response = await this.api.post("/api/guess", data);
 
+      // Log response if game is complete for debugging
+      if (response.data.game_complete || response.data.hasWon) {
+        console.log("Game complete response:", response.data);
+
+        // Log streak info specifically for debugging
+        if (response.data.winData) {
+          console.log("Win data received:", {
+            hasWinData: true,
+            score: response.data.winData.score || 0,
+            streak: response.data.winData.current_daily_streak || 
+                   response.data.current_daily_streak || 0
+          });
+        }
+      }
+
       return response.data;
     } catch (error) {
       // Handle specific error cases
@@ -704,6 +719,21 @@ class ApiService {
 
       // Make the request
       const response = await this.api.post("/api/hint", data);
+
+      // Log response if game is complete for debugging
+      if (response.data.game_complete || response.data.hasWon) {
+        console.log("Game complete after hint:", response.data);
+
+        // Log streak info specifically for debugging
+        if (response.data.winData) {
+          console.log("Win data received from hint:", {
+            hasWinData: true,
+            score: response.data.winData.score || 0,
+            streak: response.data.winData.current_daily_streak || 
+                   response.data.current_daily_streak || 0
+          });
+        }
+      }
 
       return response.data;
     } catch (error) {

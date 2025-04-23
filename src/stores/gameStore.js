@@ -543,7 +543,7 @@ const useGameStore = create(
       }
     },
 
-    // Submit a guess
+    // submitGuess function - updated to handle direct win data
     submitGuess: async (encryptedLetter, guessedLetter) => {
       if (!encryptedLetter || !guessedLetter) {
         return { success: false, error: "Invalid input" };
@@ -609,12 +609,31 @@ const useGameStore = create(
             state.completionTime = Date.now();
           }
           // Only check for win if the game hasn't been lost
-          else if (data.hasWon || data.game_complete) {
+          else if (data.game_complete || data.hasWon) {
             state.hasWon = true;
             state.hasLost = false; // Explicitly set hasLost to false to avoid conflicts
             state.completionTime = Date.now();
-            // Set verification in progress flag to show loading spinner
-            state.isWinVerificationInProgress = true;
+
+            // NEW: If winData is directly included in the response, use it
+            if (data.winData) {
+              state.winData = {
+                ...data.winData,
+                encrypted: state.encrypted,
+                display: state.display,
+                attributionComplete: true, // Flag indicating complete data
+                isDailyChallenge: state.isDailyChallenge,
+                // Handle streak data with proper fallbacks
+                current_daily_streak: data.winData.current_daily_streak || 
+                                      data.current_daily_streak || 0
+              };
+
+              // No need for verification in progress
+              state.isWinVerificationInProgress = false;
+            } else {
+              // Fallback if winData not included - legacy support
+              // Set verification in progress flag to show loading spinner
+              state.isWinVerificationInProgress = true;
+            }
           }
 
           // Handle correctly guessed letters
@@ -629,8 +648,8 @@ const useGameStore = create(
           }
         });
 
-        // If we've detected a win, verify with backend in a separate call
-        if (get().hasWon) {
+        // Only verify with backend if we've won but don't have direct winData
+        if (get().hasWon && !data.winData) {
           get().verifyWinAndGetData();
         }
 
@@ -714,7 +733,7 @@ const useGameStore = create(
 
         if (newMistakes >= state.maxMistakes) {
           hasLost = true;
-        } else if (data.hasWon || data.game_complete) {
+        } else if (data.game_complete || data.hasWon) {
           hasWon = true;
         }
 
@@ -735,6 +754,26 @@ const useGameStore = create(
             state.completionTime = Date.now();
           }
 
+          // NEW: If winData is directly included in the response, use it
+          if (hasWon && data.winData) {
+            state.winData = {
+              ...data.winData,
+              encrypted: state.encrypted,
+              display: state.display,
+              attributionComplete: true, // Flag indicating complete data
+              isDailyChallenge: state.isDailyChallenge,
+              // Handle streak data with proper fallbacks
+              current_daily_streak: data.winData.current_daily_streak || 
+                                    data.current_daily_streak || 0
+            };
+
+            // No need for verification in progress
+            state.isWinVerificationInProgress = false;
+          } else if (hasWon) {
+            // Set verification in progress flag if we need to fetch win data
+            state.isWinVerificationInProgress = true;
+          }
+
           // Update guessedMappings based on newly revealed letters
           newCorrectlyGuessed.forEach(encryptedLetter => {
             // Skip if we already have this mapping
@@ -753,10 +792,10 @@ const useGameStore = create(
               }
             }
           });
-
         });
 
-        if (hasWon) {
+        // Only verify with backend if we've won but don't have direct winData
+        if (get().hasWon && !data.winData) {
           get().verifyWinAndGetData();
         }
 
@@ -779,6 +818,24 @@ const useGameStore = create(
      */
     verifyWinAndGetData: async () => {
       try {
+        // First check if we already have complete win data
+        const currentWinData = get().winData;
+
+        // If the win data already has the attributionComplete flag, skip verification
+        if (currentWinData && currentWinData.attributionComplete) {
+          console.log("Win data already complete, skipping verification");
+
+          // Clear verification flag just in case
+          set(state => {
+            state.isWinVerificationInProgress = false;
+          });
+
+          return { verified: true, winData: currentWinData };
+        }
+
+        // Legacy path - Only proceed if verification is needed
+        console.log("Complete win data not available, fetching from backend");
+
         // Set flag to indicate verification is in progress
         set(state => {
           state.isWinVerificationInProgress = true;
@@ -839,6 +896,7 @@ const useGameStore = create(
             // Add daily challenge info to win data
             isDailyChallenge: isDailyChallenge,
             dailyDate: get().dailyDate,
+            attributionComplete: true, // Mark as complete to avoid future verification
 
             // Ensure daily streak data is properly passed through
             current_daily_streak: winData.current_daily_streak || 0,
