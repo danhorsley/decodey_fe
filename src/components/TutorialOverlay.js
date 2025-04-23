@@ -29,7 +29,7 @@ const tutorialSteps = [
   {
     id: "guess-grid",
     title: "Original Letters",
-    description: "After selecting an encrypted letter, click here to guess.",
+    description: "After selecting an encrypted letter, click here to guess what the real letter might be.",
     targetSelector: ".guess-grid",
     position: "left", // Will be auto-adjusted on small screens
     smallScreenPosition: "top", // Prefer top on small screens
@@ -45,7 +45,8 @@ const tutorialSteps = [
   {
     id: "menu",
     title: "Slide Menu",
-    description: "Access account options, leaderboard, and start new games.",
+    description:
+      "Access account options, and start new games. You can create a free account to record scores and compete on leaderboards. Change difficulty in settings or try dark mode for a retro feel!",
     targetSelector: ".menu-toggle",
     position: "bottom",
   },
