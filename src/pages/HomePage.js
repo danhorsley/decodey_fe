@@ -63,54 +63,64 @@ const HomePage = () => {
     }
   };
 
+  // const handleCustomGame = async () => {
+  //   console.log("Custom Game clicked in HomePage");
+
+  //   // For authenticated users, check for active game first
+  //   if (isAuthenticated) {
+  //     try {
+  //       // Try to continue game - this will trigger continue prompt if active game exists
+  //       const result = await continueGame();
+
+  //       if (result.success) {
+  //         // Just navigate to the game page, modal will show if there's an active game
+  //         navigate("/");
+  //         return;
+  //       }
+  //     } catch (error) {
+  //       console.error("Error checking for active game:", error);
+  //     }
+  //   }
+
+  //   // No active game or error checking - start a new custom game
+  //   try {
+  //     // First reset the game
+  //     useGameStore.getState().resetGame();
+
+  //     // Start a new custom game
+  //     const result = await initializeGame({
+  //       longText: settings?.longText || false,
+  //       hardcoreMode: settings?.hardcoreMode || false,
+  //       customGameRequested: true,
+  //     });
+
+  //     if (result.success) {
+  //       // Navigate to the game page
+  //       navigate("/");
+  //     } else {
+  //       console.error(
+  //         "Failed to start custom game:",
+  //         result.error || result.reason,
+  //       );
+  //       // Fallback to simple navigation
+  //       navigate("/");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error starting custom game:", error);
+  //     navigate("/");
+  //   }
+  // };
   const handleCustomGame = async () => {
     console.log("Custom Game clicked in HomePage");
 
-    // For authenticated users, check for active game first
-    if (isAuthenticated) {
-      try {
-        // Try to continue game - this will trigger continue prompt if active game exists
-        const result = await continueGame();
+    // First mark in localStorage that we want a custom game
+    localStorage.setItem("uncrypt-custom-game-requested", "true");
 
-        if (result.success) {
-          // Just navigate to the game page, modal will show if there's an active game
-          navigate("/");
-          return;
-        }
-      } catch (error) {
-        console.error("Error checking for active game:", error);
-      }
-    }
-
-    // No active game or error checking - start a new custom game
-    try {
-      // First reset the game
-      useGameStore.getState().resetGame();
-
-      // Start a new custom game
-      const result = await initializeGame({
-        longText: settings?.longText || false,
-        hardcoreMode: settings?.hardcoreMode || false,
-        customGameRequested: true,
-      });
-
-      if (result.success) {
-        // Navigate to the game page
-        navigate("/");
-      } else {
-        console.error(
-          "Failed to start custom game:",
-          result.error || result.reason,
-        );
-        // Fallback to simple navigation
-        navigate("/");
-      }
-    } catch (error) {
-      console.error("Error starting custom game:", error);
-      navigate("/");
-    }
+    // Just navigate to the main game route - it will handle everything
+    // including checking for active games and showing continue prompt if needed
+    navigate("/");
   };
-
+  
   const handleLeaderboard = () => {
     navigate("/leaderboard");
   };

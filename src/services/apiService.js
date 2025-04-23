@@ -1043,7 +1043,7 @@ class ApiService {
       const isDailyChallenge = this.isDailyChallenge(gameId);
 
       // For anonymous users, include game_id as query param
-      let url = "/api/game-status";
+      let url = "/api/game-complete";
 
       // Add query parameters for both anonymous game ID and daily flag
       const params = new URLSearchParams();
