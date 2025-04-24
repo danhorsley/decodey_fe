@@ -54,7 +54,7 @@ const useAuthStore = create(
               state.user = {
                 id: response.user_id,
                 username: response.username,
-                subadmin: response.subadmin || false 
+                subadmin: response.subadmin || false,
               };
               state.loading = false;
               state.hasActiveGame = hasActiveGame;
@@ -235,6 +235,7 @@ apiService.on("auth:login", (data) => {
     state.user = {
       id: data.user_id,
       username: data.username,
+      subadmin: data.subadmin || false,
     };
     state.hasActiveGame = data.has_active_game || false;
     state.loading = false;
