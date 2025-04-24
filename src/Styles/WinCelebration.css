@@ -406,3 +406,39 @@
 .light-theme .streak-bonus-tag {
   color: #007bff;
 }
+
+/* Add these rules to your WinCelebration.css file */
+
+/* Loading state for the play-again button */
+.game-over-action-button.play-again.loading {
+  position: relative;
+  pointer-events: none;
+  cursor: not-allowed;
+  opacity: 0.85;
+}
+
+/* Ensure button content is visible through the overlay */
+.game-over-action-button.play-again.loading .game-over-text-display {
+  position: relative;
+  z-index: 2;
+  opacity: 0.6;
+}
+
+/* Adjust the spinner container in button */
+.game-over-action-button .stats-spinner-container {
+  background: transparent;
+  min-height: 0;
+  height: auto;
+}
+
+/* Crypto spinner for play again button - smaller size */
+.game-over-action-button .crypto-spinner-char {
+  font-size: 1.25rem !important;
+  padding: 0 2px;
+}
+
+/* Ensure the button appears disabled but still visible */
+.game-over-action-button:disabled {
+  opacity: 0.85;
+  cursor: not-allowed;
+}

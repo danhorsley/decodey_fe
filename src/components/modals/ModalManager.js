@@ -10,6 +10,8 @@ import useGameService from "../../hooks/useGameService"; // Updated to use gameS
 import useUIStore from "../../stores/uiStore";
 import config from "../../config";
 import useGameStore from "../../stores/gameStore";
+import useSettingsStore from "../../stores/settingsStore";
+import useAuthStore from "../../stores/authStore";
 
 /**
  * ModalManager component - handles rendering of all application modals
@@ -17,7 +19,9 @@ import useGameStore from "../../stores/gameStore";
  */
 const ModalManager = ({ children }) => {
   const navigate = useNavigate();
-
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isSubAdmin = useAuthStore((state) => state.user?.subadmin || false);
+  const settings = useSettingsStore((state) => state.settings);
   // State to track daily challenge completion
   const [isDailyCompleted, setIsDailyCompleted] = useState(true);
 
@@ -85,12 +89,18 @@ const ModalManager = ({ children }) => {
       const result = await continueGame({ isDaily });
 
       // Log the result to help debug
-      console.log(`Continue ${isDaily ? "daily" : "regular"} game result:`, result);
+      console.log(
+        `Continue ${isDaily ? "daily" : "regular"} game result:`,
+        result,
+      );
 
       closeContinueGamePrompt();
       return result;
     } catch (error) {
-      console.error(`Error continuing ${isDaily ? "daily" : "regular"} game:`, error);
+      console.error(
+        `Error continuing ${isDaily ? "daily" : "regular"} game:`,
+        error,
+      );
       closeContinueGamePrompt();
       return { success: false, error };
     }
@@ -114,7 +124,7 @@ const ModalManager = ({ children }) => {
         console.log("Processing game data:", {
           regularGameStats,
           dailyGameStats,
-          hasActiveDailyGame
+          hasActiveDailyGame,
         });
 
         // Update state with complete data
@@ -129,7 +139,7 @@ const ModalManager = ({ children }) => {
         }
       } else {
         console.log(
-          "Active game found but user is not authenticated - bypassing continue prompt"
+          "Active game found but user is not authenticated - bypassing continue prompt",
         );
       }
     });
@@ -141,11 +151,13 @@ const ModalManager = ({ children }) => {
   const handleNewGame = async () => {
     try {
       console.log("Custom Game button clicked - abandoning regular game only");
-
+      const backdoorMode =
+        isAuthenticated && isSubAdmin ? settings?.backdoorMode || false : false;
       // Delegate to startNewGame through gameService
       // No need to specify isDaily anymore - always abandons regular games only
       const result = await startNewGame({
-        customGameRequested: true, // This tells the system to start a custom game
+        customGameRequested: true,
+        backdoorMode: backdoorMode,
       });
 
       // Close the modal

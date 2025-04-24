@@ -1,4 +1,4 @@
-// src/components/modals/ContinueGamePrompt.js
+// src/components/modals/ContinueGamePrompt.js - Updated with better game type handling
 import React from "react";
 import "../../Styles/About.css";
 import "../../Styles/Modal.css";
@@ -7,7 +7,7 @@ import useGameStore from "../../stores/gameStore";
 
 /**
  * Modal that prompts user to continue an existing game or start a new one
- * Now with support for both regular and daily games
+ * Now with improved support for both regular and daily games
  */
 function ContinueGamePrompt({
   isOpen,
@@ -21,8 +21,11 @@ function ContinueGamePrompt({
   hasActiveDailyGame = false, // Active daily game flag from API
 }) {
   // Debug logging
-  console.log('ContinueGamePrompt received hasActiveDailyGame:', hasActiveDailyGame);
-  console.log('ContinueGamePrompt received dailyGameStats:', dailyGameStats);
+  console.log(
+    "ContinueGamePrompt received hasActiveDailyGame:",
+    hasActiveDailyGame,
+  );
+  console.log("ContinueGamePrompt received dailyGameStats:", dailyGameStats);
   // Get theme from settings
   const settings = useSettingsStore((state) => state.settings);
 
@@ -54,6 +57,9 @@ function ContinueGamePrompt({
   const dailyButtonText = hasActiveDailyGame
     ? "Continue Daily Challenge"
     : "Daily Challenge";
+
+  // Determine if we have a regular game (non-daily)
+  const hasRegularGame = !!gameStats;
 
   return (
     <div className="about-overlay">
@@ -203,16 +209,6 @@ function ContinueGamePrompt({
             }}
           >
             Custom Game
-            <span
-              style={{
-                fontSize: "0.7rem",
-                color: "#ffcccc",
-                marginTop: "4px",
-                fontWeight: "normal",
-              }}
-            >
-              Abandons game & resets streak
-            </span>
           </button>
 
           {/* Only show Daily Challenge button if not completed or has active daily */}
@@ -233,22 +229,25 @@ function ContinueGamePrompt({
             </button>
           )}
 
-          <button
-            onClick={() => onContinue(false)} // Pass false to indicate this is not a daily game
-            style={{
-              backgroundColor:
-                settings.theme === "dark" ? "#4cc9f0" : "#007bff",
-              color: settings.theme === "dark" ? "black" : "white",
-              padding: "8px 16px",
-              borderRadius: "4px",
-              border: "none",
-              cursor: "pointer",
-              fontWeight: "bold",
-              flex: showDailyButton ? "1 1 30%" : "1 1 45%", // Adjust flex basis based on number of buttons
-            }}
-          >
-            Continue Game
-          </button>
+          {/* Only show Continue Game button if there's a regular game */}
+          {hasRegularGame && (
+            <button
+              onClick={() => onContinue(false)} // Pass false to indicate this is not a daily game
+              style={{
+                backgroundColor:
+                  settings.theme === "dark" ? "#4cc9f0" : "#007bff",
+                color: settings.theme === "dark" ? "black" : "white",
+                padding: "8px 16px",
+                borderRadius: "4px",
+                border: "none",
+                cursor: "pointer",
+                fontWeight: "bold",
+                flex: showDailyButton ? "1 1 30%" : "1 1 45%", // Adjust flex basis based on number of buttons
+              }}
+            >
+              Continue Game
+            </button>
+          )}
         </div>
       </div>
     </div>

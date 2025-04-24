@@ -1,4 +1,4 @@
-// src/components/modals/WinCelebration.js - Fixed version with proper spinner overlay
+// src/components/modals/WinCelebration.js - Updated with loading spinner for Play Again button
 import React, { useState, useEffect, useCallback } from "react";
 import MatrixRain from "../effects/MatrixRain";
 import CryptoSpinner from "../CryptoSpinner";
@@ -16,6 +16,7 @@ import { FaXTwitter } from "react-icons/fa6";
  * @param {boolean} isDailyChallenge - Whether this is a daily challenge
  * @return {number} - Percentage score between 50-100
  */
+
 const calculatePercentageRating = (score, isDailyChallenge) => {
   // Maximum theoretical score depends on game type
   // Daily challenges use Easy difficulty, so max is lower
@@ -53,6 +54,7 @@ const calculateBaseScore = (totalScore, streak) => {
 const WinCelebration = ({ playSound, winData }) => {
   // Get auth and settings state
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isSubAdmin = useAuthStore((state) => state.user?.subadmin || false);
   const openLogin = useUIStore((state) => state.openLogin);
   const settings = useSettingsStore((state) => state.settings);
 
@@ -72,6 +74,10 @@ const WinCelebration = ({ playSound, winData }) => {
   const [showStatsSpinner, setShowStatsSpinner] = useState(
     winData?.statsLoading === true,
   );
+
+  // NEW: Add state for tracking Play Again button loading
+  const [isPlayAgainLoading, setIsPlayAgainLoading] = useState(false);
+  const [playAgainInactiveTimer, setPlayAgainInactiveTimer] = useState(false);
 
   // Store anonymous state at mount time
   const [wasAnonymous] = useState(!isAuthenticated);
@@ -111,8 +117,28 @@ const WinCelebration = ({ playSound, winData }) => {
     }
   }, [winData, showStatsSpinner]);
 
+  // NEW: Effect to set a brief inactive period for the Play Again button
+  useEffect(() => {
+    // Set an initial 3-second inactive period for the Play Again button
+    setPlayAgainInactiveTimer(true);
+
+    const timer = setTimeout(() => {
+      setPlayAgainInactiveTimer(false);
+    }, 3000); // 3 second delay
+
+    return () => clearTimeout(timer);
+  }, []);
+
   // Handler for Play Again button - using direct API call for simplicity
   const handlePlayAgain = useCallback(async () => {
+    // If button is in inactive period or already loading, prevent action
+    if (playAgainInactiveTimer || isPlayAgainLoading) {
+      return;
+    }
+
+    // Set loading state
+    setIsPlayAgainLoading(true);
+
     // For authenticated users, check for existing active games
     if (isAuthenticated) {
       try {
@@ -126,6 +152,7 @@ const WinCelebration = ({ playSound, winData }) => {
 
         // Hide the spinner
         setIsCheckingActiveGames(false);
+        setIsPlayAgainLoading(false);
 
         if (
           activeGameCheck.has_active_game ||
@@ -154,6 +181,7 @@ const WinCelebration = ({ playSound, winData }) => {
       } catch (error) {
         console.error("Error checking for active games:", error);
         setIsCheckingActiveGames(false);
+        setIsPlayAgainLoading(false);
 
         // Fall back to using the provided callback
         if (winData?.onPlayAgain && typeof winData.onPlayAgain === "function") {
@@ -165,15 +193,29 @@ const WinCelebration = ({ playSound, winData }) => {
     } else {
       // For anonymous users, start a custom game with current settings
       try {
+        const backdoorMode =
+          isAuthenticated && isSubAdmin
+            ? settings?.backdoorMode || false
+            : false;
+        console.log(
+          "Starting new custom game with backdoorMode:",
+          backdoorMode,
+        );
         // Use current settings but start a custom game
         await startNewGame({
           longText: settings?.longText || false,
           hardcoreMode: settings?.hardcoreMode || false,
           difficulty: settings?.difficulty || "medium",
           customGameRequested: true, // Ensure it's a custom game
+          backdoorMode: backdoorMode, // Add the backdoorMode flag
         });
+
+        // Clear loading state
+        setIsPlayAgainLoading(false);
       } catch (error) {
         console.error("Error starting new game:", error);
+        setIsPlayAgainLoading(false);
+
         // Fallback - just reload the page if the API call fails
         window.location.reload();
       }
@@ -184,6 +226,8 @@ const WinCelebration = ({ playSound, winData }) => {
     startNewGame,
     settings,
     winData,
+    isPlayAgainLoading,
+    playAgainInactiveTimer,
   ]);
 
   // Safely extract win data with defaults
@@ -200,9 +244,10 @@ const WinCelebration = ({ playSound, winData }) => {
     attribution = {},
     isDailyChallenge = false,
     // Ensure all possible streak data locations are checked
-    current_daily_streak = winData?.current_daily_streak || 
-                           winData?.winData?.current_daily_streak || 0,
-    statsLoading = false
+    current_daily_streak = winData?.current_daily_streak ||
+      winData?.winData?.current_daily_streak ||
+      0,
+    statsLoading = false,
   } = winData || {};
 
   // Calculate base score and bonus
@@ -275,6 +320,8 @@ const WinCelebration = ({ playSound, winData }) => {
     showStatsSpinner,
     isCheckingActiveGames,
     statsLoading: winData?.statsLoading,
+    isPlayAgainLoading,
+    playAgainInactiveTimer,
   });
 
   return (
@@ -405,10 +452,35 @@ const WinCelebration = ({ playSound, winData }) => {
         {/* Action buttons using hint button styling */}
         <div className="retro-actions">
           <button
-            className="game-over-action-button play-again"
+            className={`game-over-action-button play-again ${playAgainInactiveTimer || isPlayAgainLoading ? "loading" : ""}`}
             onClick={handlePlayAgain}
-            disabled={isCheckingActiveGames}
+            disabled={playAgainInactiveTimer || isPlayAgainLoading}
+            style={{ position: "relative" }}
           >
+            {/* NEW: Loading indicator */}
+            {(playAgainInactiveTimer || isPlayAgainLoading) && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: "rgba(0, 0, 0, 0.5)",
+                  borderRadius: "inherit",
+                  zIndex: 1,
+                }}
+              >
+                <CryptoSpinner
+                  isActive={true}
+                  isDarkTheme={settings.theme === "dark"}
+                  inStatsContainer={false}
+                />
+              </div>
+            )}
             <div className="game-over-text-display">
               {hasLost ? "TRY AGAIN" : "PLAY AGAIN"}
             </div>
