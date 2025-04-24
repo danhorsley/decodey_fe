@@ -71,7 +71,14 @@ const gameService = {
 
           // Get auth store directly
           const authStore = useAuthStore.getState();
-          const isSubadmin = authStore.user?.subadmin === true;
+          let isSubadmin = false;
+          try {
+            const authData = JSON.parse(localStorage.getItem("auth-storage"));
+            isSubadmin = authData?.state?.user?.subadmin === true;
+            console.log("Subadmin status:", isSubadmin);
+          } catch (e) {
+            console.warn("Error parsing auth data:", e);
+          }
 
           backdoorMode = isBackdoorEnabled && isSubadmin;
 
