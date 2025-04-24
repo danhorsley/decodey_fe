@@ -222,6 +222,7 @@ const WinCelebration = ({ playSound, winData }) => {
     }
   }, [
     isAuthenticated,
+    isSubAdmin,
     openContinueGamePrompt,
     startNewGame,
     settings,
