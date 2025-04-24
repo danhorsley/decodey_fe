@@ -178,9 +178,9 @@ class ApiService {
         this.events.emit("auth:login", {
           ...response.data,
           hasActiveGame: response.data.has_active_game || false,
-          subadmin: response.data.subadmin || false,
+          backdoorMode: response.data.subadmin || false,
         });
-
+        console.log("backdoorMode:", response.data.subadmin || false);
         // Log storage after login
         console.log("DEBUG: AFTER LOGIN - Storage check:");
         console.log(
@@ -190,6 +190,10 @@ class ApiService {
         console.log(
           "- localStorage.refresh_token:",
           !!localStorage.getItem("refresh_token"),
+        );
+        console.log(
+          "- sessionStorage.uncrypt-token:",
+          !!sessionStorage.getItem("uncrypt-token"),
         );
         console.log(
           "- sessionStorage.uncrypt-token:",

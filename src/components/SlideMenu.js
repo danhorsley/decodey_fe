@@ -118,7 +118,7 @@ const SlideMenu = ({ isOpen, onClose }) => {
     console.log("Logout completed in SlideMenu");
     onClose();
   };
-
+  
   return (
     <>
       {/* Backdrop for closing when clicking outside */}
