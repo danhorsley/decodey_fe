@@ -59,7 +59,29 @@ const gameService = {
       // Get auth status
       const isAuthenticated = !!config.session.getAuthToken();
       const hasExistingGameId = !!localStorage.getItem("uncrypt-game-id");
+      let backdoorMode = false;
+      if (isAuthenticated) {
+        try {
+          // Get settings store directly
+          const settingsStore = localStorage.getItem("uncrypt-settings");
+          const isBackdoorEnabled = settingsStore && settingsStore.includes('"backdoorMode":true');
 
+          // Get auth store to check subadmin status
+          const authStore = localStorage.getItem("auth-storage");
+          const isSubadmin = authStore && authStore.includes('"subadmin":true');
+
+          backdoorMode = isBackdoorEnabled && isSubadmin;
+
+          if (backdoorMode) {
+            console.log("Backdoor mode enabled for subadmin user");
+          }
+        } catch (e) {
+          console.warn("Error checking backdoor settings:", e);
+        }
+      }
+
+      // Add backdoor flag to options
+      options.backdoorMode = backdoorMode;
       console.log(
         "Init status: authenticated:",
         isAuthenticated,
@@ -159,7 +181,7 @@ const gameService = {
             gameData,
           });
 
-          return { success: true, gameData, newGame: true };
+          return { success: true, gameData, newGame: true,isBackdoorMode: backdoorMode };
         } catch (error) {
           console.error("Error handling existing game:", error);
           // Fall through to default new game below

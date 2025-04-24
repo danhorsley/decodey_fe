@@ -20,6 +20,7 @@ import MatrixRainLoading from "../components/effects/MatrixRainLoading";
 import TuneableTextDisplay from "../components/TuneableTextDisplay";
 import TutorialOverlay from "../components/TutorialOverlay";
 
+
 // Game component - the main gameplay screen
 const Game = () => {
   // React Router location for checking route params
@@ -48,7 +49,6 @@ const Game = () => {
   const hardcoreMode = useGameStore((state) => state.hardcoreMode);
   const isResetting = useGameStore((state) => state.isResetting);
   const isDailyChallenge = useGameStore((state) => state.isDailyChallenge);
-
   // Use our own loading state instead of relying on hasGameStarted
   const [gameDataLoaded, setGameDataLoaded] = useState(false);
 

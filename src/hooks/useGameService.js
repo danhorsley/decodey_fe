@@ -28,7 +28,7 @@ const useGameService = () => {
     try {
       setIsInitializing(true);
       setError(null);
-
+      
       const result = await gameService.initializeGame(options);
 
       if (!result.success) {

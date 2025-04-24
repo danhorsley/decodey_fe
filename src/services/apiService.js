@@ -143,14 +143,12 @@ class ApiService {
         rememberMe: credentials.rememberMe,
       });
 
-
       const response = await this.api.post("/login", credentials);
 
       if (response.data.access_token) {
         // Store access token based on remember me preference
         if (credentials.rememberMe) {
           localStorage.setItem("uncrypt-token", response.data.access_token);
-    
         } else {
           sessionStorage.setItem("uncrypt-token", response.data.access_token);
           console.log(
@@ -180,7 +178,7 @@ class ApiService {
         this.events.emit("auth:login", {
           ...response.data,
           hasActiveGame: response.data.has_active_game || false,
-          subadmin: response.data.subadmin || false
+          subadmin: response.data.subadmin || false,
         });
 
         // Log storage after login
@@ -452,8 +450,8 @@ class ApiService {
           queryParams.append("difficulty", difficulty);
           if (options.longText) queryParams.append("longText", "true");
           if (options.hardcoreMode) queryParams.append("hardcore", "true");
-          const user = useAuthStore.getState().user;
-          if (user?.subadmin && options.backdoorMode) {
+          // Add backdoor flag if present in options
+          if (options.backdoorMode) {
             queryParams.append("backdoor", "true");
           }
           const endpoint = "/api/start";
@@ -689,8 +687,10 @@ class ApiService {
           console.log("Win data received:", {
             hasWinData: true,
             score: response.data.winData.score || 0,
-            streak: response.data.winData.current_daily_streak || 
-                   response.data.current_daily_streak || 0
+            streak:
+              response.data.winData.current_daily_streak ||
+              response.data.current_daily_streak ||
+              0,
           });
         }
       }
@@ -733,8 +733,10 @@ class ApiService {
           console.log("Win data received from hint:", {
             hasWinData: true,
             score: response.data.winData.score || 0,
-            streak: response.data.winData.current_daily_streak || 
-                   response.data.current_daily_streak || 0
+            streak:
+              response.data.winData.current_daily_streak ||
+              response.data.current_daily_streak ||
+              0,
           });
         }
       }
