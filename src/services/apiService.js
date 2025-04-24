@@ -2,7 +2,6 @@
 import axios from "axios";
 import EventEmitter from "events";
 import config from "../config";
-import useAuthStore from "../stores/authStore"
 
 // Track token refresh state
 let isRefreshing = false;
