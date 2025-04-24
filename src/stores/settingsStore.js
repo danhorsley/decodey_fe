@@ -14,6 +14,7 @@ const defaultSettings = {
   textColor: "default",
   soundEnabled: true,
   vibrationEnabled: true,
+  backdoorMode: false,
 };
 
 // Map for max mistakes based on difficulty

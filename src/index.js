@@ -22,7 +22,86 @@ import App from "./App";
 // Import stores needed for initialization
 import useGameStore from "./stores/gameStore";
 import useSettingsStore from "./stores/settingsStore";
+const enableScrollingOnSmallDevices = () => {
+  // Add a class to body for small screens
+  const isVerySmallScreen = window.innerHeight < 600; // iPhone 13 mini is around 812px, but we'll be conservative
+  if (isVerySmallScreen) {
+    document.body.classList.add("very-small-screen");
 
+    // Add CSS to ensure scrolling works
+    const style = document.createElement("style");
+    style.textContent = `
+      .very-small-screen {
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        height: auto !important;
+        position: relative !important;
+      }
+
+      .very-small-screen .App-container {
+        min-height: 100vh;
+        overflow-y: auto !important;
+        padding-bottom: 60px !important; /* Add extra padding at bottom */
+      }
+
+      /* Adjust fixed elements */
+      .very-small-screen .menu-toggle,
+      .very-small-screen .daily-challenge-button-fixed {
+        position: absolute !important;
+      }
+
+      /* Ensure touch events are not intercepted */
+      .very-small-screen * {
+        touch-action: auto !important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+};
+
+function fixIOSScrolling() {
+  // Check if it's an iOS device
+  const isIOS =
+    /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+  if (isIOS) {
+    console.log("iOS device detected, applying scroll fixes");
+
+    // Force document to be scrollable
+    document.documentElement.style.height = "auto";
+    document.body.style.height = "auto";
+    document.body.style.position = "static";
+    document.body.style.overflow = "auto";
+    document.body.style.webkitOverflowScrolling = "touch";
+
+    // Add some padding at the bottom to ensure scrollability
+    const existingPadding =
+      parseInt(getComputedStyle(document.body).paddingBottom) || 0;
+    document.body.style.paddingBottom = existingPadding + 60 + "px";
+
+    // Find and modify any fixed position containers that might block scrolling
+    document
+      .querySelectorAll(".App-container, .game-dashboard, .text-container")
+      .forEach((el) => {
+        const position = getComputedStyle(el).position;
+        if (position === "fixed") {
+          el.style.position = "absolute";
+        }
+        el.style.height = "auto";
+        el.style.maxHeight = "none";
+        el.style.overflow = "visible";
+      });
+
+    // Add scroll touch helper
+    document.addEventListener(
+      "touchstart",
+      function () {
+        // This empty handler enables "momentum" scrolling on iOS
+      },
+      false,
+    );
+  }
+}
 // Utility to disable text selection and context menus on touch devices
 const disableTouchSelection = () => {
   // Only apply on mobile devices
@@ -229,7 +308,10 @@ window.addEventListener("load", function () {
       setTimeout(hideAddressBar, 100);
     });
   }
-
+  // Enable scrolling on very small devices
+  enableScrollingOnSmallDevices();
+  // Fix iOS scrolling issues
+  fixIOSScrolling();
   // Apply touch selection prevention for mobile
   disableTouchSelection();
 });

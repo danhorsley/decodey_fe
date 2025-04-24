@@ -54,6 +54,7 @@ const useAuthStore = create(
               state.user = {
                 id: response.user_id,
                 username: response.username,
+                subadmin: response.subadmin || false 
               };
               state.loading = false;
               state.hasActiveGame = hasActiveGame;

@@ -33,9 +33,13 @@ function Settings({ onCancel }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
+  const isSubadmin = user?.subadmin === true;
 
   // Local settings state to track changes before saving
-  const [localSettings, setLocalSettings] = useState(settings);
+  const [localSettings, setLocalSettings] = useState({
+    ...settings,
+    backdoorMode: settings.backdoorMode || false
+  });
 
   // Update local settings when store settings change
   useEffect(() => {
@@ -434,7 +438,22 @@ function Settings({ onCancel }) {
               )}
             </div>
           </div>
-
+         {/* backdoor for subadmin ONLY */}
+          {isAuthenticated && isSubadmin && (
+            <div className="settings-section">
+              <h2>Admin Settings</h2>
+              <div className="settings-options">
+                <label className="settings-option">
+                  <input
+                    type="checkbox"
+                    checked={localSettings.backdoorMode}
+                    onChange={() => handleChange("backdoorMode", !localSettings.backdoorMode)}
+                  />
+                  <span className="option-label">Use Backdoor Quotes</span>
+                </label>
+              </div>
+            </div>
+          )}
           {/* Account Management Section - Only show if authenticated */}
           {isAuthenticated && (
             <div className="settings-section">

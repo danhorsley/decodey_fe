@@ -2,6 +2,7 @@
 import axios from "axios";
 import EventEmitter from "events";
 import config from "../config";
+import useAuthStore from "../stores/authStore"
 
 // Track token refresh state
 let isRefreshing = false;
@@ -180,6 +181,7 @@ class ApiService {
         this.events.emit("auth:login", {
           ...response.data,
           hasActiveGame: response.data.has_active_game || false,
+          subadmin: response.data.subadmin || false
         });
 
         // Log storage after login
@@ -451,7 +453,10 @@ class ApiService {
           queryParams.append("difficulty", difficulty);
           if (options.longText) queryParams.append("longText", "true");
           if (options.hardcoreMode) queryParams.append("hardcore", "true");
-
+          const user = useAuthStore.getState().user;
+          if (user?.subadmin && options.backdoorMode) {
+            queryParams.append("backdoor", "true");
+          }
           const endpoint = "/api/start";
           const url = `${endpoint}${queryParams.toString() ? "?" + queryParams.toString() : ""}`;
 
