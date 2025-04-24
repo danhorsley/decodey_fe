@@ -3,6 +3,8 @@ import apiService from "./apiService";
 import config from "../config";
 import EventEmitter from "events";
 import useGameStore from "../stores/gameStore";
+import useAuthStore from "../stores/authStore";
+import useSettingsStore from "../stores/settingsStore";
 
 // Create a single event emitter for the entire service
 const events = new EventEmitter();
@@ -62,13 +64,14 @@ const gameService = {
       let backdoorMode = false;
       if (isAuthenticated) {
         try {
-          // Get settings store directly
-          const settingsStore = localStorage.getItem("uncrypt-settings");
-          const isBackdoorEnabled = settingsStore && settingsStore.includes('"backdoorMode":true');
+          // Use settings store directly instead of localStorage
+          const settingsStore = useSettingsStore.getState();
+          const isBackdoorEnabled =
+            settingsStore.settings?.backdoorMode === true;
 
-          // Get auth store to check subadmin status
-          const authStore = localStorage.getItem("auth-storage");
-          const isSubadmin = authStore && authStore.includes('"subadmin":true');
+          // Get auth store directly
+          const authStore = useAuthStore.getState();
+          const isSubadmin = authStore.user?.subadmin === true;
 
           backdoorMode = isBackdoorEnabled && isSubadmin;
 
@@ -181,7 +184,12 @@ const gameService = {
             gameData,
           });
 
-          return { success: true, gameData, newGame: true,isBackdoorMode: backdoorMode };
+          return {
+            success: true,
+            gameData,
+            newGame: true,
+            isBackdoorMode: backdoorMode,
+          };
         } catch (error) {
           console.error("Error handling existing game:", error);
           // Fall through to default new game below
@@ -594,7 +602,7 @@ const gameService = {
         const startDate = new Date(dailyStats.start_time);
         const today = new Date();
 
-        const isStartedToday = 
+        const isStartedToday =
           startDate.getFullYear() === today.getFullYear() &&
           startDate.getMonth() === today.getMonth() &&
           startDate.getDate() === today.getDate();
@@ -602,11 +610,15 @@ const gameService = {
         // Only consider daily game active if it's from today
         hasActiveDailyGame = isStartedToday;
 
-        console.log(`Daily challenge check: start_time=${dailyStats.start_time}, isStartedToday=${isStartedToday}`);
+        console.log(
+          `Daily challenge check: start_time=${dailyStats.start_time}, isStartedToday=${isStartedToday}`,
+        );
 
         // If it's not from today, we treat it as if there's no active daily game
         if (!isStartedToday) {
-          console.log("Daily challenge is not from today, considering it inactive");
+          console.log(
+            "Daily challenge is not from today, considering it inactive",
+          );
         }
       }
 
@@ -711,6 +723,15 @@ const gameService = {
         gameStore.resetGame();
       }
 
+      // Reset backdoorMode in settings store
+      const settingsStore = useSettingsStore.getState();
+      if (typeof settingsStore.updateSettings === "function") {
+        settingsStore.updateSettings({
+          ...settingsStore.settings,
+          backdoorMode: false, // Reset backdoorMode on logout
+        });
+      }
+
       // Emit event for UI state transition
       events.emit(this.events.LOGOUT_TRANSITION);
 
@@ -744,6 +765,15 @@ const gameService = {
       const gameStore = useGameStore.getState();
       if (typeof gameStore.resetGame === "function") {
         gameStore.resetGame();
+      }
+
+      // Reset backdoorMode in settings store even on error
+      const settingsStore = useSettingsStore.getState();
+      if (typeof settingsStore.updateSettings === "function") {
+        settingsStore.updateSettings({
+          ...settingsStore.settings,
+          backdoorMode: false, // Reset backdoorMode on logout
+        });
       }
 
       // Emit logout event even on error

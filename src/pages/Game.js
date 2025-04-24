@@ -20,7 +20,6 @@ import MatrixRainLoading from "../components/effects/MatrixRainLoading";
 import TuneableTextDisplay from "../components/TuneableTextDisplay";
 import TutorialOverlay from "../components/TutorialOverlay";
 
-
 // Game component - the main gameplay screen
 const Game = () => {
   // React Router location for checking route params
@@ -61,18 +60,26 @@ const Game = () => {
     return useGameStore.getState().getHint();
   }, []);
 
+  // Get settings from store
+  const settings = useSettingsStore((state) => state.settings);
   const resetAndStartNewGame = useCallback(() => {
-    useGameStore.getState().resetAndStartNewGame();
-  }, []);
+    // Get backdoorMode from settings if user is subadmin
+    const backdoorMode = settings?.backdoorMode || false;
+
+    useGameStore
+      .getState()
+      .resetAndStartNewGame(
+        settings?.longText || false,
+        settings?.hardcoreMode || false,
+        { backdoorMode: backdoorMode },
+      );
+  }, [settings]);
 
   // Get mobile detection state
   const useMobileMode = useUIStore((state) => state.useMobileMode);
 
   // Get UI state
   const [menuOpen, setMenuOpen] = useState(false);
-
-  // Get settings from store
-  const settings = useSettingsStore((state) => state.settings);
 
   // State for controlling tutorial
   const [showTutorial, setShowTutorial] = useState(false);
@@ -419,7 +426,8 @@ const Game = () => {
             // Otherwise, use the value from attributionComplete
             statsLoading: useGameStore.getState().isWinVerificationInProgress,
             gameTimeSeconds: hasWon
-              ? winData?.gameTimeSeconds || Math.floor(
+              ? winData?.gameTimeSeconds ||
+                Math.floor(
                   (Date.now() -
                     (useGameStore.getState().startTime || Date.now())) /
                     1000,
