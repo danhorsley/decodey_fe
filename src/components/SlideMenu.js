@@ -118,7 +118,7 @@ const SlideMenu = ({ isOpen, onClose }) => {
     console.log("Logout completed in SlideMenu");
     onClose();
   };
-  
+
   return (
     <>
       {/* Backdrop for closing when clicking outside */}
@@ -188,7 +188,7 @@ const SlideMenu = ({ isOpen, onClose }) => {
               </li>
               <li onClick={handleSignup}>
                 <FaUserCircle className="menu-icon" />
-                Create Account
+                Create Account (Free!)
               </li>
             </>
           )}

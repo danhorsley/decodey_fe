@@ -62,18 +62,26 @@ const Game = () => {
 
   // Get settings from store
   const settings = useSettingsStore((state) => state.settings);
-  const resetAndStartNewGame = useCallback(() => {
-    // Get backdoorMode from settings if user is subadmin
-    const backdoorMode = settings?.backdoorMode || false;
-
-    useGameStore
-      .getState()
-      .resetAndStartNewGame(
-        settings?.longText || false,
-        settings?.hardcoreMode || false,
-        { backdoorMode: backdoorMode },
+  const resetAndStartNewGame = useCallback(
+    (backdoorMode = false) => {
+      console.log(
+        "Resetting and starting new game with backdoorMode:",
+        backdoorMode,
       );
-  }, [settings]);
+      const effectiveBackdoorMode =
+        backdoorMode !== null
+          ? backdoorMode // Use provided backdoorMode if specified
+          : settings?.backdoorMode || false;
+      useGameStore
+        .getState()
+        .resetAndStartNewGame(
+          settings?.longText || false,
+          settings?.hardcoreMode || false,
+          { backdoorMode: effectiveBackdoorMode },
+        );
+    },
+    [settings],
+  );
 
   // Get mobile detection state
   const useMobileMode = useUIStore((state) => state.useMobileMode);

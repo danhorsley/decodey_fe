@@ -1073,6 +1073,7 @@ const useGameStore = create(
             longText: useLongText,
             difficulty: latestSettings?.difficulty || "medium",
             hardcoreMode: latestSettings?.hardcoreMode || hardcoreMode,
+            backdoorMode: options.backdoorMode || false,
           });
 
           if (gameData && gameData.encrypted_paragraph && gameData.display) {

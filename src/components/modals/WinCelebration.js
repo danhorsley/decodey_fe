@@ -173,7 +173,12 @@ const WinCelebration = ({ playSound, winData }) => {
 
         // If no active games, use onPlayAgain callback if provided
         if (winData?.onPlayAgain && typeof winData.onPlayAgain === "function") {
-          winData.onPlayAgain();
+          const backdoorMode =
+            isAuthenticated && isSubAdmin
+              ? settings?.backdoorMode || false
+              : false;
+          console.log("Starting new game with backdoorMode:", backdoorMode);
+          winData.onPlayAgain(backdoorMode);
         } else {
           // Fallback if callback is missing
           window.location.reload();
@@ -193,21 +198,13 @@ const WinCelebration = ({ playSound, winData }) => {
     } else {
       // For anonymous users, start a custom game with current settings
       try {
-        const backdoorMode =
-          isAuthenticated && isSubAdmin
-            ? settings?.backdoorMode || false
-            : false;
-        console.log(
-          "Starting new custom game with backdoorMode:",
-          backdoorMode,
-        );
         // Use current settings but start a custom game
         await startNewGame({
           longText: settings?.longText || false,
           hardcoreMode: settings?.hardcoreMode || false,
           difficulty: settings?.difficulty || "medium",
           customGameRequested: true, // Ensure it's a custom game
-          backdoorMode: backdoorMode, // Add the backdoorMode flag
+          backdoorMode: false, // Add the backdoorMode flag
         });
 
         // Clear loading state
@@ -440,7 +437,8 @@ const WinCelebration = ({ playSound, winData }) => {
         {/* Login prompt for anonymous users */}
         {wasAnonymous && (
           <div className="anon-message">
-            ⚠️ Score not recorded. Login before your next game to save scores.
+            ⚠️ Score not recorded. Login or create free account before your next
+            game to save scores.
             <button
               className="game-over-action-button login-hint"
               onClick={openLogin}
