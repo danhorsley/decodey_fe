@@ -22,7 +22,13 @@ import useGameStore from "../stores/gameStore";
 const HomePage = () => {
   const navigate = useNavigate();
   const settings = useSettingsStore((state) => state.settings);
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
+  useEffect(() => {
+    useAuthStore.getState().waitForAuthReady().then(state => {
+      setIsAuthenticated(state.isAuthenticated);
+    });
+  }, []);
   const { logout, startDailyChallenge, initializeGame, continueGame } =
     useGameService();
   const { isLandscape } = useDeviceDetection();
