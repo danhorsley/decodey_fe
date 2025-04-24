@@ -24,16 +24,9 @@ import useGameService from "../hooks/useGameService";
 const SlideMenu = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
 
-  // Get auth state and actions with ready check
-  const [authState, setAuthState] = useState({ isAuthenticated: false, user: null });
-  
-  useEffect(() => {
-    useAuthStore.getState().waitForAuthReady().then(state => {
-      setAuthState(state);
-    });
-  }, []);
-
-  const { isAuthenticated, user } = authState;
+  // Get auth state and actions
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const user = useAuthStore((state) => state.user);
 
   // Get UI actions
   const openLogin = useUIStore((state) => state.openLogin);
