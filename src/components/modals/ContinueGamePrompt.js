@@ -59,7 +59,10 @@ function ContinueGamePrompt({
     : "Daily Challenge";
 
   // Determine if we have a regular game (non-daily)
-  const hasRegularGame = !!gameStats;
+  const hasRegularGame =
+    gameStats &&
+    typeof gameStats === "object" &&
+    Object.keys(gameStats).length > 0;
 
   return (
     <div className="about-overlay">
@@ -81,7 +84,7 @@ function ContinueGamePrompt({
         </p>
 
         {/* Regular game stats */}
-        {gameStats && (
+        {hasRegularGame && (
           <div
             className="game-stats-container"
             style={{

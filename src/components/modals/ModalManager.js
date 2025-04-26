@@ -135,7 +135,11 @@ const ModalManager = ({ children }) => {
         // Open the continue game prompt if we have any active game
         if (regularGameStats || (hasActiveDailyGame && dailyGameStats)) {
           // Don't pass any parameters here - just open the modal
-          openContinueGamePrompt();
+          openContinueGamePrompt({
+            regularGameStats,
+            dailyGameStats,
+            hasActiveDailyGame,
+          });
         }
       } else {
         console.log(
