@@ -115,14 +115,10 @@ const disableTouchSelection = () => {
   // Create a style element
   const style = document.createElement("style");
 
-  // Add CSS to disable selection
+  // Add CSS to disable selection but allow scrolling
   style.textContent = `
     body,
     .App-container, 
-    .text-container,
-    .encrypted-line,
-    .display-line,
-    .char-cell,
     .letter-cell,
     .encrypted-grid,
     .guess-grid,
@@ -137,14 +133,23 @@ const disableTouchSelection = () => {
       -moz-user-select: none !important;
       -ms-user-select: none !important;
       user-select: none !important;
-      touch-action: manipulation !important;
+    }
+
+    /* ALLOW SCROLLING on text containers - THIS IS CRITICAL */
+    .text-container,
+    .char-line,
+    .display-line,
+    .encrypted-line,
+    .char-cell {
+      touch-action: auto !important; /* Allow all touch gestures including scrolling */
+      -webkit-overflow-scrolling: touch !important;
     }
 
     /* Special rule for disabling word search */
     ::selection { background: transparent !important; }
     ::-moz-selection { background: transparent !important; }
 
-    /* Make all game interaction elements unselectable */
+    /* Make specific game interaction elements unselectable */
     .letter-cell, .hint-button, .crossword-hint-button {
       -webkit-tap-highlight-color: transparent !important;
     }

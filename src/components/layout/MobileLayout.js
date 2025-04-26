@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from "react";
+// src/components/layout/MobileLayout.js - Updated with better scrolling support
+
+import React from "react";
 import useSettingsStore from "../../stores/settingsStore";
 import useDeviceDetection from "../../hooks/useDeviceDetection";
 
 /**
- * Enhanced mobile layout that properly handles orientation
+ * Enhanced mobile layout that properly handles orientation and allows scrolling
  * Detects and responds to landscape/portrait orientations
  */
 const MobileLayout = ({ children }) => {
@@ -14,48 +16,6 @@ const MobileLayout = ({ children }) => {
   // Get device information from our detection hook
   const { isMobile, isLandscape } = useDeviceDetection();
 
-  // State for first-time portrait mode notification
-  const [showPortraitNotice, setShowPortraitNotice] = useState(false);
-
-  // Check if we should show the portrait warning
-  // useEffect(() => {
-  //   // Show much less frequently - once per week instead of every 30 minutes
-  //   const SHOW_INTERVAL = 1000 * 60 * 60 * 24 * 7; // Show once per week
-  //   const MIN_INTERVAL = 1000 * 60 * 60 * 24; // But not more often than once per day
-
-  //   const isTablet = () => {
-  //     return (
-  //       // Check for iPad specifically
-  //       /iPad/.test(navigator.userAgent) ||
-  //       // Check for tablet-sized screen
-  //       (window.innerWidth >= 768 && window.innerHeight >= 768)
-  //     );
-  //   };
-
-  //   const shouldShowWarning = () => {
-  //     if (isLandscape || isTablet()) return false;
-
-  //     const lastShown = parseInt(
-  //       localStorage.getItem("portrait-notice-last-shown") || "0",
-  //     );
-  //     const timeSinceLastShown = Date.now() - lastShown;
-
-  //     // Only show if never shown or enough time has passed
-  //     return !lastShown || timeSinceLastShown >= SHOW_INTERVAL;
-  //   };
-
-  //   if (shouldShowWarning()) {
-  //     setShowPortraitNotice(true);
-  //     localStorage.setItem("portrait-notice-last-shown", Date.now().toString());
-
-  //     const timer = setTimeout(() => {
-  //       setShowPortraitNotice(false);
-  //     }, 5000);
-
-  //     return () => clearTimeout(timer);
-  //   }
-  // }, [isLandscape]);
-
   // Assemble classes based on orientation and theme
   const mobileClasses = `
     mobile-mode 
@@ -64,25 +24,42 @@ const MobileLayout = ({ children }) => {
     ${isLandscape ? "landscape-mode" : "portrait-mode"}
   `;
 
-  // Render the mobile layout with appropriate classes
+  // Add custom styling for scroll handling
+  const mobileStyle = {
+    // Allow scrolling
+    overflow: "auto",
+    WebkitOverflowScrolling: "touch",
+    // Full height but allow growing
+    minHeight: "100vh",
+    height: "auto",
+    // Ensure content is visible
+    paddingBottom: "50px",
+  };
+
+  // Container style specifically for portrait mode
+  const containerStyle = {
+    // Allow container to scroll
+    overflow: "auto",
+    WebkitOverflowScrolling: "touch",
+    // Make sure we can see all content
+    minHeight: "100vh",
+    height: "auto",
+    // Some spacing at the bottom to prevent controls from being cut off
+    paddingBottom: isLandscape ? "20px" : "50px",
+  };
+
+  // Render the mobile layout with appropriate classes and styles
   return (
     <div
       className={mobileClasses}
       data-theme={theme}
       data-orientation={isLandscape ? "landscape" : "portrait"}
+      style={mobileStyle}
     >
-      {/* Orientation notice for portrait mode */}
-      {showPortraitNotice && (
-        <div className="orientation-notice">
-          <div className="notice-content">
-            <p>otate your device to landscape mode</p>
-            <button onClick={() => setShowPortraitNotice(false)}>Got it</button>
-          </div>
-        </div>
-      )}
-
-      {/* Mobile container with orientation-aware class */}
-      <div className="mobile-game-container">{children}</div>
+      {/* Mobile container with orientation-aware class and scrolling enabled */}
+      <div className="mobile-game-container" style={containerStyle}>
+        {children}
+      </div>
     </div>
   );
 };
